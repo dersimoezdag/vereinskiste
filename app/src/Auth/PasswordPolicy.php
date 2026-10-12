@@ -5,11 +5,11 @@ namespace Vereinskiste\Auth;
 
 use Vereinskiste\Ledger\TextInput;
 
-/** Regeln fuer neue Passwoerter (Laenge in UTF-8-Zeichen, nicht Bytes). */
+/** Mindestlaenge in UTF-8-Zeichen; bcrypt-Obergrenze in Bytes. */
 final class PasswordPolicy
 {
     public const MIN_LENGTH = 10;
-    public const MAX_LENGTH = 200;
+    public const MAX_BYTES = 72;
 
     /**
      * Das Passwort wird nie getrimmt. `$email` und `$name` sind die Werte des Benutzers, dem es gehoert.
@@ -25,8 +25,9 @@ final class PasswordPolicy
         if ($length < self::MIN_LENGTH) {
             return 'validation.password.too_short';
         }
-        if ($length > self::MAX_LENGTH) {
-            return 'validation.password.too_long';
+        // PASSWORD_DEFAULT ist bcrypt: Bytes nach Position 72 wuerden still abgeschnitten.
+        if (strlen($password) > self::MAX_BYTES) {
+            return 'validation.password.too_many_bytes';
         }
         if (TextInput::isBlank($password)) {
             return 'validation.password.blank';

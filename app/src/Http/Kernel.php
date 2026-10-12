@@ -15,6 +15,12 @@ use Slim\Views\Twig;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 use Vereinskiste\Auth\AuthService;
+use Vereinskiste\Auth\PasswordResetService;
+use Vereinskiste\Mail\Mailer;
+use Vereinskiste\Web\PasswordResetController;
+use Vereinskiste\Web\InstallController;
+use Vereinskiste\Web\UpdateController;
+use Vereinskiste\Http\Middleware\Maintenance;
 use Vereinskiste\Auth\UserRepository;
 use Vereinskiste\Db\Connection;
 use Vereinskiste\Http\Middleware\Auth;
@@ -36,6 +42,11 @@ use Vereinskiste\Web\UserController;
 
 final class Kernel
 {
+    public static function createInstaller(array $config = []): App
+    {
+        return self::create(['installer_mode' => true] + $config);
+    }
+
     /**
      * Unterstuetzte Konfiguration (alle Schluessel optional):
      * - debug (bool)
@@ -56,8 +67,13 @@ final class Kernel
             throw new RuntimeException('session_store muss ein SessionStore sein.');
         }
         $pdoProvider = self::pdoProvider($config);
+        $installerMode = (bool) ($config['installer_mode'] ?? false);
+        $appDir = $config['app_dir'] ?? dirname(__DIR__, 2);
+        $migrationDir = $config['migration_dir'] ?? $appDir . '/migrations';
         $texts = $config['texts'] ?? require dirname(__DIR__) . '/Text/de.php';
         $templates = $config['templates'] ?? dirname(__DIR__, 2) . '/templates';
+        $mailer = $config['mailer'] ?? new Mailer($config['smtp'] ?? []);
+        $resetService = new PasswordResetService($pdoProvider, $mailer, rtrim($config['base_url'] ?? '', '/'), $texts);
 
         $state = new RequestState();
         $view = Twig::create($templates, ['cache' => false, 'autoescape' => 'html']);
@@ -94,16 +110,23 @@ final class Kernel
         ));
         $env->addFilter(new TwigFilter('eur', [MoneyFormat::class, 'eur']));
         $env->addFunction(new TwigFunction(
+            'password_reset_available',
+            static fn (): bool => $resetService->isConfigured()
+        ));
+        $env->addFunction(new TwigFunction(
             'current_user',
             static fn (): ?array => $state->auth?->currentUser()
         ));
 
         // Ausfuehrung von aussen nach innen: Fehler, Session, Kontext, Body-Parsing, CSRF, Routing.
         $app->addRoutingMiddleware();
+        if (!$installerMode && ($config['maintenance'] ?? false)) {
+            $app->add(new Maintenance($pdoProvider, $migrationDir));
+        }
         $app->add(new Csrf($store, $view));
         $app->addBodyParsingMiddleware();
-        $app->add(function (Request $req, Handler $next) use ($state, $store, $view, $pdoProvider): Response {
-            $auth = new AuthService(new UserRepository($pdoProvider), $store);
+        $app->add(function (Request $req, Handler $next) use ($state, $store, $view, $pdoProvider, $installerMode): Response {
+            $auth = $installerMode ? null : new AuthService(new UserRepository($pdoProvider), $store);
             $state->auth = $auth;
             $state->path = $req->getUri()->getPath();
             return $next->handle(
@@ -118,11 +141,28 @@ final class Kernel
             return $res->withHeader('Content-Type', 'text/plain; charset=utf-8');
         });
 
+        if ($installerMode) {
+            $installer = new InstallController($appDir);
+            $app->get('/install', [$installer, 'show']);
+            $app->post('/install', [$installer, 'install']);
+            $app->map(['GET', 'POST'], '/{path:.*}', static fn (Request $req, Response $res): Response =>
+                $res->withStatus(302)->withHeader('Location', '/install'));
+            return $app;
+        }
+        $updater = new UpdateController($pdoProvider, $migrationDir);
+        $app->get('/update', [$updater, 'show'])->add(Auth::requires('settings.manage'));
+        $app->post('/update', [$updater, 'update'])->add(Auth::requires('settings.manage'));
+
         $auth = new AuthController();
         $app->get('/', [$auth, 'home'])->add(Auth::authenticated());
         $app->get('/login', [$auth, 'showLogin']);
         $app->post('/login', [$auth, 'login']);
         $app->post('/logout', [$auth, 'logout']);
+        $resets = new PasswordResetController($resetService);
+        $app->get('/password-reset', [$resets, 'showRequest']);
+        $app->post('/password-reset', [$resets, 'request']);
+        $app->get('/password-reset/{token}', [$resets, 'showConfirm']);
+        $app->post('/password-reset/{token}', [$resets, 'confirm']);
 
         $accounts = new AccountController($pdoProvider);
         $app->get('/accounts', [$accounts, 'index'])->add(Auth::requires('bookings.read'));

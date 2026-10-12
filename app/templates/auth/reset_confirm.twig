@@ -1,0 +1,30 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('reset.title') }}{% endblock %}
+{% block content %}
+<div class="card card-md"><div class="card-body">
+    <h1 class="h2">{{ t('reset.title') }}</h1>
+    {% if done %}
+    <p role="status">{{ t('reset.done') }}</p>
+    {% elseif not configured %}
+    <p role="status">{{ t('reset.disabled') }}</p>
+    {% elseif not valid %}
+    <p role="alert">{{ t('reset.invalid') }}</p>
+    <a class="btn btn-link w-100" href="/password-reset">{{ t('reset.request') }}</a>
+    {% else %}
+    <form method="post" action="/password-reset/{{ token }}">
+        {{ csrf_field() }}
+        {% for field, label in {'password': 'reset.password', 'confirmation': 'reset.confirmation'} %}
+        <div class="mb-3">
+            <label class="form-label" for="{{ field }}">{{ t(label) }}</label>
+            <input type="password" class="form-control{% if errors[field] is defined %} is-invalid{% endif %}"
+                   id="{{ field }}" name="{{ field }}" autocomplete="new-password" required minlength="10"
+                   {% if errors[field] is defined %}aria-invalid="true" aria-describedby="{{ field }}-error"{% endif %}>
+            {% if errors[field] is defined %}<div class="invalid-feedback" id="{{ field }}-error">{{ t(errors[field]) }}</div>{% endif %}
+        </div>
+        {% endfor %}
+        <button class="btn btn-primary w-100" type="submit">{{ t('reset.save') }}</button>
+    </form>
+    {% endif %}
+    <a class="btn btn-link w-100 mt-2" href="/login">{{ t('reset.login') }}</a>
+</div></div>
+{% endblock %}

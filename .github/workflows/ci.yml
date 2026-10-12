@@ -1,0 +1,44 @@
+name: Tests and release
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.1', '8.4']
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: vereinskiste_test
+          POSTGRES_USER: vk
+          POSTGRES_PASSWORD: vk
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U vk -d vereinskiste_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      VK_TEST_DSN: pgsql:host=127.0.0.1;dbname=vereinskiste_test
+      VK_TEST_USER: vk
+      VK_TEST_PASS: vk
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '${{ matrix.php }}'
+          extensions: pdo_pgsql, mbstring, fileinfo, gd, openssl, zip
+          tools: composer:v2
+          coverage: none
+      - run: composer validate --strict --working-dir=app
+      - run: composer install --working-dir=app --prefer-dist --no-interaction
+      - run: cd app && vendor/bin/phpunit
+      - run: sh scripts/build-release.sh ci
+      - uses: actions/upload-artifact@v4
+        if: matrix.php == '8.4'
+        with:
+          name: vereinskiste-release
+          path: dist/vereinskiste-ci.zip

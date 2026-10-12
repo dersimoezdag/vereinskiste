@@ -15,7 +15,7 @@ final class AuditLog
     public const ACTIONS = [
         'login', 'login_failed', 'period_closed', 'period_reopened',
         'user_created', 'user_updated', 'user_deactivated', 'user_activated',
-        'user_password_reset', 'password_changed',
+        'user_password_reset', 'password_changed', 'password_reset_completed',
     ];
 
     /** Aktionen, deren Details nie angezeigt werden (keine Personendaten im Protokoll-Bildschirm). */

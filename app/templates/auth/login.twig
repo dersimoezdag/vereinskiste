@@ -17,6 +17,9 @@
             </div>
             <button type="submit" class="btn btn-primary w-100">{{ t('auth.login.submit') }}</button>
         </form>
+        {% if password_reset_available() %}
+        <a class="btn btn-link w-100 mt-2" href="/password-reset">{{ t('reset.title') }}</a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

@@ -225,16 +225,16 @@ final class UsersPagesTest extends TestCase
         $this->assertNotNull($this->row('erika@example.org'));
     }
 
-    public function test_password_longer_than_200_characters_is_rejected(): void
+    public function test_password_above_bcrypt_byte_limit_is_rejected(): void
     {
         $this->loginAs(['vorstand']);
 
         $res = $this->postForm('/users/new', $this->newUser(['password' => str_repeat('a', 201)]));
         $this->assertSame(422, $res->getStatusCode());
-        $this->assertStringContainsString('höchstens 200 Zeichen', $this->body($res));
+        $this->assertStringContainsString('höchstens 72 Bytes', $this->body($res));
         $this->assertNull($this->row('erika@example.org'));
 
-        $res = $this->postForm('/users/new', $this->newUser(['password' => str_repeat('a', 200)]));
+        $res = $this->postForm('/users/new', $this->newUser(['password' => str_repeat('a', 72)]));
         $this->assertSame(302, $res->getStatusCode());
     }
 

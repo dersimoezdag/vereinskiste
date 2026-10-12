@@ -1,0 +1,21 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('update.title') }}{% endblock %}
+{% block content %}
+<h1>{{ t('update.title') }}</h1>
+{% if error %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endif %}
+{% if done %}<p class="alert alert-success" role="status">{{ t('update.done') }}</p>{% endif %}
+{% if not compatible %}
+<p class="alert alert-danger" role="alert">{{ t('update.incompatible') }}</p>
+{% elseif pending %}
+<p>{{ t('update.instructions') }}</p>
+<form method="post" action="/update">
+    {{ csrf_field() }}
+    <label class="form-check mb-3" for="backup">
+        <input class="form-check-input" id="backup" type="checkbox" name="backup_confirmed" value="1" required>
+        <span class="form-check-label">{{ t('update.backup') }}</span>
+    </label>
+    <button class="btn btn-primary" type="submit">{{ t('update.run') }}</button>
+</form>
+{% else %}<p>{{ t('update.current') }}</p>{% endif %}
+<a class="btn btn-link" href="/">{{ t('nav.home') }}</a>
+{% endblock %}

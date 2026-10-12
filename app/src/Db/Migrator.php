@@ -6,6 +6,7 @@ namespace Vereinskiste\Db;
 use PDO;
 use RuntimeException;
 use Throwable;
+use Vereinskiste\Ledger\Transaction;
 
 final class Migrator
 {
@@ -16,22 +17,28 @@ final class Migrator
     /** @return string[] Namen der angewendeten Migrationen, in Reihenfolge */
     public function migrate(): array
     {
+        if ($this->pdo->inTransaction()) {
+            return $this->apply();
+        }
+        // Die Versionstabelle bleibt fuer Diagnose und vorhandene Aufrufer erhalten.
+        $this->ensureTable();
+        return Transaction::run($this->pdo, fn (): array => $this->apply());
+    }
+
+    private function apply(): array
+    {
+        $this->pdo->query('SELECT pg_advisory_xact_lock(7340164)');
         $applied = [];
         foreach ($this->pending() as $name) {
             $sql = file_get_contents($this->dir . '/' . $name);
             if ($sql === false) {
                 throw new RuntimeException("Migration nicht lesbar: $name");
             }
-            $this->pdo->beginTransaction();
             try {
                 $this->pdo->exec($sql);
                 $stmt = $this->pdo->prepare('INSERT INTO schema_migrations (name, applied_at) VALUES (?, now())');
                 $stmt->execute([$name]);
-                $this->pdo->commit();
             } catch (Throwable $e) {
-                if ($this->pdo->inTransaction()) {
-                    $this->pdo->rollBack();
-                }
                 throw new RuntimeException("Migration $name fehlgeschlagen: " . $e->getMessage(), 0, $e);
             }
             $applied[] = $name;

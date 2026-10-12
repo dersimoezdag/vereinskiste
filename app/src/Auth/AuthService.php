@@ -8,6 +8,7 @@ use Vereinskiste\Http\Session\SessionStore;
 final class AuthService
 {
     private const SESSION_KEY = 'user_id';
+    private const CREDENTIAL_KEY = 'credential_hash';
 
     /** Konstanter bcrypt-Hash (Kosten wie PASSWORD_DEFAULT) eines nie verwendeten Zufallswerts. */
     public const DUMMY_HASH = '$2y$10$E1ElUVLN9s.OyRQfnUC0me7r6fY54NmksPdFE1W3Aaaa9Beict24i';
@@ -44,12 +45,14 @@ final class AuthService
         }
 
         if (password_needs_rehash($hash, PASSWORD_DEFAULT)) {
-            $this->users->updatePasswordHash($user['id'], password_hash($password, PASSWORD_DEFAULT));
+            $hash = password_hash($password, PASSWORD_DEFAULT);
+            $this->users->updatePasswordHash($user['id'], $hash);
         }
 
         $this->session->regenerate();
         $this->session->remove('csrf');
         $this->session->set(self::SESSION_KEY, $user['id']);
+        $this->session->set(self::CREDENTIAL_KEY, hash('sha256', $hash));
         $this->users->audit('login', $user['id']);
         $this->current = false;
 
@@ -81,7 +84,9 @@ final class AuthService
         if ($user === null) {
             return false;
         }
-        $this->users->updatePasswordHash($user['id'], password_hash($new, PASSWORD_DEFAULT));
+        $hash = password_hash($new, PASSWORD_DEFAULT);
+        $this->users->updatePasswordHash($user['id'], $hash);
+        $this->session->set(self::CREDENTIAL_KEY, hash('sha256', $hash));
         $this->session->regenerate();
         $this->session->remove('csrf');
         $this->users->audit('password_changed', $user['id']);
@@ -108,12 +113,15 @@ final class AuthService
         $id = $this->session->get(self::SESSION_KEY);
         if (is_int($id)) {
             $user = $this->users->findById($id);
-            if ($user !== null && $user['active']) {
+            $credential = $this->session->get(self::CREDENTIAL_KEY);
+            if ($user !== null && $user['active'] && is_string($credential)
+                && hash_equals(hash('sha256', $user['password_hash']), $credential)) {
                 unset($user['password_hash']);
                 $user['permissions'] = Permissions::for($user['roles']);
                 $this->current = $user;
             } else {
                 $this->session->remove(self::SESSION_KEY);
+                $this->session->remove(self::CREDENTIAL_KEY);
             }
         }
         return $this->current;

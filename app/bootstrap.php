@@ -11,6 +11,9 @@ use Vereinskiste\Http\Kernel;
 function vk_create_app(): \Slim\App
 {
     $file = __DIR__ . '/config/config.php';
+    if (!is_file($file)) {
+        return Kernel::createInstaller();
+    }
     $config = is_file($file) ? require $file : [];
-    return Kernel::create(is_array($config) ? $config : []);
+    return Kernel::create((is_array($config) ? $config : []) + ['maintenance' => true]);
 }

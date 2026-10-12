@@ -1,0 +1,23 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('reset.title') }}{% endblock %}
+{% block content %}
+<div class="card card-md"><div class="card-body">
+    <h1 class="h2">{{ t('reset.title') }}</h1>
+    {% if not configured %}
+    <p role="status">{{ t('reset.disabled') }}</p>
+    {% elseif sent %}
+    <p role="status">{{ t('reset.sent') }}</p>
+    {% else %}
+    <p>{{ t('reset.instructions') }}</p>
+    <form method="post" action="/password-reset">
+        {{ csrf_field() }}
+        <div class="mb-3">
+            <label class="form-label" for="email">{{ t('auth.login.email') }}</label>
+            <input class="form-control" type="email" id="email" name="email" autocomplete="username" required>
+        </div>
+        <button class="btn btn-primary w-100" type="submit">{{ t('reset.request') }}</button>
+    </form>
+    {% endif %}
+    <a class="btn btn-link w-100 mt-2" href="/login">{{ t('reset.login') }}</a>
+</div></div>
+{% endblock %}

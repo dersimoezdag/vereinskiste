@@ -1,5 +1,46 @@
 /* Eigene Styles der Vereinskiste (ergaenzen Tabler). */
 
+:focus-visible {
+    outline: 3px solid #005fcc;
+    outline-offset: 3px;
+}
+
+.skip-link {
+    position: fixed;
+    top: 0;
+    left: 1rem;
+    z-index: 1100;
+    padding: 0.75rem 1rem;
+    background: #fff;
+    color: #005fcc;
+    transform: translateY(-150%);
+}
+
+.skip-link:focus {
+    transform: translateY(0);
+}
+
+.page-wrapper, .flex-grow-1 {
+    min-width: 0;
+}
+
+main, .table-cards td {
+    overflow-wrap: anywhere;
+}
+
+.form-check {
+    padding-left: 0;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-check .form-check-input {
+    margin-left: 0;
+    flex-shrink: 0;
+}
+
 /* Touch-Ziele mindestens 44 px */
 .btn,
 .form-control,

@@ -8,11 +8,12 @@
     <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body>
+<a class="skip-link" href="#main-content">{{ t('nav.skip') }}</a>
 {% set user = current_user() %}
 {% set path = current_path() %}
 <div class="page{% if not user %} page-center{% endif %}">
     {% if user %}
-    <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+    <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark" aria-label="{{ t('nav.main') }}">
         <div class="container-fluid">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu"
                     aria-controls="sidebar-menu" aria-expanded="false" aria-label="{{ t('nav.toggle') }}">
@@ -41,6 +42,9 @@
                     </li>
                     {% endif %}
                     {% if can('settings.manage') %}
+                    <li class="nav-item{% if path == '/update' %} active{% endif %}">
+                        <a class="nav-link" href="/update"><span class="nav-link-title">{{ t('update.title') }}</span></a>
+                    </li>
                     <li class="nav-item{% if path starts with '/settings/closing' %} active{% endif %}">
                         <a class="nav-link" href="/settings/closing"><span class="nav-link-title">{{ t('nav.closing') }}</span></a>
                     </li>
@@ -67,13 +71,13 @@
     </aside>
     {% endif %}
     <div class="page-wrapper">
-        <div class="page-body">
+        <main class="page-body" id="main-content" tabindex="-1">
             <div class="{% if user %}container-xl{% else %}container-tight py-4{% endif %}">
                 {% set message = flash() %}
                 {% if message %}<div class="alert alert-success" role="status">{{ message }}</div>{% endif %}
                 {% block content %}{% endblock %}
             </div>
-        </div>
+        </main>
     </div>
 </div>
 <script src="/assets/vendor/tabler/tabler.min.js"></script>
