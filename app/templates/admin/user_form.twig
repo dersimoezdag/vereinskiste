@@ -74,7 +74,16 @@
     </div>
 </div>
 
-{% if editing %}
+{% if editing and user_id == me %}
+<div class="card">
+    <div class="card-header"><h2 class="card-title">{{ t('account.password.title') }}</h2></div>
+    <div class="card-body">
+        {% if password_error is not null %}<div class="alert alert-danger" role="alert">{{ t(password_error) }}</div>{% endif %}
+        <p class="text-secondary">{{ t('users.password.self_hint') }}</p>
+        <a class="btn" href="/account/password">{{ t('account.password.title') }}</a>
+    </div>
+</div>
+{% elseif editing %}
 <div class="card">
     <div class="card-header"><h2 class="card-title">{{ t('users.password.reset.title') }}</h2></div>
     <div class="card-body">

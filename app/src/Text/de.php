@@ -343,6 +343,11 @@ return [
     'users.password.reset.title' => 'Neues Passwort vergeben',
     'users.password.reset.help' => 'Das Passwort wird sofort gesetzt. Geben Sie es dem Benutzer auf sicherem Weg weiter; bereits angemeldete Sitzungen des Benutzers bleiben bis zur Abmeldung bestehen.',
     'users.password.reset.submit' => 'Passwort setzen',
+    'users.password.self_hint' => 'Ihr eigenes Passwort ändern Sie mit Eingabe des aktuellen Passworts.',
+    'users.field.name' => 'Name',
+    'users.field.email' => 'E-Mail-Adresse',
+    'users.field.roles' => 'Rollen',
+    'users.field.active' => 'Aktiv-Status',
     'users.flash.created' => 'Der Benutzer wurde angelegt.',
     'users.flash.updated' => 'Die Änderungen wurden gespeichert.',
     'users.flash.password_reset' => 'Das Passwort wurde gesetzt.',
@@ -368,5 +373,6 @@ return [
     'validation.password.same_as_name' => 'Das Passwort darf nicht mit dem Namen übereinstimmen.',
     'validation.password.same_as_current' => 'Das neue Passwort muss sich vom aktuellen unterscheiden.',
     'validation.password.mismatch' => 'Die beiden neuen Passwörter stimmen nicht überein.',
+    'validation.password.self_reset' => 'Das eigene Passwort kann hier nicht gesetzt werden. Nutzen Sie „Passwort ändern“ (mit Eingabe des aktuellen Passworts).',
     'validation.password.current_wrong' => 'Das aktuelle Passwort ist falsch.',
 ];

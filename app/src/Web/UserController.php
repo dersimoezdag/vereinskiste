@@ -153,8 +153,11 @@ final class UserController extends AdminController
             return $this->notFound($req);
         }
 
+        // Das eigene Passwort nur ueber /account/password: dort gilt die Pruefung des aktuellen Passworts.
         $password = $this->raw($this->body($req), 'password');
-        $error = PasswordPolicy::check($password, $user['email'], $user['name']);
+        $error = $id === $this->actorId($req)
+            ? 'validation.password.self_reset'
+            : PasswordPolicy::check($password, $user['email'], $user['name']);
         if ($error === null) {
             try {
                 $repo->resetPassword($id, password_hash($password, PASSWORD_DEFAULT), $this->actorId($req));

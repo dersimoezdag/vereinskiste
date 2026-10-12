@@ -582,6 +582,40 @@ final class UsersPagesTest extends TestCase
         $this->secondBrowser('karl@example.org', 'ganz-neues-passwort');
     }
 
+    public function test_admin_route_cannot_be_used_to_reset_the_own_password(): void
+    {
+        $me = $this->loginAs(['vorstand'], 'chef@example.org', 'Clara Chef');
+        $oldHash = $this->row('chef@example.org')['password_hash'];
+
+        $res = $this->postForm("/users/$me/password", ['password' => 'ganz-neues-passwort']);
+
+        $this->assertSame(422, $res->getStatusCode());
+        $this->assertStringContainsString('/account/password', $this->body($res));
+        $this->assertSame($oldHash, $this->row('chef@example.org')['password_hash']);
+        $this->assertSame([], $this->audit('user_password_reset'));
+
+        // Die Bearbeitungsseite bietet fuer das eigene Konto keinen Reset an, sondern verweist auf den eigenen Weg.
+        $html = $this->body($this->get("/users/$me/edit"));
+        $this->assertStringNotContainsString('action="/users/' . $me . '/password"', $html);
+        $this->assertStringContainsString('href="/account/password"', $html);
+    }
+
+    public function test_audit_log_shows_german_labels_for_user_changes(): void
+    {
+        $this->loginAs(['vorstand']);
+        $id = $this->webUser('karl@example.org', ['kassenwart'], 'Karl Kasse');
+        $this->postForm("/users/$id/edit", [
+            'name' => 'Karl Kasse', 'email' => 'karl@example.org', 'active' => '1', 'roles' => ['kassenwart', 'kassenpruefer'],
+        ]);
+
+        $html = $this->body($this->get('/audit-log'));
+
+        $this->assertStringContainsString('Benutzer geändert', $html);
+        $this->assertStringContainsString('Kassenprüfer', $html);
+        $this->assertStringContainsString('Rollen', $html);
+        $this->assertStringNotContainsString('kassenpruefer', $html);
+    }
+
     public function test_admin_password_reset_enforces_the_password_rules(): void
     {
         $this->loginAs(['vorstand']);

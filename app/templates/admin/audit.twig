@@ -39,7 +39,7 @@
                             {% for d in entry.detail %}
                             <li>
                                 <strong>{{ t('audit.detail.' ~ d.key) }}:</strong>
-                                {% if d.value is null or d.value == '' %}–{% elseif d.is_date %}{{ d.value|date('d.m.Y') }}{% else %}{{ d.value }}{% endif %}
+                                {% if d.value is null or d.value == '' %}–{% elseif d.key in ['roles', 'roles_added', 'roles_removed'] %}{% for r in d.value|split(', ') %}{{ t('users.role.' ~ r) }}{% if not loop.last %}, {% endif %}{% endfor %}{% elseif d.key == 'fields' %}{% for f in d.value|split(', ') %}{{ t('users.field.' ~ f) }}{% if not loop.last %}, {% endif %}{% endfor %}{% elseif d.is_date %}{{ d.value|date('d.m.Y') }}{% else %}{{ d.value }}{% endif %}
                             </li>
                             {% endfor %}
                         </ul>
