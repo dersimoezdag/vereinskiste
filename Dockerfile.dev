@@ -1,5 +1,6 @@
 # Nur Entwicklung, nie Teil des Release.
-FROM php:8.4-cli
+ARG DEV_PHP_VERSION=8.4
+FROM php:${DEV_PHP_VERSION}-cli
 RUN apt-get update && apt-get install -y --no-install-recommends \
       git unzip libpq-dev libpng-dev libjpeg-dev libfreetype6-dev libicu-dev libzip-dev libonig-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \

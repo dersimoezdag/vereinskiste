@@ -204,6 +204,30 @@ final class AuthPagesTest extends TestCase
         $this->assertNotSame(AuthService::DUMMY_HASH, $calls[0]);
     }
 
+    public function test_pre_upgrade_hashes_have_comparable_failed_login_time_and_still_rehash_on_success(): void
+    {
+        $id = $this->user('old@example.org', 'richtig-richtig', ['vorstand']);
+        $stmt = $this->pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
+        $stmt->execute([password_hash('richtig-richtig', PASSWORD_BCRYPT, ['cost' => 10]), $id]);
+        $old = $unknown = [];
+        for ($i = 0; $i < 3; $i++) {
+            $start = microtime(true);
+            $this->assertSame(401, $this->login('old@example.org', 'wrong')->getStatusCode());
+            $old[] = microtime(true) - $start;
+            $start = microtime(true);
+            $this->assertSame(401, $this->login('unknown@example.org', 'wrong')->getStatusCode());
+            $unknown[] = microtime(true) - $start;
+        }
+        sort($old); sort($unknown);
+        $ratio = $old[1] / $unknown[1];
+        $this->assertGreaterThan(0.4, $ratio, 'Alte Konten duerfen nicht viermal schneller erkennbar sein');
+        $this->assertLessThan(2.5, $ratio);
+        $this->assertSame(302, $this->login('old@example.org', 'richtig-richtig')->getStatusCode());
+        $hash = $this->pdo->query('SELECT password_hash FROM users')->fetchColumn();
+        $this->assertFalse(password_needs_rehash($hash, PASSWORD_DEFAULT));
+        $this->assertTrue(password_verify('richtig-richtig', $hash));
+    }
+
     public function test_unauthenticated_request_is_redirected_to_login(): void
     {
         $res = $this->get('/_test/bookings');

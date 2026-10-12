@@ -40,10 +40,20 @@ final class AuthService
             throw new TooManyAttempts('Zu viele Anmeldeversuche.');
         }
         $user = $this->users->findByEmail(trim($email));
-        // Immer genau eine Hash-Pruefung (unbekannter Nutzer: gegen den konstanten
-        // Dummy-Hash gleicher Kosten, ohne neues Hashing), damit die Antwortzeit nichts verraet.
+        // Unbekannte Konten und aktuelle bcrypt-Hashes haben denselben Arbeitsfaktor.
         $hash = $user['password_hash'] ?? self::DUMMY_HASH;
         $verified = ($this->verifier)($password, $hash);
+        $info = password_get_info($hash);
+        $cost = $info['options']['cost'] ?? 12;
+        if ($info['algoName'] === 'bcrypt' && is_int($cost) && $cost >= 4 && $cost < 12) {
+            // Bestehende Hashes beim PHP-Upgrade haben ggf. geringere Kosten.
+            // Fehlende bcrypt-Runden ergaenzen, ohne das Passwort wissen zu
+            // muessen; danach wie bisher erst bei erfolgreichem Login rehashen.
+            $workHash = substr_replace(self::DUMMY_HASH, sprintf('%02d', $cost), 4, 2);
+            for ($i = 1, $rounds = 1 << (12 - $cost); $i < $rounds; $i++) {
+                ($this->verifier)($password, $workHash);
+            }
+        }
 
         if ($user === null || !$verified || !$user['active']) {
             $this->users->audit('login_failed', null);
