@@ -222,6 +222,24 @@ final class BookingsPagesTest extends TestCase
         $this->assertStringContainsString('R-7', $html);
     }
 
+    public function test_date_before_account_opening_is_422_with_german_message_naming_the_date(): void
+    {
+        $this->loginAs(['kassenwart']);
+        $account = $this->account(); // Eroeffnungsdatum 2026-01-01
+
+        $res = $this->post('/bookings/new', [
+            '_csrf' => $this->csrf(), 'account_id' => (string) $account, 'booking_date' => '2025-12-31',
+            'amount' => '5', 'direction' => 'in', 'category_id' => '', 'description' => 'Zu frueh',
+            'counterparty' => '', 'receipt_no' => '',
+        ]);
+        $html = (string) $res->getBody();
+
+        $this->assertSame(422, $res->getStatusCode());
+        $this->assertStringContainsString('nicht vor dem Eröffnungsdatum des Kontos (01.01.2026)', $html);
+        $this->assertStringContainsString('value="2025-12-31"', $html);
+        $this->assertSame(0, (int) $this->pdo->query('SELECT count(*) FROM bookings')->fetchColumn());
+    }
+
     public function test_invalid_form_rerenders_with_422_and_keeps_input(): void
     {
         $this->loginAs(['kassenwart']);

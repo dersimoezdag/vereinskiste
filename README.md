@@ -48,6 +48,9 @@ Die Anwendung wird direkt unter einer Domain betrieben, etwa
    kann ein anderer Vorstand ein vergessenes Passwort zurücksetzen.
 7. Nach erfolgreicher Einrichtung anmelden. Weitere Benutzer, Konten und
    Kategorien anlegen. Es wird kein Cronjob benötigt.
+   Der Anfangssaldo eines Kontos gilt zum Eröffnungsdatum; Buchungen und
+   Umbuchungen davor werden abgelehnt. Das Eröffnungsdatum daher auf den Tag
+   des ersten Eintrags (oder früher) setzen.
 
 Nur `public/` darf öffentlich erreichbar sein. Die Konfiguration enthält
 Datenbank- und gegebenenfalls SMTP-Zugangsdaten; Belege liegen unter

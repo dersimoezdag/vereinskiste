@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Vereinskiste\Ledger;
 
 use PDO;
+use Vereinskiste\Text\Message;
 
 /**
  * Umbuchung zwischen zwei eigenen Konten: zwei verknuepfte Buchungen (Ausgabe auf dem Quell-,
@@ -22,7 +23,8 @@ final class TransferService
 
     /**
      * @return list<array<string,mixed>> [Ausgabe auf dem Quellkonto, Einnahme auf dem Zielkonto]
-     * @throws ValidationError Schluessel from_account_id, to_account_id, amount, booking_date, description
+     * @throws ValidationError Schluessel from_account_id, to_account_id, amount, booking_date
+     *                         (auch: Datum vor dem Eroeffnungsdatum eines der Konten), description
      * @throws ClosedPeriod wenn das Datum im abgeschlossenen Zeitraum liegt
      */
     public function create(
@@ -35,10 +37,13 @@ final class TransferService
     ): array {
         $errors = [];
         $accounts = new AccountRepository($this->pdo);
+        $latestOpening = null;
         foreach (['from_account_id' => $fromAccountId, 'to_account_id' => $toAccountId] as $key => $accountId) {
             $account = $accountId > 0 ? $accounts->find($accountId) : null;
             if ($account === null || !$account['active']) {
                 $errors[$key] = 'validation.booking.account';
+            } elseif ($latestOpening === null || $account['opening_date'] > $latestOpening) {
+                $latestOpening = $account['opening_date'];
             }
         }
         if ($errors === [] && $fromAccountId === $toAccountId) {
@@ -53,6 +58,9 @@ final class TransferService
         }
         if (!DateInput::valid($date)) {
             $errors['booking_date'] = 'validation.date.invalid';
+        } elseif ($errors === [] && $latestOpening !== null && $date < $latestOpening) {
+            // Beide Konten: das Datum darf vor keinem der Eroeffnungsdaten liegen (genannt wird das spaetere).
+            $errors['booking_date'] = Message::withParam('validation.transfer.before_opening', $latestOpening);
         }
         $description = trim($description);
         $error = BookingService::textError(

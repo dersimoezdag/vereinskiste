@@ -238,6 +238,8 @@ return [
     'validation.reason.too_long' => 'Der Grund darf höchstens 500 Zeichen lang sein.',
     'validation.correction.original' => 'Die Buchung, auf die sich die Korrektur bezieht, gibt es nicht.',
     'validation.transfer.same_account' => 'Bitte wählen Sie zwei verschiedene Konten.',
+    'validation.booking.before_opening' => 'Das Buchungsdatum darf nicht vor dem Eröffnungsdatum des Kontos ({0}) liegen.',
+    'validation.transfer.before_opening' => 'Das Buchungsdatum darf nicht vor dem Eröffnungsdatum der Konten ({0}) liegen.',
     'validation.booking.account' => 'Bitte wählen Sie ein aktives Konto.',
     'validation.booking.category' => 'Bitte wählen Sie eine aktive Kategorie oder keine.',
     'validation.booking.amount' => 'Bitte geben Sie einen Betrag größer als 0 mit höchstens zwei Nachkommastellen an (bis 9.999.999,99).',

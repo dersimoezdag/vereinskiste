@@ -62,6 +62,9 @@ final class AccountRepository
      * Saldo = Anfangssaldo + Einnahmen - Ausgaben ueber alle aktiven Buchungen
      * (Umbuchungen zaehlen mit, stornierte nicht). Es zaehlen nur Buchungen ab
      * dem Eroeffnungsdatum des Kontos (der Anfangssaldo gilt zu diesem Tag).
+     * Der Filter `booking_date >= opening_date` bleibt als Schutz erhalten: BookingService und
+     * TransferService lehnen Buchungen davor ab; solche Zeilen koennen
+     * nur noch aus aelteren Daten stammen (neue Daten enthalten sie nicht mehr).
      * `$asOf` (YYYY-MM-DD) ist inklusive; davor liegende Stichtage ergeben den Anfangssaldo.
      *
      * @return string Betrag mit zwei Nachkommastellen, z. B. "125.15"

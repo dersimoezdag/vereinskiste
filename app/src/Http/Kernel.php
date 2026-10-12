@@ -14,6 +14,7 @@ use Slim\Factory\AppFactory;
 use Slim\Views\Twig;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
+use Vereinskiste\Text\Message;
 use Vereinskiste\Auth\AuthService;
 use Vereinskiste\Auth\PasswordResetService;
 use Vereinskiste\Mail\Mailer;
@@ -80,7 +81,7 @@ final class Kernel
         $env = $view->getEnvironment();
         $env->addFunction(new TwigFunction(
             't',
-            static fn (string $key): string => $texts[$key] ?? $key
+            static fn (string $key): string => Message::resolve($texts, $key)
         ));
         $env->addFunction(new TwigFunction(
             'csrf_field',

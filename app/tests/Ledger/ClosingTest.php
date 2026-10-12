@@ -95,6 +95,8 @@ final class ClosingTest extends TestCase
     public function test_nothing_is_closed_by_default(): void
     {
         $this->assertNull($this->closing->closedUntil());
+        // Ohne Abschluss ist jedes Datum erlaubt, das nicht vor dem Eroeffnungsdatum des Kontos liegt.
+        $this->pdo->exec("UPDATE accounts SET opening_date = '2019-01-01'");
         $this->assertSame('2020-01-01', $this->booking('2020-01-01')['booking_date']);
     }
 

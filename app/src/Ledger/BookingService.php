@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Vereinskiste\Ledger;
 
 use PDO;
+use Vereinskiste\Text\Message;
 
 /**
  * Anlegen und Aendern einzelner Buchungen. Jede Aenderung (Felder, Storno, Ruecknahme) erhoeht
@@ -242,6 +243,7 @@ final class BookingService
         $id = static fn (string $value): ?int => preg_match('/^[1-9]\d{0,17}\z/', $value) === 1 ? (int) $value : null;
 
         $accountId = $id($str('account_id'));
+        $account = null;
         if ($accountId === null || $accountId !== ($current['account_id'] ?? null)) {
             $account = $accountId === null ? null : (new AccountRepository($this->pdo))->find($accountId);
             if ($account === null || !$account['active']) {
@@ -263,6 +265,14 @@ final class BookingService
         $date = $str('booking_date');
         if (!DateInput::valid($date)) {
             $errors['booking_date'] = 'validation.date.invalid';
+        } elseif ($accountId !== null && !isset($errors['account_id'])
+            && ($current === null || $accountId !== $current['account_id'] || $date !== $current['booking_date'])) {
+            // Fachregel: nicht vor dem Eroeffnungsdatum des Kontos. Bei Aenderungen nur, wenn Konto oder
+            // Datum geaendert werden (aeltere Buchungen vor dem Eroeffnungsdatum bleiben bearbeitbar).
+            $account ??= (new AccountRepository($this->pdo))->find($accountId);
+            if ($account !== null && $date < $account['opening_date']) {
+                $errors['booking_date'] = Message::withParam('validation.booking.before_opening', $account['opening_date']);
+            }
         }
 
         $amount = null;
