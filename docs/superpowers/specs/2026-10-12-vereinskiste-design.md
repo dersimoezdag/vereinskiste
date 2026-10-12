@@ -1,6 +1,6 @@
 # Vereinskiste – Entwurf
 
-Stand: 2026-10-12 · Status: freigegeben durch Auftraggeber am 2026-10-12 (Frontend: React + MUI)
+Stand: 2026-10-12 · Status: freigegeben durch Auftraggeber am 2026-10-12 (Frontend: serverseitig, responsiv)
 
 ## 1. Worum es geht
 
@@ -155,16 +155,15 @@ Entscheidungen des Entwurfsautors, die der Builder begründet ändern darf.
    Systemprüfung (PHP-Version, Extensions, Schreibrechte, DB-Verbindung) und
    Update-Lauf mit Migrationen.
 4. **Eine Installation pro Verein**, kein Mandantenmodell.
-5. **Anwendung (Auftraggeber-Entscheidung, 2026-10-12):** modernes Design mit
-   **React und MUI (Material UI)** als Frontend. Das Frontend wird **lokal bzw.
-   in der CI gebaut**; auf dem Server liegen nur die fertigen statischen
-   Dateien. Node ist damit nur Entwicklungswerkzeug und wird auf dem Server
-   nicht gebraucht. Das Backend ist ein schlankes PHP-Backend (kleines
-   Framework oder Komponenten für Routing, Validierung, DB-Zugriff), das eine
-   JSON-API, Session-Authentifizierung und geschützte Datei-Downloads
-   bereitstellt. Kein Zwang zu Laravel. Konsequenz: Mitwirkende brauchen Node
-   für die Frontend-Entwicklung; das Release-Paket ist der unterstützte Weg
-   für Verein-Admins.
+5. **Anwendung (Auftraggeber-Entscheidung, 2026-10-12):** modernes,
+   **responsives und mobilfreundliches** Design. Umsetzung **serverseitig
+   gerendert** (PHP + Twig-Templates) mit einem modernen CSS-Kit (Tabler,
+   gebündelt, kein Build-Schritt) und nur minimalem JavaScript. Ein
+   React/MUI-Frontend wurde erwogen und verworfen: zwei Technologiewelten,
+   Build-Pflicht und Wartungslast stehen in keinem Verhältnis zum Nutzen.
+   Das Backend ist ein schlankes PHP-Backend (Slim 4) mit Sessions und
+   geschützten Datei-Downloads. Kein Zwang zu Laravel. Node wird weder auf dem
+   Server noch zur Entwicklung gebraucht.
 6. **Auslieferung:** Abhängigkeiten werden beim Release gebündelt
    (`vendor/` im Release-Paket), damit Upload per FTP genügt.
 7. **Belege:** außerhalb des Webroots abgelegt, Zugriff nur über die
