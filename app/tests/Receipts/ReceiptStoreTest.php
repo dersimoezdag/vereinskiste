@@ -6,6 +6,7 @@ namespace Vereinskiste\Tests\Receipts;
 use PDO;
 use Vereinskiste\Db\Migrator;
 use Vereinskiste\Ledger\BookingNotFound;
+use Vereinskiste\Ledger\BookingRepository;
 use Vereinskiste\Ledger\BookingService;
 use Vereinskiste\Ledger\ValidationError;
 use Vereinskiste\Receipts\ReceiptNotFound;
@@ -275,5 +276,52 @@ final class ReceiptStoreTest extends TestCase
 
         $r = $this->store()->add($this->bookingId, $this->tmpFile($this->pdfBytes()), '', $this->userId);
         $this->assertSame('beleg.pdf', $r['original_name']);
+    }
+
+    public function test_rejects_blank_directory(): void
+    {
+        foreach (['', '   '] as $dir) {
+            try {
+                new ReceiptStore($this->pdo, $dir);
+                $this->fail('InvalidArgumentException erwartet');
+            } catch (\InvalidArgumentException) {
+                $this->addToAssertionCount(1);
+            }
+        }
+    }
+
+    public function test_rejects_svg_renamed_to_png(): void
+    {
+        $svg = '<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><script>alert(1)</script></svg>';
+        $this->assertRejected($this->tmpFile($svg, 'logo.png'), 'logo.png', 'validation.receipt.type');
+    }
+
+    public function test_add_without_log_change_writes_no_history_entry(): void
+    {
+        $r = $this->store()->add($this->bookingId, $this->tmpFile($this->pdfBytes()), 'a.pdf', $this->userId, false);
+
+        $this->assertSame(1, (int) $this->pdo->query('SELECT count(*) FROM receipts')->fetchColumn());
+        $this->assertSame(0, (int) $this->pdo->query('SELECT count(*) FROM booking_changes')->fetchColumn());
+        $this->assertFalse((new BookingRepository($this->pdo))->find($this->bookingId)['changed']);
+        $this->assertFileExists($this->dir . '/' . $r['storage_name']);
+    }
+
+    public function test_later_add_writes_entry_and_marks_booking_changed(): void
+    {
+        $repo = new BookingRepository($this->pdo);
+        $this->assertFalse($repo->find($this->bookingId)['changed']);
+        $this->store()->add($this->bookingId, $this->tmpFile($this->pdfBytes()), 'spaeter.pdf', $this->userId);
+
+        $this->assertSame(1, (int) $this->pdo->query('SELECT count(*) FROM booking_changes')->fetchColumn());
+        $this->assertTrue($repo->find($this->bookingId)['changed']);
+    }
+
+    public function test_stored_file_is_mode_0640_and_size_comes_from_stored_copy(): void
+    {
+        $r = $this->store()->add($this->bookingId, $this->tmpFile($this->pdfBytes('x')), 'a.pdf', $this->userId);
+        $path = $this->dir . '/' . $r['storage_name'];
+
+        $this->assertSame(filesize($path), $r['size']);
+        $this->assertSame(0640, fileperms($path) & 0777);
     }
 }

@@ -19,6 +19,16 @@ final class UploadInput
     public static function fromRequest(Request $req): ?array
     {
         $files = $req->getUploadedFiles();
+        $chosen = 0;
+        foreach (self::FIELDS as $field) {
+            $f = $files[$field] ?? null;
+            if ($f instanceof UploadedFileInterface && $f->getError() !== UPLOAD_ERR_NO_FILE) {
+                $chosen++;
+            }
+        }
+        if ($chosen > 1) {
+            throw new ValidationError(['receipt' => 'validation.receipt.both']);
+        }
         foreach (self::FIELDS as $field) {
             $file = $files[$field] ?? null;
             if (!$file instanceof UploadedFileInterface || $file->getError() === UPLOAD_ERR_NO_FILE) {

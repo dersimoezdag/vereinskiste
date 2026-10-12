@@ -132,7 +132,7 @@ final class Kernel
         $app->post('/categories/{id:[0-9]+}/toggle', [$categories, 'toggle'])->add(Auth::requires('settings.manage'));
 
         $receiptsDir = $config['receipts_dir'] ?? dirname(__DIR__, 2) . '/storage/receipts';
-        if (!is_string($receiptsDir) || $receiptsDir === '') {
+        if (!is_string($receiptsDir) || trim($receiptsDir) === '') {
             throw new RuntimeException('receipts_dir muss ein Verzeichnispfad sein.');
         }
 

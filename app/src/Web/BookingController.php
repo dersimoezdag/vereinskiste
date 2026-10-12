@@ -32,7 +32,7 @@ final class BookingController extends AdminController
     private const TRANSFER_FIELDS = ['from_account_id', 'to_account_id', 'booking_date', 'amount', 'description'];
 
     /** @param Closure():\PDO $pdo */
-    public function __construct(private Closure $pdo, private string $receiptsDir = '')
+    public function __construct(private Closure $pdo, private string $receiptsDir)
     {
     }
 
@@ -83,7 +83,7 @@ final class BookingController extends AdminController
             $booking = Transaction::run($pdo, function () use ($pdo, $input, $upload, $userId): array {
                 $created = (new BookingService($pdo))->create($input, $userId);
                 if ($upload !== null) {
-                    (new ReceiptStore($pdo, $this->receiptsDir))->add($created['id'], $upload['path'], $upload['name'], $userId);
+                    (new ReceiptStore($pdo, $this->receiptsDir))->add($created['id'], $upload['path'], $upload['name'], $userId, false);
                 }
                 return $created;
             });

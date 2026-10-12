@@ -220,6 +220,7 @@ return [
     'bookings.field.receipt' => 'Beleg',
 
     'validation.receipt.none' => 'Bitte wählen Sie eine Datei aus.',
+    'validation.receipt.both' => 'Bitte wählen Sie nur eine Datei aus: entweder eine Datei oder ein Foto.',
     'validation.receipt.empty' => 'Die Datei ist leer.',
     'validation.receipt.too_large' => 'Die Datei ist zu groß: Belege dürfen höchstens 10 MB groß sein.',
     'validation.receipt.type' => 'Nur PDF, JPEG und PNG werden als Beleg akzeptiert.',

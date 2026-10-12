@@ -41,17 +41,22 @@ final class ReceiptStore
 
     public function __construct(private PDO $pdo, private string $dir, private int $maxBytes = self::MAX_BYTES)
     {
+        if (trim($dir) === '') {
+            throw new \InvalidArgumentException('Das Beleg-Verzeichnis darf nicht leer sein.');
+        }
     }
 
     /**
-     * Neuer Beleg an einer Buchung (auch storniert oder abgeschlossen). Schreibt einen Verlaufseintrag.
+     * Neuer Beleg an einer Buchung (auch storniert oder abgeschlossen). Schreibt einen Verlaufseintrag,
+     * ausser `$logChange` ist false: dann entsteht der Beleg zusammen mit der Buchung (selbe Anfrage und
+     * Transaktion) und die Buchung gilt nicht als "geaendert".
      *
      * @return array{id:int,booking_id:int,original_name:string,mime:string,size:int,sha256:string,
      *               storage_name:string,uploaded_by:int,uploaded_at:string,replaced_at:?string}
      * @throws ValidationError
      * @throws BookingNotFound
      */
-    public function add(int $bookingId, string $tmpPath, string $originalName, int $userId): array
+    public function add(int $bookingId, string $tmpPath, string $originalName, int $userId, bool $logChange = true): array
     {
         $stmt = $this->pdo->prepare('SELECT 1 FROM bookings WHERE id = ?');
         $stmt->execute([$bookingId]);
@@ -62,14 +67,16 @@ final class ReceiptStore
         $file = $this->ingest($tmpPath);
         $name = self::cleanName($originalName, $file['ext']);
         try {
-            return Transaction::run($this->pdo, function () use ($bookingId, $file, $name, $userId): array {
+            return Transaction::run($this->pdo, function () use ($bookingId, $file, $name, $userId, $logChange): array {
                 $receipt = $this->insert($bookingId, $file, $name, $userId);
-                (new ChangeLog($this->pdo))->record(
-                    $bookingId,
-                    $userId,
-                    [['field' => 'receipt', 'from' => null, 'to' => $name]],
-                    self::ADDED_REASON
-                );
+                if ($logChange) {
+                    (new ChangeLog($this->pdo))->record(
+                        $bookingId,
+                        $userId,
+                        [['field' => 'receipt', 'from' => null, 'to' => $name]],
+                        self::ADDED_REASON
+                    );
+                }
                 return $receipt;
             });
         } catch (Throwable $e) {
@@ -231,7 +238,15 @@ final class ReceiptStore
                 throw new RuntimeException('Pruefsumme des Belegs konnte nicht berechnet werden.');
             }
             $storageName = bin2hex(random_bytes(16)) . '.' . $meta['ext'];
-            if (!@rename($temp, $this->dir . '/' . $storageName)) {
+            $final = $this->dir . '/' . $storageName;
+            if (!@rename($temp, $final)) {
+                throw new RuntimeException('Beleg konnte nicht gespeichert werden.');
+            }
+            // Nur der Besitzer und die Gruppe duerfen lesen; auf Plattformen ohne Modi schlaegt das still fehl.
+            @chmod($final, 0640);
+            clearstatcache(true, $final);
+            $size = filesize($final);
+            if ($size === false) {
                 throw new RuntimeException('Beleg konnte nicht gespeichert werden.');
             }
         } catch (Throwable $e) {

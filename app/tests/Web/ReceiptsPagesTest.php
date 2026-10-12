@@ -11,6 +11,7 @@ use Slim\Psr7\UploadedFile;
 use Vereinskiste\Db\Migrator;
 use Vereinskiste\Http\Kernel;
 use Vereinskiste\Http\Session\ArraySessionStore;
+use Vereinskiste\Ledger\BookingRepository;
 use Vereinskiste\Ledger\BookingService;
 use Vereinskiste\Tests\Receipts\ReceiptFiles;
 use Vereinskiste\Tests\TestCase;
@@ -378,5 +379,84 @@ final class ReceiptsPagesTest extends TestCase
         $this->assertStringContainsString('Nur PDF, JPEG und PNG', (string) $res->getBody());
         $this->assertStringContainsString('Raummiete', (string) $res->getBody());
         $this->assertSame(0, (int) $this->pdo->query('SELECT count(*) FROM bookings')->fetchColumn());
+    }
+
+    public function test_both_file_fields_filled_is_rejected(): void
+    {
+        $uid = $this->loginAs(['kassenwart']);
+        $id = $this->booking($uid);
+
+        $res = $this->post('/bookings/' . $id . '/receipts', [], [
+            'receipt' => ['path' => $this->tmpFile($this->pdfBytes(), 'a.bin'), 'name' => 'a.pdf'],
+            'receipt_camera' => ['path' => $this->tmpFile($this->jpegBytes(), 'b.bin'), 'name' => 'b.jpg'],
+        ]);
+        $this->assertSame(422, $res->getStatusCode());
+        $this->assertStringContainsString('nur eine Datei', (string) $res->getBody());
+        $this->assertSame(0, (int) $this->pdo->query('SELECT count(*) FROM receipts')->fetchColumn());
+    }
+
+    public function test_pdf_with_appended_html_is_served_as_safe_attachment(): void
+    {
+        $uid = $this->loginAs(['kassenwart']);
+        $id = $this->booking($uid);
+        $bytes = $this->pdfBytes('<html><script>alert(1)</script></html>');
+        $this->assertSame(302, $this->upload($id, $bytes, 'evil.html')->getStatusCode());
+
+        $this->assertSame('application/pdf', $this->pdo->query('SELECT mime FROM receipts')->fetchColumn());
+        $res = $this->get('/receipts/' . $this->receiptId());
+        $this->assertSame(200, $res->getStatusCode());
+        $this->assertSame('application/pdf', $res->getHeaderLine('Content-Type'));
+        $this->assertStringStartsWith('attachment;', $res->getHeaderLine('Content-Disposition'));
+        $this->assertSame('nosniff', $res->getHeaderLine('X-Content-Type-Options'));
+        $this->assertStringContainsString("default-src 'none'", $res->getHeaderLine('Content-Security-Policy'));
+    }
+
+    public function test_receipt_of_cancelled_booking_is_downloadable_and_addable(): void
+    {
+        $uid = $this->loginAs(['kassenwart']);
+        $id = $this->booking($uid);
+        $this->upload($id, $this->pdfBytes(), 'a.pdf');
+        $this->pdo->exec("UPDATE bookings SET status = 'cancelled' WHERE id = {$id}");
+
+        $this->assertSame(200, $this->get('/receipts/' . $this->receiptId())->getStatusCode());
+        $this->assertSame(302, $this->upload($id, $this->jpegBytes(), 'b.jpg')->getStatusCode());
+    }
+
+    public function test_receipt_posts_without_valid_csrf_are_forbidden(): void
+    {
+        $uid = $this->loginAs(['kassenwart']);
+        $id = $this->booking($uid);
+        $this->upload($id, $this->pdfBytes(), 'a.pdf');
+        $rid = $this->receiptId();
+        $file = new UploadedFile($this->tmpFile($this->pdfBytes(), 'c.bin'), 'c.pdf', 'application/pdf', 10, UPLOAD_ERR_OK);
+
+        $targets = ['/bookings/' . $id . '/receipts' => [], '/receipts/' . $rid . '/replace' => ['reason' => 'x']];
+        foreach ($targets as $path => $body) {
+            foreach ([$body, $body + ['_csrf' => 'falsch']] as $parsed) {
+                $req = (new ServerRequestFactory())->createServerRequest('POST', $path)
+                    ->withParsedBody($parsed)->withUploadedFiles(['receipt' => $file]);
+                $this->assertSame(403, $this->app->handle($req)->getStatusCode(), $path);
+            }
+        }
+        $this->assertSame(1, (int) $this->pdo->query('SELECT count(*) FROM receipts')->fetchColumn());
+    }
+
+    public function test_create_with_receipt_is_not_marked_changed_but_later_add_is(): void
+    {
+        $this->loginAs(['kassenwart']);
+        $res = $this->post('/bookings/new', $this->form(), [
+            'receipt' => ['path' => $this->tmpFile($this->pdfBytes(), 'u.bin'), 'name' => 'beleg.pdf'],
+        ]);
+        $this->assertSame(302, $res->getStatusCode());
+        $id = (int) $this->pdo->query('SELECT max(id) FROM bookings')->fetchColumn();
+        $repo = new BookingRepository($this->pdo);
+
+        $this->assertSame(1, (int) $this->pdo->query('SELECT count(*) FROM receipts')->fetchColumn());
+        $this->assertSame(0, (int) $this->pdo->query('SELECT count(*) FROM booking_changes')->fetchColumn());
+        $this->assertFalse($repo->find($id)['changed']);
+
+        $this->upload($id, $this->jpegBytes(), 'spaeter.jpg');
+        $this->assertSame(1, (int) $this->pdo->query('SELECT count(*) FROM booking_changes')->fetchColumn());
+        $this->assertTrue($repo->find($id)['changed']);
     }
 }
