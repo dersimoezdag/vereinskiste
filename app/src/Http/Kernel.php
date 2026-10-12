@@ -27,6 +27,7 @@ use Vereinskiste\Web\AccountController;
 use Vereinskiste\Web\AuthController;
 use Vereinskiste\Web\BookingController;
 use Vereinskiste\Web\CategoryController;
+use Vereinskiste\Web\ReceiptController;
 
 final class Kernel
 {
@@ -36,6 +37,7 @@ final class Kernel
      * - pdo (PDO) oder db (Verbindungsdaten fuer Connection::fromConfig, Verbindung erst bei Bedarf)
      * - session_store (SessionStore; Standard: NativeSessionStore)
      * - templates (Verzeichnis; Standard: app/templates)
+     * - receipts_dir (Beleg-Verzeichnis ausserhalb des Webroots; Standard: app/storage/receipts)
      * - texts (array<string,string>; Standard: app/src/Text/de.php)
      *
      * @param array<string,mixed> $config
@@ -129,7 +131,12 @@ final class Kernel
         $app->post('/categories/{id:[0-9]+}', [$categories, 'rename'])->add(Auth::requires('settings.manage'));
         $app->post('/categories/{id:[0-9]+}/toggle', [$categories, 'toggle'])->add(Auth::requires('settings.manage'));
 
-        $bookings = new BookingController($pdoProvider);
+        $receiptsDir = $config['receipts_dir'] ?? dirname(__DIR__, 2) . '/storage/receipts';
+        if (!is_string($receiptsDir) || $receiptsDir === '') {
+            throw new RuntimeException('receipts_dir muss ein Verzeichnispfad sein.');
+        }
+
+        $bookings = new BookingController($pdoProvider, $receiptsDir);
         $app->get('/bookings', [$bookings, 'index'])->add(Auth::requires('bookings.read'));
         $app->get('/bookings/new', [$bookings, 'showNew'])->add(Auth::requires('bookings.write'));
         $app->post('/bookings/new', [$bookings, 'create'])->add(Auth::requires('bookings.write'));
@@ -142,6 +149,11 @@ final class Kernel
         $app->post('/corrections/new', [$bookings, 'createCorrection'])->add(Auth::requires('bookings.write'));
         $app->get('/transfers/new', [$bookings, 'showTransfer'])->add(Auth::requires('bookings.write'));
         $app->post('/transfers/new', [$bookings, 'createTransfer'])->add(Auth::requires('bookings.write'));
+
+        $receipts = new ReceiptController($pdoProvider, $receiptsDir);
+        $app->post('/bookings/{id:[0-9]+}/receipts', [$receipts, 'upload'])->add(Auth::requires('bookings.write'));
+        $app->post('/receipts/{id:[0-9]+}/replace', [$receipts, 'replace'])->add(Auth::requires('bookings.write'));
+        $app->get('/receipts/{id:[0-9]+}', [$receipts, 'download'])->add(Auth::requires('bookings.read'));
 
         return $app;
     }

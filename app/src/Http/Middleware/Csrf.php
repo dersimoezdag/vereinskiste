@@ -37,6 +37,10 @@ final class Csrf implements MiddlewareInterface
             return $handler->handle($request);
         }
 
+        if (self::exceedsPostLimit($request)) {
+            return ErrorPage::render($this->view, 413, 'error.413.title', 'error.413.text');
+        }
+
         $expected = $this->store->get('csrf');
         $body = $request->getParsedBody();
         $given = is_array($body) ? ($body[self::FIELD] ?? null) : null;
@@ -45,5 +49,38 @@ final class Csrf implements MiddlewareInterface
             return ErrorPage::render($this->view, 403, 'error.csrf.title', 'error.csrf.text');
         }
         return $handler->handle($request);
+    }
+
+    /**
+     * Ueberschreitet ein Formular `post_max_size`, verwirft PHP Body und Dateien komplett; das Token fehlt
+     * dann. Das ist kein CSRF-Fehler, sondern "Upload zu gross" und bekommt einen eigenen Hinweis.
+     */
+    private static function exceedsPostLimit(ServerRequestInterface $request): bool
+    {
+        $body = $request->getParsedBody();
+        if (($body !== null && $body !== []) || $request->getUploadedFiles() !== []) {
+            return false;
+        }
+        if (stripos($request->getHeaderLine('Content-Type'), 'multipart/form-data') !== 0) {
+            return false;
+        }
+        $length = $request->getHeaderLine('Content-Length');
+        $limit = self::iniBytes((string) ini_get('post_max_size'));
+        return $limit > 0 && preg_match('/^\d+\z/', $length) === 1 && (float) $length > $limit;
+    }
+
+    private static function iniBytes(string $value): int
+    {
+        $value = trim($value);
+        if (preg_match('/^\d+[kmg]?\z/i', $value) !== 1) {
+            return 0;
+        }
+        $number = (int) $value;
+        return match (strtolower(substr($value, -1))) {
+            'g' => $number * 1024 ** 3,
+            'm' => $number * 1024 ** 2,
+            'k' => $number * 1024,
+            default => $number,
+        };
     }
 }

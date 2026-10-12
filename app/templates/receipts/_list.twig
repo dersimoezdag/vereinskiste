@@ -1,0 +1,61 @@
+{# Belege einer Buchung. Erwartet: booking, receipts (ReceiptStore::forBooking) #}
+<div class="card mb-4" id="receipts">
+    <div class="card-header"><h2 class="card-title">{{ t('receipts.title') }}</h2></div>
+    {% if receipts is empty %}
+    <div class="card-body text-secondary">{{ t('receipts.empty') }}</div>
+    {% else %}
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table table-cards">
+            <thead>
+                <tr>
+                    <th>{{ t('receipts.col.name') }}</th>
+                    <th>{{ t('receipts.col.uploaded') }}</th>
+                    <th>{{ t('receipts.col.size') }}</th>
+                    <th>{{ t('receipts.col.sha256') }}</th>
+                    <th>{{ t('receipts.col.actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for receipt in receipts %}
+                <tr>
+                    <td data-label="{{ t('receipts.col.name') }}">
+                        <a href="/receipts/{{ receipt.id }}">{{ receipt.original_name }}</a>
+                        {% if receipt.replaced_at %}<span class="badge bg-secondary-lt">{{ t('receipts.replaced') }}</span>{% endif %}
+                    </td>
+                    <td data-label="{{ t('receipts.col.uploaded') }}">{{ receipt.uploaded_at|date('d.m.Y H:i') }} · {{ receipt.uploaded_by_name }}</td>
+                    <td data-label="{{ t('receipts.col.size') }}">{{ (receipt.size / 1024)|number_format(0, ',', '.') }} KB</td>
+                    <td data-label="{{ t('receipts.col.sha256') }}"><code class="text-break">{{ receipt.sha256 }}</code></td>
+                    <td data-label="{{ t('receipts.col.actions') }}">
+                        <a class="btn btn-sm" href="/receipts/{{ receipt.id }}">{{ t('receipts.download') }}</a>
+                        {% if can('bookings.write') and not receipt.replaced_at %}
+                        <details class="mt-2">
+                            <summary class="btn btn-sm">{{ t('receipts.replace') }}</summary>
+                            <form method="post" action="/receipts/{{ receipt.id }}/replace" enctype="multipart/form-data" class="mt-2" novalidate>
+                                {{ csrf_field() }}
+                                <p class="text-secondary">{{ t('receipts.replace.hint') }}</p>
+                                {% include 'receipts/_input.twig' with {id_prefix: 'rep-' ~ receipt.id, errors: {}} %}
+                                {% include 'bookings/_reason.twig' with {reason_id: 'rep-reason-' ~ receipt.id, reason: '', errors: {}} %}
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-primary">{{ t('receipts.replace.submit') }}</button>
+                                </div>
+                            </form>
+                        </details>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    {% if can('bookings.write') %}
+    <div class="card-body border-top">
+        <h3 class="card-subtitle">{{ t('receipts.add') }}</h3>
+        <form method="post" action="/bookings/{{ booking.id }}/receipts" enctype="multipart/form-data" novalidate>
+            {{ csrf_field() }}
+            {% include 'receipts/_input.twig' with {id_prefix: 'new-receipt', errors: {}} %}
+            <button type="submit" class="btn btn-primary">{{ t('receipts.submit') }}</button>
+        </form>
+    </div>
+    {% endif %}
+</div>

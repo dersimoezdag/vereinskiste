@@ -14,9 +14,12 @@ use Vereinskiste\Ledger\BookingRepository;
 use Vereinskiste\Ledger\BookingService;
 use Vereinskiste\Ledger\CategoryRepository;
 use Vereinskiste\Ledger\ChangeLog;
+use Vereinskiste\Ledger\Transaction;
 use Vereinskiste\Ledger\TransferService;
 use Vereinskiste\Ledger\ValidationError;
 use Vereinskiste\Ledger\VersionConflict;
+use Vereinskiste\Receipts\ReceiptStore;
+use Vereinskiste\Receipts\UploadInput;
 
 final class BookingController extends AdminController
 {
@@ -29,7 +32,7 @@ final class BookingController extends AdminController
     private const TRANSFER_FIELDS = ['from_account_id', 'to_account_id', 'booking_date', 'amount', 'description'];
 
     /** @param Closure():\PDO $pdo */
-    public function __construct(private Closure $pdo)
+    public function __construct(private Closure $pdo, private string $receiptsDir = '')
     {
     }
 
@@ -72,8 +75,18 @@ final class BookingController extends AdminController
     public function create(Request $req, Response $res): Response
     {
         $input = $this->formInput($this->body($req));
+        $pdo = ($this->pdo)();
+        $userId = $this->userId($req);
         try {
-            $booking = (new BookingService(($this->pdo)()))->create($input, $this->userId($req));
+            // Optionaler Beleg: Buchung und Beleg entstehen gemeinsam oder gar nicht.
+            $upload = UploadInput::fromRequest($req);
+            $booking = Transaction::run($pdo, function () use ($pdo, $input, $upload, $userId): array {
+                $created = (new BookingService($pdo))->create($input, $userId);
+                if ($upload !== null) {
+                    (new ReceiptStore($pdo, $this->receiptsDir))->add($created['id'], $upload['path'], $upload['name'], $userId);
+                }
+                return $created;
+            });
         } catch (ValidationError $e) {
             return $this->renderForm($req, $res->withStatus(422), 'bookings/form.twig', ['input' => $input, 'errors' => $e->errors]);
         }
@@ -102,6 +115,7 @@ final class BookingController extends AdminController
         return $req->getAttribute('view')->render($res, 'bookings/detail.twig', [
             'booking' => $booking,
             'history' => (new ChangeLog($pdo))->forBooking($booking['id']),
+            'receipts' => (new ReceiptStore($pdo, $this->receiptsDir))->forBooking($booking['id']),
             'account_names' => array_column((new AccountRepository($pdo))->all(), 'name', 'id'),
             'category_names' => array_column((new CategoryRepository($pdo))->all(), 'name', 'id'),
             'original' => $booking['correction_of_id'] === null ? null : $repo->find($booking['correction_of_id']),
