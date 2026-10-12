@@ -97,4 +97,16 @@ final class SchemaTest extends TestCase
             '23502'
         );
     }
+
+    public function test_correction_without_original_booking_is_allowed(): void
+    {
+        [$pdo] = $this->withBooking();
+        $pdo->exec(
+            "INSERT INTO bookings (account_id, booking_date, amount, direction, description, kind, created_by)
+             VALUES (1, '2026-01-04', 2.50, 'out', 'Kassendifferenz', 'correction', 1)"
+        );
+        $row = $pdo->query("SELECT kind, correction_of_id FROM bookings WHERE kind = 'correction'")->fetch();
+        $this->assertSame('correction', $row['kind']);
+        $this->assertNull($row['correction_of_id']);
+    }
 }

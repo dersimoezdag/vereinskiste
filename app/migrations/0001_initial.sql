@@ -47,8 +47,7 @@ CREATE TABLE bookings (
     version          integer       NOT NULL DEFAULT 1,
     created_by       bigint        NOT NULL REFERENCES users (id),
     created_at       timestamptz   NOT NULL DEFAULT now(),
-    updated_at       timestamptz   NOT NULL DEFAULT now(),
-    CONSTRAINT bookings_correction_ref CHECK (kind <> 'correction' OR correction_of_id IS NOT NULL)
+    updated_at       timestamptz   NOT NULL DEFAULT now()
 );
 
 CREATE INDEX bookings_date_idx        ON bookings (booking_date DESC, id DESC);
