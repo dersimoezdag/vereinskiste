@@ -12,6 +12,7 @@ use RuntimeException;
 use Slim\App;
 use Slim\Factory\AppFactory;
 use Slim\Views\Twig;
+use Twig\TwigFilter;
 use Twig\TwigFunction;
 use Vereinskiste\Auth\AuthService;
 use Vereinskiste\Auth\UserRepository;
@@ -21,7 +22,10 @@ use Vereinskiste\Http\Middleware\Csrf;
 use Vereinskiste\Http\Middleware\Session;
 use Vereinskiste\Http\Session\NativeSessionStore;
 use Vereinskiste\Http\Session\SessionStore;
+use Vereinskiste\Ledger\MoneyFormat;
+use Vereinskiste\Web\AccountController;
 use Vereinskiste\Web\AuthController;
+use Vereinskiste\Web\CategoryController;
 
 final class Kernel
 {
@@ -65,6 +69,23 @@ final class Kernel
             static fn (string $permission): bool => $state->auth?->can($permission) ?? false
         ));
         $env->addFunction(new TwigFunction(
+            'flash',
+            // Einmalige Meldung: Textschluessel aus der Sitzung lesen und entfernen.
+            static function () use ($store, $texts): ?string {
+                $key = $store->get('flash');
+                if (!is_string($key)) {
+                    return null;
+                }
+                $store->remove('flash');
+                return $texts[$key] ?? $key;
+            }
+        ));
+        $env->addFunction(new TwigFunction(
+            'current_path',
+            static fn (): string => $state->path
+        ));
+        $env->addFilter(new TwigFilter('eur', [MoneyFormat::class, 'eur']));
+        $env->addFunction(new TwigFunction(
             'current_user',
             static fn (): ?array => $state->auth?->currentUser()
         ));
@@ -76,7 +97,10 @@ final class Kernel
         $app->add(function (Request $req, Handler $next) use ($state, $store, $view, $pdoProvider): Response {
             $auth = new AuthService(new UserRepository($pdoProvider), $store);
             $state->auth = $auth;
-            return $next->handle($req->withAttribute('auth', $auth)->withAttribute('view', $view));
+            $state->path = $req->getUri()->getPath();
+            return $next->handle(
+                $req->withAttribute('auth', $auth)->withAttribute('view', $view)->withAttribute('session', $store)
+            );
         });
         $app->add(new Session($store));
         $app->addErrorMiddleware((bool) ($config['debug'] ?? false), true, true);
@@ -91,6 +115,18 @@ final class Kernel
         $app->get('/login', [$auth, 'showLogin']);
         $app->post('/login', [$auth, 'login']);
         $app->post('/logout', [$auth, 'logout']);
+
+        $accounts = new AccountController($pdoProvider);
+        $app->get('/accounts', [$accounts, 'index'])->add(Auth::requires('bookings.read'));
+        $app->post('/accounts', [$accounts, 'create'])->add(Auth::requires('settings.manage'));
+        $app->post('/accounts/{id:[0-9]+}', [$accounts, 'rename'])->add(Auth::requires('settings.manage'));
+        $app->post('/accounts/{id:[0-9]+}/toggle', [$accounts, 'toggle'])->add(Auth::requires('settings.manage'));
+
+        $categories = new CategoryController($pdoProvider);
+        $app->get('/categories', [$categories, 'index'])->add(Auth::requires('bookings.read'));
+        $app->post('/categories', [$categories, 'create'])->add(Auth::requires('settings.manage'));
+        $app->post('/categories/{id:[0-9]+}', [$categories, 'rename'])->add(Auth::requires('settings.manage'));
+        $app->post('/categories/{id:[0-9]+}/toggle', [$categories, 'toggle'])->add(Auth::requires('settings.manage'));
 
         return $app;
     }

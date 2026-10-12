@@ -1,0 +1,66 @@
+/* Eigene Styles der Vereinskiste (ergaenzen Tabler). */
+
+/* Touch-Ziele mindestens 44 px */
+.btn,
+.form-control,
+.form-select,
+.navbar-nav .nav-link,
+.navbar-toggler {
+    min-height: 44px;
+}
+
+.navbar-nav .nav-link {
+    display: flex;
+    align-items: center;
+}
+
+.navbar-toggler {
+    min-width: 44px;
+}
+
+.navbar-vertical .nav-user {
+    width: 100%;
+}
+
+/* Tabellen werden auf kleinen Bildschirmen zu Karten (td braucht data-label). */
+@media (max-width: 767.98px) {
+    table.table-cards thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+    }
+
+    table.table-cards,
+    table.table-cards tbody,
+    table.table-cards tr,
+    table.table-cards td {
+        display: block;
+        width: 100%;
+    }
+
+    table.table-cards tr {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--tblr-border-color);
+    }
+
+    table.table-cards td {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 0.25rem 1rem;
+        border: 0;
+        text-align: right;
+    }
+
+    table.table-cards td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        text-align: left;
+    }
+
+    table.table-cards td > * {
+        text-align: left;
+    }
+}

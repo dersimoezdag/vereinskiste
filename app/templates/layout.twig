@@ -4,23 +4,62 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{{ t('app.name') }}{% endblock %} – {{ t('app.name') }}</title>
+    <link rel="stylesheet" href="/assets/vendor/tabler/tabler.min.css">
+    <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body>
-<header>
-    <strong>{{ t('app.name') }}</strong>
-    {% if current_user() %}
-    <nav>
-        <span>{{ current_user().name }}</span>
-        {% if can('users.manage') %}<a href="/users">{{ t('nav.users') }}</a>{% endif %}
-        <form method="post" action="/logout">
-            {{ csrf_field() }}
-            <button type="submit">{{ t('nav.logout') }}</button>
-        </form>
-    </nav>
+{% set user = current_user() %}
+{% set path = current_path() %}
+<div class="page{% if not user %} page-center{% endif %}">
+    {% if user %}
+    <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu"
+                    aria-controls="sidebar-menu" aria-expanded="false" aria-label="{{ t('nav.toggle') }}">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <h1 class="navbar-brand navbar-brand-autodark"><a href="/">{{ t('app.name') }}</a></h1>
+            <div class="collapse navbar-collapse" id="sidebar-menu">
+                <ul class="navbar-nav pt-lg-3">
+                    <li class="nav-item{% if path == '/' %} active{% endif %}">
+                        <a class="nav-link" href="/"><span class="nav-link-title">{{ t('nav.home') }}</span></a>
+                    </li>
+                    {% if can('bookings.read') %}
+                    <li class="nav-item{% if path starts with '/accounts' %} active{% endif %}">
+                        <a class="nav-link" href="/accounts"><span class="nav-link-title">{{ t('nav.accounts') }}</span></a>
+                    </li>
+                    <li class="nav-item{% if path starts with '/categories' %} active{% endif %}">
+                        <a class="nav-link" href="/categories"><span class="nav-link-title">{{ t('nav.categories') }}</span></a>
+                    </li>
+                    {% endif %}
+                    {% if can('users.manage') %}
+                    <li class="nav-item{% if path starts with '/users' %} active{% endif %}">
+                        <a class="nav-link" href="/users"><span class="nav-link-title">{{ t('nav.users') }}</span></a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <div class="nav-user mt-auto pt-3">
+                    <div class="text-secondary mb-2">{{ user.name }}</div>
+                    <form method="post" action="/logout">
+                        {{ csrf_field() }}
+                        <button type="submit" class="btn btn-outline-secondary w-100">{{ t('nav.logout') }}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </aside>
     {% endif %}
-</header>
-<main>
-{% block content %}{% endblock %}
-</main>
+    <div class="page-wrapper">
+        <div class="page-body">
+            <div class="{% if user %}container-xl{% else %}container-tight py-4{% endif %}">
+                {% set message = flash() %}
+                {% if message %}<div class="alert alert-success" role="status">{{ message }}</div>{% endif %}
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/assets/vendor/tabler/tabler.min.js"></script>
+<script src="/assets/app.js"></script>
 </body>
 </html>

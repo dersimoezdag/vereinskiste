@@ -1,0 +1,89 @@
+<?php
+declare(strict_types=1);
+
+namespace Vereinskiste\Ledger;
+
+use InvalidArgumentException;
+use PDO;
+
+final class AccountRepository
+{
+    public function __construct(private PDO $pdo)
+    {
+    }
+
+    /** @return list<array{id:int,name:string,type:string,opening_balance:string,opening_date:string,active:bool}> */
+    public function all(): array
+    {
+        return $this->pdo->query(
+            'SELECT id, name, type, opening_balance::text AS opening_balance, opening_date::text AS opening_date, active
+               FROM accounts ORDER BY active DESC, lower(name), id'
+        )->fetchAll();
+    }
+
+    /** @return array{id:int,name:string,type:string,opening_balance:string,opening_date:string,active:bool}|null */
+    public function find(int $id): ?array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT id, name, type, opening_balance::text AS opening_balance, opening_date::text AS opening_date, active
+               FROM accounts WHERE id = ?'
+        );
+        $stmt->execute([$id]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public function nameExists(string $name, ?int $exceptId = null): bool
+    {
+        $stmt = $this->pdo->prepare('SELECT 1 FROM accounts WHERE lower(name) = lower(?) AND id <> ?');
+        $stmt->execute([$name, $exceptId ?? 0]);
+        return $stmt->fetchColumn() !== false;
+    }
+
+    public function create(string $name, string $type, string $openingBalance, string $openingDate): int
+    {
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO accounts (name, type, opening_balance, opening_date) VALUES (?, ?, ?, ?) RETURNING id'
+        );
+        $stmt->execute([$name, $type, $openingBalance, $openingDate]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function rename(int $id, string $name): void
+    {
+        $this->pdo->prepare('UPDATE accounts SET name = ? WHERE id = ?')->execute([$name, $id]);
+    }
+
+    public function toggleActive(int $id): void
+    {
+        $this->pdo->prepare('UPDATE accounts SET active = NOT active WHERE id = ?')->execute([$id]);
+    }
+
+    /**
+     * Saldo = Anfangssaldo + Einnahmen - Ausgaben ueber alle aktiven Buchungen
+     * (Umbuchungen zaehlen mit, stornierte nicht). Es zaehlen nur Buchungen ab
+     * dem Eroeffnungsdatum des Kontos (der Anfangssaldo gilt zu diesem Tag).
+     * `$asOf` (YYYY-MM-DD) ist inklusive; davor liegende Stichtage ergeben den Anfangssaldo.
+     *
+     * @return string Betrag mit zwei Nachkommastellen, z. B. "125.15"
+     */
+    public function balance(int $accountId, ?string $asOf = null): string
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT (a.opening_balance + COALESCE(SUM(CASE WHEN b.direction = 'in' THEN b.amount ELSE -b.amount END), 0))::text
+               FROM accounts a
+               LEFT JOIN bookings b
+                      ON b.account_id = a.id
+                     AND b.status = 'active'
+                     AND b.booking_date >= a.opening_date
+                     AND (CAST(:as_of_null AS date) IS NULL OR b.booking_date <= CAST(:as_of AS date))
+              WHERE a.id = :id
+              GROUP BY a.id"
+        );
+        $stmt->execute(['as_of_null' => $asOf, 'as_of' => $asOf, 'id' => $accountId]);
+        $balance = $stmt->fetchColumn();
+        if ($balance === false) {
+            throw new InvalidArgumentException("Unbekanntes Konto $accountId.");
+        }
+        return $balance;
+    }
+}

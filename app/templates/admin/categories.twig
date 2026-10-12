@@ -1,0 +1,72 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('categories.title') }}{% endblock %}
+{% block content %}
+<h1 class="mb-4">{{ t('categories.title') }}</h1>
+
+<div class="card mb-4">
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table table-cards">
+            <thead>
+                <tr>
+                    <th>{{ t('categories.name') }}</th>
+                    {% if can('settings.manage') %}<th>{{ t('common.actions') }}</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+            {% for category in categories %}
+                <tr{% if not category.active %} class="text-secondary"{% endif %}>
+                    <td data-label="{{ t('categories.name') }}">
+                        {{ category.name }}
+                        {% if not category.active %}<span class="badge bg-secondary-lt">{{ t('common.inactive') }}</span>{% endif %}
+                    </td>
+                    {% if can('settings.manage') %}
+                    <td data-label="{{ t('common.actions') }}">
+                        <div class="d-flex flex-wrap gap-2">
+                            <form method="post" action="/categories/{{ category.id }}" class="d-flex gap-2 flex-grow-1">
+                                {{ csrf_field() }}
+                                <div class="flex-grow-1">
+                                    <label class="visually-hidden" for="category-name-{{ category.id }}">{{ t('categories.name') }}</label>
+                                    <input type="text" id="category-name-{{ category.id }}" name="name" maxlength="100" required
+                                           class="form-control{% if edit_id == category.id and errors.name is defined %} is-invalid{% endif %}"
+                                           value="{{ edit_id == category.id ? edit_name : category.name }}">
+                                    {% if edit_id == category.id and errors.name is defined %}
+                                    <div class="invalid-feedback">{{ t(errors.name) }}</div>
+                                    {% endif %}
+                                </div>
+                                <button type="submit" class="btn">{{ t('common.rename') }}</button>
+                            </form>
+                            <form method="post" action="/categories/{{ category.id }}/toggle">
+                                {{ csrf_field() }}
+                                <button type="submit" class="btn">{{ category.active ? t('common.deactivate') : t('common.activate') }}</button>
+                            </form>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+            {% else %}
+                <tr><td colspan="2" class="text-secondary">{{ t('categories.empty') }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if can('settings.manage') %}
+<div class="card">
+    <div class="card-header"><h2 class="card-title">{{ t('categories.new') }}</h2></div>
+    <div class="card-body">
+        <form method="post" action="/categories" novalidate>
+            {{ csrf_field() }}
+            <label class="form-label" for="category-name">{{ t('categories.name') }}</label>
+            <input type="text" id="category-name" name="name" maxlength="100" required
+                   class="form-control{% if edit_id is null and errors.name is defined %} is-invalid{% endif %}"
+                   value="{{ new_name }}">
+            {% if edit_id is null and errors.name is defined %}<div class="invalid-feedback">{{ t(errors.name) }}</div>{% endif %}
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">{{ t('categories.create') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

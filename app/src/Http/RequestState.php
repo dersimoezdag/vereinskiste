@@ -9,4 +9,5 @@ use Vereinskiste\Auth\AuthService;
 final class RequestState
 {
     public ?AuthService $auth = null;
+    public string $path = '/';
 }
