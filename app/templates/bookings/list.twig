@@ -97,7 +97,7 @@
                         <a href="/bookings/{{ b.id }}">{{ b.description }}</a>
                         {% if b.kind != 'regular' %}<span class="badge bg-azure-lt">{{ t('bookings.kind.' ~ b.kind) }}</span>{% endif %}
                         {% if b.status == 'cancelled' %}<span class="badge bg-secondary-lt">{{ t('bookings.status.cancelled') }}</span>{% endif %}
-                        {% if b.changed %}<a class="badge bg-yellow-lt" href="/bookings/{{ b.id }}#history">{{ t('bookings.changed') }}</a>{% endif %}
+                        {% if b.changed %}<a class="badge bg-yellow-lt touch-target" href="/bookings/{{ b.id }}#history">{{ t('bookings.changed') }}</a>{% endif %}
                         {% if b.counterparty %}<div class="text-secondary small">{{ b.counterparty }}</div>{% endif %}
                     </td>
                     <td data-label="{{ t('bookings.account') }}">{{ b.account_name }}</td>

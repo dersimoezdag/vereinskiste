@@ -28,6 +28,7 @@ final class MoneyTest extends TestCase
             'three decimals' => ['1,234'], 'three decimals dot' => ['1.234'], 'empty' => [''],
             'letters' => ['abc'], 'english thousands' => ['1,234.56'], 'bad grouping' => ['1.2,3'],
             'two commas' => ['1,2,3'],
+            'trailing newline' => ["12\n"], 'trailing newline comma' => ["12,50\n"],
         ];
     }
 

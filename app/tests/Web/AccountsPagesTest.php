@@ -222,6 +222,25 @@ final class AccountsPagesTest extends TestCase
         $this->assertSame(0, (int) $this->pdo->query('SELECT count(*) FROM accounts')->fetchColumn());
     }
 
+    public function test_account_with_year_zero_or_invalid_utf8_name_is_422_not_500(): void
+    {
+        $this->loginAs(['vorstand']);
+
+        $res = $this->postForm('/accounts', [
+            'name' => "Kasse \xC3\x28", 'type' => 'cash', 'opening_balance' => '0', 'opening_date' => '0000-01-01',
+        ]);
+
+        $this->assertSame(422, $res->getStatusCode());
+        $html = (string) $res->getBody();
+        $this->assertStringContainsString('Bitte geben Sie ein gültiges Datum an.', $html);
+        $this->assertStringContainsString('Der Text enthält ungültige Zeichen.', $html);
+        $this->assertSame(0, (int) $this->pdo->query('SELECT count(*) FROM accounts')->fetchColumn());
+
+        $res = $this->postForm('/categories', ['name' => "\xFF"]);
+        $this->assertSame(422, $res->getStatusCode());
+        $this->assertSame(0, (int) $this->pdo->query('SELECT count(*) FROM categories')->fetchColumn());
+    }
+
     public function test_rename_and_toggle_account(): void
     {
         $this->loginAs(['vorstand']);

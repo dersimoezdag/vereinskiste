@@ -102,6 +102,7 @@ return [
     'validation.account.type' => 'Bitte wählen Sie Bar oder Bank.',
     'validation.amount.invalid' => 'Bitte geben Sie einen gültigen Betrag an.',
     'validation.date.invalid' => 'Bitte geben Sie ein gültiges Datum an.',
+    'validation.text.encoding' => 'Der Text enthält ungültige Zeichen.',
     'validation.booking.account' => 'Bitte wählen Sie ein aktives Konto.',
     'validation.booking.category' => 'Bitte wählen Sie eine aktive Kategorie oder keine.',
     'validation.booking.amount' => 'Bitte geben Sie einen Betrag größer als 0 mit höchstens zwei Nachkommastellen an (bis 9.999.999,99).',

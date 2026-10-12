@@ -103,6 +103,15 @@ final class BookingRepositoryTest extends TestCase
         $this->assertSame([$c], $this->ids(['q' => 'ckerei_mue'])); // "_" ist kein Einzelzeichen-Wildcard
     }
 
+    public function test_filter_ignores_out_of_range_dates_and_invalid_utf8_query(): void
+    {
+        $this->assertSame([], BookingRepository::normalizeFilter([
+            'from' => '0000-01-01', 'to' => '3000-01-01', 'q' => "M\xC3\x28ller",
+        ]));
+        $a = $this->add('2026-01-10', null);
+        $this->assertSame([$a], $this->ids(['from' => '0000-01-01', 'q' => "\xFF"]));
+    }
+
     public function test_changed_flag_comes_from_history_rows(): void
     {
         $a = $this->add('2026-01-10', null);

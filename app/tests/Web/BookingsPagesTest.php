@@ -124,6 +124,21 @@ final class BookingsPagesTest extends TestCase
         $this->assertStringContainsString('/bookings/' . $out . '#history', $html);
         $this->assertStringNotContainsString('/bookings/' . $in . '#history', $html);
         $this->assertStringContainsString('table-cards', $html);
+        // Kennzeichen ist ein Touch-Ziel (>= 44 px, Regel in app.css)
+        $this->assertMatchesRegularExpression('/<a class="[^"]*\btouch-target\b[^"]*" href="\/bookings\/' . $out . '#history"/', $html);
+        $css = (string) file_get_contents(dirname(__DIR__, 3) . '/public/assets/app.css');
+        $this->assertMatchesRegularExpression('/\.touch-target\s*\{[^}]*min-height:\s*44px/', $css);
+    }
+
+    public function test_search_with_invalid_utf8_is_ignored_not_500(): void
+    {
+        $uid = $this->loginAs(['kassenwart']);
+        $this->booking($this->account(), $uid, '2026-03-01', 'in', '5.00', 'Sichtbar');
+
+        $res = $this->get('/bookings', ['q' => "M\xC3\x28ller", 'from' => '0000-01-01']);
+
+        $this->assertSame(200, $res->getStatusCode());
+        $this->assertStringContainsString('Sichtbar', (string) $res->getBody());
     }
 
     public function test_list_applies_filters_and_ignores_garbage(): void

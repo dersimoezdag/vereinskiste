@@ -32,6 +32,9 @@ abstract class AdminController
         if ($name === '') {
             return 'validation.name.required';
         }
+        if (!mb_check_encoding($name, 'UTF-8')) {
+            return 'validation.text.encoding';
+        }
         if (mb_strlen($name) > self::NAME_MAX) {
             return 'validation.name.too_long';
         }

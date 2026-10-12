@@ -46,13 +46,13 @@ final class Money
             $s = substr($s, 1);
         }
         if (str_contains($s, ',')) {
-            if (preg_match('/^(\d{1,3}(?:\.\d{3})*|\d+),(\d{1,2})$/', $s, $m) !== 1) {
+            if (preg_match('/^(\d{1,3}(?:\.\d{3})*|\d+),(\d{1,2})\z/', $s, $m) !== 1) {
                 throw new InvalidAmount('Ungueltiger Betrag.');
             }
             $int = str_replace('.', '', $m[1]);
             $frac = $m[2];
         } else {
-            if (preg_match('/^(\d+)(?:\.(\d{1,2}))?$/', $s, $m) !== 1) {
+            if (preg_match('/^(\d+)(?:\.(\d{1,2}))?\z/', $s, $m) !== 1) {
                 throw new InvalidAmount('Ungueltiger Betrag.');
             }
             $int = $m[1];

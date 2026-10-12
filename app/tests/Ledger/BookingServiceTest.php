@@ -97,6 +97,36 @@ final class BookingServiceTest extends TestCase
         }
     }
 
+    public function test_create_rejects_year_outside_1900_to_2999_as_validation_error(): void
+    {
+        foreach (['0000-01-01', '1899-12-31', '3000-01-01'] as $date) {
+            try {
+                $this->service->create($this->input(['booking_date' => $date]), $this->userId);
+                $this->fail("ValidationError erwartet fuer $date");
+            } catch (ValidationError $e) {
+                $this->assertSame(['booking_date' => 'validation.date.invalid'], $e->errors);
+            }
+        }
+        $this->assertSame(0, (int) $this->pdo->query('SELECT count(*) FROM bookings')->fetchColumn());
+    }
+
+    public function test_create_rejects_invalid_utf8_in_free_text_fields(): void
+    {
+        try {
+            $this->service->create($this->input([
+                'description' => "Kaputt \xC3\x28", 'counterparty' => "\xFF", 'receipt_no' => "R-\x80",
+            ]), $this->userId);
+            $this->fail('ValidationError erwartet');
+        } catch (ValidationError $e) {
+            $this->assertSame([
+                'description' => 'validation.text.encoding',
+                'counterparty' => 'validation.text.encoding',
+                'receipt_no' => 'validation.text.encoding',
+            ], $e->errors);
+        }
+        $this->assertSame(0, (int) $this->pdo->query('SELECT count(*) FROM bookings')->fetchColumn());
+    }
+
     public function test_create_stores_empty_optional_fields_as_null_and_trims(): void
     {
         $booking = $this->service->create(

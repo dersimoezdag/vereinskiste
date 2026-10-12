@@ -4,10 +4,10 @@ declare(strict_types=1);
 namespace Vereinskiste\Web;
 
 use Closure;
-use DateTimeImmutable;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Vereinskiste\Ledger\AccountRepository;
+use Vereinskiste\Ledger\DateInput;
 use Vereinskiste\Ledger\InvalidAmount;
 use Vereinskiste\Ledger\Money;
 
@@ -51,7 +51,7 @@ final class AccountController extends AdminController
         if ($balance === null) {
             $errors['opening_balance'] = 'validation.amount.invalid';
         }
-        if (!self::validDate($input['opening_date'])) {
+        if (!DateInput::valid($input['opening_date'])) {
             $errors['opening_date'] = 'validation.date.invalid';
         }
 
@@ -129,11 +129,5 @@ final class AccountController extends AdminController
         } catch (InvalidAmount) {
             return null;
         }
-    }
-
-    private static function validDate(string $value): bool
-    {
-        $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
-        return $date !== false && $date->format('Y-m-d') === $value;
     }
 }

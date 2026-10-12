@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Vereinskiste\Ledger;
 
-use DateTimeImmutable;
 use PDO;
 
 final class BookingRepository
@@ -75,11 +74,8 @@ final class BookingRepository
         $out = [];
         foreach (['from', 'to'] as $key) {
             $value = $raw[$key] ?? null;
-            if (is_string($value)) {
-                $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
-                if ($date !== false && $date->format('Y-m-d') === $value) {
-                    $out[$key] = $value;
-                }
+            if (DateInput::valid($value)) {
+                $out[$key] = $value;
             }
         }
         foreach (['account_id', 'category_id'] as $key) {
@@ -93,7 +89,8 @@ final class BookingRepository
                 $out[$key] = $raw[$key];
             }
         }
-        if (isset($raw['q']) && is_string($raw['q'])) {
+        // Ungueltiges UTF-8 wuerde PostgreSQL mit einem Fehler quittieren: Suchbegriff dann ignorieren.
+        if (isset($raw['q']) && is_string($raw['q']) && mb_check_encoding($raw['q'], 'UTF-8')) {
             $q = mb_substr(trim($raw['q']), 0, self::Q_MAX);
             if ($q !== '') {
                 $out['q'] = $q;

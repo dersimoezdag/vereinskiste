@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Vereinskiste\Ledger;
 
-use DateTimeImmutable;
 use PDO;
 
 final class BookingService
@@ -52,8 +51,7 @@ final class BookingService
         }
 
         $date = $str('booking_date');
-        $parsed = DateTimeImmutable::createFromFormat('!Y-m-d', $date);
-        if ($parsed === false || $parsed->format('Y-m-d') !== $date) {
+        if (!DateInput::valid($date)) {
             $errors['booking_date'] = 'validation.date.invalid';
         }
 
@@ -72,15 +70,21 @@ final class BookingService
         $description = $str('description');
         if ($description === '') {
             $errors['description'] = 'validation.booking.description.required';
+        } elseif (!mb_check_encoding($description, 'UTF-8')) {
+            $errors['description'] = 'validation.text.encoding';
         } elseif (mb_strlen($description) > self::DESCRIPTION_MAX) {
             $errors['description'] = 'validation.booking.description.too_long';
         }
         $counterparty = $str('counterparty');
-        if (mb_strlen($counterparty) > self::COUNTERPARTY_MAX) {
+        if (!mb_check_encoding($counterparty, 'UTF-8')) {
+            $errors['counterparty'] = 'validation.text.encoding';
+        } elseif (mb_strlen($counterparty) > self::COUNTERPARTY_MAX) {
             $errors['counterparty'] = 'validation.booking.counterparty.too_long';
         }
         $receiptNo = $str('receipt_no');
-        if (mb_strlen($receiptNo) > self::RECEIPT_NO_MAX) {
+        if (!mb_check_encoding($receiptNo, 'UTF-8')) {
+            $errors['receipt_no'] = 'validation.text.encoding';
+        } elseif (mb_strlen($receiptNo) > self::RECEIPT_NO_MAX) {
             $errors['receipt_no'] = 'validation.booking.receipt_no.too_long';
         }
 

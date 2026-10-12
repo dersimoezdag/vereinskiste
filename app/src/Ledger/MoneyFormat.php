@@ -9,7 +9,7 @@ final class MoneyFormat
     /** "-1234.5" => "-1.234,50 €" (Nicht-Betraege werden unveraendert zurueckgegeben). */
     public static function eur(string $amount): string
     {
-        if (preg_match('/^(-?)(\d+)(?:\.(\d{1,2}))?$/', $amount, $m) !== 1) {
+        if (preg_match('/^(-?)(\d+)(?:\.(\d{1,2}))?\z/', $amount, $m) !== 1) {
             return $amount;
         }
         $int = (string) preg_replace('/\B(?=(\d{3})+(?!\d))/', '.', ltrim($m[2], '0') ?: '0');
