@@ -2,10 +2,7 @@
 {% block title %}{{ t('nav.settings') }}{% endblock %}
 {% block content %}
 <h1>{{ t('nav.settings') }}</h1>
-<nav class="nav nav-tabs mb-4" aria-label="{{ t('nav.settings') }}">
-    <a class="nav-link active" href="/settings" aria-current="page">{{ t('settings.version_updates') }}</a>
-    <a class="nav-link" href="/settings/closing">{{ t('nav.closing') }}</a>
-</nav>
+{% include 'components/settings_tabs.twig' %}
 <section class="card mb-4" aria-labelledby="version-title">
     <div class="card-body">
         <h2 class="card-title" id="version-title">{{ t('settings.version') }}</h2>

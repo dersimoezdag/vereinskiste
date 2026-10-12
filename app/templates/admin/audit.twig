@@ -1,7 +1,9 @@
 {% extends 'layout.twig' %}
 {% block title %}{{ t('audit.title') }}{% endblock %}
 {% block content %}
-<h1 class="mb-4">{{ t('audit.title') }}</h1>
+<h1>{{ t('nav.settings') }}</h1>
+{% include 'components/settings_tabs.twig' %}
+<h2 class="mb-4">{{ t('audit.title') }}</h2>
 
 <form method="get" action="/audit-log" class="d-flex flex-wrap align-items-end gap-2 mb-4">
     <div>

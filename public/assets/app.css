@@ -55,6 +55,18 @@ main, .table-cards td {
     align-items: center;
 }
 
+.navbar-vertical .nav-link-icon {
+    display: inline-flex;
+    flex: 0 0 1.5rem;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+}
+
+.navbar-vertical .icon {
+    flex-shrink: 0;
+}
+
 /* Kleine Links (z. B. Kennzeichen "geändert") als vollwertiges Touch-Ziel */
 .touch-target {
     display: inline-flex;
@@ -194,3 +206,70 @@ fieldset.card legend {
 .stepper-actions { display: flex; gap: 0.5rem; }
 .stepper-actions [hidden] { display: none !important; }
 form:not(.is-stepper) .stepper { display: none; }
+
+/* Benutzerkarte unten in der Seitenleiste (Material-Stil: tonale Flaeche, grosse Rundung, Elevation im Menue) */
+.user-card {
+    padding: 0.75rem;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.user-card-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-card-head .avatar {
+    flex-shrink: 0;
+    border-radius: 50%;
+    font-weight: 500;
+}
+
+.user-card-info {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.user-card-name {
+    font-weight: 500;
+    color: #fff;
+    overflow-wrap: anywhere;
+}
+
+.user-card-role {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.user-card-menu .btn {
+    color: rgba(255, 255, 255, 0.85);
+    border-radius: 50%;
+    min-width: 44px;
+}
+
+.user-card-menu .btn:hover,
+.user-card-menu .btn:focus-visible,
+.user-card-menu .btn.show {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.user-card-menu .icon {
+    stroke-width: 3;
+}
+
+.user-card-menu .dropdown-menu {
+    min-width: 14rem;
+    padding: 0.5rem 0;
+    border: 0;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px 3px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.user-card-menu .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 48px;
+    padding: 0 1rem;
+}

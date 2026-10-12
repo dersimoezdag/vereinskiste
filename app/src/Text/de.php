@@ -87,6 +87,8 @@ return [
 
     'nav.toggle' => 'Navigation ein- oder ausklappen',
     'nav.home' => 'Übersicht',
+    'nav.usermenu' => 'Benutzermenü',
+    'nav.cashbook' => 'Vereinskasse',
     'nav.bookings' => 'Buchungen',
     'nav.accounts' => 'Konten',
     'nav.categories' => 'Kategorien',

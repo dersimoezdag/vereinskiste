@@ -1,3 +1,4 @@
+{% import 'components/icons.twig' as icons %}
 <!doctype html>
 <html lang="de">
 <head>
@@ -23,52 +24,67 @@
             <div class="collapse navbar-collapse" id="sidebar-menu">
                 <ul class="navbar-nav pt-lg-3">
                     <li class="nav-item{% if path == '/' %} active{% endif %}">
-                        <a class="nav-link" href="/"><span class="nav-link-title">{{ t('nav.home') }}</span></a>
+                        <a class="nav-link" href="/"><span class="nav-link-icon">{{ icons.icon('home') }}</span><span class="nav-link-title">{{ t('nav.home') }}</span></a>
                     </li>
                     {% if can('bookings.read') %}
-                    <li class="nav-item{% if path starts with '/bookings' %} active{% endif %}">
-                        <a class="nav-link" href="/bookings"><span class="nav-link-title">{{ t('nav.bookings') }}</span></a>
-                    </li>
-                    <li class="nav-item{% if path starts with '/accounts' %} active{% endif %}">
-                        <a class="nav-link" href="/accounts"><span class="nav-link-title">{{ t('nav.accounts') }}</span></a>
-                    </li>
-                    <li class="nav-item{% if path starts with '/categories' %} active{% endif %}">
-                        <a class="nav-link" href="/categories"><span class="nav-link-title">{{ t('nav.categories') }}</span></a>
+                    {% set cashActive = path starts with '/bookings' or path starts with '/accounts' or path starts with '/categories' %}
+                    <li class="nav-item dropdown{% if cashActive %} active{% endif %}">
+                        <a class="nav-link dropdown-toggle{% if cashActive %} show{% endif %}" href="#cashbook-menu" data-bs-toggle="dropdown"
+                           data-bs-auto-close="false" role="button" aria-expanded="{{ cashActive ? 'true' : 'false' }}" aria-controls="cashbook-menu">
+                            <span class="nav-link-icon">{{ icons.icon('bookings') }}</span><span class="nav-link-title">{{ t('nav.cashbook') }}</span>
+                        </a>
+                        <div class="dropdown-menu{% if cashActive %} show{% endif %}" id="cashbook-menu">
+                            <a class="dropdown-item{% if path starts with '/bookings' %} active{% endif %}" href="/bookings">{{ t('nav.bookings') }}</a>
+                            <a class="dropdown-item{% if path starts with '/accounts' %} active{% endif %}" href="/accounts">{{ t('nav.accounts') }}</a>
+                            <a class="dropdown-item{% if path starts with '/categories' %} active{% endif %}" href="/categories">{{ t('nav.categories') }}</a>
+                        </div>
                     </li>
                     {% endif %}
                     {% if can('reports.read') %}
                     <li class="nav-item{% if path starts with '/reports' %} active{% endif %}">
-                        <a class="nav-link" href="/reports/summary"><span class="nav-link-title">{{ t('nav.reports') }}</span></a>
+                        <a class="nav-link" href="/reports/summary"><span class="nav-link-icon">{{ icons.icon('reports') }}</span><span class="nav-link-title">{{ t('nav.reports') }}</span></a>
                     </li>
                     {% endif %}
                     {% if can('settings.manage') %}
                     <li class="nav-item{% if path starts with '/settings/closing' %} active{% endif %}">
-                        <a class="nav-link" href="/settings/closing"><span class="nav-link-title">{{ t('nav.closing') }}</span></a>
-                    </li>
-                    <li class="nav-item{% if path starts with '/audit-log' %} active{% endif %}">
-                        <a class="nav-link" href="/audit-log"><span class="nav-link-title">{{ t('nav.audit') }}</span></a>
+                        <a class="nav-link" href="/settings/closing"><span class="nav-link-icon">{{ icons.icon('closing') }}</span><span class="nav-link-title">{{ t('nav.closing') }}</span></a>
                     </li>
                     {% endif %}
                     {% if can('users.manage') %}
                     <li class="nav-item{% if path starts with '/users' %} active{% endif %}">
-                        <a class="nav-link" href="/users"><span class="nav-link-title">{{ t('nav.users') }}</span></a>
+                        <a class="nav-link" href="/users"><span class="nav-link-icon">{{ icons.icon('users') }}</span><span class="nav-link-title">{{ t('nav.users') }}</span></a>
                     </li>
                     {% endif %}
                 </ul>
                 <div class="nav-user mt-auto pt-3">
                     {% if can('settings.manage') %}
-                    <a class="btn btn-outline-secondary w-100 mb-3{% if path starts with '/settings' or path == '/update' %} active{% endif %}"
-                       href="/settings"{% if path == '/settings' or path == '/update' %} aria-current="page"{% endif %}>{{ t('nav.settings') }}</a>
+                    <a class="btn btn-outline-secondary w-100 mb-3{% if path starts with '/settings' or path in ['/update', '/audit-log'] %} active{% endif %}"
+                       href="/settings"{% if path == '/settings' or path == '/update' %} aria-current="page"{% endif %}>{{ icons.icon('settings') }}{{ t('nav.settings') }}</a>
                     {% endif %}
-                    <div class="text-secondary mb-2">{{ user.name }}</div>
-                    <a class="btn btn-outline-secondary w-100 mb-2" href="/account/password">{{ t('nav.password') }}</a>
-                    <form method="post" action="/logout">
-                        {{ csrf_field() }}
-                        <button type="submit" class="btn btn-outline-secondary w-100">{{ t('nav.logout') }}</button>
-                    </form>
+                    {% set nameParts = user.name|split(' ') %}
+                    <div class="user-card">
+                        <div class="user-card-head">
+                            <span class="avatar bg-primary-lt" aria-hidden="true">{{ (nameParts|first|slice(0, 1) ~ (nameParts|length > 1 ? nameParts|last|slice(0, 1) : ''))|upper }}</span>
+                            <div class="user-card-info">
+                                <div class="user-card-name">{{ user.name }}</div>
+                                <div class="user-card-role">{% for role in user.roles %}{{ t('users.role.' ~ role) }}{% if not loop.last %}, {% endif %}{% endfor %}</div>
+                            </div>
+                        <div class="dropdown dropup user-card-menu">
+                            <button type="button" class="btn btn-icon btn-ghost-secondary" data-bs-toggle="dropdown" aria-expanded="false"
+                                    aria-label="{{ t('nav.usermenu') }}">{{ icons.icon('more') }}</button>
+                            <div class="dropdown-menu dropdown-menu-end">
+                                <a class="dropdown-item" href="/account/password">{{ icons.icon('password') }}{{ t('nav.password') }}</a>
+                                <form method="post" action="/logout">
+                                    {{ csrf_field() }}
+                                    <button type="submit" class="dropdown-item">{{ icons.icon('logout') }}{{ t('nav.logout') }}</button>
+                                </form>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
                 </div>
             </div>
-        </div>
     </aside>
     {% endif %}
     <div class="page-wrapper">
