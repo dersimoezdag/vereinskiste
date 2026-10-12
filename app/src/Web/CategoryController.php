@@ -4,15 +4,13 @@ declare(strict_types=1);
 namespace Vereinskiste\Web;
 
 use Closure;
-use PDOException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Vereinskiste\Ledger\CategoryRepository;
+use Vereinskiste\Ledger\NameAlreadyExists;
 
 final class CategoryController extends AdminController
 {
-    private const UNIQUE_VIOLATION = '23505';
-
     /** @param Closure():\PDO $pdo */
     public function __construct(private Closure $pdo)
     {
@@ -26,7 +24,7 @@ final class CategoryController extends AdminController
     public function create(Request $req, Response $res): Response
     {
         $name = $this->str($this->body($req), 'name');
-        $error = $this->check($name, null, fn () => $this->repo()->create($name));
+        $error = $this->check($name, null, fn () => $this->repo()->create($name, $this->userId($req)));
         if ($error !== null) {
             return $this->render($req, $res, 422, ['new_name' => $name, 'errors' => ['name' => $error]]);
         }
@@ -42,7 +40,7 @@ final class CategoryController extends AdminController
             return $this->notFound($req);
         }
         $name = $this->str($this->body($req), 'name');
-        $error = $this->check($name, $id, fn () => $this->repo()->rename($id, $name));
+        $error = $this->check($name, $id, fn () => $this->repo()->rename($id, $name, $this->userId($req)));
         if ($error !== null) {
             return $this->render($req, $res, 422, [
                 'edit_id' => $id, 'edit_name' => $name, 'errors' => ['name' => $error],
@@ -60,7 +58,7 @@ final class CategoryController extends AdminController
         if ($repo->find($id) === null) {
             return $this->notFound($req);
         }
-        $repo->toggleActive($id);
+        $repo->toggleActive($id, $this->userId($req));
         $this->flash($req, 'categories.flash.toggled');
         return $this->redirect('/categories');
     }
@@ -82,10 +80,7 @@ final class CategoryController extends AdminController
         }
         try {
             $write();
-        } catch (PDOException $e) {
-            if ($e->getCode() !== self::UNIQUE_VIOLATION) {
-                throw $e;
-            }
+        } catch (NameAlreadyExists) {
             return 'validation.category.duplicate';
         }
         return null;

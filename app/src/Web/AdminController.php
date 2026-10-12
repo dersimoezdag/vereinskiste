@@ -42,6 +42,11 @@ abstract class AdminController
         return null;
     }
 
+    protected function userId(Request $req): int
+    {
+        return $req->getAttribute('auth')->currentUser()['id'];
+    }
+
     protected function flash(Request $req, string $textKey): void
     {
         /** @var SessionStore $session */

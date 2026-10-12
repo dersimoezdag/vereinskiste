@@ -370,6 +370,16 @@ return [
     'audit.detail.fields' => 'Geänderte Felder',
     'audit.detail.roles_added' => 'Rollen hinzugefügt',
     'audit.detail.roles_removed' => 'Rollen entfernt',
+    'audit.detail.id' => 'ID',
+    'audit.detail.name' => 'Name',
+    'audit.action.account_created' => 'Konto angelegt',
+    'audit.action.account_renamed' => 'Konto umbenannt',
+    'audit.action.account_activated' => 'Konto aktiviert',
+    'audit.action.account_deactivated' => 'Konto deaktiviert',
+    'audit.action.category_created' => 'Kategorie angelegt',
+    'audit.action.category_renamed' => 'Kategorie umbenannt',
+    'audit.action.category_activated' => 'Kategorie aktiviert',
+    'audit.action.category_deactivated' => 'Kategorie deaktiviert',
 
     'nav.password' => 'Passwort ändern',
 

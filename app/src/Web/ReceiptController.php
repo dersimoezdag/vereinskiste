@@ -116,11 +116,6 @@ final class ReceiptController extends AdminController
         return $id === false ? null : (int) $id;
     }
 
-    private function userId(Request $req): int
-    {
-        return $req->getAttribute('auth')->currentUser()['id'];
-    }
-
     private function failed(Request $req, int $bookingId, ValidationError $e): Response
     {
         $key = $e->errors['receipt'] ?? $e->errors['reason'] ?? 'validation.receipt.upload_failed';

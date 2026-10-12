@@ -206,6 +206,39 @@ final class AccountsPagesTest extends TestCase
         $this->assertStringNotContainsString('Konto wurde angelegt.', (string) $this->get('/accounts')->getBody());
     }
 
+    public function test_master_data_changes_appear_in_audit_log_with_german_labels(): void
+    {
+        $this->loginAs(['vorstand']);
+        $this->postForm('/accounts', [
+            'name' => 'Vereinskonto', 'type' => 'bank', 'opening_balance' => '0', 'opening_date' => '2026-01-01',
+        ]);
+        $accountId = (int) $this->pdo->query('SELECT id FROM accounts')->fetchColumn();
+        $this->postForm('/accounts/' . $accountId, ['name' => 'Girokonto']);
+        $this->postForm('/accounts/' . $accountId . '/toggle', []);
+        $this->postForm('/categories', ['name' => 'Spenden']);
+        $categoryId = (int) $this->pdo->query('SELECT id FROM categories')->fetchColumn();
+        $this->postForm('/categories/' . $categoryId . '/toggle', []);
+        $this->postForm('/categories/' . $categoryId . '/toggle', []);
+        $this->pdo->exec("INSERT INTO audit_log (action, detail) VALUES ('future_action', '{\"x\": 1}')");
+
+        $res = $this->get('/audit-log');
+        $html = (string) $res->getBody();
+
+        $this->assertSame(200, $res->getStatusCode());
+        foreach (['Konto angelegt', 'Konto umbenannt', 'Konto deaktiviert', 'Kategorie angelegt',
+            'Kategorie deaktiviert', 'Kategorie aktiviert'] as $label) {
+            $this->assertStringContainsString($label, $html);
+        }
+        $this->assertStringContainsString('Vereinskonto', $html);
+        $this->assertStringContainsString('Girokonto', $html);
+        $this->assertStringNotContainsString('audit.action.account_', $html);
+        $this->assertStringNotContainsString('audit.detail.', $html);
+
+        $filtered = (string) $this->get('/audit-log?action=account_renamed')->getBody();
+        $this->assertStringContainsString('Girokonto', $filtered);
+        $this->assertStringNotContainsString('Spenden', $filtered);
+    }
+
     public function test_invalid_account_rerenders_with_422_and_field_errors(): void
     {
         $this->loginAs(['vorstand']);

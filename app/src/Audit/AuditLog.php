@@ -6,8 +6,9 @@ namespace Vereinskiste\Audit;
 use PDO;
 
 /**
- * Lesezugriff auf das Protokoll (Tabelle `audit_log`, per Trigger unveraenderlich).
- * Geschrieben wird es von den Stellen, die die Aktion ausloesen (Anmeldung, Abschluss).
+ * Zugriff auf das Protokoll (Tabelle `audit_log`, per Trigger unveraenderlich): Lesen fuer die
+ * Protokollseite, `record` fuer die Stammdaten (Konten, Kategorien). Aeltere Schreibstellen
+ * (Benutzerverwaltung, Abschluss) schreiben noch selbst in die Tabelle.
  */
 final class AuditLog
 {
@@ -16,6 +17,8 @@ final class AuditLog
         'login', 'login_failed', 'period_closed', 'period_reopened',
         'user_created', 'user_updated', 'user_deactivated', 'user_activated',
         'user_password_reset', 'password_changed', 'password_reset_completed',
+        'account_created', 'account_renamed', 'account_activated', 'account_deactivated',
+        'category_created', 'category_renamed', 'category_activated', 'category_deactivated',
     ];
 
     /** Aktionen, deren Details nie angezeigt werden (keine Personendaten im Protokoll-Bildschirm). */
@@ -23,6 +26,22 @@ final class AuditLog
 
     public function __construct(private PDO $pdo)
     {
+    }
+
+    /**
+     * Schreibt einen Eintrag. Der Aufrufer oeffnet vorher die Transaktion der protokollierten
+     * Aenderung, damit beides gemeinsam bestehen oder scheitern.
+     *
+     * @param array<string,mixed> $detail keine Personendaten
+     */
+    public function record(string $action, ?int $userId, array $detail = []): void
+    {
+        $this->pdo
+            ->prepare('INSERT INTO audit_log (user_id, action, detail) VALUES (?, ?, ?::jsonb)')
+            ->execute([
+                $userId, $action,
+                json_encode((object) $detail, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE),
+            ]);
     }
 
     /** Unbekannte Filterwerte werden zu null (kein Filter). */

@@ -10,6 +10,7 @@ use Vereinskiste\Ledger\AccountRepository;
 use Vereinskiste\Ledger\DateInput;
 use Vereinskiste\Ledger\InvalidAmount;
 use Vereinskiste\Ledger\Money;
+use Vereinskiste\Ledger\NameAlreadyExists;
 
 final class AccountController extends AdminController
 {
@@ -58,7 +59,13 @@ final class AccountController extends AdminController
         if ($errors !== []) {
             return $this->render($req, $res, 422, ['input' => $input, 'errors' => $errors]);
         }
-        $repo->create($input['name'], $input['type'], (string) $balance, $input['opening_date']);
+        try {
+            $repo->create($input['name'], $input['type'], (string) $balance, $input['opening_date'], $this->userId($req));
+        } catch (NameAlreadyExists) {
+            // Wettlauf: gleichzeitig angelegtes Konto gleichen Namens (DB-Eindeutigkeit)
+            $errors['name'] = 'validation.account.duplicate';
+            return $this->render($req, $res, 422, ['input' => $input, 'errors' => $errors]);
+        }
         $this->flash($req, 'accounts.flash.created');
         return $this->redirect('/accounts');
     }
@@ -81,7 +88,13 @@ final class AccountController extends AdminController
                 'edit_id' => $id, 'edit_name' => $name, 'errors' => ['name' => $error],
             ]);
         }
-        $repo->rename($id, $name);
+        try {
+            $repo->rename($id, $name, $this->userId($req));
+        } catch (NameAlreadyExists) {
+            return $this->render($req, $res, 422, [
+                'edit_id' => $id, 'edit_name' => $name, 'errors' => ['name' => 'validation.account.duplicate'],
+            ]);
+        }
         $this->flash($req, 'accounts.flash.renamed');
         return $this->redirect('/accounts');
     }
@@ -94,7 +107,7 @@ final class AccountController extends AdminController
         if ($repo->find($id) === null) {
             return $this->notFound($req);
         }
-        $repo->toggleActive($id);
+        $repo->toggleActive($id, $this->userId($req));
         $this->flash($req, 'accounts.flash.toggled');
         return $this->redirect('/accounts');
     }
