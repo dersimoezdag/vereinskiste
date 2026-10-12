@@ -1,0 +1,9 @@
+# Nur Entwicklung, nie Teil des Release.
+FROM php:8.1-cli
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      git unzip libpq-dev libpng-dev libjpeg-dev libfreetype6-dev libicu-dev libzip-dev libonig-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j2 pdo_pgsql mbstring gd intl zip \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+WORKDIR /work

@@ -1,0 +1,29 @@
+{
+    "name": "vereinskiste/vereinskiste",
+    "description": "Vereinskiste - Kassenbuch fuer kleine Vereine",
+    "license": "AGPL-3.0-or-later",
+    "type": "project",
+    "require": {
+        "php": ">=8.1",
+        "ext-pdo": "*",
+        "ext-pdo_pgsql": "*",
+        "slim/slim": "^4.12",
+        "slim/psr7": "^1.6",
+        "slim/twig-view": "^3.3",
+        "phpmailer/phpmailer": "^6.9",
+        "setasign/fpdf": "^1.8"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5"
+    },
+    "autoload": {
+        "psr-4": { "Vereinskiste\\": "src/" }
+    },
+    "autoload-dev": {
+        "psr-4": { "Vereinskiste\\Tests\\": "tests/" }
+    },
+    "config": {
+        "sort-packages": true,
+        "platform": { "php": "8.1.0" }
+    }
+}

@@ -1,0 +1,27 @@
+# Nur Entwicklung (kein PHP/Composer/PostgreSQL auf dem Host noetig). Nie Teil des Release.
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: vereinskiste_test
+      POSTGRES_USER: vk
+      POSTGRES_PASSWORD: vk
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vk -d vereinskiste_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    working_dir: /work
+    volumes:
+      - .:/work
+    environment:
+      VK_TEST_DSN: "pgsql:host=db;dbname=vereinskiste_test"
+      VK_TEST_USER: vk
+      VK_TEST_PASS: vk
+    depends_on:
+      db:
+        condition: service_healthy
