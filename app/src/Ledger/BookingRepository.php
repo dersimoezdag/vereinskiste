@@ -57,6 +57,28 @@ final class BookingRepository
         return array_map($this->cast(...), $stmt->fetchAll());
     }
 
+    /**
+     * Keyset-Paging fuer Exporte: aufsteigend nach Buchungsdatum und id, ab (ausschliesslich) `$after`
+     * = [Buchungsdatum, id]. Stabil auch bei gleichzeitig eingehenden Buchungen, anders als OFFSET.
+     *
+     * @param array<string,mixed> $filter wie bei search()
+     * @param array{0:string,1:int}|null $after Position der letzten bereits gelieferten Buchung
+     * @return list<array<string,mixed>>
+     */
+    public function searchAfter(array $filter, ?array $after, int $limit): array
+    {
+        [$where, $params] = $this->where(self::normalizeFilter($filter));
+        if ($after !== null) {
+            $where .= ($where === '' ? ' WHERE ' : ' AND ') . '(b.booking_date, b.id) > (?::date, ?::bigint)';
+            array_push($params, $after[0], $after[1]);
+        }
+        $stmt = $this->pdo->prepare(
+            self::SELECT . $where . ' ORDER BY b.booking_date, b.id LIMIT ' . max(1, $limit)
+        );
+        $stmt->execute($params);
+        return array_map($this->cast(...), $stmt->fetchAll());
+    }
+
     /** @param array<string,mixed> $filter */
     public function count(array $filter): int
     {

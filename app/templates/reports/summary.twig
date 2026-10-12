@@ -1,0 +1,112 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('reports.title') }}{% endblock %}
+{% block content %}
+<h1 class="mb-4">{{ t('reports.title') }}</h1>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" action="/reports/summary" novalidate>
+            <div class="row g-3">
+                <div class="col-6 col-md-3">
+                    <label class="form-label" for="r-from">{{ t('bookings.filter.from') }}</label>
+                    <input type="date" id="r-from" name="from" class="form-control{% if errors.from is defined %} is-invalid{% endif %}" value="{{ input.from }}">
+                    {% if errors.from is defined %}<div class="invalid-feedback">{{ t(errors.from) }}</div>{% endif %}
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label" for="r-to">{{ t('bookings.filter.to') }}</label>
+                    <input type="date" id="r-to" name="to" class="form-control{% if errors.to is defined %} is-invalid{% endif %}" value="{{ input.to }}">
+                    {% if errors.to is defined %}<div class="invalid-feedback">{{ t(errors.to) }}</div>{% endif %}
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label" for="r-account">{{ t('bookings.account') }}</label>
+                    <select id="r-account" name="account_id" class="form-select{% if errors.account_id is defined %} is-invalid{% endif %}">
+                        <option value="">{{ t('reports.all_accounts') }}</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}"{% if input.account_id == '' ~ account.id %} selected{% endif %}>{{ account.name }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if errors.account_id is defined %}<div class="invalid-feedback">{{ t(errors.account_id) }}</div>{% endif %}
+                </div>
+                <div class="col-12 col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">{{ t('reports.apply') }}</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if summary %}
+<div class="row row-cards mb-4">
+    <div class="col-12 col-md-4">
+        <div class="card"><div class="card-body">
+            <div class="text-secondary">{{ t('reports.income') }}</div>
+            <div class="h2 mb-0 text-success">{{ summary.income|eur }}</div>
+        </div></div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card"><div class="card-body">
+            <div class="text-secondary">{{ t('reports.expense') }}</div>
+            <div class="h2 mb-0 text-danger">{{ summary.expense|eur }}</div>
+        </div></div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card"><div class="card-body">
+            <div class="text-secondary">{{ t('reports.balance') }}</div>
+            <div class="h2 mb-0">{{ summary.balance|eur }}</div>
+        </div></div>
+    </div>
+    {% if summary.accountBalanceAtEnd is not null %}
+    <div class="col-12">
+        <div class="card"><div class="card-body">
+            <div class="text-secondary">{{ summary.account_name }} – {{ t('reports.account_balance_at_end') }} ({{ summary.to|date('d.m.Y') }})</div>
+            <div class="h2 mb-0">{{ summary.accountBalanceAtEnd|eur }}</div>
+        </div></div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card mb-3">
+    <div class="card-header"><h2 class="card-title">{{ t('reports.by_category') }}</h2></div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table table-cards">
+            <thead>
+                <tr>
+                    <th>{{ t('reports.category') }}</th>
+                    <th class="text-end">{{ t('reports.income') }}</th>
+                    <th class="text-end">{{ t('reports.expense') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for row in summary.byCategory %}
+                <tr>
+                    <td data-label="{{ t('reports.category') }}">{{ row.category_id is null ? t('reports.uncategorized') : row.name }}</td>
+                    <td data-label="{{ t('reports.income') }}" class="text-end">{{ row.income|eur }}</td>
+                    <td data-label="{{ t('reports.expense') }}" class="text-end">{{ row.expense|eur }}</td>
+                </tr>
+            {% else %}
+                <tr><td colspan="3" class="text-secondary">{{ t('reports.empty') }}</td></tr>
+            {% endfor %}
+            </tbody>
+            {% if summary.byCategory %}
+            <tfoot>
+                <tr class="fw-bold">
+                    <td data-label="{{ t('reports.total') }}">{{ t('reports.total') }}</td>
+                    <td data-label="{{ t('reports.income') }}" class="text-end">{{ summary.income|eur }}</td>
+                    <td data-label="{{ t('reports.expense') }}" class="text-end">{{ summary.expense|eur }}</td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+<p class="text-secondary small">{{ t('reports.note') }}</p>
+
+<div class="card">
+    <div class="card-header"><h2 class="card-title">{{ t('reports.export') }}</h2></div>
+    <div class="card-body d-flex flex-wrap gap-2">
+        <a class="btn" href="/reports/bookings.csv?{{ export_query }}">{{ t('reports.export.csv') }}</a>
+        <a class="btn" href="/reports/summary.pdf?{{ export_query }}">{{ t('reports.export.pdf') }}</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

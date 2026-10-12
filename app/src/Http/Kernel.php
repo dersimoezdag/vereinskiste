@@ -28,6 +28,7 @@ use Vereinskiste\Web\AuthController;
 use Vereinskiste\Web\BookingController;
 use Vereinskiste\Web\CategoryController;
 use Vereinskiste\Web\ReceiptController;
+use Vereinskiste\Web\ReportController;
 
 final class Kernel
 {
@@ -154,6 +155,11 @@ final class Kernel
         $app->post('/bookings/{id:[0-9]+}/receipts', [$receipts, 'upload'])->add(Auth::requires('bookings.write'));
         $app->post('/receipts/{id:[0-9]+}/replace', [$receipts, 'replace'])->add(Auth::requires('bookings.write'));
         $app->get('/receipts/{id:[0-9]+}', [$receipts, 'download'])->add(Auth::requires('bookings.read'));
+
+        $reports = new ReportController($pdoProvider, $texts);
+        $app->get('/reports/summary', [$reports, 'summary'])->add(Auth::requires('reports.read'));
+        $app->get('/reports/bookings.csv', [$reports, 'csv'])->add(Auth::requires('reports.read'));
+        $app->get('/reports/summary.pdf', [$reports, 'pdf'])->add(Auth::requires('reports.read'));
 
         return $app;
     }

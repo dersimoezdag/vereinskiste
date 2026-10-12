@@ -35,6 +35,11 @@
                         <a class="nav-link" href="/categories"><span class="nav-link-title">{{ t('nav.categories') }}</span></a>
                     </li>
                     {% endif %}
+                    {% if can('reports.read') %}
+                    <li class="nav-item{% if path starts with '/reports' %} active{% endif %}">
+                        <a class="nav-link" href="/reports/summary"><span class="nav-link-title">{{ t('nav.reports') }}</span></a>
+                    </li>
+                    {% endif %}
                     {% if can('users.manage') %}
                     <li class="nav-item{% if path starts with '/users' %} active{% endif %}">
                         <a class="nav-link" href="/users"><span class="nav-link-title">{{ t('nav.users') }}</span></a>
