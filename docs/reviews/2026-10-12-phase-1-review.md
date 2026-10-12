@@ -32,21 +32,31 @@ produktiven Hosting und keinen unabhängigen Sicherheits-Audit.
 
 ## Verbleibende Befunde im Kassenbuch
 
-1. **Buchungen vor dem Eröffnungsdatum eines Kontos:** `BookingService` und
+1. **Buchungen vor dem Eröffnungsdatum eines Kontos (behoben in diesem Branch):** `BookingService` und
    `TransferService` validieren dieses Datum nicht gegen `opening_date`.
    `AccountRepository::balance()` lässt ältere Buchungen aus, die
    Zeitraumsauswertung berücksichtigt sie. Die Fachregel sollte festgelegt
    werden: frühere Buchungen ablehnen oder ihre Behandlung konsistent erklären
    und darstellen. Ein vorhandener Saldo-Test bestätigt das derzeitige Auslassen.
-2. **Audit für Konten und Kategorien:** Erstellen, Umbenennen und Deaktivieren
+2. **Audit für Konten und Kategorien (behoben in diesem Branch):** Erstellen, Umbenennen und Deaktivieren
    schreiben derzeit keine Audit-Einträge. Die Benutzerverwaltung und Abschlüsse
    werden bereits protokolliert; die Stammdatenpflege sollte folgen.
-3. **Namenseindeutigkeit bei parallelen Anfragen:** `accounts` hat keinen
+3. **Namenseindeutigkeit bei parallelen Anfragen (behoben in diesem Branch):** `accounts` hat keinen
    eindeutigen Namensindex. `categories.name` ist nur case-sensitiv eindeutig,
    während die Anwendung mit `lower(name)` prüft. Zwei gleichzeitige Anfragen
    können die Prüfung bestehen und gleichnamige Konten beziehungsweise nur in
    Groß-/Kleinschreibung unterschiedliche Kategorien erzeugen. Die
    Datenbank-Constraints sollten dieselbe Regel wie die Anwendung durchsetzen.
+
+   Behebung: (1) `BookingService` und `TransferService` lehnen ein Buchungsdatum
+   vor dem Eröffnungsdatum des Kontos mit einer Validierungsmeldung ab (Anlegen,
+   Ändern von Datum oder Konto, Korrekturbuchung, beide Konten bei Umbuchungen;
+   Storno und Wiederherstellung bleiben möglich). (2) Anlegen, Umbenennen,
+   Aktivieren und Deaktivieren von Konten und Kategorien schreiben in derselben
+   Transaktion einen Protokolleintrag, der auf `/audit-log` mit deutschen
+   Bezeichnungen erscheint. (3) Migration `0005_unique_account_category_names.sql`
+   erzwingt `lower(name)` eindeutig für beide Tabellen; ein Wettlauf (SQLSTATE
+   23505) ergibt denselben Formularfehler wie die Anwendungsprüfung.
 
 ## Wartbarkeit und Duplikate
 

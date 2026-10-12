@@ -77,6 +77,12 @@ Die Anwendung bleibt im Wartungsmodus. Nach einem erfolgreichen Update nicht
 einfach alten Code über die neue Datenbank kopieren: bei einem Rollback das
 bisherige Release **und** das zugehörige Backup gemeinsam wiederherstellen.
 
+Migration 0005 macht Konto- und Kategorienamen ohne Beachtung der Groß-/Klein-
+schreibung eindeutig. Gibt es bereits Konten oder Kategorien, die sich nur in
+der Schreibweise unterscheiden, bricht das Update mit einer Meldung ab und
+ändert nichts: die genannten Einträge zuerst in der Anwendung (oder mit
+Datenbankwerkzeug) umbenennen und das Update wiederholen.
+
 ## Backup und Wiederherstellung
 
 Regelmäßig einen PostgreSQL-Dump über das Hosting-Panel oder ein geeignetes

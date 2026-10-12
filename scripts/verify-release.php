@@ -7,7 +7,7 @@ if ($argc !== 2 || $zip->open($argv[1]) !== true) {
     exit(1);
 }
 foreach (['app/vendor/autoload.php', 'app/bootstrap.php', 'app/migrations/0001_initial.sql',
-    'app/migrations/0004_password_resets.sql', 'app/config/', 'app/storage/',
+    'app/migrations/0005_unique_account_category_names.sql', 'app/config/', 'app/storage/',
     'public/index.php', 'public/.htaccess', 'public/assets/app.css',
     'public/assets/vendor/tabler/tabler.min.css', 'public/assets/vendor/tabler/tabler.min.js', 'LICENSE', 'README.md'] as $name) {
     if ($zip->locateName($name) === false) { throw new RuntimeException('Release-Datei fehlt: ' . $name); }

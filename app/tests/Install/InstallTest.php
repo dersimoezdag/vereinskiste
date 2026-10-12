@@ -84,7 +84,7 @@ final class InstallTest extends TestCase
 
     public function test_failed_install_rolls_back_all_migrations_and_keeps_config_absent(): void
     {
-        file_put_contents($this->dir . '/migrations/0005_fail.sql', 'THIS IS NOT SQL;');
+        file_put_contents($this->dir . '/migrations/0900_fail.sql', 'THIS IS NOT SQL;');
         try { $this->install(); $this->fail('Fehler erwartet'); } catch (RuntimeException) {
             $this->assertNull($this->pdo->query("SELECT to_regclass('public.users')")->fetchColumn());
             $this->assertFileDoesNotExist($this->dir . '/config/config.php');
@@ -115,8 +115,8 @@ final class InstallTest extends TestCase
     public function test_updater_requires_backup_and_rolls_back_complete_batch(): void
     {
         (new Migrator($this->pdo, $this->dir . '/migrations'))->migrate();
-        file_put_contents($this->dir . '/migrations/0005_good.sql', 'CREATE TABLE new_table (id int);');
-        file_put_contents($this->dir . '/migrations/0006_bad.sql', 'THIS IS NOT SQL;');
+        file_put_contents($this->dir . '/migrations/0900_good.sql', 'CREATE TABLE new_table (id int);');
+        file_put_contents($this->dir . '/migrations/0901_bad.sql', 'THIS IS NOT SQL;');
         $updater = new Updater($this->pdo, $this->dir . '/migrations');
         $this->assertTrue($updater->needsUpdate());
         try { $updater->run(false); $this->fail('Backup erforderlich'); } catch (RuntimeException) {
@@ -124,10 +124,10 @@ final class InstallTest extends TestCase
         }
         try { $updater->run(true); $this->fail('Migrationsfehler erwartet'); } catch (RuntimeException) {
             $this->assertNull($this->pdo->query("SELECT to_regclass('public.new_table')")->fetchColumn());
-            $this->assertSame('0004_password_resets.sql', (new Migrator($this->pdo, $this->dir . '/migrations'))->currentVersion());
+            $this->assertSame('0005_unique_account_category_names.sql', (new Migrator($this->pdo, $this->dir . '/migrations'))->currentVersion());
         }
-        unlink($this->dir . '/migrations/0006_bad.sql');
-        $this->assertSame(['0005_good.sql'], $updater->run(true));
+        unlink($this->dir . '/migrations/0901_bad.sql');
+        $this->assertSame(['0900_good.sql'], $updater->run(true));
         $this->assertFalse($updater->needsUpdate());
     }
 
@@ -168,7 +168,7 @@ final class InstallTest extends TestCase
     public function test_maintenance_blocks_business_routes_but_update_requires_vorstand(): void
     {
         (new Migrator($this->pdo, $this->dir . '/migrations'))->migrate();
-        file_put_contents($this->dir . '/migrations/0005_pending.sql', 'CREATE TABLE after_update (id int);');
+        file_put_contents($this->dir . '/migrations/0900_pending.sql', 'CREATE TABLE after_update (id int);');
         $store = new ArraySessionStore();
         $app = Kernel::create(['pdo' => $this->pdo, 'session_store' => $store, 'maintenance' => true,
             'migration_dir' => $this->dir . '/migrations']);
