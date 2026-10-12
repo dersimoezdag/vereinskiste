@@ -98,10 +98,11 @@ final class AccountsPagesTest extends TestCase
         string $status = 'active',
         string $kind = 'regular'
     ): void {
+        // Umbuchungen brauchen eine transfer_id (Constraint bookings_transfer_link)
         $this->pdo->prepare(
-            'INSERT INTO bookings (account_id, booking_date, amount, direction, description, kind, status, created_by)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-        )->execute([$accountId, $date, $amount, $direction, 'Test', $kind, $status, $userId]);
+            "INSERT INTO bookings (account_id, booking_date, amount, direction, description, kind, status, created_by, transfer_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN ? THEN nextval('booking_transfer_id_seq') END)"
+        )->execute([$accountId, $date, $amount, $direction, 'Test', $kind, $status, $userId, $kind === 'transfer' ? 'true' : 'false']);
     }
 
     public function test_balance_includes_opening_balance_and_ignores_cancelled(): void

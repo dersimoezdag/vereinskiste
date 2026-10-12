@@ -3,7 +3,15 @@
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <h1 class="mb-0">{{ t('bookings.detail') }} #{{ booking.id }}</h1>
-    <a class="btn" href="/bookings">{{ t('bookings.back') }}</a>
+    <div class="d-flex flex-wrap gap-2">
+        {% if can('bookings.write') and booking.kind != 'transfer' and booking.status == 'active' %}
+        <a class="btn btn-primary" href="/bookings/{{ booking.id }}/edit">{{ t('bookings.edit') }}</a>
+        {% endif %}
+        {% if can('bookings.write') %}
+        <a class="btn" href="/corrections/new?of={{ booking.id }}">{{ t('bookings.correction.of_this') }}</a>
+        {% endif %}
+        <a class="btn" href="/bookings">{{ t('bookings.back') }}</a>
+    </div>
 </div>
 
 <div class="card mb-4">
@@ -36,6 +44,19 @@
             <dt class="col-sm-4">{{ t('bookings.kind') }}</dt>
             <dd class="col-sm-8">{{ t('bookings.kind.' ~ booking.kind) }}</dd>
 
+            {% if original %}
+            <dt class="col-sm-4">{{ t('bookings.correction.original') }}</dt>
+            <dd class="col-sm-8"><a href="/bookings/{{ original.id }}">#{{ original.id }} {{ original.description }}</a></dd>
+            {% endif %}
+
+            {% for leg in counterparts %}
+            <dt class="col-sm-4">{{ t('bookings.transfer.counterpart') }}</dt>
+            <dd class="col-sm-8">
+                <a href="/bookings/{{ leg.id }}">#{{ leg.id }}</a>
+                {{ leg.account_name }} ({{ t('bookings.direction.' ~ leg.direction) }})
+            </dd>
+            {% endfor %}
+
             <dt class="col-sm-4">{{ t('bookings.status') }}</dt>
             <dd class="col-sm-8">{{ t('bookings.status.' ~ booking.status) }}</dd>
 
@@ -47,4 +68,16 @@
         </dl>
     </div>
 </div>
+
+{% if can('bookings.write') %}
+{% set action = booking.status == 'active' ? 'cancel' : 'restore' %}
+<div class="card mb-4">
+    <div class="card-header"><h2 class="card-title">{{ t('bookings.' ~ action ~ '.title') }}</h2></div>
+    <div class="card-body">
+        {% include 'bookings/_status_form.twig' with {action: action, version: booking.version, reason: '', errors: {}} %}
+    </div>
+</div>
+{% endif %}
+
+{% include 'bookings/_history.twig' %}
 {% endblock %}

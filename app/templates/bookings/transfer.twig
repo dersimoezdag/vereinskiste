@@ -1,0 +1,54 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('bookings.transfer.title') }}{% endblock %}
+{% block content %}
+<h1 class="mb-4">{{ t('bookings.transfer.title') }}</h1>
+
+<div class="card">
+    <div class="card-body">
+        <p class="text-secondary">{{ t('bookings.transfer.hint') }}</p>
+        <form method="post" action="/transfers/new" novalidate>
+            {{ csrf_field() }}
+            <div class="row g-3">
+                {% for field, label in {from_account_id: 'bookings.transfer.from', to_account_id: 'bookings.transfer.to'} %}
+                <div class="col-md-6">
+                    <label class="form-label" for="t-{{ field }}">{{ t(label) }}</label>
+                    <select id="t-{{ field }}" name="{{ field }}" required
+                            class="form-select{% if errors[field] is defined %} is-invalid{% endif %}">
+                        <option value="">{{ t('bookings.choose') }}</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}"{% if input[field] == (account.id ~ '') %} selected{% endif %}>{{ account.name }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if errors[field] is defined %}<div class="invalid-feedback">{{ t(errors[field]) }}</div>{% endif %}
+                </div>
+                {% endfor %}
+                <div class="col-md-6">
+                    <label class="form-label" for="t-date">{{ t('bookings.date') }}</label>
+                    <input type="date" id="t-date" name="booking_date" required
+                           class="form-control{% if errors.booking_date is defined %} is-invalid{% endif %}"
+                           value="{{ input.booking_date }}">
+                    {% if errors.booking_date is defined %}<div class="invalid-feedback">{{ t(errors.booking_date) }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="t-amount">{{ t('bookings.amount_eur') }}</label>
+                    <input type="text" inputmode="decimal" id="t-amount" name="amount" required
+                           class="form-control{% if errors.amount is defined %} is-invalid{% endif %}"
+                           value="{{ input.amount }}">
+                    {% if errors.amount is defined %}<div class="invalid-feedback">{{ t(errors.amount) }}</div>{% endif %}
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="t-description">{{ t('bookings.description') }}</label>
+                    <input type="text" id="t-description" name="description" maxlength="500" required
+                           class="form-control{% if errors.description is defined %} is-invalid{% endif %}"
+                           value="{{ input.description }}">
+                    {% if errors.description is defined %}<div class="invalid-feedback">{{ t(errors.description) }}</div>{% endif %}
+                </div>
+            </div>
+            <div class="mt-4 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary">{{ t('bookings.transfer.submit') }}</button>
+                <a class="btn" href="/bookings">{{ t('common.cancel') }}</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

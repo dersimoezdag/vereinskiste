@@ -1,0 +1,10 @@
+{# Pflichtgrund fuer den Aenderungsverlauf. Erwartet: reason, errors; optional: reason_label, reason_id #}
+{% set reason_id = reason_id ?? 'b-reason' %}
+<div class="mt-3">
+    <label class="form-label required" for="{{ reason_id }}">{{ t(reason_label ?? 'bookings.reason') }}</label>
+    <textarea id="{{ reason_id }}" name="reason" rows="2" maxlength="500" required
+              aria-describedby="{{ reason_id }}-help"
+              class="form-control{% if errors.reason is defined %} is-invalid{% endif %}">{{ reason }}</textarea>
+    {% if errors.reason is defined %}<div class="invalid-feedback">{{ t(errors.reason) }}</div>{% endif %}
+    <div class="form-hint" id="{{ reason_id }}-help">{{ t('bookings.reason.help') }}</div>
+</div>

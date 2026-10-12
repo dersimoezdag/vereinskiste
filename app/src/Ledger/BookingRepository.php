@@ -12,13 +12,16 @@ final class BookingRepository
     public const DIRECTIONS = ['in', 'out'];
     private const Q_MAX = 100;
 
+    // "changed": es gibt Verlaufseintraege ausser dem Anlage-Eintrag (ChangeLog::CREATED, z. B. Korrekturbuchung).
     private const SELECT = "
         SELECT b.id, b.account_id, a.name AS account_name, b.booking_date::text AS booking_date,
                b.amount::text AS amount, b.direction, b.category_id, c.name AS category_name,
                b.description, b.counterparty, b.receipt_no, b.kind, b.status, b.correction_of_id,
                b.transfer_id, b.version, b.created_by, u.name AS created_by_name,
                b.created_at::text AS created_at, b.updated_at::text AS updated_at,
-               EXISTS (SELECT 1 FROM booking_changes bc WHERE bc.booking_id = b.id) AS changed
+               EXISTS (SELECT 1 FROM booking_changes bc
+                        WHERE bc.booking_id = b.id
+                          AND NOT bc.changes @> '[{\"field\":\"created\"}]'::jsonb) AS changed
           FROM bookings b
           JOIN accounts a ON a.id = b.account_id
           JOIN users u ON u.id = b.created_by

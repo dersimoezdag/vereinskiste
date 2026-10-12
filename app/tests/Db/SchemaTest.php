@@ -109,4 +109,23 @@ final class SchemaTest extends TestCase
         $this->assertSame('correction', $row['kind']);
         $this->assertNull($row['correction_of_id']);
     }
+
+    public function test_transfer_and_correction_invariants_are_enforced(): void
+    {
+        [$pdo, $id] = $this->withBooking();
+        $insert = "INSERT INTO bookings (account_id, booking_date, amount, direction, description, created_by, %s)
+                   VALUES (1, '2026-01-05', 1.00, 'out', 'x', 1, %s)";
+        // Umbuchung ohne transfer_id, transfer_id ohne Umbuchung, Umbuchung mit Kategorie
+        $this->assertRejected($pdo, sprintf($insert, 'kind', "'transfer'"), '23514');
+        $this->assertRejected($pdo, sprintf($insert, 'transfer_id', '7'), '23514');
+        $pdo->exec("INSERT INTO categories (name) VALUES ('Miete')");
+        $this->assertRejected($pdo, sprintf($insert, 'kind, transfer_id, category_id', "'transfer', 7, 1"), '23514');
+        // Verweis auf Ursprungsbuchung nur bei Korrekturbuchungen
+        $this->assertRejected($pdo, sprintf($insert, 'correction_of_id', (string) $id), '23514');
+        $this->assertRejected($pdo, "UPDATE bookings SET version = 0 WHERE id = $id", '23514');
+
+        $pdo->exec(sprintf($insert, 'kind, transfer_id', "'transfer', nextval('booking_transfer_id_seq')"));
+        $pdo->exec(sprintf($insert, 'kind, correction_of_id', "'correction', $id"));
+        $this->assertSame(3, (int) $pdo->query('SELECT count(*) FROM bookings')->fetchColumn());
+    }
 }

@@ -12,13 +12,19 @@ abstract class TestCase extends BaseTestCase
     /** Frisches, leeres Schema pro Aufruf. */
     protected function pdo(): PDO
     {
-        $pdo = Connection::fromConfig([
+        $pdo = $this->connect();
+        $pdo->exec('DROP SCHEMA IF EXISTS public CASCADE');
+        $pdo->exec('CREATE SCHEMA public');
+        return $pdo;
+    }
+
+    /** Weitere Verbindung zur Testdatenbank, ohne das Schema anzufassen (z. B. fuer Nebenlaeufigkeit). */
+    protected function connect(): PDO
+    {
+        return Connection::fromConfig([
             'dsn' => getenv('VK_TEST_DSN') ?: 'pgsql:host=localhost;dbname=vereinskiste_test',
             'user' => getenv('VK_TEST_USER') ?: 'vk',
             'pass' => getenv('VK_TEST_PASS') ?: 'vk',
         ]);
-        $pdo->exec('DROP SCHEMA IF EXISTS public CASCADE');
-        $pdo->exec('CREATE SCHEMA public');
-        return $pdo;
     }
 }

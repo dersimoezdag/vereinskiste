@@ -1,0 +1,65 @@
+{# Aenderungsverlauf einer Buchung. Erwartet: history (ChangeLog::forBooking), account_names, category_names #}
+{% macro value(field, v, account_names, category_names) %}
+{%- if v is null or v is same as('') -%}
+    –
+{%- elseif field == 'account_id' -%}
+    {{ account_names[v] ?? ('#' ~ v) }}
+{%- elseif field == 'category_id' -%}
+    {{ category_names[v] ?? ('#' ~ v) }}
+{%- elseif field == 'amount' -%}
+    {{ v|eur }}
+{%- elseif field == 'booking_date' -%}
+    {{ v|date('d.m.Y') }}
+{%- elseif field == 'direction' -%}
+    {{ t('bookings.direction.' ~ v) }}
+{%- elseif field == 'status' -%}
+    {{ t('bookings.status.' ~ v) }}
+{%- else -%}
+    {{ v }}
+{%- endif -%}
+{% endmacro %}
+{% import _self as h %}
+<div class="card mb-4" id="history">
+    <div class="card-header"><h2 class="card-title">{{ t('bookings.history') }}</h2></div>
+    {% if history is empty %}
+    <div class="card-body text-secondary">{{ t('bookings.history.empty') }}</div>
+    {% else %}
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table table-cards">
+            <thead>
+                <tr>
+                    <th>{{ t('bookings.history.when') }}</th>
+                    <th>{{ t('bookings.history.who') }}</th>
+                    <th>{{ t('bookings.history.what') }}</th>
+                    <th>{{ t('bookings.history.reason') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for entry in history %}
+                <tr>
+                    <td data-label="{{ t('bookings.history.when') }}">{{ entry.changed_at|date('d.m.Y H:i') }}</td>
+                    <td data-label="{{ t('bookings.history.who') }}">{{ entry.changed_by_name }}</td>
+                    <td data-label="{{ t('bookings.history.what') }}">
+                        <ul class="list-unstyled mb-0">
+                        {% for change in entry.changes %}
+                            {% if change.field == 'created' %}
+                            <li>{{ t('bookings.history.created') }}</li>
+                            {% else %}
+                            <li>
+                                <strong>{{ t('bookings.field.' ~ change.field) }}:</strong>
+                                {{ h.value(change.field, change.from, account_names, category_names) }}
+                                →
+                                {{ h.value(change.field, change.to, account_names, category_names) }}
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        </ul>
+                    </td>
+                    <td data-label="{{ t('bookings.history.reason') }}">{{ entry.reason }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>

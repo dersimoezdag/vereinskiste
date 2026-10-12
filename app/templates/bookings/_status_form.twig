@@ -1,0 +1,13 @@
+{# Storno / Ruecknahme. Erwartet: booking, action ('cancel'|'restore'), version, reason, errors #}
+<form method="post" action="/bookings/{{ booking.id }}/{{ action }}" novalidate>
+    {{ csrf_field() }}
+    <input type="hidden" name="version" value="{{ version }}">
+    <p class="text-secondary mb-0">
+        {{ t('bookings.' ~ action ~ '.hint') }}
+        {% if booking.kind == 'transfer' %}{{ t('bookings.' ~ action ~ '.transfer_hint') }}{% endif %}
+    </p>
+    {% include 'bookings/_reason.twig' with {reason_id: 'b-reason-' ~ action} %}
+    <div class="mt-3">
+        <button type="submit" class="btn {{ action == 'cancel' ? 'btn-danger' : 'btn-primary' }}">{{ t('bookings.' ~ action) }}</button>
+    </div>
+</form>

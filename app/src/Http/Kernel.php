@@ -134,6 +134,14 @@ final class Kernel
         $app->get('/bookings/new', [$bookings, 'showNew'])->add(Auth::requires('bookings.write'));
         $app->post('/bookings/new', [$bookings, 'create'])->add(Auth::requires('bookings.write'));
         $app->get('/bookings/{id:[0-9]+}', [$bookings, 'show'])->add(Auth::requires('bookings.read'));
+        $app->get('/bookings/{id:[0-9]+}/edit', [$bookings, 'showEdit'])->add(Auth::requires('bookings.write'));
+        $app->post('/bookings/{id:[0-9]+}/edit', [$bookings, 'update'])->add(Auth::requires('bookings.write'));
+        $app->post('/bookings/{id:[0-9]+}/cancel', [$bookings, 'cancel'])->add(Auth::requires('bookings.write'));
+        $app->post('/bookings/{id:[0-9]+}/restore', [$bookings, 'restore'])->add(Auth::requires('bookings.write'));
+        $app->get('/corrections/new', [$bookings, 'showCorrection'])->add(Auth::requires('bookings.write'));
+        $app->post('/corrections/new', [$bookings, 'createCorrection'])->add(Auth::requires('bookings.write'));
+        $app->get('/transfers/new', [$bookings, 'showTransfer'])->add(Auth::requires('bookings.write'));
+        $app->post('/transfers/new', [$bookings, 'createTransfer'])->add(Auth::requires('bookings.write'));
 
         return $app;
     }

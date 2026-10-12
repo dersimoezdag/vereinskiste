@@ -1,0 +1,32 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('bookings.correction.title') }}{% endblock %}
+{% block content %}
+<h1 class="mb-4">{{ t('bookings.correction.title') }}</h1>
+
+<div class="card">
+    <div class="card-body">
+        <p class="text-secondary">{{ t('bookings.correction.hint') }}</p>
+        {% if original %}
+        <p>
+            {{ t('bookings.correction.original') }}:
+            <a href="/bookings/{{ original.id }}">#{{ original.id }} {{ original.description }}</a>
+            ({{ original.booking_date|date('d.m.Y') }}, {{ original.account_name }},
+            {{ (original.direction == 'in' ? '+' : '−') ~ (original.amount|eur) }})
+        </p>
+        {% else %}
+        <p>{{ t('bookings.correction.without_original') }}</p>
+        {% endif %}
+        {% if errors.correction_of_id is defined %}<div class="alert alert-danger" role="alert">{{ t(errors.correction_of_id) }}</div>{% endif %}
+        <form method="post" action="/corrections/new" novalidate>
+            {{ csrf_field() }}
+            <input type="hidden" name="correction_of_id" value="{{ correction_of_id }}">
+            {% include 'bookings/_fields.twig' with {description_optional: true} %}
+            {% include 'bookings/_reason.twig' with {reason_label: 'bookings.correction.reason'} %}
+            <div class="mt-4 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary">{{ t('bookings.correction.submit') }}</button>
+                <a class="btn" href="{{ original ? '/bookings/' ~ original.id : '/bookings' }}">{{ t('common.cancel') }}</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

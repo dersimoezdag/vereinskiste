@@ -9,12 +9,19 @@ use Slim\Views\Twig;
 
 final class ErrorPage
 {
-    public static function render(Twig $view, int $status, string $titleKey, string $textKey): ResponseInterface
-    {
+    /** `$backUrl`: optionaler Link (z. B. "Buchung neu laden") unter dem Text. */
+    public static function render(
+        Twig $view,
+        int $status,
+        string $titleKey,
+        string $textKey,
+        ?string $backUrl = null,
+        string $backKey = 'common.back'
+    ): ResponseInterface {
         return $view->render(
             (new Response())->withStatus($status),
             'error.twig',
-            ['title_key' => $titleKey, 'text_key' => $textKey]
+            ['title_key' => $titleKey, 'text_key' => $textKey, 'back_url' => $backUrl, 'back_key' => $backKey]
         );
     }
 }
