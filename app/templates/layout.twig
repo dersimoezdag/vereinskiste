@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{{ t('app.name') }}{% endblock %} – {{ t('app.name') }}</title>
+</head>
+<body>
+<header>
+    <strong>{{ t('app.name') }}</strong>
+    {% if current_user() %}
+    <nav>
+        <span>{{ current_user().name }}</span>
+        {% if can('users.manage') %}<a href="/users">{{ t('nav.users') }}</a>{% endif %}
+        <form method="post" action="/logout">
+            {{ csrf_field() }}
+            <button type="submit">{{ t('nav.logout') }}</button>
+        </form>
+    </nav>
+    {% endif %}
+</header>
+<main>
+{% block content %}{% endblock %}
+</main>
+</body>
+</html>
