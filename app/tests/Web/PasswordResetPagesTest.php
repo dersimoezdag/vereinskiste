@@ -119,7 +119,7 @@ final class PasswordResetPagesTest extends TestCase
     {
         $this->configure(false);
         $this->assertStringNotContainsString('href="/password-reset"', (string) $this->get('/login')->getBody());
-        $this->assertStringContainsString('Bitte wende dich an einen Vorstand', (string) $this->get('/password-reset')->getBody());
+        $this->assertStringContainsString('Bitte wende dich an einen Administrator oder Vorstand', (string) $this->get('/password-reset')->getBody());
         $this->postForm('/password-reset', ['email' => 'user@example.org']);
         $this->assertCount(0, $this->messages);
     }

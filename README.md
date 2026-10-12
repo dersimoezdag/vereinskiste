@@ -42,7 +42,7 @@ Die Anwendung wird direkt unter einer Domain betrieben, etwa
    den PHP-Prozess beschreibbar machen. Keine pauschalen Schreibrechte für alle
    Benutzer vergeben. Bei Apache muss URL-Rewriting aktiv sein.
 5. Einen zufälligen Einrichtungsschlüssel (mindestens 32 Zeichen aus Buchstaben, Ziffern, `_` und `-`) in `app/config/setup.key` außerhalb des Webroots hochladen. `/install` über HTTPS öffnen und mit diesem Schlüssel freigeben. Systemprüfung prüfen, Datenbank-Zugangsdaten,
-   Vereinsname, HTTPS-Adresse und den ersten Vorstand eintragen.
+   Vereinsname, HTTPS-Adresse und den ersten Administrator eintragen.
 6. SMTP ist optional: Host, Port, Absender und Zugangsdaten eintragen. `TLS` mit
    Port 587 oder `SSL` mit Port 465 gemäß dem Mailanbieter wählen. Ohne SMTP
    kann ein anderer Vorstand ein vergessenes Passwort zurücksetzen.

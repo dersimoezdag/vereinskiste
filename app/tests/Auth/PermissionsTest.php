@@ -39,4 +39,10 @@ final class PermissionsTest extends TestCase
     {
         $this->assertEqualsCanonicalizing(Permissions::ALL, Permissions::for(['vorstand']));
     }
+
+    public function test_admin_is_a_supported_role_with_every_permission(): void
+    {
+        $this->assertContains('admin', Permissions::ROLES);
+        $this->assertEqualsCanonicalizing(Permissions::ALL, Permissions::for(['admin']));
+    }
 }

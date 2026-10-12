@@ -314,7 +314,7 @@ final class UsersPagesTest extends TestCase
     {
         $this->loginAs(['vorstand']);
 
-        foreach ([[], ['hacker'], ['kassenwart', 'admin'], 'vorstand'] as $roles) {
+        foreach ([[], ['hacker'], ['kassenwart', 'unknown-role'], 'vorstand'] as $roles) {
             $res = $this->postForm('/users/new', $this->newUser(['roles' => $roles]));
             $this->assertSame(422, $res->getStatusCode(), json_encode($roles));
         }

@@ -194,4 +194,21 @@ final class UserRepositoryTest extends TestCase
         }
         $this->assertTrue($this->repo->findById($a)['active']);
     }
+
+    public function test_last_admin_remains_protected_and_a_vorstand_can_take_over(): void
+    {
+        $admin = $this->user('admin@example.org', ['admin']);
+        $actor = $this->user('actor@example.org', ['kassenwart']);
+        try {
+            $this->repo->update($admin, 'Admin', 'admin@example.org', ['kassenwart'], true, $actor);
+            $this->fail('Letzter Administrator darf nicht entmachtet werden');
+        } catch (ValidationError $e) {
+            $this->assertSame(['roles' => 'validation.user.last_vorstand'], $e->errors);
+        }
+        $this->assertSame(['admin'], $this->roles($admin));
+        $vorstand = $this->user('vorstand@example.org', ['vorstand']);
+        $this->repo->update($admin, 'Admin', 'admin@example.org', ['kassenwart'], true, $vorstand);
+        $this->assertSame(['kassenwart'], $this->roles($admin));
+        $this->assertSame(['vorstand'], $this->roles($vorstand));
+    }
 }

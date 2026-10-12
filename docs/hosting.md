@@ -22,7 +22,7 @@ https://www.php.net/supported-versions.php
    unter `app/config/setup.key` hochladen, außerhalb des Webroots und mit 0600.
    Jeder Betreiber erzeugt seinen eigenen Schlüssel; das ZIP enthält keinen.
 5. Domain freigeben, `/install` über HTTPS öffnen, Schlüssel eingeben und dann
-   Systemprüfung, Datenbank, Verein und ersten Vorstand einrichten. Der
+   Systemprüfung, Datenbank, Verein und ersten Administrator einrichten. Der
    Schlüssel wird nach Erfolg entfernt; Konfiguration und Installationssperre
    verhindern eine erneute Einrichtung. Schlüssel niemals in eine URL setzen.
 6. SMTP nach Angaben des Anbieters einstellen: STARTTLS/587 oder TLS/465,
