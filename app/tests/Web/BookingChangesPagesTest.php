@@ -365,6 +365,17 @@ final class BookingChangesPagesTest extends TestCase
         $this->assertSame(0, substr_count($list, 'geändert'), 'Neue Korrektur ist nicht "geaendert"');
     }
 
+    public function test_correction_reference_with_trailing_newline_is_ignored(): void
+    {
+        $uid = $this->loginAs(['kassenwart']);
+        $original = $this->booking($uid);
+
+        $html = (string) $this->get('/corrections/new', ['of' => $original . "\n"])->getBody();
+
+        $this->assertStringContainsString('name="correction_of_id" value=""', $html);
+        $this->assertStringNotContainsString('Raummiete März', $html);
+    }
+
     public function test_correction_without_original_for_cash_difference(): void
     {
         $this->loginAs(['kassenwart']);

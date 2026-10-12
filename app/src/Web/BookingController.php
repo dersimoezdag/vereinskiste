@@ -42,7 +42,7 @@ final class BookingController extends AdminController
         $total = $repo->count($filter);
         $pages = max(1, (int) ceil($total / self::PAGE_SIZE));
         $rawPage = $query['page'] ?? '1';
-        $page = is_string($rawPage) && preg_match('/^\d{1,9}$/', $rawPage) === 1 ? (int) $rawPage : 1;
+        $page = is_string($rawPage) && preg_match('/^\d{1,9}\z/', $rawPage) === 1 ? (int) $rawPage : 1;
         $page = min(max(1, $page), $pages);
 
         $base = http_build_query($filter);
@@ -176,7 +176,7 @@ final class BookingController extends AdminController
         $of = $req->getQueryParams()['of'] ?? null;
         $original = null;
         $input = [];
-        if (is_string($of) && preg_match('/^[1-9]\d{0,17}$/', $of) === 1) {
+        if (is_string($of) && preg_match('/^[1-9]\d{0,17}\z/', $of) === 1) {
             $original = (new BookingRepository(($this->pdo)()))->find((int) $of);
             if ($original === null) {
                 return $this->notFound($req);
@@ -199,7 +199,7 @@ final class BookingController extends AdminController
         $reason = $this->str($body, 'reason');
         $rawOf = $this->str($body, 'correction_of_id');
         // Unbrauchbarer Verweis wird zu 0 und vom Service als "gibt es nicht" gemeldet.
-        $of = $rawOf === '' ? null : (preg_match('/^[1-9]\d{0,17}$/', $rawOf) === 1 ? (int) $rawOf : 0);
+        $of = $rawOf === '' ? null : (preg_match('/^[1-9]\d{0,17}\z/', $rawOf) === 1 ? (int) $rawOf : 0);
 
         try {
             $booking = (new BookingService($pdo))->createCorrection($input, $of, $reason, $this->userId($req));
@@ -230,7 +230,7 @@ final class BookingController extends AdminController
         foreach (self::TRANSFER_FIELDS as $field) {
             $input[$field] = $this->str($body, $field);
         }
-        $accountId = static fn (string $v): int => preg_match('/^[1-9]\d{0,17}$/', $v) === 1 ? (int) $v : 0;
+        $accountId = static fn (string $v): int => preg_match('/^[1-9]\d{0,17}\z/', $v) === 1 ? (int) $v : 0;
 
         try {
             [$out] = (new TransferService(($this->pdo)()))->create(
@@ -373,7 +373,7 @@ final class BookingController extends AdminController
     /** Version aus dem Hidden-Feld; Unbrauchbares wird 0 und fuehrt damit zum Versionskonflikt. */
     private function version(string $raw): int
     {
-        return preg_match('/^[1-9]\d{0,8}$/', $raw) === 1 ? (int) $raw : 0;
+        return preg_match('/^[1-9]\d{0,8}\z/', $raw) === 1 ? (int) $raw : 0;
     }
 
     private function userId(Request $req): int

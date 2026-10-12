@@ -83,7 +83,7 @@ final class BookingRepository
         }
         foreach (['account_id', 'category_id'] as $key) {
             $value = $raw[$key] ?? null;
-            if ((is_string($value) || is_int($value)) && preg_match('/^[1-9]\d{0,17}$/', (string) $value) === 1) {
+            if ((is_string($value) || is_int($value)) && preg_match('/^[1-9]\d{0,17}\z/', (string) $value) === 1) {
                 $out[$key] = (int) $value;
             }
         }

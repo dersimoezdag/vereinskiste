@@ -137,7 +137,7 @@ final class BookingService
     {
         $reasonError = ChangeLog::reasonError($reason);
         $description = $input['description'] ?? null;
-        if ($reasonError === null && (!is_string($description) || trim($description) === '')) {
+        if ($reasonError === null && (!is_string($description) || TextInput::isBlank($description))) {
             $input['description'] = trim($reason);
         }
 
@@ -262,8 +262,12 @@ final class BookingService
         }
 
         $description = $str('description');
-        $error = $description === '' ? 'validation.booking.description.required'
-            : self::textError($description, self::DESCRIPTION_MAX, 'validation.booking.description.too_long');
+        $error = self::textError(
+            $description,
+            self::DESCRIPTION_MAX,
+            'validation.booking.description.too_long',
+            'validation.booking.description.required'
+        );
         if ($error !== null) {
             $errors['description'] = $error;
         }
@@ -290,11 +294,17 @@ final class BookingService
         ], $errors];
     }
 
-    /** Freitext: gueltiges UTF-8 und Laengengrenze. */
-    public static function textError(string $value, int $max, string $tooLongKey): ?string
+    /**
+     * Freitext: gueltiges UTF-8, bei Pflichtfeldern (`$requiredKey`) nicht leer im Sinne von
+     * TextInput::isBlank (auch kein reiner Unicode-Leerraum), Laengengrenze.
+     */
+    public static function textError(string $value, int $max, string $tooLongKey, ?string $requiredKey = null): ?string
     {
         if (!mb_check_encoding($value, 'UTF-8')) {
             return 'validation.text.encoding';
+        }
+        if ($requiredKey !== null && TextInput::isBlank($value)) {
+            return $requiredKey;
         }
         return mb_strlen($value) > $max ? $tooLongKey : null;
     }

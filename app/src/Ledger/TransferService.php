@@ -51,10 +51,11 @@ final class TransferService
             $errors['booking_date'] = 'validation.date.invalid';
         }
         $description = trim($description);
-        $error = $description === '' ? 'validation.booking.description.required' : BookingService::textError(
+        $error = BookingService::textError(
             $description,
             BookingService::DESCRIPTION_MAX,
-            'validation.booking.description.too_long'
+            'validation.booking.description.too_long',
+            'validation.booking.description.required'
         );
         if ($error !== null) {
             $errors['description'] = $error;

@@ -39,11 +39,11 @@ final class ChangeLog
     public static function reasonError(string $reason): ?string
     {
         $reason = trim($reason);
-        if ($reason === '') {
-            return 'validation.reason.required';
-        }
         if (!mb_check_encoding($reason, 'UTF-8')) {
             return 'validation.text.encoding';
+        }
+        if (TextInput::isBlank($reason)) {
+            return 'validation.reason.required';
         }
         if (mb_strlen($reason) > self::REASON_MAX) {
             return 'validation.reason.too_long';

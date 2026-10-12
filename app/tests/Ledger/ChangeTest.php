@@ -456,6 +456,80 @@ final class ChangeTest extends TestCase
         $this->assertSame(4, $this->changeCount());
     }
 
+    /** @return list<string> */
+    private static function unicodeBlanks(): array
+    {
+        return ["\u{00A0}", "\u{200B}", "\u{3000}", "  \u{00A0} "];
+    }
+
+    public function test_reason_of_only_unicode_whitespace_is_rejected(): void
+    {
+        $booking = $this->booking();
+        $transfers = new TransferService($this->pdo);
+        [$leg] = $transfers->create($this->cash, $this->bank, '5', '2026-03-10', 'Einzahlung', $this->userId);
+
+        foreach (self::unicodeBlanks() as $blank) {
+            foreach ([
+                fn () => $this->service->update($booking['id'], $this->form(['amount' => '99']), $blank, 1, $this->userId),
+                fn () => $this->service->cancel($booking['id'], $blank, 1, $this->userId),
+                fn () => $this->service->createCorrection($this->form(), null, $blank, $this->userId),
+                fn () => $transfers->cancel($leg['id'], $blank, 1, $this->userId),
+                fn () => $this->log->record($booking['id'], $this->userId, [['field' => 'x', 'from' => 1, 'to' => 2]], $blank),
+            ] as $attempt) {
+                try {
+                    $attempt();
+                    $this->fail('ValidationError erwartet fuer ' . json_encode($blank));
+                } catch (ValidationError $e) {
+                    $this->assertSame(['reason' => 'validation.reason.required'], $e->errors);
+                }
+            }
+        }
+        $this->assertSame(0, $this->changeCount());
+        $this->assertSame(1, (new BookingRepository($this->pdo))->find($booking['id'])['version']);
+    }
+
+    public function test_description_of_only_unicode_whitespace_is_rejected(): void
+    {
+        $transfers = new TransferService($this->pdo);
+        foreach (self::unicodeBlanks() as $blank) {
+            try {
+                $this->service->create($this->form(['description' => $blank]), $this->userId);
+                $this->fail('ValidationError erwartet');
+            } catch (ValidationError $e) {
+                $this->assertSame(['description' => 'validation.booking.description.required'], $e->errors);
+            }
+            try {
+                $transfers->create($this->cash, $this->bank, '5', '2026-03-10', $blank, $this->userId);
+                $this->fail('ValidationError erwartet');
+            } catch (ValidationError $e) {
+                $this->assertSame(['description' => 'validation.booking.description.required'], $e->errors);
+            }
+        }
+        $this->assertSame(0, (int) $this->pdo->query('SELECT count(*) FROM bookings')->fetchColumn());
+
+        $booking = $this->booking();
+        try {
+            $this->service->update($booking['id'], $this->form(['description' => "\u{3000}"]), 'Grund', 1, $this->userId);
+            $this->fail('ValidationError erwartet');
+        } catch (ValidationError $e) {
+            $this->assertSame(['description' => 'validation.booking.description.required'], $e->errors);
+        }
+
+        // Korrektur: unsichtbare Beschreibung zaehlt als leer, der Grund wird Beschreibung.
+        $correction = $this->service->createCorrection($this->form(['description' => "\u{200B}"]), null, 'Kassendifferenz', $this->userId);
+        $this->assertSame('Kassendifferenz', $correction['description']);
+    }
+
+    public function test_reason_with_inner_nbsp_is_accepted(): void
+    {
+        $booking = $this->booking();
+
+        $updated = $this->service->update($booking['id'], $this->form(['amount' => '20']), "Betrag\u{00A0}korrigiert", 1, $this->userId);
+
+        $this->assertSame(2, $updated['version']);
+        $this->assertSame("Betrag\u{00A0}korrigiert", $this->log->forBooking($booking['id'])[0]['reason']);
+    }
+
     public function test_change_log_record_rejects_blank_reason_and_keeps_order(): void
     {
         $booking = $this->booking();
