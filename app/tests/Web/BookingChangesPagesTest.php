@@ -172,6 +172,26 @@ final class BookingChangesPagesTest extends TestCase
         $this->assertSame(1, $this->changeCount());
     }
 
+    public function test_edit_form_keeps_current_inactive_account_and_category_selected(): void
+    {
+        $uid = $this->loginAs(['kassenwart']);
+        $id = $this->booking($uid);
+        $this->pdo->exec("UPDATE accounts SET active = false WHERE id = {$this->cash}");
+        $this->pdo->exec("UPDATE categories SET active = false WHERE id = {$this->rent}");
+
+        $form = (string) $this->get('/bookings/' . $id . '/edit')->getBody();
+        $this->assertStringContainsString('<option value="' . $this->cash . '" selected>Barkasse</option>', $form);
+        $this->assertStringContainsString('<option value="' . $this->rent . '" selected>Miete</option>', $form);
+
+        $res = $this->post('/bookings/' . $id . '/edit', $this->form(['description' => 'Tippfehler behoben']) + [
+            'version' => '1', 'reason' => 'Tippfehler',
+        ]);
+        $this->assertSame(302, $res->getStatusCode());
+
+        // Neue Buchungen bieten das inaktive Konto weiterhin nicht an.
+        $this->assertStringNotContainsString('Barkasse', (string) $this->get('/bookings/new')->getBody());
+    }
+
     public function test_edit_without_reason_rerenders_422_with_submitted_version_and_input(): void
     {
         $uid = $this->loginAs(['kassenwart']);
