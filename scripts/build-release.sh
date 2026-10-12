@@ -7,6 +7,7 @@ stage=$(mktemp -d)
 trap 'rm -rf -- "$stage"' EXIT HUP INT TERM
 mkdir -p "$stage/app/config" "$stage/app/storage" "$stage/public" "$root/dist"
 cp "$root/app/composer.json" "$root/app/composer.lock" "$root/app/bootstrap.php" "$root/app/cron.php" "$stage/app/"
+printf '%s\n' "$version" > "$stage/app/VERSION"
 cp -R "$root/app/src" "$root/app/templates" "$root/app/migrations" "$stage/app/"
 cp -R "$root/public/." "$stage/public/"
 cp "$root/LICENSE" "$root/README.md" "$stage/"

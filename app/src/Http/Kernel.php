@@ -155,7 +155,13 @@ final class Kernel
                 $res->withStatus(302)->withHeader('Location', '/install'));
             return $app;
         }
-        $updater = new UpdateController($pdoProvider, $migrationDir);
+        $versionFile = $appDir . '/VERSION';
+        $version = is_file($versionFile) ? trim((string) file_get_contents($versionFile)) : '–';
+        $updater = new UpdateController($pdoProvider, $migrationDir, $version,
+            $config['release_checker'] ?? new \Vereinskiste\Install\GitHubReleases());
+        $app->get('/settings', [$updater, 'show'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/check-updates', [$updater, 'check'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/update', [$updater, 'update'])->add(Auth::requires('settings.manage'));
         $app->get('/update', [$updater, 'show'])->add(Auth::requires('settings.manage'));
         $app->post('/update', [$updater, 'update'])->add(Auth::requires('settings.manage'));
 

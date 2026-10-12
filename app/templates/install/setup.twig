@@ -13,21 +13,37 @@
     <button class="btn btn-primary" type="submit">{{ t('install.key.submit') }}</button>
 </form>
 {% else %}
-<ul class="list-group mb-3">
-{% for check in checks %}<li class="list-group-item">{{ check.name }}: {{ check.message }} {% if not check.ok %}({{ t('install.failed') }}){% endif %}</li>{% endfor %}
-</ul>
+{% set steps = [
+    {'title': 'install.step.check', 'fields': {}},
+    {'title': 'install.club', 'fields': {'club_name': 'text', 'base_url': 'url'}},
+    {'title': 'install.database', 'fields': {'db_host': 'text', 'db_port': 'number', 'db_name': 'text', 'db_user': 'text', 'db_password': 'password'}},
+    {'title': 'install.admin', 'fields': {'admin_name': 'text', 'admin_email': 'email', 'admin_password': 'password'}},
+    {'title': 'install.smtp', 'fields': {'smtp_host': 'text', 'smtp_port': 'number', 'smtp_from': 'email', 'smtp_username': 'text', 'smtp_password': 'password', 'smtp_encryption': 'select'}}
+] %}
+{% set allOk = true %}{% for check in checks %}{% if not check.ok %}{% set allOk = false %}{% endif %}{% endfor %}
 {% if error %}<p class="alert alert-danger" role="alert">{{ t('install.error') }}</p>{% endif %}
-<form method="post" action="/install">
+<form method="post" action="/install" data-stepper data-checks-ok="{{ allOk ? '1' : '0' }}">
     {{ csrf_field() }}
-    {% for group, fields in {
-        'install.club': {'club_name': 'text', 'base_url': 'url'},
-        'install.database': {'db_host': 'text', 'db_port': 'number', 'db_name': 'text', 'db_user': 'text', 'db_password': 'password'},
-        'install.admin': {'admin_name': 'text', 'admin_email': 'email', 'admin_password': 'password'},
-        'install.smtp': {'smtp_host': 'text', 'smtp_port': 'number', 'smtp_from': 'email', 'smtp_username': 'text', 'smtp_password': 'password', 'smtp_encryption': 'select'}
-    } %}
-    <fieldset class="mb-4"><legend class="h3">{{ t(group) }}</legend>
-    {% if group == 'install.smtp' %}<p>{{ t('install.smtp.optional') }}</p>{% endif %}
-    {% for field, type in fields %}
+    <ol class="stepper" aria-label="{{ t('install.steps') }}">
+    {% for step in steps %}<li class="stepper-item" data-step-label="{{ loop.index0 }}"><span class="stepper-num">{{ loop.index }}</span><span class="stepper-title">{{ t(step.title) }}</span></li>{% endfor %}
+    </ol>
+    {% for step in steps %}
+    <fieldset class="card card-body mb-4 stepper-panel" data-step="{{ loop.index0 }}"><legend class="card-title h3">{{ loop.index }}. {{ t(step.title) }}</legend>
+    {% if loop.first %}
+        <ul class="list-group list-group-flush mb-2">
+        {% for check in checks %}
+        <li class="list-group-item check-item {{ check.ok ? 'check-ok' : 'check-fail' }}">
+            <span class="check-dot" aria-hidden="true"></span>
+            <span class="check-name">{{ check.name }}</span>
+            <span class="check-message text-secondary">{{ check.message }}</span>
+            {% if not check.ok %}<span class="badge bg-red-lt">{{ t('install.failed') }}</span>{% endif %}
+        </li>
+        {% endfor %}
+        </ul>
+        {% if not allOk %}<p class="text-danger mb-0" role="alert">{{ t('install.check.blocked') }}</p>{% endif %}
+    {% endif %}
+    {% if step.title == 'install.smtp' %}<p class="text-secondary">{{ t('install.smtp.optional') }}</p>{% endif %}
+    {% for field, type in step.fields %}
     <div class="mb-3">
         <label class="form-label" for="{{ field }}">{{ t('install.' ~ field) }}</label>
         {% if type == 'select' %}
@@ -37,13 +53,18 @@
         {% else %}
         <input class="form-control" type="{{ type }}" id="{{ field }}" name="{{ field }}"
                {% if type != 'password' %}value="{{ input[field]|default('') }}"{% else %}autocomplete="new-password"{% endif %}
-               {% if group != 'install.smtp' and field != 'db_password' %}required{% endif %}
+               {% if step.title != 'install.smtp' and field != 'db_password' %}required{% endif %}
                {% if field == 'admin_password' %}minlength="10"{% endif %}>
         {% endif %}
     </div>
-    {% endfor %}</fieldset>
     {% endfor %}
-    <button class="btn btn-primary w-100" type="submit">{{ t('install.submit') }}</button>
+    </fieldset>
+    {% endfor %}
+    <div class="stepper-actions">
+        <button class="btn btn-outline-secondary" type="button" data-step-prev hidden>{{ t('install.back') }}</button>
+        <button class="btn btn-primary ms-auto" type="button" data-step-next hidden>{{ t('install.next') }}</button>
+        <button class="btn btn-primary w-100" type="submit" data-step-submit>{{ t('install.submit') }}</button>
+    </div>
 </form>
 {% endif %}
 {% endblock %}

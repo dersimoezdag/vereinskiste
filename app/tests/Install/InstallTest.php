@@ -60,7 +60,7 @@ final class InstallTest extends TestCase
         $this->assertFileDoesNotExist($this->dir . '/config/setup.key');
         $config = require $this->dir . '/config/config.php';
         $this->assertSame('https://verein.example.org', $config['base_url']);
-        $this->assertSame('vorstand', $this->pdo->query('SELECT role FROM user_roles')->fetchColumn());
+        $this->assertSame('admin', $this->pdo->query('SELECT role FROM user_roles')->fetchColumn());
         $this->assertSame('Testverein', $this->pdo->query("SELECT value FROM settings WHERE key = 'club_name'")->fetchColumn());
         $this->assertTrue(password_verify('sicheres-passwort-123', $this->pdo->query('SELECT password_hash FROM users')->fetchColumn()));
         $this->expectException(RuntimeException::class);
@@ -160,6 +160,7 @@ final class InstallTest extends TestCase
     public function test_updater_requires_backup_and_rolls_back_complete_batch(): void
     {
         (new Migrator($this->pdo, $this->dir . '/migrations'))->migrate();
+        $previousVersion = (new Migrator($this->pdo, $this->dir . '/migrations'))->currentVersion();
         file_put_contents($this->dir . '/migrations/0900_good.sql', 'CREATE TABLE new_table (id int);');
         file_put_contents($this->dir . '/migrations/0901_bad.sql', 'THIS IS NOT SQL;');
         $updater = new Updater($this->pdo, $this->dir . '/migrations');
@@ -169,7 +170,7 @@ final class InstallTest extends TestCase
         }
         try { $updater->run(true); $this->fail('Migrationsfehler erwartet'); } catch (RuntimeException) {
             $this->assertNull($this->pdo->query("SELECT to_regclass('public.new_table')")->fetchColumn());
-            $this->assertSame('0006_reset_request_queue.sql', (new Migrator($this->pdo, $this->dir . '/migrations'))->currentVersion());
+            $this->assertSame($previousVersion, (new Migrator($this->pdo, $this->dir . '/migrations'))->currentVersion());
         }
         unlink($this->dir . '/migrations/0901_bad.sql');
         $this->assertSame(['0900_good.sql'], $updater->run(true));
@@ -224,12 +225,18 @@ final class InstallTest extends TestCase
         $factory = new ServerRequestFactory();
         $this->assertSame(503, $app->handle($factory->createServerRequest('GET', '/bookings'))->getStatusCode());
         $this->assertSame(200, $app->handle($factory->createServerRequest('GET', '/login'))->getStatusCode());
+        $this->assertSame('/login', $app->handle($factory->createServerRequest('GET', '/settings'))->getHeaderLine('Location'));
         $this->assertSame('/login', $app->handle($factory->createServerRequest('GET', '/update'))->getHeaderLine('Location'));
         $id = (new \Vereinskiste\Auth\UserRepository($this->pdo))->create('Leser', 'reader@example.org', 'hash', ['kassenpruefer'], null);
         $store->set('user_id', $id);
         $store->set('credential_hash', hash('sha256', 'hash'));
         $this->assertSame(403, $app->handle($factory->createServerRequest('GET', '/update'))->getStatusCode());
+        $this->assertSame(403, $app->handle($factory->createServerRequest('GET', '/settings'))->getStatusCode());
         $this->pdo->exec("UPDATE user_roles SET role = 'vorstand'");
         $this->assertSame(200, $app->handle($factory->createServerRequest('GET', '/update'))->getStatusCode());
+        $settings = $app->handle($factory->createServerRequest('GET', '/settings'));
+        $this->assertSame(200, $settings->getStatusCode());
+        $this->assertStringContainsString('Installierte Version', (string) $settings->getBody());
+        $this->assertStringContainsString('action="/settings/update"', (string) $settings->getBody());
     }
 }

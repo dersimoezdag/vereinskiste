@@ -72,6 +72,42 @@ main, .table-cards td {
     width: 100%;
 }
 
+/* Systemprüfung der Installation: farbiger Punkt plus Text (nie nur Farbe). */
+.check-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+}
+
+.check-dot {
+    flex-shrink: 0;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background: #2fb344;
+    box-shadow: 0 0 0 4px rgba(47, 179, 68, 0.2);
+}
+
+.check-fail .check-dot {
+    background: #d63939;
+    box-shadow: 0 0 0 4px rgba(214, 57, 57, 0.2);
+}
+
+.check-name {
+    font-weight: 600;
+    font-family: var(--tblr-font-monospace);
+}
+
+.check-message {
+    flex: 1 1 12rem;
+}
+
+fieldset.card legend {
+    float: none;
+    width: auto;
+}
+
 /* Tabellen werden auf kleinen Bildschirmen zu Karten (td braucht data-label). */
 @media (max-width: 767.98px) {
     table.table-cards thead {
@@ -114,3 +150,47 @@ main, .table-cards td {
         text-align: left;
     }
 }
+
+/* Einrichtungsassistent */
+.stepper {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0 0 1.5rem;
+    padding: 0;
+    list-style: none;
+}
+
+.stepper-item {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--tblr-secondary);
+}
+
+.stepper-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    border: 2px solid var(--tblr-border-color);
+    font-weight: 600;
+}
+
+.stepper-item.is-active { color: var(--tblr-body-color); font-weight: 600; }
+.stepper-item.is-active .stepper-num { border-color: var(--tblr-primary); background: var(--tblr-primary); color: #fff; }
+.stepper-item.is-done .stepper-num { border-color: #2fb344; background: #2fb344; color: #fff; }
+
+@media (max-width: 575.98px) {
+    .stepper-title { display: none; }
+    .stepper-item.is-active .stepper-title { display: block; }
+}
+
+.stepper-actions { display: flex; gap: 0.5rem; }
+.stepper-actions [hidden] { display: none !important; }
+form:not(.is-stepper) .stepper { display: none; }

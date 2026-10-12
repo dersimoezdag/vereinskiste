@@ -78,7 +78,7 @@ final class Installer
             Transaction::run($pdo, function () use ($pdo, $name, $email, $admin, $clubName, $temp, &$published, &$locked): void {
                 (new Migrator($pdo, $this->appDir . '/migrations'))->migrate();
                 (new UserRepository($pdo))->create($name, $email,
-                    password_hash($admin['password'], PASSWORD_DEFAULT), ['vorstand'], null);
+                    password_hash($admin['password'], PASSWORD_DEFAULT), ['admin'], null);
                 $pdo->prepare('INSERT INTO settings (key, value) VALUES (?, ?)')->execute(['club_name', $clubName]);
                 if (!rename($temp, $this->appDir . '/config/config.php')) {
                     throw new RuntimeException('Konfiguration konnte nicht aktiviert werden.');

@@ -6,7 +6,7 @@ if ($argc !== 2 || $zip->open($argv[1]) !== true) {
     fwrite(STDERR, "Release-ZIP fehlt oder ist unlesbar.\n");
     exit(1);
 }
-foreach (['app/vendor/autoload.php', 'app/bootstrap.php', 'app/migrations/0001_initial.sql',
+foreach (['app/vendor/autoload.php', 'app/bootstrap.php', 'app/VERSION', 'app/migrations/0001_initial.sql',
     'app/migrations/0006_reset_request_queue.sql', 'app/cron.php', 'docs/hosting.md', 'app/config/', 'app/storage/',
     'public/index.php', 'public/.htaccess', 'public/assets/app.css',
     'public/assets/vendor/tabler/tabler.min.css', 'public/assets/vendor/tabler/tabler.min.js', 'LICENSE', 'README.md'] as $name) {

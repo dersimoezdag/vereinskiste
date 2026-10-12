@@ -42,9 +42,6 @@
                     </li>
                     {% endif %}
                     {% if can('settings.manage') %}
-                    <li class="nav-item{% if path == '/update' %} active{% endif %}">
-                        <a class="nav-link" href="/update"><span class="nav-link-title">{{ t('update.title') }}</span></a>
-                    </li>
                     <li class="nav-item{% if path starts with '/settings/closing' %} active{% endif %}">
                         <a class="nav-link" href="/settings/closing"><span class="nav-link-title">{{ t('nav.closing') }}</span></a>
                     </li>
@@ -59,6 +56,10 @@
                     {% endif %}
                 </ul>
                 <div class="nav-user mt-auto pt-3">
+                    {% if can('settings.manage') %}
+                    <a class="btn btn-outline-secondary w-100 mb-3{% if path starts with '/settings' or path == '/update' %} active{% endif %}"
+                       href="/settings"{% if path == '/settings' or path == '/update' %} aria-current="page"{% endif %}>{{ t('nav.settings') }}</a>
+                    {% endif %}
                     <div class="text-secondary mb-2">{{ user.name }}</div>
                     <a class="btn btn-outline-secondary w-100 mb-2" href="/account/password">{{ t('nav.password') }}</a>
                     <form method="post" action="/logout">

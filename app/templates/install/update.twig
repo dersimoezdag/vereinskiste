@@ -1,14 +1,40 @@
 {% extends 'layout.twig' %}
-{% block title %}{{ t('update.title') }}{% endblock %}
+{% block title %}{{ t('nav.settings') }}{% endblock %}
 {% block content %}
-<h1>{{ t('update.title') }}</h1>
+<h1>{{ t('nav.settings') }}</h1>
+<nav class="nav nav-tabs mb-4" aria-label="{{ t('nav.settings') }}">
+    <a class="nav-link active" href="/settings" aria-current="page">{{ t('settings.version_updates') }}</a>
+    <a class="nav-link" href="/settings/closing">{{ t('nav.closing') }}</a>
+</nav>
+<section class="card mb-4" aria-labelledby="version-title">
+    <div class="card-body">
+        <h2 class="card-title" id="version-title">{{ t('settings.version') }}</h2>
+        <p class="h2 mb-0">{{ version }}</p>
+    </div>
+</section>
+<section class="card" aria-labelledby="updates-title"><div class="card-body">
+<h2 class="card-title" id="updates-title">{{ t('settings.updates') }}</h2>
+<p>{{ t('settings.github.source') }} <a href="https://github.com/dersimoezdag/vereinskiste/releases" rel="noreferrer">GitHub Releases</a></p>
+<form method="post" action="/settings/check-updates" class="mb-3">
+    {{ csrf_field() }}
+    <button class="btn btn-outline-primary" type="submit">{{ t('settings.github.check') }}</button>
+</form>
+{% if release.status != 'unchecked' %}
+<p role="status">{{ t('settings.github.' ~ release.status) }}{% if release.version is defined %} {{ release.version }}{% endif %}</p>
+{% if release.status == 'available' %}
+    {% if release.download is defined %}<a class="btn btn-primary mb-3" href="{{ release.download }}" rel="noreferrer">{{ t('settings.github.download') }}</a>
+    {% else %}<p>{{ t('settings.github.missing_package') }}</p>{% endif %}
+    <a class="btn btn-link mb-3" href="{{ release.url }}" rel="noreferrer">{{ t('settings.github.release') }}</a>
+{% endif %}
+{% endif %}
+<p class="text-secondary">{{ t('settings.updates.help') }}</p>
 {% if error %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endif %}
 {% if done %}<p class="alert alert-success" role="status">{{ t('update.done') }}</p>{% endif %}
 {% if not compatible %}
 <p class="alert alert-danger" role="alert">{{ t('update.incompatible') }}</p>
 {% elseif pending %}
 <p>{{ t('update.instructions') }}</p>
-<form method="post" action="/update">
+<form method="post" action="/settings/update">
     {{ csrf_field() }}
     <label class="form-check mb-3" for="backup">
         <input class="form-check-input" id="backup" type="checkbox" name="backup_confirmed" value="1" required>
@@ -17,5 +43,5 @@
     <button class="btn btn-primary" type="submit">{{ t('update.run') }}</button>
 </form>
 {% else %}<p>{{ t('update.current') }}</p>{% endif %}
-<a class="btn btn-link" href="/">{{ t('nav.home') }}</a>
+</div></section>
 {% endblock %}

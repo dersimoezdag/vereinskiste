@@ -20,7 +20,7 @@ final class Maintenance implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $path = $request->getUri()->getPath();
-        if (in_array($path, ['/login', '/logout', '/update', '/health'], true)
+        if (in_array($path, ['/login', '/logout', '/update', '/settings', '/settings/update', '/settings/check-updates', '/health'], true)
             || !(new Updater(($this->pdo)(), $this->migrationDir))->needsUpdate()) {
             return $handler->handle($request);
         }

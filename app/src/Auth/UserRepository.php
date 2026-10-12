@@ -18,6 +18,9 @@ final class UserRepository
      */
     public const LOCK_KEY = 7340163;
 
+    /** Rollen mit vollen Rechten; mindestens ein aktiver Benutzer mit einer dieser Rollen muss bleiben. */
+    private const MANAGING_ROLES = ['admin', 'vorstand'];
+
     private ?PDO $pdo = null;
 
     /** @param PDO|Closure():PDO $source Closure = Verbindung erst bei Bedarf */
@@ -149,8 +152,8 @@ final class UserRepository
                 throw new ValidationError(['active' => 'validation.user.self_deactivate']);
             }
 
-            $wasVorstand = $wasActive && in_array('vorstand', $before, true);
-            $staysVorstand = $active && in_array('vorstand', $roles, true);
+            $wasVorstand = $wasActive && array_intersect(self::MANAGING_ROLES, $before) !== [];
+            $staysVorstand = $active && array_intersect(self::MANAGING_ROLES, $roles) !== [];
             if ($wasVorstand && !$staysVorstand && $this->otherActiveVorstaende($id) === 0) {
                 throw new ValidationError([($active ? 'roles' : 'active') => 'validation.user.last_vorstand']);
             }
@@ -255,7 +258,7 @@ final class UserRepository
     {
         $stmt = $this->db()->prepare(
             "SELECT count(*) FROM users u JOIN user_roles r ON r.user_id = u.id
-              WHERE r.role = 'vorstand' AND u.active AND u.id <> ?"
+              WHERE r.role IN ('admin', 'vorstand') AND u.active AND u.id <> ?"
         );
         $stmt->execute([$excludeId]);
         return (int) $stmt->fetchColumn();

@@ -16,9 +16,10 @@ final class Permissions
     ];
 
     /** Zulaessige Rollen (Whitelist fuer Eingaben und Benutzerverwaltung). */
-    public const ROLES = ['vorstand', 'kassenwart', 'schriftfuehrer', 'kassenpruefer'];
+    public const ROLES = ['admin', 'vorstand', 'kassenwart', 'schriftfuehrer', 'kassenpruefer'];
 
     private const BY_ROLE = [
+        'admin' => self::ALL,
         'vorstand' => self::ALL,
         'kassenwart' => ['bookings.read', 'bookings.write', 'members.read', 'reports.read'],
         'schriftfuehrer' => ['members.read', 'members.write', 'bookings.read'],

@@ -77,6 +77,19 @@ löschen: das würde den Schutz zurücksetzen.
 
 ## Backup, Wiederherstellung und Update
 
+Unter **Einstellungen → Version & Updates → Auf Updates prüfen** wird das
+neueste öffentliche stabile GitHub-Release aus
+https://github.com/dersimoezdag/vereinskiste/releases geprüft. Dort muss ein
+vollständiges Installationspaket `vereinskiste-VERSION.zip` als Release-Asset
+veröffentlicht sein (z. B. Tag `v0.2.0`, Paket `vereinskiste-0.2.0.zip`).
+GitHubs automatisch erzeugtes Quellcode-ZIP enthält keine gebündelten
+PHP-Abhängigkeiten und eignet sich nicht für die Hosting-Installation.
+Die Prüfung benötigt ausgehendes HTTPS zu `api.github.com`, keinen GitHub-Token
+für öffentliche Releases. Netzwerkfehler werden als fehlgeschlagene Prüfung
+angezeigt. Das Paket herunterladen, Backup erstellen und nach dem unten
+beschriebenen Verfahren hochladen; anschließend hier das Datenbank-Update
+ausführen. Entwürfe und Vorabversionen werden nicht als Update angeboten.
+
 Domain sperren und Mail-Cron pausieren. PostgreSQL-Dump, `app/config/`,
 Belegdateien aus `app/storage/receipts/` und genaue Release-Version gemeinsam
 sichern. Backups verschlüsseln und getrennt vom Hosting aufbewahren.
