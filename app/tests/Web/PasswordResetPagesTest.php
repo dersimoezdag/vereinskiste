@@ -19,6 +19,8 @@ final class PasswordResetPagesTest extends TestCase
     private PDO $pdo;
     private array $messages = [];
     private int $userId;
+    private \Vereinskiste\Auth\PasswordResetService $worker;
+    private int $clock = 1000;
 
     protected function setUp(): void
     {
@@ -35,13 +37,18 @@ final class PasswordResetPagesTest extends TestCase
             function (PHPMailer $mail): void {
                 $this->messages[] = $mail;
             });
-        $this->app = Kernel::create(['pdo' => $this->pdo, 'session_store' => $this->store,
-            'mailer' => $mailer, 'base_url' => $baseUrl]);
+        $limiter = new \Vereinskiste\Auth\RateLimiter($this->securityDir(), fn (): int => $this->clock);
+        $this->worker = new \Vereinskiste\Auth\PasswordResetService(fn (): PDO => $this->pdo,
+            $mailer, $baseUrl, require dirname(__DIR__, 2) . '/src/Text/de.php', $limiter);
+        $this->app = Kernel::create(['require_https' => false, 'security_dir' => $this->securityDir(), 'pdo' => $this->pdo, 'session_store' => $this->store,
+            'mailer' => $mailer, 'base_url' => $baseUrl, 'rate_limiter' => $limiter]);
     }
 
     private function requestToken(): string
     {
         $this->postForm('/password-reset', ['email' => 'user@example.org']);
+        $this->assertCount(0, $this->messages, 'HTTP darf keinen SMTP-Versand ausloesen');
+        $this->worker->processQueue();
         $this->assertCount(1, $this->messages);
         preg_match('~/password-reset/([a-f0-9]{64})~', $this->messages[0]->Body, $match);
         return $match[1];
@@ -50,18 +57,21 @@ final class PasswordResetPagesTest extends TestCase
     public function test_unknown_and_inactive_email_show_same_confirmation_and_send_nothing(): void
     {
         $known = $this->postForm('/password-reset', ['email' => 'user@example.org']);
+        $this->worker->processQueue();
         $unknown = $this->postForm('/password-reset', ['email' => 'unknown@example.org']);
         $this->assertSame((string) $known->getBody(), (string) $unknown->getBody());
         $this->pdo->exec('UPDATE users SET active = false');
         $inactive = $this->postForm('/password-reset', ['email' => 'user@example.org']);
         $this->assertSame((string) $known->getBody(), (string) $inactive->getBody());
+        $this->worker->processQueue();
         $this->assertCount(1, $this->messages);
     }
 
     public function test_token_is_hashed_single_use_and_password_changes(): void
     {
         $otherBrowser = new ArraySessionStore();
-        $otherAuth = new \Vereinskiste\Auth\AuthService(new \Vereinskiste\Auth\UserRepository($this->pdo), $otherBrowser);
+        $otherAuth = new \Vereinskiste\Auth\AuthService(new \Vereinskiste\Auth\UserRepository($this->pdo), $otherBrowser,
+            null, new \Vereinskiste\Auth\RateLimiter($this->securityDir()));
         $this->assertNotNull($otherAuth->login('user@example.org', 'richtig-richtig'));
         $token = $this->requestToken();
         $this->assertSame(hash('sha256', $token), $this->pdo->query('SELECT token_hash FROM password_resets')->fetchColumn());
@@ -129,7 +139,9 @@ final class PasswordResetPagesTest extends TestCase
         $this->postForm('/password-reset', ['email' => 'user@example.org']);
         $this->assertCount(1, $this->messages);
         $this->pdo->exec("UPDATE password_resets SET created_at = now() - interval '2 minutes'");
+        $this->clock += 61;
         $this->postForm('/password-reset', ['email' => 'user@example.org']);
+        $this->worker->processQueue();
         $this->assertCount(2, $this->messages);
         $this->assertStringNotContainsString('name="password"', (string) $this->get('/password-reset/' . $old)->getBody());
     }

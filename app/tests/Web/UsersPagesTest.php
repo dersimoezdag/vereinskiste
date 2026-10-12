@@ -78,7 +78,7 @@ final class UsersPagesTest extends TestCase
     /** Zweiter "Browser" mit eigener Sitzung gegen dieselbe Datenbank. */
     private function secondBrowser(string $email, string $password): \Slim\App
     {
-        $app = Kernel::create(['pdo' => $this->pdo, 'session_store' => new ArraySessionStore()]);
+        $app = Kernel::create(['require_https' => false, 'security_dir' => $this->securityDir(), 'pdo' => $this->pdo, 'session_store' => new ArraySessionStore()]);
         $html = (string) $app->handle((new ServerRequestFactory())->createServerRequest('GET', '/login'))->getBody();
         preg_match('/name="_csrf" value="([^"]+)"/', $html, $m);
         $res = $app->handle(

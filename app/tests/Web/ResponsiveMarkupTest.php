@@ -39,13 +39,13 @@ final class ResponsiveMarkupTest extends TestCase
         }
         $this->assertStringContainsString('table-cards', (string) $this->get('/bookings')->getBody());
         $this->store = new ArraySessionStore();
-        $this->app = Kernel::create(['pdo' => $this->pdo, 'session_store' => $this->store,
+        $this->app = Kernel::create(['require_https' => false, 'security_dir' => $this->securityDir(), 'pdo' => $this->pdo, 'session_store' => $this->store,
             'base_url' => 'https://verein.example.org',
             'mailer' => new Mailer(['host' => 'smtp.example.org', 'from' => 'verein@example.org'], static function (): void {})]);
         foreach (['/login', '/password-reset', '/password-reset/invalid'] as $path) {
             $this->check((string) $this->get($path)->getBody(), $path);
         }
-        $this->app = Kernel::createInstaller(['session_store' => new ArraySessionStore()]);
+        $this->app = Kernel::createInstaller(['require_https' => false, 'security_dir' => $this->securityDir(), 'session_store' => new ArraySessionStore()]);
         $this->check((string) $this->get('/install')->getBody(), '/install');
     }
 

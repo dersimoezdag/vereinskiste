@@ -31,7 +31,7 @@ final class AuthPagesTest extends TestCase
         $this->pdo = $this->pdo();
         (new Migrator($this->pdo, dirname(__DIR__, 2) . '/migrations'))->migrate();
         $this->store = new ArraySessionStore();
-        $this->app = Kernel::create(['pdo' => $this->pdo, 'session_store' => $this->store]);
+        $this->app = Kernel::create(['require_https' => false, 'security_dir' => $this->securityDir(), 'pdo' => $this->pdo, 'session_store' => $this->store]);
         $this->app->get('/_test/users', function ($req, ResponseInterface $res) {
             $res->getBody()->write('users-page');
             return $res;
@@ -97,6 +97,23 @@ final class AuthPagesTest extends TestCase
         $this->assertStringContainsString('name="_csrf"', $html);
         $this->assertStringContainsString('Anmelden', $html);
         $this->assertStringContainsString('name="email"', $html);
+    }
+
+    public function test_new_browser_and_spoofed_proxy_headers_do_not_reset_login_budget(): void
+    {
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertSame(401, $this->login('nobody@example.org', 'wrong')->getStatusCode());
+        }
+        $this->store = new ArraySessionStore();
+        $this->app = Kernel::create(['require_https' => false, 'security_dir' => $this->securityDir(),
+            'pdo' => $this->pdo, 'session_store' => $this->store]);
+        $response = $this->app->handle((new ServerRequestFactory())->createServerRequest('POST', '/login')
+            ->withHeader('X-Forwarded-For', '203.0.113.8')->withParsedBody([
+                '_csrf' => $this->csrfToken(), 'email' => ' NOBODY@example.org ', 'password' => 'wrong',
+            ]));
+        $this->assertSame(429, $response->getStatusCode());
+        $this->assertSame('60', $response->getHeaderLine('Retry-After'));
+        $this->assertSame(5, (int) $this->pdo->query("SELECT count(*) FROM audit_log WHERE action = 'login_failed'")->fetchColumn());
     }
 
     public function test_login_with_wrong_password_shows_error_and_401(): void
@@ -174,7 +191,8 @@ final class AuthPagesTest extends TestCase
             $calls[] = $hash;
             return password_verify($pw, $hash);
         };
-        $auth = new AuthService(new UserRepository($this->pdo), $this->store, $verifier);
+        $auth = new AuthService(new UserRepository($this->pdo), $this->store, $verifier,
+            new \Vereinskiste\Auth\RateLimiter($this->securityDir()));
 
         $this->assertNull($auth->login('niemand@example.org', 'egal'));
         $this->assertSame([AuthService::DUMMY_HASH], $calls);
@@ -184,6 +202,30 @@ final class AuthPagesTest extends TestCase
         $this->assertNull($auth->login('kasse@example.org', 'falsch'));
         $this->assertCount(1, $calls);
         $this->assertNotSame(AuthService::DUMMY_HASH, $calls[0]);
+    }
+
+    public function test_pre_upgrade_hashes_have_comparable_failed_login_time_and_still_rehash_on_success(): void
+    {
+        $id = $this->user('old@example.org', 'richtig-richtig', ['vorstand']);
+        $stmt = $this->pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
+        $stmt->execute([password_hash('richtig-richtig', PASSWORD_BCRYPT, ['cost' => 10]), $id]);
+        $old = $unknown = [];
+        for ($i = 0; $i < 3; $i++) {
+            $start = microtime(true);
+            $this->assertSame(401, $this->login('old@example.org', 'wrong')->getStatusCode());
+            $old[] = microtime(true) - $start;
+            $start = microtime(true);
+            $this->assertSame(401, $this->login('unknown@example.org', 'wrong')->getStatusCode());
+            $unknown[] = microtime(true) - $start;
+        }
+        sort($old); sort($unknown);
+        $ratio = $old[1] / $unknown[1];
+        $this->assertGreaterThan(0.4, $ratio, 'Alte Konten duerfen nicht viermal schneller erkennbar sein');
+        $this->assertLessThan(2.5, $ratio);
+        $this->assertSame(302, $this->login('old@example.org', 'richtig-richtig')->getStatusCode());
+        $hash = $this->pdo->query('SELECT password_hash FROM users')->fetchColumn();
+        $this->assertFalse(password_needs_rehash($hash, PASSWORD_DEFAULT));
+        $this->assertTrue(password_verify('richtig-richtig', $hash));
     }
 
     public function test_unauthenticated_request_is_redirected_to_login(): void

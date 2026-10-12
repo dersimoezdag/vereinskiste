@@ -21,7 +21,8 @@ final class PasswordResetController extends AdminController
 
     public function request(Request $req, Response $res): Response
     {
-        $this->service->request($this->str($this->body($req), 'email'));
+        $address = $req->getServerParams()['REMOTE_ADDR'] ?? '';
+        $this->service->request($this->str($this->body($req), 'email'), is_string($address) ? $address : '');
         return $this->render($req, $res, 'auth/reset_request.twig', ['sent' => true]);
     }
 

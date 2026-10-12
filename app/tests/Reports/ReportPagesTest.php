@@ -20,7 +20,7 @@ final class ReportPagesTest extends TestCase
     protected function setUp(): void
     {
         $this->migrated();
-        $this->app = Kernel::create(['pdo' => $this->pdo, 'session_store' => new ArraySessionStore()]);
+        $this->app = Kernel::create(['require_https' => false, 'security_dir' => $this->securityDir(), 'pdo' => $this->pdo, 'session_store' => new ArraySessionStore()]);
     }
 
     /** @param array<string,string> $query */

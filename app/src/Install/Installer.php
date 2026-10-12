@@ -24,8 +24,12 @@ final class Installer
     }
 
     /** @param array<string,mixed> $db @param array<string,string> $club @param array<string,string> $admin */
-    public function install(array $db, array $club, array $admin, ?array $smtp = null): void
+    public function install(array $db, array $club, array $admin, ?array $smtp, string $setupProof): void
     {
+        $key = new SetupKey($this->appDir);
+        if (!$key->accepts($setupProof)) {
+            throw new RuntimeException('Einrichtung nicht autorisiert.');
+        }
         foreach ((new SystemCheck($this->appDir))->run() as $check) {
             if (!$check['ok']) {
                 throw new RuntimeException('Systemprüfung fehlgeschlagen.');
@@ -62,6 +66,9 @@ final class Installer
             if ($this->isInstalled()) {
                 throw new RuntimeException('Die Installation ist bereits eingerichtet.');
             }
+            if (!$key->accepts($setupProof)) {
+                throw new RuntimeException('Einrichtung nicht autorisiert.');
+            }
             $config = ['db' => $db, 'base_url' => $baseUrl, 'smtp' => $smtp ?? []];
             if (file_put_contents($temp, "<?php\nreturn " . var_export($config, true) . ";\n", LOCK_EX) === false) {
                 throw new RuntimeException('Konfiguration konnte nicht gespeichert werden.');
@@ -91,5 +98,8 @@ final class Installer
             flock($guard, LOCK_UN);
             fclose($guard);
         }
+        // Die Datenbank ist bereits committed: ein Fehler beim Entfernen des
+        // Schluessels darf die aktive Installation nicht wieder freigeben.
+        $key->consume();
     }
 }

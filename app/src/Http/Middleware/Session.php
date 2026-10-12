@@ -30,7 +30,6 @@ final class Session implements MiddlewareInterface
     {
         $server = $request->getServerParams();
         return $request->getUri()->getScheme() === 'https'
-            || (isset($server['HTTPS']) && $server['HTTPS'] !== '' && strtolower((string) $server['HTTPS']) !== 'off')
-            || strtolower($request->getHeaderLine('X-Forwarded-Proto')) === 'https';
+            || (isset($server['HTTPS']) && $server['HTTPS'] !== '' && strtolower((string) $server['HTTPS']) !== 'off');
     }
 }

@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Vereinskiste\Web;
 
+use Vereinskiste\Auth\TooManyAttempts;
+
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -22,7 +24,13 @@ final class AuthController
         $email = is_string($body['email'] ?? null) ? $body['email'] : '';
         $password = is_string($body['password'] ?? null) ? $body['password'] : '';
 
-        $user = $req->getAttribute('auth')->login($email, $password);
+        try {
+            $address = $req->getServerParams()['REMOTE_ADDR'] ?? '';
+            $user = $req->getAttribute('auth')->login($email, $password, is_string($address) ? $address : '');
+        } catch (TooManyAttempts) {
+            return $req->getAttribute('view')->render($res->withStatus(429)->withHeader('Retry-After', '60'),
+                'auth/login.twig', ['error' => false, 'throttled' => true, 'email' => '']);
+        }
         if ($user === null) {
             return $req->getAttribute('view')
                 ->render($res->withStatus(401), 'auth/login.twig', ['error' => true, 'email' => mb_check_encoding($email, 'UTF-8') ? trim($email) : '']);

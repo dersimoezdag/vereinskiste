@@ -25,6 +25,7 @@ final class InstallTest extends TestCase
         $this->dir = sys_get_temp_dir() . '/vk_install_' . bin2hex(random_bytes(8));
         mkdir($this->dir);
         foreach (['config', 'storage', 'migrations'] as $folder) { mkdir($this->dir . '/' . $folder); }
+        file_put_contents($this->dir . '/config/setup.key', str_repeat('k', 48));
         foreach (glob(dirname(__DIR__, 2) . '/migrations/*.sql') as $file) {
             copy($file, $this->dir . '/migrations/' . basename($file));
         }
@@ -48,13 +49,15 @@ final class InstallTest extends TestCase
     {
         (new Installer($this->dir))->install($db ?? $this->db(),
             ['name' => 'Testverein', 'base_url' => 'https://verein.example.org'],
-            ['name' => 'Vorstand', 'email' => 'vorstand@example.org', 'password' => 'sicheres-passwort-123']);
+            ['name' => 'Vorstand', 'email' => 'vorstand@example.org', 'password' => 'sicheres-passwort-123'],
+            null, hash('sha256', str_repeat('k', 48)));
     }
 
     public function test_install_creates_admin_config_and_lock(): void
     {
         $this->install();
         $this->assertFileExists($this->dir . '/config/installed.lock');
+        $this->assertFileDoesNotExist($this->dir . '/config/setup.key');
         $config = require $this->dir . '/config/config.php';
         $this->assertSame('https://verein.example.org', $config['base_url']);
         $this->assertSame('vorstand', $this->pdo->query('SELECT role FROM user_roles')->fetchColumn());
@@ -69,6 +72,40 @@ final class InstallTest extends TestCase
         file_put_contents($this->dir . '/config/installed.lock', 'installed');
         $this->expectException(RuntimeException::class);
         $this->install();
+    }
+
+    public function test_owner_proof_is_required_before_any_database_connection(): void
+    {
+        try {
+            (new Installer($this->dir))->install(['dsn' => 'invalid'], [], [], null, 'wrong-proof');
+            $this->fail('Eigentumsnachweis erforderlich');
+        } catch (RuntimeException $e) {
+            $this->assertSame('Einrichtung nicht autorisiert.', $e->getMessage());
+            $this->assertNull($this->pdo->query("SELECT to_regclass('public.users')")->fetchColumn());
+            $this->assertFileDoesNotExist($this->dir . '/config/config.php');
+        }
+    }
+
+    public function test_public_install_form_does_not_bypass_unlock_or_expose_key(): void
+    {
+        $store = new ArraySessionStore();
+        $app = Kernel::createInstaller(['require_https' => false, 'security_dir' => $this->securityDir(),
+            'app_dir' => $this->dir, 'session_store' => $store]);
+        $factory = new ServerRequestFactory();
+        $html = (string) $app->handle($factory->createServerRequest('GET', '/install'))->getBody();
+        $this->assertStringNotContainsString('name="db_host"', $html);
+        $this->assertStringNotContainsString(str_repeat('k', 48), $html);
+        preg_match('/name="_csrf" value="([^"]+)"/', $html, $csrf);
+        $this->assertSame(403, $app->handle($factory->createServerRequest('POST', '/install')
+            ->withParsedBody(['_csrf' => $csrf[1], 'db_host' => 'attacker.example.org']))->getStatusCode());
+        $this->assertSame(403, $app->handle($factory->createServerRequest('POST', '/install/unlock')
+            ->withParsedBody(['_csrf' => $csrf[1], 'setup_key' => 'wrong']))->getStatusCode());
+        $app->handle($factory->createServerRequest('POST', '/install/unlock')
+            ->withParsedBody(['_csrf' => $csrf[1], 'setup_key' => str_repeat('k', 48)]));
+        $this->assertNotSame(str_repeat('k', 48), $store->get('setup_proof'));
+        file_put_contents($this->dir . '/config/setup.key', str_repeat('r', 48));
+        $this->assertSame(403, $app->handle($factory->createServerRequest('POST', '/install')
+            ->withParsedBody(['_csrf' => $csrf[1]]))->getStatusCode());
     }
 
     public function test_wrong_credentials_change_nothing(): void
@@ -101,9 +138,17 @@ final class InstallTest extends TestCase
         mkdir($this->dir . '/storage');
     }
 
+    public function test_system_check_refuses_private_application_inside_document_root(): void
+    {
+        $checks = array_column((new SystemCheck($this->dir, dirname($this->dir)))->run(), null, 'name');
+        $this->assertFalse($checks['Webroot']['ok']);
+        $checks = array_column((new SystemCheck($this->dir, $this->dir . '/migrations'))->run(), null, 'name');
+        $this->assertTrue($checks['Webroot']['ok']);
+    }
+
     public function test_installer_page_renders_without_database_and_redirects_other_paths(): void
     {
-        $app = Kernel::createInstaller(['app_dir' => $this->dir, 'session_store' => new ArraySessionStore()]);
+        $app = Kernel::createInstaller(['require_https' => false, 'security_dir' => $this->securityDir(), 'app_dir' => $this->dir, 'session_store' => new ArraySessionStore()]);
         $factory = new ServerRequestFactory();
         $response = $app->handle($factory->createServerRequest('GET', '/install'));
         $this->assertSame(200, $response->getStatusCode());
@@ -124,7 +169,7 @@ final class InstallTest extends TestCase
         }
         try { $updater->run(true); $this->fail('Migrationsfehler erwartet'); } catch (RuntimeException) {
             $this->assertNull($this->pdo->query("SELECT to_regclass('public.new_table')")->fetchColumn());
-            $this->assertSame('0005_unique_account_category_names.sql', (new Migrator($this->pdo, $this->dir . '/migrations'))->currentVersion());
+            $this->assertSame('0006_reset_request_queue.sql', (new Migrator($this->pdo, $this->dir . '/migrations'))->currentVersion());
         }
         unlink($this->dir . '/migrations/0901_bad.sql');
         $this->assertSame(['0900_good.sql'], $updater->run(true));
@@ -134,8 +179,12 @@ final class InstallTest extends TestCase
     public function test_install_form_creates_a_working_configuration(): void
     {
         $store = new ArraySessionStore();
-        $app = Kernel::createInstaller(['app_dir' => $this->dir, 'session_store' => $store]);
+        $app = Kernel::createInstaller(['require_https' => false, 'security_dir' => $this->securityDir(), 'app_dir' => $this->dir, 'session_store' => $store]);
         $factory = new ServerRequestFactory();
+        $html = (string) $app->handle($factory->createServerRequest('GET', '/install'))->getBody();
+        preg_match('/name="_csrf" value="([^"]+)"/', $html, $csrf);
+        $this->assertSame(302, $app->handle($factory->createServerRequest('POST', '/install/unlock')
+            ->withParsedBody(['_csrf' => $csrf[1], 'setup_key' => str_repeat('k', 48)]))->getStatusCode());
         $html = (string) $app->handle($factory->createServerRequest('GET', '/install'))->getBody();
         preg_match('/name="_csrf" value="([^"]+)"/', $html, $csrf);
         preg_match('/dbname=([^;]+)/', getenv('VK_TEST_DSN'), $dbName);
@@ -147,7 +196,7 @@ final class InstallTest extends TestCase
         $response = $app->handle($factory->createServerRequest('POST', '/install')->withParsedBody($body));
         $this->assertSame('/login', $response->getHeaderLine('Location'));
         $config = require $this->dir . '/config/config.php';
-        $normal = Kernel::create($config + ['session_store' => new ArraySessionStore(), 'maintenance' => true]);
+        $normal = Kernel::create($config + ['require_https' => false, 'security_dir' => $this->securityDir(), 'session_store' => new ArraySessionStore(), 'maintenance' => true]);
         $this->assertSame(200, $normal->handle($factory->createServerRequest('GET', '/login'))->getStatusCode());
     }
 
@@ -158,7 +207,7 @@ final class InstallTest extends TestCase
         $updater = new Updater($this->pdo, $this->dir . '/migrations');
         $this->assertFalse($updater->isCompatible());
         $this->assertTrue($updater->needsUpdate());
-        $app = Kernel::create(['pdo' => $this->pdo, 'session_store' => new ArraySessionStore(),
+        $app = Kernel::create(['require_https' => false, 'security_dir' => $this->securityDir(), 'pdo' => $this->pdo, 'session_store' => new ArraySessionStore(),
             'maintenance' => true, 'migration_dir' => $this->dir . '/migrations']);
         $this->assertSame(503, $app->handle((new ServerRequestFactory())->createServerRequest('GET', '/bookings'))->getStatusCode());
         $this->expectException(RuntimeException::class);
@@ -170,7 +219,7 @@ final class InstallTest extends TestCase
         (new Migrator($this->pdo, $this->dir . '/migrations'))->migrate();
         file_put_contents($this->dir . '/migrations/0900_pending.sql', 'CREATE TABLE after_update (id int);');
         $store = new ArraySessionStore();
-        $app = Kernel::create(['pdo' => $this->pdo, 'session_store' => $store, 'maintenance' => true,
+        $app = Kernel::create(['require_https' => false, 'security_dir' => $this->securityDir(), 'pdo' => $this->pdo, 'session_store' => $store, 'maintenance' => true,
             'migration_dir' => $this->dir . '/migrations']);
         $factory = new ServerRequestFactory();
         $this->assertSame(503, $app->handle($factory->createServerRequest('GET', '/bookings'))->getStatusCode());

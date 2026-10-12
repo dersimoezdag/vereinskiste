@@ -71,12 +71,12 @@ final class NativeSessionStoreTest extends TestCase
         $this->assertSame($expected, Session::isHttps($req));
     }
 
-    public function test_is_https_honours_forwarded_proto_header(): void
+    public function test_is_https_ignores_untrusted_forwarded_proto_header(): void
     {
         $req = (new ServerRequestFactory())->createServerRequest('GET', 'http://example.org/')
             ->withHeader('X-Forwarded-Proto', 'https');
 
-        $this->assertTrue(Session::isHttps($req));
+        $this->assertFalse(Session::isHttps($req));
     }
 
     public function test_session_middleware_configures_store_and_commits(): void

@@ -17,7 +17,8 @@ final class PasswordResetService
         private Closure $pdo,
         private Mailer $mailer,
         private string $baseUrl,
-        private array $texts
+        private array $texts,
+        private ?RateLimiter $limiter = null
     ) {
     }
 
@@ -31,11 +32,35 @@ final class PasswordResetService
     }
 
     /** Die Antwort bleibt auch bei unbekanntem Nutzer oder Versandfehler gleich. */
-    public function request(string $email): void
+    public function request(string $email, string $address = ''): void
     {
-        if (!$this->isConfigured()) {
+        $email = UserRepository::normalizeEmail($email);
+        if (!$this->isConfigured() || strlen($email) > 254 || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
             return;
         }
+        $limiter = $this->limiter ?? new RateLimiter(dirname(__DIR__, 2) . '/storage/security');
+        if (!$limiter->take('reset', $email, $address)) { return; }
+        (new ResetRequestQueue(($this->pdo)()))->enqueue($email);
+    }
+
+    /** Ausschliesslich aus dem privaten CLI-Cronjob; nie aus HTTP aufrufen. */
+    public function processQueue(int $limit = 10): int
+    {
+        if (!$this->isConfigured()) { return 0; }
+        $queue = new ResetRequestQueue(($this->pdo)());
+        $processed = 0;
+        $deadline = microtime(true) + 20;
+        while ($processed < max(0, min($limit, 100)) && microtime(true) < $deadline) {
+            $email = $queue->claim();
+            if ($email === null) { break; }
+            $this->deliver($email);
+            $processed++;
+        }
+        return $processed;
+    }
+
+    private function deliver(string $email): void
+    {
         $pdo = ($this->pdo)();
         $user = (new UserRepository($pdo))->findByEmail(trim($email));
         if ($user === null || !$user['active']) {

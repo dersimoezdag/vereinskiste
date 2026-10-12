@@ -9,6 +9,12 @@ use Vereinskiste\Db\Connection;
 
 abstract class TestCase extends BaseTestCase
 {
+    private ?string $securityDirectory = null;
+
+    protected function securityDir(): string
+    {
+        return $this->securityDirectory ??= sys_get_temp_dir() . '/vk_security_' . bin2hex(random_bytes(12));
+    }
     /** Frisches, leeres Schema pro Aufruf. */
     protected function pdo(): PDO
     {

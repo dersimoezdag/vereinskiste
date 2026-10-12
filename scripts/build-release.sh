@@ -6,10 +6,12 @@ root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 stage=$(mktemp -d)
 trap 'rm -rf -- "$stage"' EXIT HUP INT TERM
 mkdir -p "$stage/app/config" "$stage/app/storage" "$stage/public" "$root/dist"
-cp "$root/app/composer.json" "$root/app/composer.lock" "$root/app/bootstrap.php" "$stage/app/"
+cp "$root/app/composer.json" "$root/app/composer.lock" "$root/app/bootstrap.php" "$root/app/cron.php" "$stage/app/"
 cp -R "$root/app/src" "$root/app/templates" "$root/app/migrations" "$stage/app/"
 cp -R "$root/public/." "$stage/public/"
 cp "$root/LICENSE" "$root/README.md" "$stage/"
+mkdir -p "$stage/docs"
+cp "$root/docs/hosting.md" "$stage/docs/"
 composer install --working-dir="$stage/app" --no-dev --prefer-dist --no-interaction --optimize-autoloader
 php "$root/scripts/package-release.php" "$stage" "$root/dist/vereinskiste-$version.zip"
 php "$root/scripts/verify-release.php" "$root/dist/vereinskiste-$version.zip"

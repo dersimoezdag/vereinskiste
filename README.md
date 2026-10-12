@@ -1,6 +1,6 @@
 # Vereinskiste
 
-Kassenbuch fuer kleine Vereine (PHP 8.1, Slim 4, PostgreSQL 15). Lizenz: AGPL-3.0, siehe `LICENSE`.
+Kassenbuch fuer kleine Vereine (PHP 8.4, Slim 4, PostgreSQL 15). Lizenz: AGPL-3.0, siehe `LICENSE`.
 
 ## Entwicklung
 
@@ -25,7 +25,7 @@ Niemals die Tests gegen eine produktive Datenbank ausführen.
 
 ## Installation auf Webhosting (z. B. Hetzner)
 
-Voraussetzungen: PHP ab 8.1 mit `pdo_pgsql`, `mbstring`, `fileinfo`, `gd` und
+Voraussetzungen: PHP ab 8.4 mit `pdo_pgsql`, `mbstring`, `fileinfo`, `gd` und
 `openssl`, PostgreSQL ab 15, HTTPS, mindestens 64 MB PHP-Speicher.
 Die Anwendung wird direkt unter einer Domain betrieben, etwa
 `https://verein.example.org`, nicht in einem URL-Unterverzeichnis.
@@ -41,13 +41,13 @@ Die Anwendung wird direkt unter einer Domain betrieben, etwa
 4. PHP aktivieren, HTTPS einrichten und `app/config/` sowie `app/storage/` für
    den PHP-Prozess beschreibbar machen. Keine pauschalen Schreibrechte für alle
    Benutzer vergeben. Bei Apache muss URL-Rewriting aktiv sein.
-5. `/install` im Browser öffnen. Systemprüfung prüfen, Datenbank-Zugangsdaten,
+5. Einen zufälligen Einrichtungsschlüssel (mindestens 32 Zeichen aus Buchstaben, Ziffern, `_` und `-`) in `app/config/setup.key` außerhalb des Webroots hochladen. `/install` über HTTPS öffnen und mit diesem Schlüssel freigeben. Systemprüfung prüfen, Datenbank-Zugangsdaten,
    Vereinsname, HTTPS-Adresse und den ersten Vorstand eintragen.
 6. SMTP ist optional: Host, Port, Absender und Zugangsdaten eintragen. `TLS` mit
    Port 587 oder `SSL` mit Port 465 gemäß dem Mailanbieter wählen. Ohne SMTP
    kann ein anderer Vorstand ein vergessenes Passwort zurücksetzen.
 7. Nach erfolgreicher Einrichtung anmelden. Weitere Benutzer, Konten und
-   Kategorien anlegen. Es wird kein Cronjob benötigt.
+   Kategorien anlegen. Bei aktiviertem SMTP einen exklusiven Cronjob jede Minute für `app/cron.php` einrichten; Passwort-Reset-Mails werden im Hintergrund versendet.
    Der Anfangssaldo eines Kontos gilt zum Eröffnungsdatum; Buchungen und
    Umbuchungen davor werden abgelehnt. Das Eröffnungsdatum daher auf den Tag
    des ersten Eintrags (oder früher) setzen.
@@ -109,3 +109,5 @@ sh scripts/verify-release.sh dist/vereinskiste-0.1.0.zip
 Der Build installiert Produktionsabhängigkeiten in einem temporären Verzeichnis.
 Lokale Konfiguration, Belege, Tests und Entwicklungscontainer gelangen nicht ins
 Paket. Die CI prüft Tests gegen PostgreSQL und erzeugt ein geprüftes Release-ZIP.
+
+Die ausführliche Hosting-, SMTP- und Wiederherstellungsprüfung steht in [docs/hosting.md](docs/hosting.md).

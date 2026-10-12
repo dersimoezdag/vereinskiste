@@ -527,7 +527,7 @@ final class ClosingTest extends TestCase
             ->add($booking['id'], $this->tmpFile($this->pdfBytes(), 'a.pdf'), 'a.pdf', $this->userId);
         $this->closing->close('2026-03-31', $this->userId);
         $this->store = new ArraySessionStore();
-        $this->app = Kernel::create(['pdo' => $this->pdo, 'session_store' => $this->store, 'receipts_dir' => $receiptsDir]);
+        $this->app = Kernel::create(['require_https' => false, 'security_dir' => $this->securityDir(), 'pdo' => $this->pdo, 'session_store' => $this->store, 'receipts_dir' => $receiptsDir]);
         $this->loginAs(['kassenwart'], 'kw@example.org');
 
         $correction = $this->postForm('/corrections/new', $this->form(['booking_date' => '2026-03-31', 'reason' => 'Falsch']));

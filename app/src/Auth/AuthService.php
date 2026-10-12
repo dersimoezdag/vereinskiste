@@ -11,33 +11,49 @@ final class AuthService
     private const CREDENTIAL_KEY = 'credential_hash';
 
     /** Konstanter bcrypt-Hash (Kosten wie PASSWORD_DEFAULT) eines nie verwendeten Zufallswerts. */
-    public const DUMMY_HASH = '$2y$10$E1ElUVLN9s.OyRQfnUC0me7r6fY54NmksPdFE1W3Aaaa9Beict24i';
+    public const DUMMY_HASH = '$2y$12$uGEfth2hShsaAdQNzkkIm.4tZ9O5mMKNhzeLtMEyZmpddchjfw/4S';
 
     /** @var array<string,mixed>|null|false false = noch nicht geladen */
     private array|null|false $current = false;
 
     /** @var \Closure(string,string):bool */
     private \Closure $verifier;
+    private RateLimiter $limiter;
 
     /** @param (\Closure(string,string):bool)|null $verifier Standard: password_verify (injizierbar fuer Tests) */
     public function __construct(
         private UserRepository $users,
         private SessionStore $session,
-        ?\Closure $verifier = null
+        ?\Closure $verifier = null,
+        ?RateLimiter $limiter = null
     ) {
         $this->verifier = $verifier ?? static fn (string $pw, string $hash): bool => password_verify($pw, $hash);
+        $this->limiter = $limiter ?? new RateLimiter(dirname(__DIR__, 2) . '/storage/security');
     }
 
     /**
      * @return array{id:int,email:string,name:string,active:bool,roles:string[],permissions:string[]}|null
      */
-    public function login(string $email, string $password): ?array
+    public function login(string $email, string $password, string $address = ''): ?array
     {
+        if (!$this->limiter->take('login', $email, $address)) {
+            throw new TooManyAttempts('Zu viele Anmeldeversuche.');
+        }
         $user = $this->users->findByEmail(trim($email));
-        // Immer genau eine Hash-Pruefung (unbekannter Nutzer: gegen den konstanten
-        // Dummy-Hash gleicher Kosten, ohne neues Hashing), damit die Antwortzeit nichts verraet.
+        // Unbekannte Konten und aktuelle bcrypt-Hashes haben denselben Arbeitsfaktor.
         $hash = $user['password_hash'] ?? self::DUMMY_HASH;
         $verified = ($this->verifier)($password, $hash);
+        $info = password_get_info($hash);
+        $cost = $info['options']['cost'] ?? 12;
+        if ($info['algoName'] === 'bcrypt' && is_int($cost) && $cost >= 4 && $cost < 12) {
+            // Bestehende Hashes beim PHP-Upgrade haben ggf. geringere Kosten.
+            // Fehlende bcrypt-Runden ergaenzen, ohne das Passwort wissen zu
+            // muessen; danach wie bisher erst bei erfolgreichem Login rehashen.
+            $workHash = substr_replace(self::DUMMY_HASH, sprintf('%02d', $cost), 4, 2);
+            for ($i = 1, $rounds = 1 << (12 - $cost); $i < $rounds; $i++) {
+                ($this->verifier)($password, $workHash);
+            }
+        }
 
         if ($user === null || !$verified || !$user['active']) {
             $this->users->audit('login_failed', null);

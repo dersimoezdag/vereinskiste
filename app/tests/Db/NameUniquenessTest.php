@@ -218,7 +218,7 @@ final class NameUniquenessTest extends TestCase
         };
 
         $store = new ArraySessionStore();
-        $app = Kernel::create(['pdo' => $blind, 'session_store' => $store]);
+        $app = Kernel::create(['require_https' => false, 'security_dir' => $this->securityDir(), 'pdo' => $blind, 'session_store' => $store]);
         $factory = new ServerRequestFactory();
         $post = static fn (string $path, array $body): ResponseInterface => $app->handle(
             $factory->createServerRequest('POST', $path)->withParsedBody($body)
