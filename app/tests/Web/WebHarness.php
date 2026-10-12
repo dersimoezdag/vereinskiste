@@ -21,7 +21,7 @@ trait WebHarness
     private function bootApp(): void
     {
         $this->store = new ArraySessionStore();
-        $this->app = Kernel::create(['pdo' => $this->pdo, 'session_store' => $this->store]);
+        $this->app = Kernel::create(['require_https' => false, 'security_dir' => $this->securityDir(), 'pdo' => $this->pdo, 'session_store' => $this->store]);
     }
 
     /** @param string[] $roles */

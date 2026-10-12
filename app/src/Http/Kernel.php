@@ -16,6 +16,7 @@ use Twig\TwigFilter;
 use Twig\TwigFunction;
 use Vereinskiste\Text\Message;
 use Vereinskiste\Auth\AuthService;
+use Vereinskiste\Auth\RateLimiter;
 use Vereinskiste\Auth\PasswordResetService;
 use Vereinskiste\Mail\Mailer;
 use Vereinskiste\Web\PasswordResetController;
@@ -27,6 +28,7 @@ use Vereinskiste\Db\Connection;
 use Vereinskiste\Http\Middleware\Auth;
 use Vereinskiste\Http\Middleware\Csrf;
 use Vereinskiste\Http\Middleware\Session;
+use Vereinskiste\Http\Middleware\TransportSecurity;
 use Vereinskiste\Http\Session\NativeSessionStore;
 use Vereinskiste\Http\Session\SessionStore;
 use Vereinskiste\Ledger\MoneyFormat;
@@ -63,18 +65,20 @@ final class Kernel
     {
         $app = AppFactory::create();
 
-        $store = $config['session_store'] ?? new NativeSessionStore();
+        $appDir = $config['app_dir'] ?? dirname(__DIR__, 2);
+        $store = $config['session_store'] ?? new NativeSessionStore($appDir . '/storage/sessions');
         if (!$store instanceof SessionStore) {
             throw new RuntimeException('session_store muss ein SessionStore sein.');
         }
         $pdoProvider = self::pdoProvider($config);
         $installerMode = (bool) ($config['installer_mode'] ?? false);
         $appDir = $config['app_dir'] ?? dirname(__DIR__, 2);
+        $limiter = $config['rate_limiter'] ?? new RateLimiter($config['security_dir'] ?? $appDir . '/storage/security');
         $migrationDir = $config['migration_dir'] ?? $appDir . '/migrations';
         $texts = $config['texts'] ?? require dirname(__DIR__) . '/Text/de.php';
         $templates = $config['templates'] ?? dirname(__DIR__, 2) . '/templates';
         $mailer = $config['mailer'] ?? new Mailer($config['smtp'] ?? []);
-        $resetService = new PasswordResetService($pdoProvider, $mailer, rtrim($config['base_url'] ?? '', '/'), $texts);
+        $resetService = new PasswordResetService($pdoProvider, $mailer, rtrim($config['base_url'] ?? '', '/'), $texts, $limiter);
 
         $state = new RequestState();
         $view = Twig::create($templates, ['cache' => false, 'autoescape' => 'html']);
@@ -126,8 +130,8 @@ final class Kernel
         }
         $app->add(new Csrf($store, $view));
         $app->addBodyParsingMiddleware();
-        $app->add(function (Request $req, Handler $next) use ($state, $store, $view, $pdoProvider, $installerMode): Response {
-            $auth = $installerMode ? null : new AuthService(new UserRepository($pdoProvider), $store);
+        $app->add(function (Request $req, Handler $next) use ($state, $store, $view, $pdoProvider, $installerMode, $limiter): Response {
+            $auth = $installerMode ? null : new AuthService(new UserRepository($pdoProvider), $store, null, $limiter);
             $state->auth = $auth;
             $state->path = $req->getUri()->getPath();
             return $next->handle(
@@ -136,6 +140,7 @@ final class Kernel
         });
         $app->add(new Session($store));
         $app->addErrorMiddleware((bool) ($config['debug'] ?? false), true, true);
+        $app->add(new TransportSecurity((bool) ($config['require_https'] ?? true), $config['base_url'] ?? ''));
 
         $app->get('/health', function (Request $req, Response $res): Response {
             $res->getBody()->write('ok');
@@ -143,8 +148,9 @@ final class Kernel
         });
 
         if ($installerMode) {
-            $installer = new InstallController($appDir);
+            $installer = new InstallController($appDir, $limiter);
             $app->get('/install', [$installer, 'show']);
+            $app->post('/install/unlock', [$installer, 'unlock']);
             $app->post('/install', [$installer, 'install']);
             $app->map(['GET', 'POST'], '/{path:.*}', static fn (Request $req, Response $res): Response =>
                 $res->withStatus(302)->withHeader('Location', '/install'));

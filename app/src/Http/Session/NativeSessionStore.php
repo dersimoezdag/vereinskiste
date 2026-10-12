@@ -9,6 +9,8 @@ final class NativeSessionStore implements SessionStore
     private bool $secure = false;
     private bool $started = false;
 
+    public function __construct(private ?string $directory = null) {}
+
     public function configure(bool $secure): void
     {
         $this->secure = $secure;
@@ -70,11 +72,17 @@ final class NativeSessionStore implements SessionStore
             return;
         }
         if (session_status() !== PHP_SESSION_ACTIVE) {
+            if ($this->directory !== null) {
+                if (!is_dir($this->directory) && !mkdir($this->directory, 0700, true) && !is_dir($this->directory)) {
+                    throw new \RuntimeException('Sitzungsspeicher nicht verfügbar.');
+                }
+                session_save_path($this->directory);
+            }
             session_name('vk_session');
             ini_set('session.use_strict_mode', '1');
             ini_set('session.use_only_cookies', '1');
             session_set_cookie_params(self::cookieParams($this->secure));
-            session_start();
+            if (!session_start()) { throw new \RuntimeException('Sitzung konnte nicht gestartet werden.'); }
         }
         $this->started = true;
     }

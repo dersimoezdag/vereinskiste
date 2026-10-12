@@ -5,6 +5,7 @@
     <div class="card-body">
         <h1 class="h2 text-center mb-4">{{ t('auth.login.title') }}</h1>
         {% if error %}<div class="alert alert-danger" role="alert">{{ t('auth.login.error') }}</div>{% endif %}
+        {% if throttled|default(false) %}<div class="alert alert-danger" role="alert">{{ t('auth.login.throttled') }}</div>{% endif %}
         <form method="post" action="/login">
             {{ csrf_field() }}
             <div class="mb-3">

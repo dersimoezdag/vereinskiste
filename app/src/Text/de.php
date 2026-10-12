@@ -3,6 +3,13 @@ declare(strict_types=1);
 
 /** Zentrale deutsche Oberflaechentexte (Schluessel => Text). */
 return [
+    'auth.login.throttled' => 'Zu viele Anmeldeversuche. Bitte warten Sie eine Minute.',
+    'install.key.title' => 'Einrichtung freigeben',
+    'install.key.help' => 'Legen Sie Ihren Einrichtungsschlüssel außerhalb des Webroots in app/config/setup.key ab.',
+    'install.key.label' => 'Einrichtungsschlüssel',
+    'install.key.submit' => 'Freigeben',
+    'install.key.invalid' => 'Einrichtungsschlüssel ungültig.',
+    'install.key.throttled' => 'Zu viele Versuche. Bitte warten Sie eine Minute.',
     'validation.password.too_many_bytes' => 'Das Passwort darf höchstens 72 Bytes lang sein. Umlaute und andere Sonderzeichen können mehrere Bytes benötigen.',
     'nav.skip' => 'Zum Inhalt springen',
     'nav.main' => 'Hauptnavigation',

@@ -23,7 +23,7 @@ final class BookingsPagesTest extends TestCase
         $this->pdo = $this->pdo();
         (new Migrator($this->pdo, dirname(__DIR__, 2) . '/migrations'))->migrate();
         $this->store = new ArraySessionStore();
-        $this->app = Kernel::create(['pdo' => $this->pdo, 'session_store' => $this->store]);
+        $this->app = Kernel::create(['require_https' => false, 'security_dir' => $this->securityDir(), 'pdo' => $this->pdo, 'session_store' => $this->store]);
     }
 
     /** @param array<string,string> $query */

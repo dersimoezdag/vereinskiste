@@ -31,7 +31,7 @@ final class AuthPagesTest extends TestCase
         $this->pdo = $this->pdo();
         (new Migrator($this->pdo, dirname(__DIR__, 2) . '/migrations'))->migrate();
         $this->store = new ArraySessionStore();
-        $this->app = Kernel::create(['pdo' => $this->pdo, 'session_store' => $this->store]);
+        $this->app = Kernel::create(['require_https' => false, 'security_dir' => $this->securityDir(), 'pdo' => $this->pdo, 'session_store' => $this->store]);
         $this->app->get('/_test/users', function ($req, ResponseInterface $res) {
             $res->getBody()->write('users-page');
             return $res;
@@ -97,6 +97,23 @@ final class AuthPagesTest extends TestCase
         $this->assertStringContainsString('name="_csrf"', $html);
         $this->assertStringContainsString('Anmelden', $html);
         $this->assertStringContainsString('name="email"', $html);
+    }
+
+    public function test_new_browser_and_spoofed_proxy_headers_do_not_reset_login_budget(): void
+    {
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertSame(401, $this->login('nobody@example.org', 'wrong')->getStatusCode());
+        }
+        $this->store = new ArraySessionStore();
+        $this->app = Kernel::create(['require_https' => false, 'security_dir' => $this->securityDir(),
+            'pdo' => $this->pdo, 'session_store' => $this->store]);
+        $response = $this->app->handle((new ServerRequestFactory())->createServerRequest('POST', '/login')
+            ->withHeader('X-Forwarded-For', '203.0.113.8')->withParsedBody([
+                '_csrf' => $this->csrfToken(), 'email' => ' NOBODY@example.org ', 'password' => 'wrong',
+            ]));
+        $this->assertSame(429, $response->getStatusCode());
+        $this->assertSame('60', $response->getHeaderLine('Retry-After'));
+        $this->assertSame(5, (int) $this->pdo->query("SELECT count(*) FROM audit_log WHERE action = 'login_failed'")->fetchColumn());
     }
 
     public function test_login_with_wrong_password_shows_error_and_401(): void
@@ -174,7 +191,8 @@ final class AuthPagesTest extends TestCase
             $calls[] = $hash;
             return password_verify($pw, $hash);
         };
-        $auth = new AuthService(new UserRepository($this->pdo), $this->store, $verifier);
+        $auth = new AuthService(new UserRepository($this->pdo), $this->store, $verifier,
+            new \Vereinskiste\Auth\RateLimiter($this->securityDir()));
 
         $this->assertNull($auth->login('niemand@example.org', 'egal'));
         $this->assertSame([AuthService::DUMMY_HASH], $calls);

@@ -12,7 +12,7 @@ final class SystemCheck
     /** @return list<array{name:string,ok:bool,message:string}> */
     public function run(): array
     {
-        $checks = [['name' => 'PHP', 'ok' => version_compare(PHP_VERSION, '8.1.0', '>='), 'message' => PHP_VERSION]];
+        $checks = [['name' => 'PHP', 'ok' => version_compare(PHP_VERSION, '8.4.0', '>='), 'message' => PHP_VERSION]];
         foreach (['pdo_pgsql', 'mbstring', 'fileinfo', 'gd', 'openssl'] as $extension) {
             $checks[] = ['name' => $extension, 'ok' => extension_loaded($extension),
                 'message' => extension_loaded($extension) ? 'Verfügbar' : 'PHP-Erweiterung fehlt'];

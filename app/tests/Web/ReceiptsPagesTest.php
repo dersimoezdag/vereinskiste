@@ -30,7 +30,7 @@ final class ReceiptsPagesTest extends TestCase
         $this->pdo = $this->pdo();
         (new Migrator($this->pdo, dirname(__DIR__, 2) . '/migrations'))->migrate();
         $this->dir = $this->scratchDir() . '/receipts';
-        $this->app = Kernel::create([
+        $this->app = Kernel::create(['require_https' => false, 'security_dir' => $this->securityDir(), 
             'pdo' => $this->pdo, 'session_store' => new ArraySessionStore(), 'receipts_dir' => $this->dir,
         ]);
         $this->cash = (int) $this->pdo->query(
