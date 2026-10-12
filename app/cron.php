@@ -14,9 +14,10 @@ chmod($directory . '/mail-worker.lock', 0600);
 if (!flock($lock, LOCK_EX | LOCK_NB)) { fclose($lock); exit; }
 try {
     $pdo = Vereinskiste\Db\Connection::fromConfig($config['db']);
-    $migrator = new Vereinskiste\Db\Migrator($pdo, __DIR__ . '/migrations');
     // Vor einem Schema-Update keine Nachrichten zustellen.
-    if ($migrator->pending() !== []) { throw new RuntimeException('Bitte zuerst Datenbank aktualisieren.'); }
+    if ((new Vereinskiste\Install\Updater($pdo, __DIR__ . '/migrations'))->needsUpdate()) {
+        throw new RuntimeException('Bitte zuerst Datenbank aktualisieren.');
+    }
     $service = new Vereinskiste\Auth\PasswordResetService(
         static fn (): PDO => $pdo, new Vereinskiste\Mail\Mailer($config['smtp'] ?? []),
         $config['base_url'] ?? '', require __DIR__ . '/src/Text/de.php'

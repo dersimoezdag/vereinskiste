@@ -72,7 +72,6 @@ final class Kernel
         }
         $pdoProvider = self::pdoProvider($config);
         $installerMode = (bool) ($config['installer_mode'] ?? false);
-        $appDir = $config['app_dir'] ?? dirname(__DIR__, 2);
         $limiter = $config['rate_limiter'] ?? new RateLimiter($config['security_dir'] ?? $appDir . '/storage/security');
         $migrationDir = $config['migration_dir'] ?? $appDir . '/migrations';
         $texts = $config['texts'] ?? require dirname(__DIR__) . '/Text/de.php';

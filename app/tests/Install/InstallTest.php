@@ -57,6 +57,7 @@ final class InstallTest extends TestCase
     {
         $this->install();
         $this->assertFileExists($this->dir . '/config/installed.lock');
+        $this->assertFileDoesNotExist($this->dir . '/config/setup.key');
         $config = require $this->dir . '/config/config.php';
         $this->assertSame('https://verein.example.org', $config['base_url']);
         $this->assertSame('vorstand', $this->pdo->query('SELECT role FROM user_roles')->fetchColumn());
@@ -135,6 +136,14 @@ final class InstallTest extends TestCase
         $this->assertFalse($checks['storage']['ok']);
         $this->assertNotSame('', $checks['storage']['message']);
         mkdir($this->dir . '/storage');
+    }
+
+    public function test_system_check_refuses_private_application_inside_document_root(): void
+    {
+        $checks = array_column((new SystemCheck($this->dir, dirname($this->dir)))->run(), null, 'name');
+        $this->assertFalse($checks['Webroot']['ok']);
+        $checks = array_column((new SystemCheck($this->dir, $this->dir . '/migrations'))->run(), null, 'name');
+        $this->assertTrue($checks['Webroot']['ok']);
     }
 
     public function test_installer_page_renders_without_database_and_redirects_other_paths(): void

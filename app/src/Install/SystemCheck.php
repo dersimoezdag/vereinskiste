@@ -5,7 +5,7 @@ namespace Vereinskiste\Install;
 
 final class SystemCheck
 {
-    public function __construct(private string $appDir)
+    public function __construct(private string $appDir, private ?string $webRoot = null)
     {
     }
 
@@ -21,6 +21,17 @@ final class SystemCheck
             $path = $this->appDir . '/' . $dir;
             $checks[] = ['name' => $dir, 'ok' => is_dir($path) && is_writable($path),
                 'message' => is_dir($path) && is_writable($path) ? 'Beschreibbar' : 'Verzeichnis fehlt oder ist nicht beschreibbar'];
+        }
+        $root = $this->webRoot ?? ($_SERVER['DOCUMENT_ROOT'] ?? '');
+        if (is_string($root) && $root !== '') {
+            $public = realpath($root);
+            $private = realpath($this->appDir);
+            $normalize = static fn (string $path): string => PHP_OS_FAMILY === 'Windows'
+                ? strtolower(str_replace('\\', '/', $path)) : $path;
+            $safe = $public !== false && $private !== false
+                && !str_starts_with($normalize($private) . '/', rtrim($normalize($public), '/') . '/');
+            $checks[] = ['name' => 'Webroot', 'ok' => $safe, 'message' => $safe
+                ? 'Private Anwendung außerhalb des Webroots' : 'Nur public/ darf als Webroot verwendet werden'];
         }
         $limit = trim((string) ini_get('memory_limit'));
         $bytes = (int) $limit * match (strtolower(substr($limit, -1))) {
