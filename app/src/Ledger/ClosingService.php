@@ -5,6 +5,7 @@ namespace Vereinskiste\Ledger;
 
 use LogicException;
 use PDO;
+use RuntimeException;
 
 /**
  * "Abgeschlossen bis"-Datum (Tabelle `settings`, Schluessel `closed_until`; fehlt der Eintrag, ist
@@ -38,25 +39,37 @@ final class ClosingService
         $stmt = $this->pdo->prepare('SELECT value FROM settings WHERE key = ?');
         $stmt->execute([self::SETTING]);
         $value = $stmt->fetchColumn();
-        return $value === false || !DateInput::valid($value) ? null : (string) $value;
+        if ($value === false) {
+            return null;
+        }
+        if (!DateInput::valid($value)) {
+            // Fail closed: ein unlesbarer Abschluss darf nie als "nichts abgeschlossen" gelten.
+            throw new RuntimeException('Die gespeicherte Einstellung closed_until ist kein gueltiges Datum.');
+        }
+        return (string) $value;
     }
 
     /**
      * Wirft ClosedPeriod, wenn `$date` im abgeschlossenen Zeitraum liegt. Muss in der Transaktion der
-     * Schreiboperation laufen, die das Datum betrifft (siehe Klassenkommentar). Ungueltige Datumswerte
-     * ignoriert die Methode: sie meldet die Validierung des Aufrufers.
+     * Schreiboperation laufen, die das Datum betrifft (siehe Klassenkommentar). Die Sperre schliesst im
+     * Zweifel (fail closed): ein ungueltiges Datum wird nie als "offen" gewertet.
      *
      * @throws ClosedPeriod
      * @throws LogicException ausserhalb einer Transaktion
+     * @throws RuntimeException bei einem ungueltigen `$date` (aus der Datenbank gelesene Werte muessen gueltig
+     *                          sein; der Aufrufer prueft Benutzereingaben vorher) oder gespeichertem Abschlussdatum
      */
     public function assertOpen(string $date): void
     {
         if (!$this->pdo->inTransaction()) {
             throw new LogicException('Die Abschluss-Pruefung muss innerhalb einer Transaktion laufen.');
         }
+        if (!DateInput::valid($date)) {
+            throw new RuntimeException('Ungueltiges Buchungsdatum in der Abschluss-Pruefung: ' . $date);
+        }
         $this->pdo->query('SELECT pg_advisory_xact_lock_shared(' . self::LOCK_KEY . ')');
         $closedUntil = $this->closedUntil();
-        if ($closedUntil !== null && DateInput::valid($date) && $date <= $closedUntil) {
+        if ($closedUntil !== null && $date <= $closedUntil) {
             throw new ClosedPeriod($closedUntil);
         }
     }

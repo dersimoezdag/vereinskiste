@@ -73,7 +73,9 @@ final class BookingService
 
             $merged = array_intersect_key($fields, array_flip(self::EDITABLE)) + self::asInput($current);
             [$values, $errors] = $this->validate($merged, $current);
-            $this->closing->assertOpen($values['booking_date']);
+            if (DateInput::valid($values['booking_date'])) {
+                $this->closing->assertOpen($values['booking_date']);
+            }
             $reasonError = ChangeLog::reasonError($reason);
             if ($reasonError !== null) {
                 $errors['reason'] = $reasonError;

@@ -21,6 +21,11 @@ use Vereinskiste\Ledger\ValidationError;
  * Die Datei wird nie komplett in den Speicher gelesen (copy/hash_file/finfo/getimagesize).
  *
  * Fehler der Eingabe: ValidationError ['receipt' => Textschluessel] bzw. ['reason' => ...].
+ * Sperrreihenfolge in `replace` (gleich der aller Buchungs-Schreibwege, damit es weder Verklemmungen noch
+ * ueberholte Datumswerte gibt): 1. Buchungszeile FOR UPDATE, 2. geteilte Abschluss-Sperre und Lesen von
+ * `closed_until` (ClosingService::assertOpen), 3. Belegzeile FOR UPDATE. Die Buchung wird anhand eines
+ * ungesperrten Vorab-Lesens des Belegs gefunden und nach dem Sperren der Belegzeile gegengeprueft.
+ *
  * Der Aufrufer besitzt eine eventuell offene aeussere Transaktion; rollt er sie nach `add`/`replace`
  * zurueck, bleibt die gespeicherte Datei als unreferenzierte Datei liegen (das Verzeichnis ist flach
  * und rein zufaellig benannt, ein Aufraeumen kann sie anhand der Tabelle erkennen).
@@ -108,7 +113,11 @@ final class ReceiptStore
         $file = $this->ingest($tmpPath);
         $name = self::cleanName($originalName, $file['ext']);
         try {
-            return Transaction::run($this->pdo, function () use ($receiptId, $file, $name, $reason, $userId): array {
+            return Transaction::run($this->pdo, function () use ($receiptId, $old, $file, $name, $reason, $userId): array {
+                // Sperrreihenfolge wie bei allen Buchungs-Schreibwegen: Buchungszeile, Abschluss-Sperre,
+                // erst danach die Belegzeile (siehe Klassenkommentar).
+                $this->assertReplaceAllowed($old['booking_id']);
+
                 $lock = $this->pdo->prepare('SELECT booking_id, original_name, replaced_at FROM receipts WHERE id = ? FOR UPDATE');
                 $lock->execute([$receiptId]);
                 $current = $lock->fetch();
@@ -119,7 +128,9 @@ final class ReceiptStore
                     throw new ValidationError(['receipt' => 'validation.receipt.already_replaced']);
                 }
                 $bookingId = (int) $current['booking_id'];
-                $this->assertReplaceAllowed($bookingId);
+                if ($bookingId !== $old['booking_id']) {
+                    throw new \LogicException('Ein Beleg gehoert nach der Anlage immer zur selben Buchung.');
+                }
 
                 $this->pdo->prepare('UPDATE receipts SET replaced_at = now() WHERE id = ?')->execute([$receiptId]);
                 $receipt = $this->insert($bookingId, $file, $name, $userId);
@@ -140,13 +151,14 @@ final class ReceiptStore
     /**
      * Zentrale Sperrstelle fuer das Ersetzen: Belege von Buchungen im abgeschlossenen Zeitraum bleiben
      * unveraendert; `add` ruft sie bewusst nicht auf (neue Belege sind nach dem Abschluss erlaubt).
-     * Laeuft in der Transaktion von `replace`.
+     * Laeuft in der Transaktion von `replace` und sperrt zuerst die Buchungszeile (FOR UPDATE), dann
+     * (in `assertOpen`) die geteilte Abschluss-Sperre; der Abschluss-Stand wird erst danach gelesen.
      *
      * @throws ClosedPeriod
      */
     private function assertReplaceAllowed(int $bookingId): void
     {
-        $stmt = $this->pdo->prepare('SELECT booking_date::text FROM bookings WHERE id = ?');
+        $stmt = $this->pdo->prepare('SELECT booking_date::text FROM bookings WHERE id = ? FOR UPDATE');
         $stmt->execute([$bookingId]);
         $date = $stmt->fetchColumn();
         if ($date === false) {

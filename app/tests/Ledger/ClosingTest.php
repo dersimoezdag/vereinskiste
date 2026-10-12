@@ -222,6 +222,109 @@ final class ClosingTest extends TestCase
         $this->assertSame(2, $this->rows('receipts'));
     }
 
+    public function test_receipt_replace_locks_booking_row_before_closing_check(): void
+    {
+        $booking = $this->booking('2026-05-10');
+        $store = new ReceiptStore($this->pdo, $this->scratchDir() . '/store');
+        $receipt = $store->add($booking['id'], $this->tmpFile($this->pdfBytes(), 'a.pdf'), 'a.pdf', $this->userId);
+
+        // Ein anderer Vorgang haelt die Buchungszeile (z. B. update/cancel in Arbeit): replace muss warten.
+        $other = $this->connect();
+        $other->beginTransaction();
+        $other->query("SELECT 1 FROM bookings WHERE id = {$booking['id']} FOR NO KEY UPDATE");
+        $this->pdo->exec("SET lock_timeout = '300ms'");
+        try {
+            $store->replace($receipt['id'], $this->tmpFile($this->pdfBytes('x'), 'b.pdf'), 'b.pdf', 'Besser', $this->userId);
+            $this->fail('replace darf die Buchungszeile nicht ungesperrt lesen');
+        } catch (PDOException $e) {
+            $this->assertSame('55P03', $e->getCode());
+        } finally {
+            $other->rollBack();
+            $this->pdo->exec('RESET lock_timeout');
+        }
+        $this->assertSame(1, $this->rows('receipts'));
+
+        // Der Beleg selbst wird erst nach der Buchungszeile gesperrt: eine Sperre nur auf der Belegzeile
+        // blockiert replace ebenfalls (Reihenfolge Buchung -> Abschluss -> Beleg), ohne Verklemmung.
+        $holder = $this->connect();
+        $holder->beginTransaction();
+        $holder->query("SELECT 1 FROM receipts WHERE id = {$receipt['id']} FOR UPDATE");
+        $this->pdo->exec("SET lock_timeout = '300ms'");
+        try {
+            $store->replace($receipt['id'], $this->tmpFile($this->pdfBytes('y'), 'c.pdf'), 'c.pdf', 'Besser', $this->userId);
+            $this->fail('55P03 erwartet');
+        } catch (PDOException $e) {
+            $this->assertSame('55P03', $e->getCode());
+        } finally {
+            $holder->rollBack();
+            $this->pdo->exec('RESET lock_timeout');
+        }
+    }
+
+    public function test_receipt_replace_uses_date_after_concurrent_move_and_closing(): void
+    {
+        $booking = $this->booking('2026-05-10');
+        $store = new ReceiptStore($this->pdo, $this->scratchDir() . '/store');
+        $receipt = $store->add($booking['id'], $this->tmpFile($this->pdfBytes(), 'a.pdf'), 'a.pdf', $this->userId);
+        $this->closing->close('2026-02-28', $this->userId);
+
+        // Zwischen Vorab-Lesen und Pruefung: Buchung wird (erlaubt) in den Mrz verschoben, dann Abschluss bis 31.03.
+        $other = $this->connect();
+        (new BookingService($other))->update(
+            $booking['id'], ['booking_date' => '2026-03-20'], 'Datum', $booking['version'], $this->userId
+        );
+        (new ClosingService($other))->close('2026-03-31', $this->userId);
+
+        $this->assertClosed(fn () => $store->replace(
+            $receipt['id'], $this->tmpFile($this->pdfBytes('x'), 'b.pdf'), 'b.pdf', 'Besser', $this->userId
+        ));
+        $this->assertSame(1, $this->rows('receipts'));
+    }
+
+    public function test_malformed_stored_closing_date_fails_closed(): void
+    {
+        $this->pdo->exec("INSERT INTO settings (key, value) VALUES ('closed_until', 'kaputt')");
+
+        try {
+            $this->closing->closedUntil();
+            $this->fail('RuntimeException erwartet');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('closed_until', $e->getMessage());
+        }
+        try {
+            $this->booking('2030-01-01');
+            $this->fail('RuntimeException erwartet');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString('closed_until', $e->getMessage());
+        }
+        $this->assertSame(0, $this->rows('bookings'));
+    }
+
+    public function test_malformed_old_date_from_database_fails_closed(): void
+    {
+        $id = (int) $this->pdo->query(
+            "INSERT INTO bookings (account_id, booking_date, amount, direction, description, kind, status, created_by)
+             VALUES ({$this->cash}, '1850-01-01', '1.00', 'out', 'Alt', 'regular', 'active', {$this->userId}) RETURNING id"
+        )->fetchColumn();
+        $this->closing->close('2026-03-31', $this->userId);
+
+        try {
+            $this->bookings->update($id, ['description' => 'Neu'], 'Grund', 1, $this->userId);
+            $this->fail('RuntimeException erwartet');
+        } catch (\RuntimeException $e) {
+            $this->assertNotInstanceOf(ClosedPeriod::class, $e);
+        }
+        $this->assertFalse($this->pdo->inTransaction());
+
+        $this->pdo->beginTransaction();
+        try {
+            $this->closing->assertOpen('garbage');
+            $this->fail('RuntimeException erwartet');
+        } catch (\RuntimeException) {
+            $this->pdo->rollBack();
+        }
+    }
+
     public function test_reopening_lifts_the_block(): void
     {
         $booking = $this->booking('2026-03-10');
