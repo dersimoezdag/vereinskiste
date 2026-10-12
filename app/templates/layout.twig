@@ -25,6 +25,9 @@
                         <a class="nav-link" href="/"><span class="nav-link-title">{{ t('nav.home') }}</span></a>
                     </li>
                     {% if can('bookings.read') %}
+                    <li class="nav-item{% if path starts with '/bookings' %} active{% endif %}">
+                        <a class="nav-link" href="/bookings"><span class="nav-link-title">{{ t('nav.bookings') }}</span></a>
+                    </li>
                     <li class="nav-item{% if path starts with '/accounts' %} active{% endif %}">
                         <a class="nav-link" href="/accounts"><span class="nav-link-title">{{ t('nav.accounts') }}</span></a>
                     </li>

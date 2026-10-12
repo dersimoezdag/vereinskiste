@@ -8,6 +8,8 @@ use DateTimeImmutable;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Vereinskiste\Ledger\AccountRepository;
+use Vereinskiste\Ledger\InvalidAmount;
+use Vereinskiste\Ledger\Money;
 
 final class AccountController extends AdminController
 {
@@ -119,22 +121,14 @@ final class AccountController extends AdminController
         return new AccountRepository(($this->pdo)());
     }
 
-    /**
-     * Anfangssaldo: optional negativ, "12,5" / "1.234,50" / "12.50", bis 9.999.999,99.
-     * Rueckgabe kanonisch ("1234.50") oder null.
-     */
+    /** Anfangssaldo (optional negativ), Format siehe Money::parseSigned; null bei ungueltiger Eingabe. */
     private static function parseSignedAmount(string $input): ?string
     {
-        $s = str_replace(' ', '', $input);
-        if (str_contains($s, ',')) {
-            $s = str_replace('.', '', $s);
-            $s = str_replace(',', '.', $s);
-        }
-        if (preg_match('/^(-?)(\d{1,7})(?:\.(\d{1,2}))?$/', $s, $m) !== 1) {
+        try {
+            return Money::parseSigned($input);
+        } catch (InvalidAmount) {
             return null;
         }
-        $value = $m[2] . '.' . str_pad($m[3] ?? '', 2, '0');
-        return ($m[1] === '-' && $value !== '0.00' ? '-' : '') . $value;
     }
 
     private static function validDate(string $value): bool

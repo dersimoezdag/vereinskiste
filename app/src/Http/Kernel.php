@@ -25,6 +25,7 @@ use Vereinskiste\Http\Session\SessionStore;
 use Vereinskiste\Ledger\MoneyFormat;
 use Vereinskiste\Web\AccountController;
 use Vereinskiste\Web\AuthController;
+use Vereinskiste\Web\BookingController;
 use Vereinskiste\Web\CategoryController;
 
 final class Kernel
@@ -127,6 +128,12 @@ final class Kernel
         $app->post('/categories', [$categories, 'create'])->add(Auth::requires('settings.manage'));
         $app->post('/categories/{id:[0-9]+}', [$categories, 'rename'])->add(Auth::requires('settings.manage'));
         $app->post('/categories/{id:[0-9]+}/toggle', [$categories, 'toggle'])->add(Auth::requires('settings.manage'));
+
+        $bookings = new BookingController($pdoProvider);
+        $app->get('/bookings', [$bookings, 'index'])->add(Auth::requires('bookings.read'));
+        $app->get('/bookings/new', [$bookings, 'showNew'])->add(Auth::requires('bookings.write'));
+        $app->post('/bookings/new', [$bookings, 'create'])->add(Auth::requires('bookings.write'));
+        $app->get('/bookings/{id:[0-9]+}', [$bookings, 'show'])->add(Auth::requires('bookings.read'));
 
         return $app;
     }

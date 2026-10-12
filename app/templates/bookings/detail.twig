@@ -1,0 +1,50 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('bookings.detail') }} #{{ booking.id }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h1 class="mb-0">{{ t('bookings.detail') }} #{{ booking.id }}</h1>
+    <a class="btn" href="/bookings">{{ t('bookings.back') }}</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-4">{{ t('bookings.date') }}</dt>
+            <dd class="col-sm-8">{{ booking.booking_date|date('d.m.Y') }}</dd>
+
+            <dt class="col-sm-4">{{ t('bookings.amount') }}</dt>
+            <dd class="col-sm-8 {{ booking.direction == 'in' ? 'text-success' : 'text-danger' }}">
+                {{ (booking.direction == 'in' ? '+' : '−') ~ (booking.amount|eur) }}
+                ({{ t('bookings.direction.' ~ booking.direction) }})
+            </dd>
+
+            <dt class="col-sm-4">{{ t('bookings.description') }}</dt>
+            <dd class="col-sm-8">{{ booking.description }}</dd>
+
+            <dt class="col-sm-4">{{ t('bookings.account') }}</dt>
+            <dd class="col-sm-8">{{ booking.account_name }}</dd>
+
+            <dt class="col-sm-4">{{ t('bookings.category') }}</dt>
+            <dd class="col-sm-8">{{ booking.category_name ?? '–' }}</dd>
+
+            <dt class="col-sm-4">{{ t('bookings.counterparty') }}</dt>
+            <dd class="col-sm-8">{{ booking.counterparty ?? '–' }}</dd>
+
+            <dt class="col-sm-4">{{ t('bookings.receipt_no') }}</dt>
+            <dd class="col-sm-8">{{ booking.receipt_no ?? '–' }}</dd>
+
+            <dt class="col-sm-4">{{ t('bookings.kind') }}</dt>
+            <dd class="col-sm-8">{{ t('bookings.kind.' ~ booking.kind) }}</dd>
+
+            <dt class="col-sm-4">{{ t('bookings.status') }}</dt>
+            <dd class="col-sm-8">{{ t('bookings.status.' ~ booking.status) }}</dd>
+
+            <dt class="col-sm-4">{{ t('bookings.created') }}</dt>
+            <dd class="col-sm-8">{{ booking.created_at|date('d.m.Y H:i') }} · {{ booking.created_by_name }}</dd>
+
+            <dt class="col-sm-4">{{ t('bookings.version') }}</dt>
+            <dd class="col-sm-8">{{ booking.version }}</dd>
+        </dl>
+    </div>
+</div>
+{% endblock %}

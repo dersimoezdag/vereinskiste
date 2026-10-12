@@ -1,0 +1,126 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('bookings.title') }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h1 class="mb-0">{{ t('bookings.title') }}</h1>
+    {% if can('bookings.write') %}
+    <a class="btn btn-primary" href="/bookings/new">{{ t('bookings.new') }}</a>
+    {% endif %}
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" action="/bookings">
+            <div class="row g-3">
+                <div class="col-6 col-md-3">
+                    <label class="form-label" for="f-from">{{ t('bookings.filter.from') }}</label>
+                    <input type="date" id="f-from" name="from" class="form-control" value="{{ filter.from }}">
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label" for="f-to">{{ t('bookings.filter.to') }}</label>
+                    <input type="date" id="f-to" name="to" class="form-control" value="{{ filter.to }}">
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label" for="f-account">{{ t('bookings.account') }}</label>
+                    <select id="f-account" name="account_id" class="form-select">
+                        <option value="">{{ t('bookings.filter.all') }}</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}"{% if filter.account_id == account.id %} selected{% endif %}>{{ account.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label" for="f-category">{{ t('bookings.category') }}</label>
+                    <select id="f-category" name="category_id" class="form-select">
+                        <option value="">{{ t('bookings.filter.all') }}</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}"{% if filter.category_id == category.id %} selected{% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label" for="f-direction">{{ t('bookings.direction') }}</label>
+                    <select id="f-direction" name="direction" class="form-select">
+                        <option value="">{{ t('bookings.filter.all') }}</option>
+                        <option value="in"{% if filter.direction == 'in' %} selected{% endif %}>{{ t('bookings.direction.in') }}</option>
+                        <option value="out"{% if filter.direction == 'out' %} selected{% endif %}>{{ t('bookings.direction.out') }}</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label" for="f-kind">{{ t('bookings.kind') }}</label>
+                    <select id="f-kind" name="kind" class="form-select">
+                        <option value="">{{ t('bookings.filter.all') }}</option>
+                        {% for kind in ['regular', 'correction', 'transfer'] %}
+                        <option value="{{ kind }}"{% if filter.kind == kind %} selected{% endif %}>{{ t('bookings.kind.' ~ kind) }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label" for="f-status">{{ t('bookings.status') }}</label>
+                    <select id="f-status" name="status" class="form-select">
+                        <option value="">{{ t('bookings.filter.all') }}</option>
+                        {% for status in ['active', 'cancelled'] %}
+                        <option value="{{ status }}"{% if filter.status == status %} selected{% endif %}>{{ t('bookings.status.' ~ status) }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label" for="f-q">{{ t('bookings.filter.q') }}</label>
+                    <input type="search" id="f-q" name="q" maxlength="100" class="form-control" value="{{ filter.q }}">
+                </div>
+            </div>
+            <div class="mt-3 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary">{{ t('bookings.filter.apply') }}</button>
+                <a class="btn" href="/bookings">{{ t('bookings.filter.reset') }}</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table table-cards">
+            <thead>
+                <tr>
+                    <th>{{ t('bookings.date') }}</th>
+                    <th>{{ t('bookings.description') }}</th>
+                    <th>{{ t('bookings.account') }}</th>
+                    <th>{{ t('bookings.category') }}</th>
+                    <th class="text-end">{{ t('bookings.amount') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for b in bookings %}
+                <tr{% if b.status == 'cancelled' %} class="text-secondary"{% endif %}>
+                    <td data-label="{{ t('bookings.date') }}">{{ b.booking_date|date('d.m.Y') }}</td>
+                    <td data-label="{{ t('bookings.description') }}">
+                        <a href="/bookings/{{ b.id }}">{{ b.description }}</a>
+                        {% if b.kind != 'regular' %}<span class="badge bg-azure-lt">{{ t('bookings.kind.' ~ b.kind) }}</span>{% endif %}
+                        {% if b.status == 'cancelled' %}<span class="badge bg-secondary-lt">{{ t('bookings.status.cancelled') }}</span>{% endif %}
+                        {% if b.changed %}<a class="badge bg-yellow-lt" href="/bookings/{{ b.id }}#history">{{ t('bookings.changed') }}</a>{% endif %}
+                        {% if b.counterparty %}<div class="text-secondary small">{{ b.counterparty }}</div>{% endif %}
+                    </td>
+                    <td data-label="{{ t('bookings.account') }}">{{ b.account_name }}</td>
+                    <td data-label="{{ t('bookings.category') }}">{{ b.category_name ?? '–' }}</td>
+                    <td data-label="{{ t('bookings.amount') }}" class="text-end {{ b.direction == 'in' ? 'text-success' : 'text-danger' }}">
+                        {{ (b.direction == 'in' ? '+' : '−') ~ (b.amount|eur) }}
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5" class="text-secondary">{{ t('bookings.empty') }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if pages > 1 %}
+<nav class="d-flex flex-wrap justify-content-between align-items-center gap-2" aria-label="{{ t('bookings.pagination') }}">
+    <span class="text-secondary">{{ t('bookings.page') }} {{ page }} / {{ pages }} ({{ total }})</span>
+    <span class="d-flex gap-2">
+        {% if prev_url %}<a class="btn" href="{{ prev_url }}">{{ t('bookings.prev') }}</a>{% endif %}
+        {% if next_url %}<a class="btn" href="{{ next_url }}">{{ t('bookings.next') }}</a>{% endif %}
+    </span>
+</nav>
+{% endif %}
+{% endblock %}

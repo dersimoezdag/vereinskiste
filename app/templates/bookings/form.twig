@@ -1,0 +1,85 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('bookings.new') }}{% endblock %}
+{% block content %}
+<h1 class="mb-4">{{ t('bookings.new') }}</h1>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="/bookings/new" novalidate>
+            {{ csrf_field() }}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="b-account">{{ t('bookings.account') }}</label>
+                    <select id="b-account" name="account_id" required
+                            class="form-select{% if errors.account_id is defined %} is-invalid{% endif %}">
+                        <option value="">{{ t('bookings.choose') }}</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}"{% if input.account_id == (account.id ~ '') %} selected{% endif %}>{{ account.name }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if errors.account_id is defined %}<div class="invalid-feedback">{{ t(errors.account_id) }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="b-category">{{ t('bookings.category') }}</label>
+                    <select id="b-category" name="category_id"
+                            class="form-select{% if errors.category_id is defined %} is-invalid{% endif %}">
+                        <option value="">{{ t('bookings.no_category') }}</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}"{% if input.category_id == (category.id ~ '') %} selected{% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if errors.category_id is defined %}<div class="invalid-feedback">{{ t(errors.category_id) }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="b-date">{{ t('bookings.date') }}</label>
+                    <input type="date" id="b-date" name="booking_date" required
+                           class="form-control{% if errors.booking_date is defined %} is-invalid{% endif %}"
+                           value="{{ input.booking_date }}">
+                    {% if errors.booking_date is defined %}<div class="invalid-feedback">{{ t(errors.booking_date) }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="b-direction">{{ t('bookings.direction') }}</label>
+                    <select id="b-direction" name="direction"
+                            class="form-select{% if errors.direction is defined %} is-invalid{% endif %}">
+                        <option value="in"{% if input.direction == 'in' %} selected{% endif %}>{{ t('bookings.direction.in') }}</option>
+                        <option value="out"{% if input.direction == 'out' %} selected{% endif %}>{{ t('bookings.direction.out') }}</option>
+                    </select>
+                    {% if errors.direction is defined %}<div class="invalid-feedback">{{ t(errors.direction) }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="b-amount">{{ t('bookings.amount_eur') }}</label>
+                    <input type="text" inputmode="decimal" id="b-amount" name="amount" required
+                           class="form-control{% if errors.amount is defined %} is-invalid{% endif %}"
+                           value="{{ input.amount }}">
+                    {% if errors.amount is defined %}<div class="invalid-feedback">{{ t(errors.amount) }}</div>{% endif %}
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="b-description">{{ t('bookings.description') }}</label>
+                    <input type="text" id="b-description" name="description" maxlength="500" required
+                           class="form-control{% if errors.description is defined %} is-invalid{% endif %}"
+                           value="{{ input.description }}">
+                    {% if errors.description is defined %}<div class="invalid-feedback">{{ t(errors.description) }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="b-counterparty">{{ t('bookings.counterparty') }}</label>
+                    <input type="text" id="b-counterparty" name="counterparty" maxlength="200"
+                           class="form-control{% if errors.counterparty is defined %} is-invalid{% endif %}"
+                           value="{{ input.counterparty }}">
+                    {% if errors.counterparty is defined %}<div class="invalid-feedback">{{ t(errors.counterparty) }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="b-receipt-no">{{ t('bookings.receipt_no') }}</label>
+                    <input type="text" id="b-receipt-no" name="receipt_no" maxlength="100"
+                           class="form-control{% if errors.receipt_no is defined %} is-invalid{% endif %}"
+                           value="{{ input.receipt_no }}">
+                    {% if errors.receipt_no is defined %}<div class="invalid-feedback">{{ t(errors.receipt_no) }}</div>{% endif %}
+                </div>
+            </div>
+            <div class="mt-4 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary">{{ t('bookings.create') }}</button>
+                <a class="btn" href="/bookings">{{ t('common.cancel') }}</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
