@@ -1,0 +1,46 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('users.title') }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h1 class="mb-0">{{ t('users.title') }}</h1>
+    <a class="btn btn-primary" href="/users/new">{{ t('users.new') }}</a>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table table-cards">
+            <thead>
+                <tr>
+                    <th>{{ t('users.name') }}</th>
+                    <th>{{ t('users.email') }}</th>
+                    <th>{{ t('users.roles') }}</th>
+                    <th>{{ t('users.status') }}</th>
+                    <th>{{ t('common.actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for user in users %}
+                <tr{% if not user.active %} class="text-secondary"{% endif %}>
+                    <td data-label="{{ t('users.name') }}">
+                        {{ user.name }}
+                        {% if user.id == me %}<span class="badge bg-blue-lt">{{ t('users.you') }}</span>{% endif %}
+                    </td>
+                    <td data-label="{{ t('users.email') }}">{{ user.email }}</td>
+                    <td data-label="{{ t('users.roles') }}">
+                        {% for role in user.roles %}<span class="badge bg-secondary-lt me-1">{{ t('users.role.' ~ role) }}</span>{% endfor %}
+                    </td>
+                    <td data-label="{{ t('users.status') }}">
+                        {% if user.active %}<span class="badge bg-green-lt">{{ t('users.active') }}</span>{% else %}<span class="badge bg-secondary-lt">{{ t('common.inactive') }}</span>{% endif %}
+                    </td>
+                    <td data-label="{{ t('common.actions') }}">
+                        <a class="btn" href="/users/{{ user.id }}/edit">{{ t('users.edit') }}</a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5" class="text-secondary">{{ t('users.empty') }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

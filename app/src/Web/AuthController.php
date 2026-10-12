@@ -25,7 +25,7 @@ final class AuthController
         $user = $req->getAttribute('auth')->login($email, $password);
         if ($user === null) {
             return $req->getAttribute('view')
-                ->render($res->withStatus(401), 'auth/login.twig', ['error' => true, 'email' => trim($email)]);
+                ->render($res->withStatus(401), 'auth/login.twig', ['error' => true, 'email' => mb_check_encoding($email, 'UTF-8') ? trim($email) : '']);
         }
         return $this->redirect($res, '/');
     }

@@ -1,0 +1,100 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ user_id is not null ? t('users.edit.title') : t('users.new') }}{% endblock %}
+{% block content %}
+{% set editing = user_id is not null %}
+<h1 class="mb-4">{{ editing ? t('users.edit.title') : t('users.new') }}</h1>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="post" action="{{ editing ? '/users/' ~ user_id ~ '/edit' : '/users/new' }}" novalidate>
+            {{ csrf_field() }}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="user-name">{{ t('users.name') }}</label>
+                    <input type="text" id="user-name" name="name" maxlength="100" required autocomplete="off"
+                           class="form-control{% if errors.name is defined %} is-invalid{% endif %}"
+                           value="{{ input.name }}">
+                    {% if errors.name is defined %}<div class="invalid-feedback">{{ t(errors.name) }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="user-email">{{ t('users.email') }}</label>
+                    <input type="email" id="user-email" name="email" maxlength="254" required autocomplete="off"
+                           class="form-control{% if errors.email is defined %} is-invalid{% endif %}"
+                           value="{{ input.email }}">
+                    {% if errors.email is defined %}<div class="invalid-feedback">{{ t(errors.email) }}</div>{% endif %}
+                </div>
+                {% if not editing %}
+                <div class="col-md-6">
+                    <label class="form-label" for="user-password">{{ t('users.password.initial') }}</label>
+                    <input type="password" id="user-password" name="password" required autocomplete="new-password"
+                           class="form-control{% if errors.password is defined %} is-invalid{% endif %}">
+                    <div class="form-hint">{{ t('users.password.help') }}</div>
+                    {% if errors.password is defined %}<div class="invalid-feedback">{{ t(errors.password) }}</div>{% endif %}
+                </div>
+                {% endif %}
+                <div class="col-12">
+                    <fieldset>
+                        <legend class="form-label">{{ t('users.roles') }}</legend>
+                        <div class="d-flex flex-column gap-2{% if errors.roles is defined %} is-invalid{% endif %}">
+                            {% for role in roles %}
+                            <label class="form-check mb-0">
+                                <input class="form-check-input" type="checkbox" name="roles[]" value="{{ role }}"{% if role in input.roles %} checked{% endif %}>
+                                <span class="form-check-label">{{ t('users.role.' ~ role) }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                        {% if errors.roles is defined %}<div class="invalid-feedback">{{ t(errors.roles) }}</div>{% endif %}
+                        <div class="form-hint">{{ t('users.roles.help') }}</div>
+                    </fieldset>
+                </div>
+                {% if editing %}
+                <div class="col-12">
+                    {% if user_id == me %}
+                    <input type="hidden" name="active" value="1">
+                    <label class="form-check mb-0">
+                        <input class="form-check-input" type="checkbox" checked disabled>
+                        <span class="form-check-label">{{ t('users.active.label') }}</span>
+                    </label>
+                    <div class="form-hint">{{ t('users.active.self_hint') }}</div>
+                    {% else %}
+                    <label class="form-check mb-0">
+                        <input class="form-check-input{% if errors.active is defined %} is-invalid{% endif %}" type="checkbox" name="active" value="1"{% if input.active %} checked{% endif %}>
+                        <span class="form-check-label">{{ t('users.active.label') }}</span>
+                    </label>
+                    {% endif %}
+                    {% if errors.active is defined %}<div class="text-danger mt-1">{{ t(errors.active) }}</div>{% endif %}
+                </div>
+                {% endif %}
+            </div>
+            <div class="mt-4 d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary">{{ editing ? t('users.save') : t('users.create') }}</button>
+                <a class="btn" href="/users">{{ t('common.cancel') }}</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if editing %}
+<div class="card">
+    <div class="card-header"><h2 class="card-title">{{ t('users.password.reset.title') }}</h2></div>
+    <div class="card-body">
+        <p class="text-secondary">{{ t('users.password.reset.help') }}</p>
+        <form method="post" action="/users/{{ user_id }}/password" novalidate>
+            {{ csrf_field() }}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="user-new-password">{{ t('users.password.new') }}</label>
+                    <input type="password" id="user-new-password" name="password" required autocomplete="new-password"
+                           class="form-control{% if password_error is not null %} is-invalid{% endif %}">
+                    <div class="form-hint">{{ t('users.password.help') }}</div>
+                    {% if password_error is not null %}<div class="invalid-feedback">{{ t(password_error) }}</div>{% endif %}
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn">{{ t('users.password.reset.submit') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

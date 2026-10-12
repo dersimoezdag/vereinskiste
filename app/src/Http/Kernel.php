@@ -32,6 +32,7 @@ use Vereinskiste\Web\ReceiptController;
 use Vereinskiste\Web\ReportController;
 use Vereinskiste\Web\SettingsController;
 use Vereinskiste\Web\TransferController;
+use Vereinskiste\Web\UserController;
 
 final class Kernel
 {
@@ -172,6 +173,16 @@ final class Kernel
         $app->get('/settings/closing', [$settings, 'closing'])->add(Auth::requires('settings.manage'));
         $app->post('/settings/closing', [$settings, 'saveClosing'])->add(Auth::requires('settings.manage'));
         $app->get('/audit-log', [$settings, 'auditLog'])->add(Auth::requires('settings.manage'));
+
+        $users = new UserController($pdoProvider);
+        $app->get('/users', [$users, 'index'])->add(Auth::requires('users.manage'));
+        $app->get('/users/new', [$users, 'showNew'])->add(Auth::requires('users.manage'));
+        $app->post('/users/new', [$users, 'create'])->add(Auth::requires('users.manage'));
+        $app->get('/users/{id:[0-9]+}/edit', [$users, 'showEdit'])->add(Auth::requires('users.manage'));
+        $app->post('/users/{id:[0-9]+}/edit', [$users, 'update'])->add(Auth::requires('users.manage'));
+        $app->post('/users/{id:[0-9]+}/password', [$users, 'resetPassword'])->add(Auth::requires('users.manage'));
+        $app->get('/account/password', [$users, 'showOwnPassword'])->add(Auth::authenticated());
+        $app->post('/account/password', [$users, 'changeOwnPassword'])->add(Auth::authenticated());
 
         return $app;
     }

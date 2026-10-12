@@ -15,6 +15,9 @@ final class Permissions
         'settings.manage',
     ];
 
+    /** Zulaessige Rollen (Whitelist fuer Eingaben und Benutzerverwaltung). */
+    public const ROLES = ['vorstand', 'kassenwart', 'schriftfuehrer', 'kassenpruefer'];
+
     private const BY_ROLE = [
         'vorstand' => self::ALL,
         'kassenwart' => ['bookings.read', 'bookings.write', 'members.read', 'reports.read'],

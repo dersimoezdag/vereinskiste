@@ -56,6 +56,38 @@ final class AuthService
         return $this->currentUser();
     }
 
+    /**
+     * Prueft ein Passwort gegen den Hash des angemeldeten Benutzers (derselbe Verifier wie bei der Anmeldung).
+     */
+    public function verifyPassword(string $password): bool
+    {
+        $current = $this->currentUser();
+        $user = $current === null ? null : $this->users->findById($current['id']);
+        $verified = ($this->verifier)($password, $user['password_hash'] ?? self::DUMMY_HASH);
+        return $user !== null && $verified;
+    }
+
+    /**
+     * Aendert das eigene Passwort, wenn das aktuelle stimmt. Die Regeln fuer das neue Passwort
+     * (PasswordPolicy) prueft der Aufrufer vorher. Bei Erfolg: neue Sitzungs-ID und Protokolleintrag
+     * `password_changed` ohne Passwort oder Hash.
+     */
+    public function changePassword(string $current, string $new): bool
+    {
+        if (!$this->verifyPassword($current)) {
+            return false;
+        }
+        $user = $this->currentUser();
+        if ($user === null) {
+            return false;
+        }
+        $this->users->updatePasswordHash($user['id'], password_hash($new, PASSWORD_DEFAULT));
+        $this->session->regenerate();
+        $this->session->remove('csrf');
+        $this->users->audit('password_changed', $user['id']);
+        return true;
+    }
+
     public function logout(): void
     {
         $this->session->destroy();

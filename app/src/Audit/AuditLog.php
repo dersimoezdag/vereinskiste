@@ -12,7 +12,11 @@ use PDO;
 final class AuditLog
 {
     /** Bekannte Aktionen (Filter-Whitelist); Beschriftung ueber `audit.action.<aktion>`. */
-    public const ACTIONS = ['login', 'login_failed', 'period_closed', 'period_reopened'];
+    public const ACTIONS = [
+        'login', 'login_failed', 'period_closed', 'period_reopened',
+        'user_created', 'user_updated', 'user_deactivated', 'user_activated',
+        'user_password_reset', 'password_changed',
+    ];
 
     /** Aktionen, deren Details nie angezeigt werden (keine Personendaten im Protokoll-Bildschirm). */
     private const NO_DETAIL = ['login_failed'];
@@ -87,6 +91,9 @@ final class AuditLog
                 $text = $value ? 'ja' : 'nein';
             } elseif (is_scalar($value)) {
                 $text = (string) $value;
+            } elseif (is_array($value) && array_is_list($value) && array_filter($value, 'is_scalar') === $value) {
+                // Liste einfacher Werte (z. B. Rollen): kommagetrennt statt als JSON
+                $text = implode(', ', array_map('strval', $value));
             } else {
                 $text = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '';
             }
