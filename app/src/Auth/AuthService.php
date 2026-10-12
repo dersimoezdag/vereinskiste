@@ -9,11 +9,22 @@ final class AuthService
 {
     private const SESSION_KEY = 'user_id';
 
+    /** Konstanter bcrypt-Hash (Kosten wie PASSWORD_DEFAULT) eines nie verwendeten Zufallswerts. */
+    public const DUMMY_HASH = '$2y$10$E1ElUVLN9s.OyRQfnUC0me7r6fY54NmksPdFE1W3Aaaa9Beict24i';
+
     /** @var array<string,mixed>|null|false false = noch nicht geladen */
     private array|null|false $current = false;
 
-    public function __construct(private UserRepository $users, private SessionStore $session)
-    {
+    /** @var \Closure(string,string):bool */
+    private \Closure $verifier;
+
+    /** @param (\Closure(string,string):bool)|null $verifier Standard: password_verify (injizierbar fuer Tests) */
+    public function __construct(
+        private UserRepository $users,
+        private SessionStore $session,
+        ?\Closure $verifier = null
+    ) {
+        $this->verifier = $verifier ?? static fn (string $pw, string $hash): bool => password_verify($pw, $hash);
     }
 
     /**
@@ -22,9 +33,10 @@ final class AuthService
     public function login(string $email, string $password): ?array
     {
         $user = $this->users->findByEmail(trim($email));
-        // Immer genau eine Hash-Pruefung, damit Antwortzeit und -text nichts verraten.
-        $hash = $user['password_hash'] ?? password_hash('dummy', PASSWORD_DEFAULT);
-        $verified = password_verify($password, $hash);
+        // Immer genau eine Hash-Pruefung (unbekannter Nutzer: gegen den konstanten
+        // Dummy-Hash gleicher Kosten, ohne neues Hashing), damit die Antwortzeit nichts verraet.
+        $hash = $user['password_hash'] ?? self::DUMMY_HASH;
+        $verified = ($this->verifier)($password, $hash);
 
         if ($user === null || !$verified || !$user['active']) {
             $this->users->audit('login_failed', null);

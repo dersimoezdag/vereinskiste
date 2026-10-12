@@ -7,6 +7,8 @@ use PDO;
 use Psr\Http\Message\ResponseInterface;
 use Slim\App;
 use Slim\Psr7\Factory\ServerRequestFactory;
+use Vereinskiste\Auth\AuthService;
+use Vereinskiste\Auth\UserRepository;
 use Vereinskiste\Db\Migrator;
 use Vereinskiste\Http\Kernel;
 use Vereinskiste\Http\Middleware\Auth;
@@ -160,6 +162,28 @@ final class AuthPagesTest extends TestCase
         $this->post('/login', ['_csrf' => $token, 'email' => 'kasse@example.org', 'password' => 'richtig-richtig']);
 
         $this->assertNotSame($before, $this->store->id());
+    }
+
+    public function test_unknown_user_is_verified_exactly_once_against_the_constant_dummy_hash(): void
+    {
+        $this->assertSame('bcrypt', password_get_info(AuthService::DUMMY_HASH)['algoName']);
+        $this->assertFalse(password_needs_rehash(AuthService::DUMMY_HASH, PASSWORD_DEFAULT));
+
+        $calls = [];
+        $verifier = function (string $pw, string $hash) use (&$calls): bool {
+            $calls[] = $hash;
+            return password_verify($pw, $hash);
+        };
+        $auth = new AuthService(new UserRepository($this->pdo), $this->store, $verifier);
+
+        $this->assertNull($auth->login('niemand@example.org', 'egal'));
+        $this->assertSame([AuthService::DUMMY_HASH], $calls);
+
+        $this->user('kasse@example.org', 'richtig-richtig', ['kassenwart']);
+        $calls = [];
+        $this->assertNull($auth->login('kasse@example.org', 'falsch'));
+        $this->assertCount(1, $calls);
+        $this->assertNotSame(AuthService::DUMMY_HASH, $calls[0]);
     }
 
     public function test_unauthenticated_request_is_redirected_to_login(): void

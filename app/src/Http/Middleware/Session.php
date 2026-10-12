@@ -26,7 +26,7 @@ final class Session implements MiddlewareInterface
         }
     }
 
-    private static function isHttps(ServerRequestInterface $request): bool
+    public static function isHttps(ServerRequestInterface $request): bool
     {
         $server = $request->getServerParams();
         return $request->getUri()->getScheme() === 'https'

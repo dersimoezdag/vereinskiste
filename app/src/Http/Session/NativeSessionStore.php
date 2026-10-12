@@ -45,12 +45,13 @@ final class NativeSessionStore implements SessionStore
         session_destroy();
         $this->started = false;
         if (!headers_sent()) {
+            $p = self::cookieParams($this->secure);
             setcookie(session_name(), '', [
                 'expires' => 1,
-                'path' => '/',
-                'secure' => $this->secure,
-                'httponly' => true,
-                'samesite' => 'Strict',
+                'path' => $p['path'],
+                'secure' => $p['secure'],
+                'httponly' => $p['httponly'],
+                'samesite' => $p['samesite'],
             ]);
         }
     }
@@ -72,15 +73,28 @@ final class NativeSessionStore implements SessionStore
             session_name('vk_session');
             ini_set('session.use_strict_mode', '1');
             ini_set('session.use_only_cookies', '1');
-            session_set_cookie_params([
-                'lifetime' => 0,
-                'path' => '/',
-                'secure' => $this->secure,
-                'httponly' => true,
-                'samesite' => 'Strict',
-            ]);
+            session_set_cookie_params(self::cookieParams($this->secure));
             session_start();
         }
         $this->started = true;
+    }
+
+    /** @return array{lifetime:int,path:string,secure:bool,httponly:bool,samesite:string} */
+    public static function cookieParams(bool $secure): array
+    {
+        return [
+            'lifetime' => 0,
+            'path' => '/',
+            'secure' => $secure,
+            'httponly' => true,
+            'samesite' => 'Strict',
+        ];
+    }
+
+    /** Aktuelle Sitzungs-ID (startet die Sitzung). */
+    public function id(): string
+    {
+        $this->start();
+        return session_id();
     }
 }
