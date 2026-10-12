@@ -1,0 +1,73 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('closing.title') }}{% endblock %}
+{% block content %}
+<h1 class="mb-4">{{ t('closing.title') }}</h1>
+
+{% if errors.action is defined %}
+<div class="alert alert-danger" role="alert">{{ t(errors.action) }}</div>
+{% endif %}
+
+<div class="card mb-4">
+    <div class="card-header"><h2 class="card-title">{{ t('closing.current') }}</h2></div>
+    <div class="card-body">
+        {% if closed_until %}
+        <p class="h2 mb-2">{{ closed_until|date('d.m.Y') }}</p>
+        <p class="text-secondary mb-0">{{ t('closing.current.text')|replace({'{date}': closed_until|date('d.m.Y')}) }}</p>
+        {% else %}
+        <p class="mb-0">{{ t('closing.none') }}</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header"><h2 class="card-title">{{ t('closing.close.title') }}</h2></div>
+    <div class="card-body">
+        <form method="post" action="/settings/closing" novalidate>
+            {{ csrf_field() }}
+            <input type="hidden" name="action" value="close">
+            <label class="form-label required" for="close-date">{{ t('closing.close.date') }}</label>
+            <input type="date" id="close-date" name="closed_until" required aria-describedby="close-help"
+                   class="form-control{% if action == 'close' and errors.closed_until is defined %} is-invalid{% endif %}"
+                   value="{{ close_date }}">
+            {% if action == 'close' and errors.closed_until is defined %}
+            <div class="invalid-feedback">{{ t(errors.closed_until) }}</div>
+            {% endif %}
+            <div class="form-hint" id="close-help">{{ t('closing.close.help') }}</div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">{{ t('closing.close.submit') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if closed_until %}
+<div class="card">
+    <div class="card-header"><h2 class="card-title">{{ t('closing.reopen.title') }}</h2></div>
+    <div class="card-body">
+        <p class="text-secondary">{{ t('closing.reopen.help') }}</p>
+        <form method="post" action="/settings/closing" novalidate>
+            {{ csrf_field() }}
+            <input type="hidden" name="action" value="reopen">
+            <label class="form-label" for="reopen-date">{{ t('closing.reopen.date') }}</label>
+            <input type="date" id="reopen-date" name="closed_until"
+                   class="form-control{% if action == 'reopen' and errors.closed_until is defined %} is-invalid{% endif %}"
+                   value="{{ reopen_date }}">
+            {% if action == 'reopen' and errors.closed_until is defined %}
+            <div class="invalid-feedback">{{ t(errors.closed_until) }}</div>
+            {% endif %}
+            <div class="mt-3">
+                <label class="form-label required" for="reopen-reason">{{ t('closing.reopen.reason') }}</label>
+                <textarea id="reopen-reason" name="reason" rows="2" maxlength="500" required
+                          class="form-control{% if action == 'reopen' and errors.reason is defined %} is-invalid{% endif %}">{{ reason }}</textarea>
+                {% if action == 'reopen' and errors.reason is defined %}
+                <div class="invalid-feedback">{{ t(errors.reason) }}</div>
+                {% endif %}
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-danger">{{ t('closing.reopen.submit') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

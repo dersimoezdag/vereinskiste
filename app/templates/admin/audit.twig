@@ -1,0 +1,66 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('audit.title') }}{% endblock %}
+{% block content %}
+<h1 class="mb-4">{{ t('audit.title') }}</h1>
+
+<form method="get" action="/audit-log" class="d-flex flex-wrap align-items-end gap-2 mb-4">
+    <div>
+        <label class="form-label" for="audit-action">{{ t('audit.filter') }}</label>
+        <select id="audit-action" name="action" class="form-select">
+            <option value="">{{ t('audit.filter.all') }}</option>
+            {% for a in actions %}
+            <option value="{{ a }}"{% if a == action %} selected{% endif %}>{{ t('audit.action.' ~ a) }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn">{{ t('audit.filter.apply') }}</button>
+</form>
+
+<div class="card mb-4">
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table table-cards">
+            <thead>
+                <tr>
+                    <th>{{ t('audit.when') }}</th>
+                    <th>{{ t('audit.who') }}</th>
+                    <th>{{ t('audit.action') }}</th>
+                    <th>{{ t('audit.detail') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for entry in entries %}
+                <tr>
+                    <td data-label="{{ t('audit.when') }}">{{ entry.at|date('d.m.Y H:i') }}</td>
+                    <td data-label="{{ t('audit.who') }}">{{ entry.user_name ?? '–' }}</td>
+                    <td data-label="{{ t('audit.action') }}">{{ t('audit.action.' ~ entry.action) }}</td>
+                    <td data-label="{{ t('audit.detail') }}">
+                        {% if entry.detail %}
+                        <ul class="list-unstyled mb-0">
+                            {% for d in entry.detail %}
+                            <li>
+                                <strong>{{ t('audit.detail.' ~ d.key) }}:</strong>
+                                {% if d.value is null or d.value == '' %}–{% elseif d.is_date %}{{ d.value|date('d.m.Y') }}{% else %}{{ d.value }}{% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}–{% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="4" class="text-secondary">{{ t('audit.empty') }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if pages > 1 %}
+<nav class="d-flex flex-wrap justify-content-between align-items-center gap-2" aria-label="{{ t('bookings.pagination') }}">
+    <span class="text-secondary">{{ t('bookings.page') }} {{ page }} / {{ pages }} ({{ total }})</span>
+    <span class="d-flex gap-2">
+        {% if prev_url %}<a class="btn" href="{{ prev_url }}">{{ t('bookings.prev') }}</a>{% endif %}
+        {% if next_url %}<a class="btn" href="{{ next_url }}">{{ t('bookings.next') }}</a>{% endif %}
+    </span>
+</nav>
+{% endif %}
+{% endblock %}

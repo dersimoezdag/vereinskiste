@@ -2,7 +2,7 @@
 {% block title %}{{ t(title_key) }}{% endblock %}
 {% block content %}
 <h1>{{ t(title_key) }}</h1>
-<p>{{ t(text_key) }}</p>
+<p>{{ params is defined and params ? t(text_key)|replace(params) : t(text_key) }}</p>
 {% if back_url is defined and back_url %}
 <a class="btn btn-primary" href="{{ back_url }}">{{ t(back_key) }}</a>
 {% endif %}

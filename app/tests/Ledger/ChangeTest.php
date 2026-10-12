@@ -462,6 +462,40 @@ final class ChangeTest extends TestCase
         return ["\u{00A0}", "\u{200B}", "\u{3000}", "  \u{00A0} "];
     }
 
+    public function test_transfer_cancel_and_restore_require_exactly_two_legs(): void
+    {
+        $transfers = new TransferService($this->pdo);
+        $transferId = (int) $this->pdo->query("SELECT nextval('booking_transfer_id_seq')")->fetchColumn();
+        $insert = $this->pdo->prepare(
+            "INSERT INTO bookings (account_id, booking_date, amount, direction, description, kind, status, transfer_id, created_by)
+             VALUES (?, '2026-03-05', '5.00', ?, 'Umbuchung', 'transfer', ?, ?, ?) RETURNING id"
+        );
+        $insert->execute([$this->cash, 'out', 'active', $transferId, $this->userId]);
+        $single = (int) $insert->fetchColumn();
+
+        foreach (['cancel', 'restore'] as $action) {
+            try {
+                $transfers->{$action}($single, 'Grund', 1, $this->userId);
+                $this->fail('BookingLocked erwartet');
+            } catch (BookingLocked $e) {
+                $this->assertSame('bookings.locked.transfer_legs', $e->textKey);
+            }
+        }
+
+        // Drei Teile: ebenfalls abgelehnt, nichts wird veraendert.
+        foreach ([['in', $this->bank], ['in', $this->cash]] as [$direction, $account]) {
+            $insert->execute([$account, $direction, 'active', $transferId, $this->userId]);
+        }
+        try {
+            $transfers->cancel($single, 'Grund', 1, $this->userId);
+            $this->fail('BookingLocked erwartet');
+        } catch (BookingLocked $e) {
+            $this->assertSame('bookings.locked.transfer_legs', $e->textKey);
+        }
+        $this->assertSame(0, (int) $this->pdo->query("SELECT count(*) FROM bookings WHERE status = 'cancelled'")->fetchColumn());
+        $this->assertSame(0, $this->changeCount());
+    }
+
     public function test_reason_of_only_unicode_whitespace_is_rejected(): void
     {
         $booking = $this->booking();

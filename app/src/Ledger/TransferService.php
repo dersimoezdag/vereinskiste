@@ -13,13 +13,17 @@ use PDO;
  */
 final class TransferService
 {
+    private ClosingService $closing;
+
     public function __construct(private PDO $pdo)
     {
+        $this->closing = new ClosingService($pdo);
     }
 
     /**
      * @return list<array<string,mixed>> [Ausgabe auf dem Quellkonto, Einnahme auf dem Zielkonto]
      * @throws ValidationError Schluessel from_account_id, to_account_id, amount, booking_date, description
+     * @throws ClosedPeriod wenn das Datum im abgeschlossenen Zeitraum liegt
      */
     public function create(
         int $fromAccountId,
@@ -65,6 +69,7 @@ final class TransferService
         }
 
         return Transaction::run($this->pdo, function () use ($fromAccountId, $toAccountId, $canonical, $date, $description, $userId): array {
+            $this->closing->assertOpen($date);
             $transferId = (int) $this->pdo->query("SELECT nextval('booking_transfer_id_seq')")->fetchColumn();
             $insert = $this->pdo->prepare(
                 "INSERT INTO bookings (account_id, booking_date, amount, direction, category_id, description,
@@ -103,7 +108,7 @@ final class TransferService
      * `$expectedVersion` ist die Version der Buchung, die der Benutzer vor sich hatte.
      *
      * @return list<array<string,mixed>> beide Buchungen danach
-     * @throws ValidationError|VersionConflict|BookingNotFound|BookingLocked
+     * @throws ValidationError|VersionConflict|BookingNotFound|BookingLocked|ClosedPeriod
      */
     public function cancel(int $bookingId, string $reason, int $expectedVersion, int $userId): array
     {
@@ -114,7 +119,7 @@ final class TransferService
      * Nimmt das Storno beider Buchungen zurueck.
      *
      * @return list<array<string,mixed>>
-     * @throws ValidationError|VersionConflict|BookingNotFound|BookingLocked
+     * @throws ValidationError|VersionConflict|BookingNotFound|BookingLocked|ClosedPeriod
      */
     public function restore(int $bookingId, string $reason, int $expectedVersion, int $userId): array
     {
@@ -137,9 +142,19 @@ final class TransferService
             }
 
             // Beide Buchungen in fester Reihenfolge sperren (keine Verklemmung bei gleichzeitigen Aufrufen).
-            $stmt = $this->pdo->prepare('SELECT id, version, status FROM bookings WHERE transfer_id = ? ORDER BY id FOR UPDATE');
+            $stmt = $this->pdo->prepare(
+                'SELECT id, version, status, booking_date::text AS booking_date
+                   FROM bookings WHERE transfer_id = ? ORDER BY id FOR UPDATE'
+            );
             $stmt->execute([(int) $booking['transfer_id']]);
             $legs = $stmt->fetchAll();
+            // Eine Umbuchung besteht immer aus genau zwei Buchungen; alles andere ist ein Datenfehler.
+            if (count($legs) !== 2) {
+                throw new BookingLocked($bookingId, 'bookings.locked.transfer_legs');
+            }
+            foreach ($legs as $leg) {
+                $this->closing->assertOpen((string) $leg['booking_date']);
+            }
             foreach ($legs as $leg) {
                 if ((int) $leg['id'] === $bookingId && (int) $leg['version'] !== $expectedVersion) {
                     throw new VersionConflict($bookingId);

@@ -27,8 +27,11 @@ use Vereinskiste\Web\AccountController;
 use Vereinskiste\Web\AuthController;
 use Vereinskiste\Web\BookingController;
 use Vereinskiste\Web\CategoryController;
+use Vereinskiste\Web\CorrectionController;
 use Vereinskiste\Web\ReceiptController;
 use Vereinskiste\Web\ReportController;
+use Vereinskiste\Web\SettingsController;
+use Vereinskiste\Web\TransferController;
 
 final class Kernel
 {
@@ -146,10 +149,14 @@ final class Kernel
         $app->post('/bookings/{id:[0-9]+}/edit', [$bookings, 'update'])->add(Auth::requires('bookings.write'));
         $app->post('/bookings/{id:[0-9]+}/cancel', [$bookings, 'cancel'])->add(Auth::requires('bookings.write'));
         $app->post('/bookings/{id:[0-9]+}/restore', [$bookings, 'restore'])->add(Auth::requires('bookings.write'));
-        $app->get('/corrections/new', [$bookings, 'showCorrection'])->add(Auth::requires('bookings.write'));
-        $app->post('/corrections/new', [$bookings, 'createCorrection'])->add(Auth::requires('bookings.write'));
-        $app->get('/transfers/new', [$bookings, 'showTransfer'])->add(Auth::requires('bookings.write'));
-        $app->post('/transfers/new', [$bookings, 'createTransfer'])->add(Auth::requires('bookings.write'));
+
+        $corrections = new CorrectionController($pdoProvider);
+        $app->get('/corrections/new', [$corrections, 'showCorrection'])->add(Auth::requires('bookings.write'));
+        $app->post('/corrections/new', [$corrections, 'createCorrection'])->add(Auth::requires('bookings.write'));
+
+        $transfers = new TransferController($pdoProvider);
+        $app->get('/transfers/new', [$transfers, 'showTransfer'])->add(Auth::requires('bookings.write'));
+        $app->post('/transfers/new', [$transfers, 'createTransfer'])->add(Auth::requires('bookings.write'));
 
         $receipts = new ReceiptController($pdoProvider, $receiptsDir);
         $app->post('/bookings/{id:[0-9]+}/receipts', [$receipts, 'upload'])->add(Auth::requires('bookings.write'));
@@ -160,6 +167,11 @@ final class Kernel
         $app->get('/reports/summary', [$reports, 'summary'])->add(Auth::requires('reports.read'));
         $app->get('/reports/bookings.csv', [$reports, 'csv'])->add(Auth::requires('reports.read'));
         $app->get('/reports/summary.pdf', [$reports, 'pdf'])->add(Auth::requires('reports.read'));
+
+        $settings = new SettingsController($pdoProvider);
+        $app->get('/settings/closing', [$settings, 'closing'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/closing', [$settings, 'saveClosing'])->add(Auth::requires('settings.manage'));
+        $app->get('/audit-log', [$settings, 'auditLog'])->add(Auth::requires('settings.manage'));
 
         return $app;
     }

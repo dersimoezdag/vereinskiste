@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Psr7\Stream;
 use Vereinskiste\Http\ErrorPage;
 use Vereinskiste\Ledger\BookingNotFound;
+use Vereinskiste\Ledger\ClosedPeriod;
 use Vereinskiste\Ledger\ValidationError;
 use Vereinskiste\Receipts\ReceiptNotFound;
 use Vereinskiste\Receipts\ReceiptStore;
@@ -62,6 +63,8 @@ final class ReceiptController extends AdminController
             return $this->failed($req, $bookingId, $e);
         } catch (ReceiptNotFound) {
             return $this->notFound($req);
+        } catch (ClosedPeriod $e) {
+            return $this->closedPeriod($req, $e, '/bookings/' . $bookingId . '#receipts');
         }
         $this->flash($req, 'receipts.flash.replaced');
         return $this->redirect('/bookings/' . $bookingId . '#receipts');

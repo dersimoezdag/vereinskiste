@@ -8,6 +8,8 @@ use RuntimeException;
 use Throwable;
 use Vereinskiste\Ledger\BookingNotFound;
 use Vereinskiste\Ledger\ChangeLog;
+use Vereinskiste\Ledger\ClosedPeriod;
+use Vereinskiste\Ledger\ClosingService;
 use Vereinskiste\Ledger\Transaction;
 use Vereinskiste\Ledger\ValidationError;
 
@@ -93,6 +95,7 @@ final class ReceiptStore
      *               storage_name:string,uploaded_by:int,uploaded_at:string,replaced_at:?string}
      * @throws ValidationError Grund fehlt, Datei ungueltig oder Beleg bereits ersetzt
      * @throws ReceiptNotFound
+     * @throws ClosedPeriod wenn die Buchung im abgeschlossenen Zeitraum liegt
      */
     public function replace(int $receiptId, string $tmpPath, string $originalName, string $reason, int $userId): array
     {
@@ -135,11 +138,21 @@ final class ReceiptStore
     }
 
     /**
-     * Zentrale Sperrstelle fuer das Ersetzen (Abschluss-Pruefung der Buchungsperiode folgt hier);
-     * `add` ruft sie bewusst nicht auf. Laeuft in der Transaktion von `replace`.
+     * Zentrale Sperrstelle fuer das Ersetzen: Belege von Buchungen im abgeschlossenen Zeitraum bleiben
+     * unveraendert; `add` ruft sie bewusst nicht auf (neue Belege sind nach dem Abschluss erlaubt).
+     * Laeuft in der Transaktion von `replace`.
+     *
+     * @throws ClosedPeriod
      */
     private function assertReplaceAllowed(int $bookingId): void
     {
+        $stmt = $this->pdo->prepare('SELECT booking_date::text FROM bookings WHERE id = ?');
+        $stmt->execute([$bookingId]);
+        $date = $stmt->fetchColumn();
+        if ($date === false) {
+            throw new BookingNotFound($bookingId);
+        }
+        (new ClosingService($this->pdo))->assertOpen((string) $date);
     }
 
     /**

@@ -22,8 +22,11 @@ final class BookingService
         'booking_date', 'amount', 'direction', 'account_id', 'category_id', 'description', 'counterparty', 'receipt_no',
     ];
 
+    private ClosingService $closing;
+
     public function __construct(private PDO $pdo)
     {
+        $this->closing = new ClosingService($pdo);
     }
 
     /**
@@ -33,6 +36,7 @@ final class BookingService
      *                                   description, counterparty?, receipt_no?
      * @return array<string,mixed> die angelegte Buchung (wie BookingRepository::find)
      * @throws ValidationError Feldname => Textschluessel
+     * @throws ClosedPeriod wenn das Buchungsdatum im abgeschlossenen Zeitraum liegt
      */
     public function create(array $input, int $userId): array
     {
@@ -40,7 +44,10 @@ final class BookingService
         if ($errors !== []) {
             throw new ValidationError($errors);
         }
-        return $this->find($this->insert($values, 'regular', null, $userId));
+        return Transaction::run($this->pdo, function () use ($values, $userId): array {
+            $this->closing->assertOpen($values['booking_date']);
+            return $this->find($this->insert($values, 'regular', null, $userId));
+        });
     }
 
     /**
@@ -53,17 +60,20 @@ final class BookingService
      * @throws VersionConflict wenn die Buchung inzwischen eine andere Version hat
      * @throws BookingNotFound
      * @throws BookingLocked bei Umbuchungen und stornierten Buchungen
+     * @throws ClosedPeriod wenn altes oder neues Buchungsdatum im abgeschlossenen Zeitraum liegt
      */
     public function update(int $id, array $fields, string $reason, int $expectedVersion, int $userId): array
     {
         return Transaction::run($this->pdo, function () use ($id, $fields, $reason, $expectedVersion, $userId): array {
             $current = $this->lockForChange($id);
+            $this->closing->assertOpen((string) $current['booking_date']);
             if ($current['status'] === 'cancelled') {
                 throw new BookingLocked($id, 'bookings.locked.cancelled');
             }
 
             $merged = array_intersect_key($fields, array_flip(self::EDITABLE)) + self::asInput($current);
             [$values, $errors] = $this->validate($merged, $current);
+            $this->closing->assertOpen($values['booking_date']);
             $reasonError = ChangeLog::reasonError($reason);
             if ($reasonError !== null) {
                 $errors['reason'] = $reasonError;
@@ -106,7 +116,7 @@ final class BookingService
      * Storniert eine aktive Buchung (bleibt sichtbar, zaehlt nicht mehr in Salden).
      *
      * @return array<string,mixed>
-     * @throws ValidationError|VersionConflict|BookingNotFound|BookingLocked
+     * @throws ValidationError|VersionConflict|BookingNotFound|BookingLocked|ClosedPeriod
      */
     public function cancel(int $id, string $reason, int $expectedVersion, int $userId): array
     {
@@ -117,7 +127,7 @@ final class BookingService
      * Nimmt ein Storno zurueck.
      *
      * @return array<string,mixed>
-     * @throws ValidationError|VersionConflict|BookingNotFound|BookingLocked
+     * @throws ValidationError|VersionConflict|BookingNotFound|BookingLocked|ClosedPeriod
      */
     public function restore(int $id, string $reason, int $expectedVersion, int $userId): array
     {
@@ -127,11 +137,13 @@ final class BookingService
     /**
      * Legt eine sichtbare Korrekturbuchung an (kind = correction), optional mit Verweis auf die
      * Ursprungsbuchung. Der Grund steht im Anlage-Eintrag des Verlaufs und, falls keine Beschreibung
-     * angegeben ist, auch als Beschreibung.
+     * angegeben ist, auch als Beschreibung. Auch nach einem Abschluss moeglich, solange das Datum
+     * nach dem Abschlussdatum liegt.
      *
      * @param array<string,mixed> $input wie bei create, description optional
      * @return array<string,mixed>
      * @throws ValidationError
+     * @throws ClosedPeriod wenn das Datum der Korrektur im abgeschlossenen Zeitraum liegt
      */
     public function createCorrection(array $input, ?int $correctionOfId, string $reason, int $userId): array
     {
@@ -153,6 +165,7 @@ final class BookingService
         }
 
         return Transaction::run($this->pdo, function () use ($values, $correctionOfId, $reason, $userId): array {
+            $this->closing->assertOpen($values['booking_date']);
             $id = $this->insert($values, 'correction', $correctionOfId, $userId);
             (new ChangeLog($this->pdo))->record(
                 $id,
@@ -170,6 +183,7 @@ final class BookingService
         $reason = ChangeLog::normalizeReason($reason);
         return Transaction::run($this->pdo, function () use ($id, $from, $to, $reason, $expectedVersion, $userId): array {
             $current = $this->lockForChange($id);
+            $this->closing->assertOpen((string) $current['booking_date']);
             if ($current['version'] !== $expectedVersion) {
                 throw new VersionConflict($id);
             }

@@ -14,6 +14,7 @@ use Vereinskiste\Ledger\BookingRepository;
 use Vereinskiste\Ledger\BookingService;
 use Vereinskiste\Ledger\CategoryRepository;
 use Vereinskiste\Ledger\ChangeLog;
+use Vereinskiste\Ledger\ClosedPeriod;
 use Vereinskiste\Ledger\Transaction;
 use Vereinskiste\Ledger\TransferService;
 use Vereinskiste\Ledger\ValidationError;
@@ -21,19 +22,14 @@ use Vereinskiste\Ledger\VersionConflict;
 use Vereinskiste\Receipts\ReceiptStore;
 use Vereinskiste\Receipts\UploadInput;
 
-final class BookingController extends AdminController
+final class BookingController extends LedgerController
 {
     public const PAGE_SIZE = 25;
 
-    private const FORM_FIELDS = [
-        'account_id', 'booking_date', 'amount', 'direction', 'category_id', 'description', 'counterparty', 'receipt_no',
-    ];
-
-    private const TRANSFER_FIELDS = ['from_account_id', 'to_account_id', 'booking_date', 'amount', 'description'];
-
     /** @param Closure():\PDO $pdo */
-    public function __construct(private Closure $pdo, private string $receiptsDir)
+    public function __construct(Closure $pdo, private string $receiptsDir)
     {
+        parent::__construct($pdo);
     }
 
     public function index(Request $req, Response $res): Response
@@ -89,6 +85,8 @@ final class BookingController extends AdminController
             });
         } catch (ValidationError $e) {
             return $this->renderForm($req, $res->withStatus(422), 'bookings/form.twig', ['input' => $input, 'errors' => $e->errors]);
+        } catch (ClosedPeriod $e) {
+            return $this->closedPeriod($req, $e);
         }
         $this->flash($req, 'bookings.flash.created');
         return $this->redirect('/bookings/' . $booking['id']);
@@ -168,6 +166,8 @@ final class BookingController extends AdminController
             return $this->notFound($req);
         } catch (BookingLocked $e) {
             return $this->locked($req, $id, $e->textKey);
+        } catch (ClosedPeriod $e) {
+            return $this->closedPeriod($req, $e, '/bookings/' . $id);
         }
         $this->flash($req, $updated['version'] === $booking['version'] ? 'bookings.flash.unchanged' : 'bookings.flash.updated');
         return $this->redirect('/bookings/' . $id);
@@ -183,83 +183,6 @@ final class BookingController extends AdminController
     public function restore(Request $req, Response $res, array $args): Response
     {
         return $this->changeStatus($req, $res, (int) $args['id'], 'restore');
-    }
-
-    public function showCorrection(Request $req, Response $res): Response
-    {
-        $of = $req->getQueryParams()['of'] ?? null;
-        $original = null;
-        $input = [];
-        if (is_string($of) && preg_match('/^[1-9]\d{0,17}\z/', $of) === 1) {
-            $original = (new BookingRepository(($this->pdo)()))->find((int) $of);
-            if ($original === null) {
-                return $this->notFound($req);
-            }
-            $input = ['account_id' => (string) $original['account_id']];
-        }
-        return $this->renderForm($req, $res, 'bookings/correction.twig', [
-            'input' => $input + ['description' => ''],
-            'original' => $original,
-            'correction_of_id' => $original === null ? '' : (string) $original['id'],
-            'reason' => '',
-        ]);
-    }
-
-    public function createCorrection(Request $req, Response $res): Response
-    {
-        $pdo = ($this->pdo)();
-        $body = $this->body($req);
-        $input = $this->formInput($body);
-        $reason = $this->str($body, 'reason');
-        $rawOf = $this->str($body, 'correction_of_id');
-        // Unbrauchbarer Verweis wird zu 0 und vom Service als "gibt es nicht" gemeldet.
-        $of = $rawOf === '' ? null : (preg_match('/^[1-9]\d{0,17}\z/', $rawOf) === 1 ? (int) $rawOf : 0);
-
-        try {
-            $booking = (new BookingService($pdo))->createCorrection($input, $of, $reason, $this->userId($req));
-        } catch (ValidationError $e) {
-            return $this->renderForm($req, $res->withStatus(422), 'bookings/correction.twig', [
-                'input' => $input,
-                'errors' => $e->errors,
-                'original' => $of === null ? null : (new BookingRepository($pdo))->find($of),
-                'correction_of_id' => $rawOf,
-                'reason' => $reason,
-            ]);
-        }
-        $this->flash($req, 'bookings.flash.correction_created');
-        return $this->redirect('/bookings/' . $booking['id']);
-    }
-
-    public function showTransfer(Request $req, Response $res): Response
-    {
-        return $this->renderTransfer($req, $res, [
-            'from_account_id' => '', 'to_account_id' => '', 'booking_date' => date('Y-m-d'), 'amount' => '', 'description' => '',
-        ]);
-    }
-
-    public function createTransfer(Request $req, Response $res): Response
-    {
-        $body = $this->body($req);
-        $input = [];
-        foreach (self::TRANSFER_FIELDS as $field) {
-            $input[$field] = $this->str($body, $field);
-        }
-        $accountId = static fn (string $v): int => preg_match('/^[1-9]\d{0,17}\z/', $v) === 1 ? (int) $v : 0;
-
-        try {
-            [$out] = (new TransferService(($this->pdo)()))->create(
-                $accountId($input['from_account_id']),
-                $accountId($input['to_account_id']),
-                $input['amount'],
-                $input['booking_date'],
-                $input['description'],
-                $this->userId($req)
-            );
-        } catch (ValidationError $e) {
-            return $this->renderTransfer($req, $res->withStatus(422), $input, $e->errors);
-        }
-        $this->flash($req, 'bookings.flash.transfer_created');
-        return $this->redirect('/bookings/' . $out['id']);
     }
 
     private function changeStatus(Request $req, Response $res, int $id, string $action): Response
@@ -287,6 +210,8 @@ final class BookingController extends AdminController
             return $this->notFound($req);
         } catch (BookingLocked $e) {
             return $this->locked($req, $id, $e->textKey);
+        } catch (ClosedPeriod $e) {
+            return $this->closedPeriod($req, $e, '/bookings/' . $id);
         }
 
         $flash = [
@@ -329,70 +254,10 @@ final class BookingController extends AdminController
         ]);
     }
 
-    /**
-     * Formular mit Konto- und Kategorieauswahl. Angeboten werden aktive Eintraege; ein bereits
-     * gewaehlter inaktiver Eintrag (Bearbeitung) bleibt waehlbar, damit er nicht stillschweigend wechselt.
-     *
-     * @param array<string,mixed> $context input?, errors?, booking?
-     */
-    private function renderForm(Request $req, Response $res, string $template, array $context = []): Response
-    {
-        $pdo = ($this->pdo)();
-        $context['input'] = ($context['input'] ?? []) + [
-            'account_id' => '', 'booking_date' => date('Y-m-d'), 'amount' => '', 'direction' => 'out',
-            'category_id' => '', 'description' => '', 'counterparty' => '', 'receipt_no' => '',
-        ];
-        $context['errors'] ??= [];
-        $keep = static fn (string $key): ?int => isset($context['booking'][$key]) ? (int) $context['booking'][$key] : null;
-        $context['accounts'] = array_values(array_filter(
-            (new AccountRepository($pdo))->all(),
-            static fn (array $a): bool => $a['active'] || $a['id'] === $keep('account_id')
-        ));
-        $context['categories'] = array_values(array_filter(
-            (new CategoryRepository($pdo))->all(),
-            static fn (array $c): bool => $c['active'] || $c['id'] === $keep('category_id')
-        ));
-        return $req->getAttribute('view')->render($res, $template, $context);
-    }
-
-    /**
-     * @param array<string,string> $input
-     * @param array<string,string> $errors
-     */
-    private function renderTransfer(Request $req, Response $res, array $input, array $errors = []): Response
-    {
-        return $req->getAttribute('view')->render($res, 'bookings/transfer.twig', [
-            'input' => $input,
-            'errors' => $errors,
-            'accounts' => array_values(array_filter(
-                (new AccountRepository(($this->pdo)()))->all(),
-                static fn (array $a): bool => $a['active']
-            )),
-        ]);
-    }
-
-    /**
-     * @param array<string,mixed> $body
-     * @return array<string,string>
-     */
-    private function formInput(array $body): array
-    {
-        $input = [];
-        foreach (self::FORM_FIELDS as $field) {
-            $input[$field] = $this->str($body, $field);
-        }
-        return $input;
-    }
-
     /** Version aus dem Hidden-Feld; Unbrauchbares wird 0 und fuehrt damit zum Versionskonflikt. */
     private function version(string $raw): int
     {
         return preg_match('/^[1-9]\d{0,8}\z/', $raw) === 1 ? (int) $raw : 0;
-    }
-
-    private function userId(Request $req): int
-    {
-        return $req->getAttribute('auth')->currentUser()['id'];
     }
 
     private function conflict(Request $req, int $id): Response
