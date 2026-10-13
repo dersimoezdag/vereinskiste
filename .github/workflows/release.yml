@@ -1,5 +1,8 @@
 name: Signed release
 on:
+  push:
+    branches: [main]
+    paths: ['app/VERSION']
   workflow_dispatch:
     inputs:
       version:
@@ -32,7 +35,6 @@ jobs:
       VK_TEST_USER: vk
       VK_TEST_PASS: vk
       RELEASE_VERSION: ${{ inputs.version }}
-      VK_UPDATE_PACKAGE: ${{ github.workspace }}/dist/vereinskiste-${{ inputs.version }}.zip
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,8 +45,12 @@ jobs:
           extensions: pdo_pgsql, mbstring, fileinfo, gd, openssl, zip, sodium, curl
           tools: composer:v2
           coverage: none
-      - name: Validate version
-        run: php -r 'if (!preg_match("/^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$/", getenv("RELEASE_VERSION"))) { exit(1); }'
+      - name: Resolve and validate version
+        run: |
+          version="${RELEASE_VERSION:-$(cat app/VERSION)}"
+          if ! [[ "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then exit 1; fi
+          echo "RELEASE_VERSION=$version" >> "$GITHUB_ENV"
+          echo "VK_UPDATE_PACKAGE=$GITHUB_WORKSPACE/dist/vereinskiste-$version.zip" >> "$GITHUB_ENV"
       - run: composer validate --strict --working-dir=app
       - run: composer install --working-dir=app --prefer-dist --no-interaction
       - run: composer audit --locked --working-dir=app
@@ -61,6 +67,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$RELEASE_VERSION" --target "$GITHUB_SHA" --title "Vereinskiste $RELEASE_VERSION" --generate-notes --latest \
+          notes="docs/releases/$RELEASE_VERSION.md"
+          if [ -f "$notes" ]; then
+            notes_args=(--notes-file "$notes")
+          else
+            notes_args=(--generate-notes)
+          fi
+          gh release create "$RELEASE_VERSION" --target "$GITHUB_SHA" --title "Vereinskiste $RELEASE_VERSION" "${notes_args[@]}" --latest \
             "dist/vereinskiste-$RELEASE_VERSION.zip" "dist/vereinskiste-$RELEASE_VERSION.zip.sha256" \
             "dist/vereinskiste-$RELEASE_VERSION.zip.manifest.json" "dist/vereinskiste-$RELEASE_VERSION.zip.manifest.sig"
