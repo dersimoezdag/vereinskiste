@@ -37,43 +37,60 @@
                         <a class="nav-link" href="/"><span class="nav-link-icon">{{ icons.icon('home') }}</span><span class="nav-link-title">{{ t('nav.home') }}</span></a>
                     </li>
                     {% if can('members.read') %}
-                    <li class="nav-item{% if path starts with '/members' %} active{% endif %}">
-                        <a class="nav-link" href="/members"><span class="nav-link-icon">{{ icons.icon('members') }}</span><span class="nav-link-title">{{ t('nav.members') }}</span></a>
+                    {% set membersActive = path starts with '/members' or path == '/settings/club-roles' %}
+                    {% set pendingApps = pending_applications_count() %}
+                    <li class="nav-item dropdown{% if membersActive %} active{% endif %}">
+                        <a class="nav-link dropdown-toggle{% if membersActive %} show{% endif %}" href="#members-menu" data-bs-toggle="dropdown"
+                           data-bs-auto-close="false" role="button" aria-expanded="{{ membersActive ? 'true' : 'false' }}" aria-controls="members-menu">
+                            <span class="nav-link-icon">{{ icons.icon('members') }}</span>
+                            <span class="nav-link-title">{{ t('nav.members') }}</span>
+                            {% if pendingApps > 0 %}
+                            <span class="badge bg-primary ms-auto" title="{{ pendingApps }} offene Anträge">{{ pendingApps }}</span>
+                            {% endif %}
+                        </a>
+                        <div class="dropdown-menu{% if membersActive %} show{% endif %}" id="members-menu">
+                            <a class="dropdown-item{% if path == '/members' or (path starts with '/members/' and not (path starts with '/members/applications')) %} active{% endif %}" href="/members">{{ t('members.list')|default('Mitgliederverzeichnis') }}</a>
+                            <a class="dropdown-item d-flex align-items-center justify-content-between{% if path starts with '/members/applications' %} active{% endif %}" href="/members/applications">
+                                <span>{{ t('applications.tab_applications')|default('Mitgliedsanträge') }}</span>
+                                {% if pendingApps > 0 %}
+                                <span class="badge bg-primary-subtle text-primary">{{ pendingApps }}</span>
+                                {% endif %}
+                            </a>
+                            {% if can('settings.manage') %}
+                            <a class="dropdown-item{% if path == '/settings/club-roles' %} active{% endif %}" href="/settings/club-roles">{{ t('nav.club_roles') }}</a>
+                            {% endif %}
+                        </div>
                     </li>
                     {% endif %}
                     {% if can('bookings.read') %}
-                    {% set cashActive = path starts with '/bookings' or path starts with '/accounts' or path starts with '/categories' %}
+                    {% set cashActive = path starts with '/bookings' or path starts with '/accounts' or path starts with '/categories' or path starts with '/imports' or path starts with '/invoices' or path starts with '/contacts' or path starts with '/settings/closing' or path starts with '/transfers' or path starts with '/corrections' %}
                     <li class="nav-item dropdown{% if cashActive %} active{% endif %}">
                         <a class="nav-link dropdown-toggle{% if cashActive %} show{% endif %}" href="#cashbook-menu" data-bs-toggle="dropdown"
                            data-bs-auto-close="false" role="button" aria-expanded="{{ cashActive ? 'true' : 'false' }}" aria-controls="cashbook-menu">
                             <span class="nav-link-icon">{{ icons.icon('bookings') }}</span><span class="nav-link-title">{{ t('nav.cashbook') }}</span>
                         </a>
                         <div class="dropdown-menu{% if cashActive %} show{% endif %}" id="cashbook-menu">
-                            <a class="dropdown-item{% if path starts with '/bookings' %} active{% endif %}" href="/bookings">{{ t('nav.bookings') }}</a>
+                            <a class="dropdown-item{% if path starts with '/bookings' or path starts with '/transfers' or path starts with '/corrections' %} active{% endif %}" href="/bookings">{{ t('nav.bookings') }}</a>
                             <a class="dropdown-item{% if path starts with '/accounts' %} active{% endif %}" href="/accounts">{{ t('nav.accounts') }}</a>
                             <a class="dropdown-item{% if path starts with '/categories' %} active{% endif %}" href="/categories">{{ t('nav.categories') }}</a>
+                            {% if can('imports.read') %}
+                            <a class="dropdown-item{% if path starts with '/imports' %} active{% endif %}" href="/imports/bank">Kontoauszug-Import</a>
+                            {% endif %}
+                            {% if can('invoices.read') %}
+                            <a class="dropdown-item{% if path starts with '/invoices' %} active{% endif %}" href="/invoices">{{ t('invoices.title') }}</a>
+                            {% endif %}
+                            {% if can('contacts.read') %}
+                            <a class="dropdown-item{% if path starts with '/contacts' %} active{% endif %}" href="/contacts">{{ t('foundation.contacts') }}</a>
+                            {% endif %}
+                            {% if can('settings.manage') %}
+                            <a class="dropdown-item{% if path starts with '/settings/closing' %} active{% endif %}" href="/settings/closing">{{ t('nav.closing') }}</a>
+                            {% endif %}
                         </div>
                     </li>
                     {% endif %}
                     {% if can('reports.read') %}
                     <li class="nav-item{% if path starts with '/reports' %} active{% endif %}">
                         <a class="nav-link" href="/reports/summary"><span class="nav-link-icon">{{ icons.icon('reports') }}</span><span class="nav-link-title">{{ t('nav.reports') }}</span></a>
-                    </li>
-                    {% endif %}
-                    {% if can('settings.manage') %}
-                    <li class="nav-item{% if path starts with '/settings/closing' %} active{% endif %}">
-                        <a class="nav-link" href="/settings/closing"><span class="nav-link-icon">{{ icons.icon('closing') }}</span><span class="nav-link-title">{{ t('nav.closing') }}</span></a>
-                    </li>
-                    {% endif %}
-                    {% if can('imports.read') %}
-                    <li class="nav-item{% if path starts with '/imports/bank' %} active{% endif %}">
-                        <a class="nav-link" href="/imports/bank"><span class="nav-link-icon">{{ icons.icon('imports') }}</span><span class="nav-link-title">Kontoauszug-Import</span></a>
-                    </li>
-                    {% endif %}
-                    {% if can('invoices.read') %}<li class="nav-item{% if path starts with '/invoices' %} active{% endif %}"><a class="nav-link" href="/invoices"><span class="nav-link-icon">{{ icons.icon('bookings') }}</span><span class="nav-link-title">{{ t('invoices.title') }}</span></a></li>{% endif %}
-                    {% if can('contacts.read') %}
-                    <li class="nav-item{% if path starts with '/contacts' %} active{% endif %}">
-                        <a class="nav-link" href="/contacts"><span class="nav-link-icon">{{ icons.icon('contacts') }}</span><span class="nav-link-title">{{ t('foundation.contacts') }}</span></a>
                     </li>
                     {% endif %}
                 </ul>

@@ -125,6 +125,19 @@ final class Kernel
             'current_user',
             static fn (): ?array => $state->auth?->currentUser()
         ));
+        $env->addFunction(new TwigFunction(
+            'pending_applications_count',
+            static function () use ($pdoProvider, $state): int {
+                if (!($state->auth?->can('members.read') ?? false)) {
+                    return 0;
+                }
+                try {
+                    return (new \Vereinskiste\Members\ApplicationRepository($pdoProvider))->countPending();
+                } catch (\Throwable) {
+                    return 0;
+                }
+            }
+        ));
 
         // Ausfuehrung von aussen nach innen: Fehler, Session, Kontext, Body-Parsing, CSRF, Routing.
         $app->addRoutingMiddleware();

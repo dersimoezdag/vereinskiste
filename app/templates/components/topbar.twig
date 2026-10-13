@@ -1,6 +1,7 @@
 {# Obere Leiste: Brotkrumen (Bereich > Seite) links, Farbschema-Umschalter rechts. Erwartet: path, icons #}
 {% set segs = path|split('/') %}
-{% set cash = {'label': t('nav.cashbook')} %}
+{% set cash = {'label': t('nav.cashbook'), 'url': '/bookings'} %}
+{% set members_group = {'label': t('nav.members'), 'url': '/members'} %}
 {% set settings = {'label': t('nav.settings'), 'url': '/settings'} %}
 {% set crumbs = [] %}
 {% if path == '/' %}
@@ -23,16 +24,36 @@
     {% set crumbs = [cash, {'label': t('nav.accounts'), 'url': '/accounts'}, {'label': t('foundation.bank')}] %}
 {% elseif path starts with '/categories' %}
     {% set crumbs = [cash, {'label': t('nav.categories')}] %}
+{% elseif path == '/imports/bank' %}
+    {% set crumbs = [cash, {'label': 'Kontoauszug-Import'}] %}
+{% elseif path starts with '/imports' %}
+    {% set crumbs = [cash, {'label': 'Kontoauszug-Import', 'url': '/imports/bank'}, {'label': path ends with '/new' ? 'Neuer Import' : 'Import'}] %}
+{% elseif path == '/invoices' %}
+    {% set crumbs = [cash, {'label': t('invoices.title')}] %}
+{% elseif path starts with '/invoices' %}
+    {% set crumbs = [cash, {'label': t('invoices.title'), 'url': '/invoices'}, {'label': path == '/invoices/import' ? 'Import' : 'Rechnung'}] %}
+{% elseif path == '/contacts' %}
+    {% set crumbs = [cash, {'label': t('foundation.contacts')}] %}
+{% elseif path starts with '/contacts' %}
+    {% set crumbs = [cash, {'label': t('foundation.contacts'), 'url': '/contacts'}, {'label': path == '/contacts/new' ? 'Neu' : 'Kontakt'}] %}
+{% elseif path starts with '/settings/closing' %}
+    {% set crumbs = [cash, {'label': t('nav.closing')}] %}
 {% elseif path starts with '/reports' %}
     {% set crumbs = [{'label': t('nav.reports'), 'url': '/reports/summary'}, {'label': path == '/reports/dashboard' ? t('reports.tab.dashboard') : t('reports.tab.summary')}] %}
+{% elseif path == '/members' %}
+    {% set crumbs = [members_group, {'label': t('members.list')|default('Mitgliederverzeichnis')}] %}
+{% elseif path == '/members/applications' %}
+    {% set crumbs = [members_group, {'label': t('applications.tab_applications')}] %}
+{% elseif path starts with '/members' %}
+    {% set crumbs = [members_group, {'label': path == '/members/new' ? 'Neu' : 'Mitglied'}] %}
+{% elseif path == '/settings/club-roles' %}
+    {% set crumbs = [members_group, {'label': t('nav.club_roles')}] %}
 {% elseif path == '/settings' %}
     {% set crumbs = [{'label': t('nav.settings')}] %}
 {% elseif path == '/settings/email' %}
     {% set crumbs = [settings, {'label': t('mail.settings.title')}] %}
 {% elseif path == '/settings/club' %}
     {% set crumbs = [settings, {'label': t('foundation.club')}] %}
-{% elseif path starts with '/settings/closing' %}
-    {% set crumbs = [settings, {'label': t('nav.closing')}] %}
 {% elseif path == '/audit-log' %}
     {% set crumbs = [settings, {'label': t('nav.audit')}] %}
 {% elseif path == '/update' %}
@@ -43,22 +64,6 @@
     {% set crumbs = [settings, {'label': t('settings.users'), 'url': '/users'}, {'label': path ends with '/new' ? 'Neu' : 'Bearbeiten'}] %}
 {% elseif path starts with '/settings' %}
     {% set crumbs = [{'label': t('nav.settings')}] %}
-{% elseif path == '/contacts' %}
-    {% set crumbs = [{'label': t('foundation.contacts')}] %}
-{% elseif path starts with '/contacts' %}
-    {% set crumbs = [{'label': t('foundation.contacts'), 'url': '/contacts'}, {'label': path == '/contacts/new' ? 'Neu' : 'Kontakt'}] %}
-{% elseif path == '/members' %}
-    {% set crumbs = [{'label': t('nav.members')}] %}
-{% elseif path == '/members/applications' %}
-    {% set crumbs = [{'label': t('nav.members'), 'url': '/members'}, {'label': t('applications.tab_applications')}] %}
-{% elseif path starts with '/members' %}
-    {% set crumbs = [{'label': t('nav.members'), 'url': '/members'}, {'label': path == '/members/new' ? 'Neu' : 'Mitglied'}] %}
-{% elseif path == '/settings/club-roles' %}
-    {% set crumbs = [settings, {'label': t('nav.club_roles')}] %}
-{% elseif path == '/imports/bank' %}
-    {% set crumbs = [{'label': 'Kontoauszug-Import'}] %}
-{% elseif path starts with '/imports' %}
-    {% set crumbs = [{'label': 'Kontoauszug-Import', 'url': '/imports/bank'}, {'label': path ends with '/new' ? 'Neuer Import' : 'Import'}] %}
 {% elseif path starts with '/account/password' %}
     {% set crumbs = [{'label': t('nav.password')}] %}
 {% endif %}
