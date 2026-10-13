@@ -6,6 +6,7 @@ $materialIcons = [ordered]@{
     'categories' = 'category'; 'reports' = 'bar_chart'; 'closing' = 'lock'; 'audit' = 'history'
     'users' = 'group'; 'settings' = 'settings'; 'password' = 'key'; 'logout' = 'logout'
     'more' = 'more_vert'; 'chevron-up' = 'expand_less'; 'imports' = 'upload_file'; 'contacts' = 'contacts'
+    'dark-mode' = 'dark_mode'; 'light-mode' = 'light_mode'
 }
 $materialDirectory = Join-Path $PSScriptRoot '../public/assets/vendor/material-symbols'
 New-Item -ItemType Directory -Path $materialDirectory -Force | Out-Null

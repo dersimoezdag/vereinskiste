@@ -14,3 +14,14 @@ Diese Dateien werden unverändert mit der Anwendung ausgeliefert (kein Build auf
 - SHA-256 JS: `9d26ca1aa061a0c647305654e32efc2c8838e348b2423e9d1f4593869868e09b`
 
 Aktualisieren: offizielles npm-Paket herunterladen, dessen veröffentlichte Integrität vor dem Entpacken prüfen, Version/Prüfsummen dokumentieren, Lizenz und Oberfläche prüfen. Kein Paketmanager oder Node auf dem Hosting nötig.
+
+## Chart.js (`chartjs/`)
+
+- Paket: `chart.js` **4.4.7** (MIT-Lizenz, siehe `chartjs/LICENSE`)
+- Datei: `chartjs/chart.umd.min.js` (aus `dist/chart.umd.js`, unverändert)
+- Quelle: `https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.js`
+- Lizenztext: `https://github.com/chartjs/Chart.js/blob/v4.4.7/LICENSE.md`
+- SHA-256: `2812cb8825fdc57469eb2f7bb055e9429244e599920511ee477e828499b632cb`
+- Verwendung: nur das Finanz-Dashboard (`/reports/dashboard`, `public/assets/dashboard.js`). Kein Build, kein React; die Seite bleibt mit der Content-Security-Policy `script-src 'self'` vereinbar.
+
+Aktualisieren: neue Version von jsDelivr/npm laden, Prüfsumme hier eintragen, Dashboard auf allen Zeiträumen prüfen.

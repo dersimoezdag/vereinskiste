@@ -22,11 +22,21 @@
 <p class="alert alert-warning">{{ t('settings.github.error.' ~ release.reason) }}{% if release.http_status is defined %} (HTTP {{ release.http_status }}){% endif %}</p>
 {% endif %}
 {% if release.status == 'available' %}
+    {% if release.manifest is defined and release.signature is defined and automatic_supported and not pending %}
+    <form method="post" action="/settings/auto-update/start" class="card card-body mb-3">
+        {{ csrf_field() }}<input type="hidden" name="version" value="{{ release.version }}">
+        <p>{{ t('auto_update.explain') }}</p>
+        <label class="form-check mb-3"><input type="checkbox" name="backup_confirmed" value="1" class="form-check-input" required>
+            {{ t('auto_update.backup_confirm') }}</label>
+        <button class="btn btn-primary" type="submit">{{ t('auto_update.install') }} {{ release.version }}</button>
+    </form>
+    {% endif %}
     {% if release.download is defined %}<a class="btn btn-primary mb-3" href="{{ release.download }}" rel="noreferrer">{{ t('settings.github.download') }}</a>
     {% else %}<p>{{ t('settings.github.missing_package') }}</p>{% endif %}
     <a class="btn btn-link mb-3" href="{{ release.url }}" rel="noreferrer">{{ t('settings.github.release') }}</a>
 {% endif %}
 {% endif %}
+{% if operation.phase != 'idle' %}<p><a href="/settings/auto-update">{{ t('auto_update.progress') }}</a></p>{% endif %}
 <p class="text-secondary">{{ t('settings.updates.help') }}</p>
 {% if error %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endif %}
 {% if done %}<p class="alert alert-success" role="status">{{ t('update.done') }}</p>{% endif %}

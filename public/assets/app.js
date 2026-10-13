@@ -60,3 +60,47 @@ document.querySelectorAll('form[data-stepper]').forEach(function (form) {
     });
     show(0);
 });
+
+// Dark-Mode Umschaltung & Synchronisation
+(function () {
+    function updateThemeUI(theme) {
+        document.querySelectorAll('.theme-toggle').forEach(function (btn) {
+            var lightIcon = btn.querySelector('.theme-icon-light');
+            var darkIcon = btn.querySelector('.theme-icon-dark');
+            if (lightIcon && darkIcon) {
+                if (theme === 'dark') {
+                    lightIcon.classList.remove('d-none');
+                    darkIcon.classList.add('d-none');
+                    btn.setAttribute('aria-label', 'Zum hellen Modus wechseln');
+                    btn.setAttribute('title', 'Zum hellen Modus wechseln');
+                } else {
+                    lightIcon.classList.add('d-none');
+                    darkIcon.classList.remove('d-none');
+                    btn.setAttribute('aria-label', 'Zum dunklen Modus wechseln');
+                    btn.setAttribute('title', 'Zum dunklen Modus wechseln');
+                }
+            }
+        });
+    }
+
+    function getPreferredTheme() {
+        var stored = null;
+        try { stored = localStorage.getItem('vk-theme'); } catch (e) {}
+        if (stored === 'dark' || stored === 'light') { return stored; }
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    var activeTheme = getPreferredTheme();
+    document.documentElement.setAttribute('data-bs-theme', activeTheme);
+    updateThemeUI(activeTheme);
+
+    document.addEventListener('click', function (event) {
+        var toggle = event.target.closest('.theme-toggle');
+        if (!toggle) { return; }
+        var current = document.documentElement.getAttribute('data-bs-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-bs-theme', next);
+        try { localStorage.setItem('vk-theme', next); } catch (e) {}
+        updateThemeUI(next);
+    });
+})();

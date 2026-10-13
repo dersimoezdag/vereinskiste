@@ -20,8 +20,10 @@ final class Coordinator
             $old=$this->state->load();
             if ($old!==null && !in_array($old['phase'],self::TERMINAL,true)) { throw new Failure('busy'); }
             if (!extension_loaded('zip') || !extension_loaded('sodium') || !is_file($this->runtime->instance . '/update-trust.json')) { throw new Failure('requirements'); }
+            $current=$this->runtime->active()['version']??$installed;
             if (($release['status']??'')!=='available' || !isset($release['download'],$release['manifest'],$release['signature'])
                 || !preg_match('/^\d+\.\d+\.\d+\z/',$release['version']??'') || !version_compare($release['version'],$installed,'>')) { throw new Failure('signed_release'); }
+            if (!version_compare($release['version'],$current,'>')) { throw new Failure('signed_release'); }
             $base=\Vereinskiste\Install\GitHubReleases::REPOSITORY . '/releases/download/';
             foreach (['download','manifest','signature'] as $key) {
                 if (!str_starts_with($release[$key],$base)) { throw new Failure('download_url'); }
@@ -36,7 +38,13 @@ final class Coordinator
     public function step(): array
     {
         return $this->state->locked(function(): array {
-            $data=$this->state->load(); if ($data===null || in_array($data['phase'],self::TERMINAL,true)) { return $this->state->publicStatus(); }
+            $data=$this->state->load();
+            if ($data===null || in_array($data['phase'],self::TERMINAL,true)) {
+                if ($data!==null && in_array($data['phase'],['done','rolled_back'],true) && ($this->runtime->maintenance()['id']??null)===$data['id']) {
+                    unlink($this->runtime->directory() . '/maintenance.json');
+                }
+                return $this->state->publicStatus();
+            }
             $exclusive=false;
             try {
                 if (in_array($data['phase'],['manifest','signature','download','inspect','extract'],true)) {

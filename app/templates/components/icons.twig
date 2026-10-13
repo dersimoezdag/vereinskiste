@@ -1,6 +1,6 @@
 {% macro icon(name) %}
     <svg class="icon material-symbol" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
          viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true" focusable="false">
-        <use width="24" height="24" href="/assets/vendor/material-symbols/symbols.svg#{{ name|url_encode }}"/>
+        <use width="24" height="24" href="{{ asset('vendor/material-symbols/symbols.svg') }}#{{ name|url_encode }}"/>
     </svg>
 {% endmacro %}

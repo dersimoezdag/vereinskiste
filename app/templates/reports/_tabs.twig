@@ -1,0 +1,8 @@
+<nav class="nav nav-tabs mb-4" aria-label="{{ t('reports.tabs') }}">
+    {% for tab in [
+        {'id': 'summary', 'url': '/reports/summary', 'label': 'reports.tab.summary'},
+        {'id': 'dashboard', 'url': '/reports/dashboard', 'label': 'reports.tab.dashboard'}
+    ] %}
+    <a class="nav-link{% if tab.id == active %} active{% endif %}" href="{{ tab.url }}{% if export_query %}?{{ export_query }}{% endif %}"{% if tab.id == active %} aria-current="page"{% endif %}>{{ t(tab.label) }}</a>
+    {% endfor %}
+</nav>

@@ -1,0 +1,26 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('auto_update.title') }}{% endblock %}
+{% block content %}
+<h1>{{ t('auto_update.title') }}</h1>
+{% if error %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endif %}
+<section class="card card-body" id="automatic-update" data-phase="{{ operation.phase }}">
+    <h2 id="automatic-status" role="status">{{ t('auto_update.phase.' ~ operation.phase) }}</h2>
+    {% if operation.version is defined %}<p>{{ t('auto_update.target') }} {{ operation.version }}</p>{% endif %}
+    <p id="automatic-detail">{% if operation.downloaded is defined %}{{ operation.downloaded }} / {{ operation.size }} Bytes{% endif %}</p>
+    <p id="automatic-error" class="text-danger"{% if operation.error is not defined %} hidden{% endif %}>{% if operation.error is defined %}{{ t('auto_update.error.' ~ operation.error) }}{% endif %}</p>
+    {% if operation.phase not in ['idle','done','failed','cancelled','rolled_back'] %}
+    <p>{{ t('auto_update.keep_open') }}</p>
+    {% if operation.probe_url is defined %}<p><a href="{{ operation.probe_url }}" target="_blank" rel="noopener">{{ t('auto_update.probe') }}</a></p>{% endif %}
+    <form method="post" action="/settings/auto-update/step" id="automatic-step">{{ csrf_field() }}
+        <button type="submit" class="btn btn-primary">{{ t('auto_update.continue') }}</button></form>
+    <form method="post" action="/settings/auto-update/cancel" class="mt-3">{{ csrf_field() }}
+        <button type="submit" class="btn btn-outline-secondary">{{ t('auto_update.cancel') }}</button></form>
+    {% endif %}
+</section>
+<p class="mt-3"><a href="/settings">{{ t('auto_update.back') }}</a></p>
+<div id="automatic-messages" hidden>{% for phase in ['idle','manifest','signature','download','inspect','extract','waiting','backup','activate','verify','rollback','recovery_required','done','failed','cancelled','rolled_back'] %}
+    <span data-phase="{{ phase }}">{{ t('auto_update.phase.' ~ phase) }}</span>{% endfor %}
+    {% for reason in ['signature','manifest','requirements','download','download_url','download_limit','range','checksum','archive','archive_limit','php','space','storage','schema','backup','backup_limit','restore_timeout','update','health','busy','state'] %}
+    <span data-error="{{ reason }}">{{ t('auto_update.error.' ~ reason) }}</span>{% endfor %}</div>
+{% endblock %}
+{% block scripts %}<script src="{{ asset('auto-update.js') }}"></script>{% endblock %}

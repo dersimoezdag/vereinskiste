@@ -2,9 +2,17 @@
 declare(strict_types=1);
 
 if (PHP_SAPI !== 'cli') { http_response_code(403); exit; }
+if (!defined('VK_INSTANCE_APP')) {
+    require __DIR__ . '/update-bootstrap.php';
+    define('VK_INSTANCE_APP',__DIR__);
+    $cronRuntime=new Vereinskiste\Update\Runtime(__DIR__);
+    $cronCode=$cronRuntime->application();
+    if ($cronCode!==__DIR__) { require $cronCode . '/cron.php'; exit; }
+}
 require __DIR__ . '/vendor/autoload.php';
-$config = require __DIR__ . '/config/config.php';
-$directory = __DIR__ . '/storage/security';
+$instance=VK_INSTANCE_APP;
+$config = require $instance . '/config/config.php';
+$directory = $instance . '/storage/security';
 if (!is_dir($directory) && !mkdir($directory, 0700, true)) {
     throw new RuntimeException('Cron-Speicher nicht verfuegbar.');
 }
@@ -14,6 +22,14 @@ chmod($directory . '/mail-worker.lock', 0600);
 if (!flock($lock, LOCK_EX | LOCK_NB)) { fclose($lock); exit; }
 try {
     $pdo = Vereinskiste\Db\Connection::fromConfig($config['db']);
+    $cronRuntime=new Vereinskiste\Update\Runtime($instance);
+    $updateState=(new Vereinskiste\Update\State($cronRuntime))->load();
+    if ($updateState!==null && !in_array($updateState['phase'],[...Vereinskiste\Update\Coordinator::TERMINAL,'recovery_required'],true)) {
+        (new Vereinskiste\Update\Coordinator($pdo,$cronRuntime))->step();
+    }
+    if ($cronRuntime->maintenance()!==null) { return; }
+    $workerShared=(bool)$pdo->query('SELECT pg_try_advisory_lock_shared(' . Vereinskiste\Update\Coordinator::BARRIER . ')')->fetchColumn();
+    if (!$workerShared || $cronRuntime->maintenance()!==null) { return; }
     // Vor einem Schema-Update keine Nachrichten zustellen.
     if ((new Vereinskiste\Install\Updater($pdo, __DIR__ . '/migrations'))->needsUpdate()) {
         throw new RuntimeException('Bitte zuerst Datenbank aktualisieren.');
@@ -37,13 +53,14 @@ try {
             (new Vereinskiste\Files\StoredFileRepository($pdo))->registerReceipts(50);
         },
         'bank_csv_parse' => static function (array $payload) use ($pdo): void {
-            (new Vereinskiste\BankImport\ParseService($pdo, __DIR__ . '/storage/documents'))->step((int) $payload['id']);
+            (new Vereinskiste\BankImport\ParseService($pdo, VK_INSTANCE_APP . '/storage/documents'))->step((int) $payload['id']);
         },
         'upload_cleanup' => static function () use ($pdo): void {
-            (new Vereinskiste\Files\UnregisteredUploads($pdo, __DIR__ . '/storage/documents'))->clean();
+            (new Vereinskiste\Files\UnregisteredUploads($pdo, VK_INSTANCE_APP . '/storage/documents'))->clean();
         },
     ]))->run(20, 20);
 } finally {
+    if (($workerShared??false) && isset($pdo)) { $pdo->query('SELECT pg_advisory_unlock_shared(' . Vereinskiste\Update\Coordinator::BARRIER . ')'); }
     flock($lock, LOCK_UN);
     fclose($lock);
 }

@@ -11,6 +11,7 @@ use Vereinskiste\Ledger\AccountRepository;
 use Vereinskiste\Ledger\BookingRepository;
 use Vereinskiste\Ledger\ValidationError;
 use Vereinskiste\Reports\CsvExporter;
+use Vereinskiste\Reports\DashboardService;
 use Vereinskiste\Reports\PdfExporter;
 use Vereinskiste\Reports\SummaryService;
 
@@ -30,6 +31,30 @@ final class ReportController
     {
         return $this->withSummary($req, $res, fn (array $summary, array $input): Response => $req
             ->getAttribute('view')->render($res, 'reports/summary.twig', $this->context($input, [], $summary)));
+    }
+
+    public function dashboard(Request $req, Response $res): Response
+    {
+        return $this->withSummary($req, $res, function (array $summary, array $input) use ($req, $res): Response {
+            $view = $req->getAttribute('view');
+            try {
+                $monthly = (new DashboardService(($this->pdo)()))->monthly($summary['from'], $summary['to'], $summary['account_id']);
+            } catch (ValidationError $e) {
+                return $view->render($res->withStatus(422), 'reports/dashboard.twig', $this->context($input, $e->errors, null));
+            }
+            $uncategorized = $this->texts['reports.uncategorized'] ?? SummaryService::UNCATEGORIZED;
+            $other = $this->texts['dashboard.other'] ?? 'Weitere';
+            $income = DashboardService::topCategories($summary['byCategory'], 'income', $uncategorized, $other);
+            $expense = DashboardService::topCategories($summary['byCategory'], 'expense', $uncategorized, $other);
+            // JSON_HEX_*: Kategorienamen duerfen den <script>-Block nicht verlassen (CSP erlaubt nur Daten, kein Inline-Skript).
+            $json = json_encode(
+                DashboardService::chartData($monthly, $income, $expense),
+                JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+            );
+            return $view->render($res, 'reports/dashboard.twig', $this->context($input, [], $summary) + [
+                'monthly' => $monthly, 'income_rows' => $income, 'expense_rows' => $expense, 'charts_json' => $json,
+            ]);
+        }, 'reports/dashboard.twig');
     }
 
     public function pdf(Request $req, Response $res): Response
@@ -74,8 +99,9 @@ final class ReportController
      * `$onSuccess` aufrufen; bei Eingabefehlern stattdessen die Seite mit Fehlern (422) ausgeben.
      *
      * @param callable(array<string,mixed>,array<string,string>):Response $onSuccess
+     * @param string $errorTemplate Seite, die bei Eingabefehlern (422) ausgegeben wird
      */
-    private function withSummary(Request $req, Response $res, callable $onSuccess): Response
+    private function withSummary(Request $req, Response $res, callable $onSuccess, string $errorTemplate = 'reports/summary.twig'): Response
     {
         $q = $req->getQueryParams();
         $period = (new \Vereinskiste\Club\Profile(($this->pdo)()))->period();
@@ -97,7 +123,7 @@ final class ReportController
         } catch (ValidationError $e) {
             return $req->getAttribute('view')->render(
                 $res->withStatus(422),
-                'reports/summary.twig',
+                $errorTemplate,
                 $this->context($input, $e->errors, null)
             );
         }

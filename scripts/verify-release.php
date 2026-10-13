@@ -7,11 +7,13 @@ if ($argc !== 2 || $zip->open($argv[1]) !== true) {
     exit(1);
 }
 foreach (['app/vendor/autoload.php', 'app/bootstrap.php', 'app/VERSION', 'app/migrations/0001_initial.sql',
+    'app/update-bootstrap.php','app/update-trust.json','app/src/Update/Coordinator.php','app/src/Text/de/auto_update.php','public/assets/auto-update.js',
     'app/migrations/0006_reset_request_queue.sql', 'app/migrations/0010_bank_import.sql',
     'app/src/Text/de/core.php', 'app/src/Text/de/foundation.php', 'app/src/Text/de/bank_import.php',
-    'app/src/Text/de/updates.php', 'app/src/Install/GitHubTransport.php', 'app/src/Install/UpdateCheckFailure.php',
+    'app/src/Text/de/updates.php', 'app/src/Text/de/dashboard.php', 'app/src/Install/GitHubTransport.php', 'app/src/Install/UpdateCheckFailure.php',
     'app/cron.php', 'docs/hosting.md', 'docs/plans/ausbau/10-csv-import.md', 'app/config/', 'app/storage/',
-    'public/index.php', 'public/.htaccess', 'public/assets/logo.svg', 'public/assets/app.css', 'public/assets/user-card.css', 'public/assets/bank-import.js',
+    'public/index.php', 'public/.htaccess', 'public/assets/logo.svg', 'public/assets/app.css', 'public/assets/user-card.css', 'public/assets/bank-import.js', 'public/assets/dashboard.js',
+    'public/assets/vendor/chartjs/chart.umd.min.js', 'public/assets/vendor/chartjs/LICENSE',
     'public/assets/vendor/material-symbols/symbols.svg', 'public/assets/vendor/material-symbols/LICENSE',
     'public/assets/vendor/tabler/tabler.min.css', 'public/assets/vendor/tabler/tabler.min.js', 'LICENSE', 'README.md'] as $name) {
     if ($zip->locateName($name) === false) { throw new RuntimeException('Release-Datei fehlt: ' . $name); }

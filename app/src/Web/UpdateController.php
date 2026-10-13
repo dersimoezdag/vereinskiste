@@ -50,6 +50,8 @@ final class UpdateController extends AdminController
         $updater = new Updater(($this->pdo)(), $this->migrationDir);
         return $req->getAttribute('view')->render($res->withHeader('Cache-Control', 'no-store'),
             'install/update.twig', ['pending' => $updater->needsUpdate(), 'compatible' => $updater->isCompatible(),
+                'automatic_supported'=>extension_loaded('zip') && extension_loaded('sodium') && is_file(dirname($this->migrationDir) . '/update-trust.json'),
+                'operation'=>(new \Vereinskiste\Update\State(new \Vereinskiste\Update\Runtime(defined('VK_INSTANCE_APP')?VK_INSTANCE_APP:dirname($this->migrationDir))))->publicStatus(),
                 'error' => $error, 'done' => $done, 'version' => $this->version,
                 'release' => $req->getAttribute('session')->get('github_release_installed') === $this->version
                     ? ($req->getAttribute('session')->get('github_release') ?? ['status' => 'unchecked'])

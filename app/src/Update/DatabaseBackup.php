@@ -13,7 +13,7 @@ final class DatabaseBackup
         Files::mkdir($this->directory);
         $schema = (new DatabaseSchema($this->db))->capture();
         Files::json($this->directory . '/schema.json', $schema);
-        return ['table'=>0,'last'=>null,'rows'=>0,'bytes'=>0];
+        return ['table'=>0,'last'=>null,'rows'=>0,'bytes'=>0,'total_bytes'=>0];
     }
     public function step(array $progress): array
     {
@@ -38,6 +38,8 @@ final class DatabaseBackup
                 foreach ($rows as $row) {
                     if (++$progress['rows'] > self::MAX_ROWS) { throw new Failure('backup_limit'); }
                     $line = json_encode($row,JSON_THROW_ON_ERROR) . "\n";
+                    $progress['total_bytes']+=strlen($line);
+                    if ($progress['total_bytes']>67108864) { throw new Failure('backup_limit'); }
                     if (strlen($line)>1048576 || fwrite($stream,$line)!==strlen($line)) { throw new Failure('backup'); }
                     $progress['bytes']+=strlen($line);
                 }

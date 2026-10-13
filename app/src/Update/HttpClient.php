@@ -26,14 +26,16 @@ final class HttpClient
         $headers=['User-Agent: Vereinskiste-Updater','Accept-Encoding: identity'];
         if ($range!==null) { $headers[]='Range: bytes=' . $range[0] . '-' . $range[1]; }
         if (!function_exists('curl_init')) { return $this->stream($url,$headers,$limit); }
-        $handle=curl_init($url); $body=''; $responseHeaders=[];
+        $handle=curl_init($url); $body=''; $responseHeaders=[]; $status=0;
         if ($handle===false) { throw new Failure('download'); }
         try {
             curl_setopt_array($handle,[CURLOPT_HTTPHEADER=>$headers,CURLOPT_CONNECTTIMEOUT_MS=>2000,CURLOPT_TIMEOUT_MS=>4000,
                 CURLOPT_FOLLOWLOCATION=>false,CURLOPT_PROTOCOLS=>CURLPROTO_HTTPS,CURLOPT_SSL_VERIFYPEER=>true,CURLOPT_SSL_VERIFYHOST=>2,
-                CURLOPT_WRITEFUNCTION=>static function($unused,string $chunk) use(&$body,$limit): int {
+                CURLOPT_WRITEFUNCTION=>static function($unused,string $chunk) use(&$body,$limit,&$status): int {
+                    if (in_array($status,[301,302,303,307,308],true)) { return strlen($chunk); }
                     if (strlen($body)+strlen($chunk)>$limit) { return 0; } $body.=$chunk; return strlen($chunk);
-                },CURLOPT_HEADERFUNCTION=>static function($unused,string $header) use(&$responseHeaders): int {
+                },CURLOPT_HEADERFUNCTION=>static function($unused,string $header) use(&$responseHeaders,&$status): int {
+                    if (preg_match('~^HTTP/\S+ ([0-9]{3})~',$header,$m)) { $status=(int)$m[1]; $responseHeaders=[]; }
                     if (preg_match('/^([A-Za-z-]+):\s*(.*?)\r?\n?$/',$header,$m)) { $responseHeaders[strtolower($m[1])]=trim($m[2]); }
                     return strlen($header);
                 }]);
@@ -53,7 +55,7 @@ final class HttpClient
                 if (preg_match('~^HTTP/\S+ ([0-9]{3})~',$header,$m)) { $status=(int)$m[1]; }
                 if (preg_match('/^([A-Za-z-]+):\s*(.*)$/',$header,$m)) { $result[strtolower($m[1])]=trim($m[2]); }
             }
-            $body=stream_get_contents($stream,$limit+1);
+            $body=in_array($status,[301,302,303,307,308],true)?'':stream_get_contents($stream,$limit+1);
             if ($body===false || stream_get_meta_data($stream)['timed_out'] || strlen($body)>$limit) { throw new Failure('download'); }
             return ['status'=>$status,'headers'=>$result,'body'=>$body];
         } finally { fclose($stream); }

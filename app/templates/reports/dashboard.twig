@@ -1,0 +1,142 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('reports.title') }} – {{ t('reports.tab.dashboard') }}{% endblock %}
+{% block content %}
+<h1 class="mb-4">{{ t('reports.title') }}</h1>
+{% include 'reports/_tabs.twig' with {'active': 'dashboard'} %}
+{% include 'reports/_filter.twig' with {'action': '/reports/dashboard'} %}
+
+{% if summary %}
+<div class="row row-cards mb-4">
+    <div class="col-12 col-md-4">
+        <div class="card"><div class="card-body">
+            <div class="text-secondary"><span class="viz-swatch viz-swatch-income" aria-hidden="true"></span>{{ t('reports.income') }}</div>
+            <div class="h2 mb-0">{{ summary.income|eur }}</div>
+        </div></div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card"><div class="card-body">
+            <div class="text-secondary"><span class="viz-swatch viz-swatch-expense" aria-hidden="true"></span>{{ t('reports.expense') }}</div>
+            <div class="h2 mb-0">{{ summary.expense|eur }}</div>
+        </div></div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card"><div class="card-body">
+            <div class="text-secondary">{{ t('reports.balance') }}</div>
+            <div class="h2 mb-0">{{ summary.balance|eur }}</div>
+        </div></div>
+    </div>
+    {% if summary.accountBalanceAtEnd is not null %}
+    <div class="col-12">
+        <div class="card"><div class="card-body">
+            <div class="text-secondary">{{ summary.account_name }} – {{ t('reports.account_balance_at_end') }} ({{ summary.to|date('d.m.Y') }})</div>
+            <div class="h2 mb-0">{{ summary.accountBalanceAtEnd|eur }}</div>
+        </div></div>
+    </div>
+    {% endif %}
+</div>
+
+{% if summary.income == '0.00' and summary.expense == '0.00' %}
+<p class="text-secondary">{{ t('reports.empty') }}</p>
+{% else %}
+<div class="viz-root" data-dashboard data-locale="de-DE"
+     data-label-income="{{ t('reports.income') }}" data-label-expense="{{ t('reports.expense') }}"
+     data-label-cumulative="{{ t('dashboard.cumulative') }}">
+
+    <section class="card mb-3" aria-labelledby="chart-monthly-title">
+        <div class="card-header"><h2 class="card-title" id="chart-monthly-title">{{ t('dashboard.monthly') }}</h2></div>
+        <div class="card-body">
+            <div class="chart-box"><canvas id="chart-monthly" role="img" aria-label="{{ t('dashboard.monthly.alt') }}"></canvas></div>
+            <details class="mt-3">
+                <summary>{{ t('dashboard.table') }}</summary>
+                <div class="table-responsive mt-2">
+                    <table class="table table-vcenter table-cards">
+                        <thead><tr>
+                            <th>{{ t('dashboard.month') }}</th>
+                            <th class="text-end">{{ t('reports.income') }}</th>
+                            <th class="text-end">{{ t('reports.expense') }}</th>
+                            <th class="text-end">{{ t('dashboard.result') }}</th>
+                        </tr></thead>
+                        <tbody>
+                        {% for row in monthly %}
+                            <tr>
+                                <td data-label="{{ t('dashboard.month') }}">{{ (row.month ~ '-01')|date('m/Y') }}</td>
+                                <td data-label="{{ t('reports.income') }}" class="text-end">{{ row.income|eur }}</td>
+                                <td data-label="{{ t('reports.expense') }}" class="text-end">{{ row.expense|eur }}</td>
+                                <td data-label="{{ t('dashboard.result') }}" class="text-end">{{ row.result|eur }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+        </div>
+    </section>
+
+    <div class="row row-cards mb-3">
+        {% for kind, rows in {'income': income_rows, 'expense': expense_rows} %}
+        <div class="col-12 col-lg-6">
+            <section class="card h-100" aria-labelledby="chart-{{ kind }}-title">
+                <div class="card-header"><h2 class="card-title" id="chart-{{ kind }}-title">{{ t('dashboard.' ~ kind ~ '_by_category') }}</h2></div>
+                <div class="card-body">
+                    {% if rows %}
+                    <div class="chart-box" style="height: {{ 64 + rows|length * 38 }}px"><canvas id="chart-{{ kind }}-categories" role="img" aria-label="{{ t('dashboard.' ~ kind ~ '_by_category.alt') }}"></canvas></div>
+                    <details class="mt-3">
+                        <summary>{{ t('dashboard.table') }}</summary>
+                        <div class="table-responsive mt-2">
+                            <table class="table table-vcenter table-cards">
+                                <thead><tr><th>{{ t('reports.category') }}</th><th class="text-end">{{ t('reports.' ~ kind) }}</th></tr></thead>
+                                <tbody>
+                                {% for row in rows %}
+                                    <tr>
+                                        <td data-label="{{ t('reports.category') }}">{{ row.name }}</td>
+                                        <td data-label="{{ t('reports.' ~ kind) }}" class="text-end">{{ row.amount|eur }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </details>
+                    {% else %}
+                    <p class="text-secondary mb-0">{{ t('dashboard.no_' ~ kind) }}</p>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+        {% endfor %}
+    </div>
+
+    <section class="card mb-3" aria-labelledby="chart-cumulative-title">
+        <div class="card-header"><h2 class="card-title" id="chart-cumulative-title">{{ t('dashboard.cumulative') }}</h2></div>
+        <div class="card-body">
+            <div class="chart-box"><canvas id="chart-cumulative" role="img" aria-label="{{ t('dashboard.cumulative.alt') }}"></canvas></div>
+            <details class="mt-3">
+                <summary>{{ t('dashboard.table') }}</summary>
+                <div class="table-responsive mt-2">
+                    <table class="table table-vcenter table-cards">
+                        <thead><tr><th>{{ t('dashboard.month') }}</th><th class="text-end">{{ t('dashboard.cumulative_col') }}</th></tr></thead>
+                        <tbody>
+                        {% for row in monthly %}
+                            <tr>
+                                <td data-label="{{ t('dashboard.month') }}">{{ (row.month ~ '-01')|date('m/Y') }}</td>
+                                <td data-label="{{ t('dashboard.cumulative_col') }}" class="text-end">{{ row.cumulative|eur }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+        </div>
+    </section>
+
+    <script type="application/json" id="dashboard-data">{{ charts_json|raw }}</script>
+</div>
+<p class="text-secondary small">{{ t('reports.note') }}</p>
+{% endif %}
+{% endif %}
+{% endblock %}
+{% block scripts %}
+{% if summary and (summary.income != '0.00' or summary.expense != '0.00') %}
+<script src="/assets/vendor/chartjs/chart.umd.min.js"></script>
+<script src="/assets/dashboard.js"></script>
+{% endif %}
+{% endblock %}

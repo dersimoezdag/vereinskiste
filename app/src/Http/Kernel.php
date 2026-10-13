@@ -232,6 +232,7 @@ final class Kernel
 
         $reports = new ReportController($pdoProvider, $texts);
         $app->get('/reports/summary', [$reports, 'summary'])->add(Auth::requires('reports.read'));
+        $app->get('/reports/dashboard', [$reports, 'dashboard'])->add(Auth::requires('reports.read'));
         $app->get('/reports/bookings.csv', [$reports, 'csv'])->add(Auth::requires('reports.read'));
         $app->get('/reports/summary.pdf', [$reports, 'pdf'])->add(Auth::requires('reports.read'));
 
