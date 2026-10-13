@@ -46,6 +46,12 @@ final class ApplicationOutboxTest extends TestCase
         $row=$outbox->list($id)[0];$this->assertSame('uncertain',$row['status']);
         $outbox->retry((int)$row['id'],(int)$row['version'],1);$outbox->process($mailer);$this->assertSame(2,$sent);
     }
+    public function test_stale_delivery_is_recovered_even_when_smtp_is_disabled():void
+    {
+        $id=$this->application();$this->db->prepare("UPDATE mail_outbox SET status='sending',attempted_at=now()-interval '10 minutes' WHERE application_id=?")->execute([$id]);
+        $outbox=new Outbox($this->db);$this->assertFalse($outbox->process(new Mailer()));
+        $this->assertSame('uncertain',$outbox->list($id)[0]['status']);
+    }
     public function test_changed_document_snapshot_and_invalid_public_text_do_not_consume_the_invite():void
     {
         $repo=new ApplicationRepository($this->db);$invite=$repo->createInvite(1);

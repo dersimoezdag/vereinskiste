@@ -35,9 +35,9 @@ final class Outbox
     }
     public function process(Mailer $mailer):bool
     {
-        if(!$mailer->isConfigured()) { return false; }
         // Do not silently resend a message after a worker crash or an ambiguous SMTP failure.
         $this->pdo->exec("UPDATE mail_outbox SET status='uncertain',version=version+1 WHERE status='sending' AND attempted_at<now()-interval '5 minutes'");
+        if(!$mailer->isConfigured()) { return false; }
         $row=Transaction::run($this->pdo,function():array|false {
             $stmt=$this->pdo->query("SELECT * FROM mail_outbox WHERE status='pending' ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1");
             $row=$stmt->fetch();if(!$row) { return false; }
