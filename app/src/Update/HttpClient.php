@@ -41,7 +41,7 @@ final class HttpClient
                 }]);
             if (curl_exec($handle)===false) { throw new Failure('download'); }
             return ['status'=>(int)curl_getinfo($handle,CURLINFO_RESPONSE_CODE),'headers'=>$responseHeaders,'body'=>$body];
-        } finally { curl_close($handle); }
+        } finally { unset($handle); }
     }
     private function stream(string $url,array $headers,int $limit): array
     {

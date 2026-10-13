@@ -1,0 +1,66 @@
+name: Signed release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (for example 0.1.5)'
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: signed-release
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: vereinskiste_release_test
+          POSTGRES_USER: vk
+          POSTGRES_PASSWORD: vk
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U vk -d vereinskiste_release_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      VK_TEST_DSN: pgsql:host=127.0.0.1;dbname=vereinskiste_release_test
+      VK_TEST_USER: vk
+      VK_TEST_PASS: vk
+      RELEASE_VERSION: ${{ inputs.version }}
+      VK_UPDATE_PACKAGE: ${{ github.workspace }}/dist/vereinskiste-${{ inputs.version }}.zip
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, mbstring, fileinfo, gd, openssl, zip, sodium, curl
+          tools: composer:v2
+          coverage: none
+      - name: Validate version
+        run: php -r 'if (!preg_match("/^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$/", getenv("RELEASE_VERSION"))) { exit(1); }'
+      - run: composer validate --strict --working-dir=app
+      - run: composer install --working-dir=app --prefer-dist --no-interaction
+      - run: composer audit --locked --working-dir=app
+      - name: Build package without exposing the signing key to Composer
+        run: sh scripts/build-release.sh "$RELEASE_VERSION" unsigned
+      - run: cd app && vendor/bin/phpunit
+      - name: Sign and verify manifest
+        env:
+          VK_RELEASE_SIGNING_KEY: ${{ secrets.VK_RELEASE_SIGNING_KEY }}
+        run: |
+          php scripts/sign-release.php "dist/vereinskiste-$RELEASE_VERSION.zip" "$RELEASE_VERSION"
+          php scripts/verify-signed-release.php "dist/vereinskiste-$RELEASE_VERSION.zip" "$RELEASE_VERSION"
+      - name: Publish immutable release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$RELEASE_VERSION" --target "$GITHUB_SHA" --title "Vereinskiste $RELEASE_VERSION" --generate-notes --latest \
+            "dist/vereinskiste-$RELEASE_VERSION.zip" "dist/vereinskiste-$RELEASE_VERSION.zip.sha256" \
+            "dist/vereinskiste-$RELEASE_VERSION.zip.manifest.json" "dist/vereinskiste-$RELEASE_VERSION.zip.manifest.sig"

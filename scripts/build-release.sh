@@ -21,5 +21,5 @@ php "$root/scripts/package-release.php" "$stage" "$root/dist/vereinskiste-$versi
 php "$root/scripts/verify-release.php" "$root/dist/vereinskiste-$version.zip"
 case "$version" in
   *[!0-9.]*|'') ;;
-  *) php "$root/scripts/sign-release.php" "$root/dist/vereinskiste-$version.zip" "$version" ;;
+  *) if [ "${2:-signed}" != "unsigned" ]; then php "$root/scripts/sign-release.php" "$root/dist/vereinskiste-$version.zip" "$version"; fi ;;
 esac

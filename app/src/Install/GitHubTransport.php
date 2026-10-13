@@ -38,7 +38,7 @@ final class GitHubTransport
                 throw new UpdateCheckFailure($reason);
             }
             return ['status' => (int) curl_getinfo($handle, CURLINFO_RESPONSE_CODE), 'body' => $body, 'rate_remaining' => $remaining];
-        } finally { curl_close($handle); }
+        } finally { unset($handle); }
     }
     private function stream(): array
     {

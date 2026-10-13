@@ -25,19 +25,20 @@ jobs:
       VK_TEST_DSN: pgsql:host=127.0.0.1;dbname=vereinskiste_test
       VK_TEST_USER: vk
       VK_TEST_PASS: vk
+      VK_UPDATE_PACKAGE: ${{ github.workspace }}/dist/vereinskiste-ci.zip
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '${{ matrix.php }}'
-          extensions: pdo_pgsql, mbstring, fileinfo, gd, openssl, zip
+          extensions: pdo_pgsql, mbstring, fileinfo, gd, openssl, zip, sodium, curl
           tools: composer:v2
           coverage: none
       - run: composer validate --strict --working-dir=app
       - run: composer install --working-dir=app --prefer-dist --no-interaction
       - run: composer audit --locked --working-dir=app
-      - run: cd app && vendor/bin/phpunit
       - run: sh scripts/build-release.sh ci
+      - run: cd app && vendor/bin/phpunit
       - uses: actions/upload-artifact@v4
         if: matrix.php == '8.4'
         with:
