@@ -3,6 +3,7 @@
     {% for tab in [
         {'url': '/settings', 'label': 'settings.version_updates', 'active': settings_path in ['/settings', '/update', '/settings/update']},
         {'url': '/settings/club', 'label': 'foundation.club', 'active': settings_path == '/settings/club'},
+        {'url': '/settings/club-roles', 'label': 'nav.club_roles', 'active': settings_path == '/settings/club-roles', 'right': 'settings.manage'},
         {'url': '/settings/closing', 'label': 'nav.closing', 'active': settings_path == '/settings/closing'},
         {'url': '/audit-log', 'label': 'nav.audit', 'active': settings_path == '/audit-log'},
         {'url': '/users', 'label': 'settings.users', 'active': settings_path starts with '/users', 'right': 'users.manage'}

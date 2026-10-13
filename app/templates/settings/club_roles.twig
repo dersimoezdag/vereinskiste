@@ -1,0 +1,178 @@
+{% extends 'layout.twig' %}
+{% import 'components/icons.twig' as icons %}
+
+{% block content %}
+<div class="container-xl">
+    <div class="page-header d-print-none mb-3">
+        <h1 class="page-title">{{ t('nav.settings') }}</h1>
+    </div>
+
+    {% include 'components/settings_tabs.twig' %}
+
+    <div class="alert alert-info d-flex align-items-center mb-4">
+        <div>{{ t('clubroles.help') }}</div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Formular zum Anlegen neuer Vereinsrollen -->
+        <div class="col-lg-4 col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{{ t('clubroles.new') }}</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="/settings/club-roles" novalidate>
+                        {{ csrf_field() }}
+
+                        <div class="mb-3">
+                            <label for="new-role-name" class="form-label required">{{ t('clubroles.name') }}</label>
+                            <input type="text" id="new-role-name" name="name" value="{{ input.name|default('') }}"
+                                   class="form-control{% if errors.name and error_role_id is null %} is-invalid{% endif %}" required maxlength="100">
+                            {% if errors.name and error_role_id is null %}
+                            <div class="invalid-feedback">{{ t(errors.name) }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="new-role-desc" class="form-label">{{ t('clubroles.description') }}</label>
+                            <textarea id="new-role-desc" name="description" rows="2" class="form-control" maxlength="500">{{ input.description|default('') }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="new-role-kind" class="form-label required">{{ t('clubroles.kind') }}</label>
+                            <select id="new-role-kind" name="kind" class="form-select">
+                                <option value="function">{{ t('clubroles.kind.function') }}</option>
+                                <option value="membership_type">{{ t('clubroles.kind.membership_type') }}</option>
+                            </select>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="new-single-holder" name="single_holder" value="1">
+                            <label class="form-check-label" for="new-single-holder">
+                                {{ t('clubroles.single') }}
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">{{ t('clubroles.new') }}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste bestehender Vereinsrollen -->
+        <div class="col-lg-8 col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{{ t('clubroles.title') }}</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-vcenter table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>{{ t('clubroles.name') }}</th>
+                                <th>{{ t('clubroles.kind') }}</th>
+                                <th>{{ t('clubroles.holders') }}</th>
+                                <th class="text-end">Aktion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for r in roles %}
+                            <tr {% if not r.active %}class="opacity-75 bg-light-subtle"{% endif %}>
+                                <td>
+                                    <div class="fw-semibold">
+                                        {{ r.name }}
+                                        {% if not r.active %}
+                                            <span class="badge bg-secondary-subtle text-secondary ms-1">{{ t('clubroles.archived') }}</span>
+                                        {% endif %}
+                                        {% if r.single_holder %}
+                                            <span class="badge bg-warning-subtle text-warning ms-1">{{ t('clubroles.single.badge') }}</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if r.description %}
+                                    <div class="small text-muted">{{ r.description }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if r.kind == 'membership_type' %}
+                                        <span class="badge bg-primary-subtle text-primary">{{ t('clubroles.kind.membership_type') }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary">{{ t('clubroles.kind.function') }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if r.holders_list is empty %}
+                                        <span class="text-muted small">0 Träger</span>
+                                    {% else %}
+                                        <div class="small">
+                                            <strong>{{ r.holders }} Träger:</strong>
+                                            {% for h in r.holders_list %}
+                                                <a href="/members/{{ h.member_id }}" class="text-reset text-decoration-underline me-1">{{ h.name }}{% if h.scope %} ({{ h.scope }}){% endif %}</a>{% if not loop.last %}, {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                                            onclick="document.getElementById('edit-role-{{ r.id }}').classList.toggle('d-none');">
+                                        Bearbeiten
+                                    </button>
+                                </td>
+                            </tr>
+                            <!-- Ausklappbares Bearbeitungsformular -->
+                            <tr id="edit-role-{{ r.id }}" class="{% if error_role_id != r.id %}d-none{% endif %} bg-light-subtle">
+                                <td colspan="4" class="p-3">
+                                    <form method="post" action="/settings/club-roles/{{ r.id }}" class="row g-2 align-items-end">
+                                        {{ csrf_field() }}
+                                        <input type="hidden" name="version" value="{{ r.version }}">
+
+                                        <div class="col-md-3 col-12">
+                                            <label for="role-name-{{ r.id }}" class="form-label form-label-sm">{{ t('clubroles.name') }}</label>
+                                            <input type="text" id="role-name-{{ r.id }}" name="name" value="{{ (error_role_id == r.id ? input.name : r.name) }}" class="form-control form-control-sm" required maxlength="100">
+                                            {% if error_role_id == r.id and errors.name %}
+                                            <div class="text-danger small">{{ t(errors.name) }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-3 col-12">
+                                            <label for="role-desc-{{ r.id }}" class="form-label form-label-sm">{{ t('clubroles.description') }}</label>
+                                            <input type="text" id="role-desc-{{ r.id }}" name="description" value="{{ (error_role_id == r.id ? input.description : r.description) }}" class="form-control form-control-sm" maxlength="500">
+                                        </div>
+                                        <div class="col-md-2 col-12">
+                                            <label for="role-kind-{{ r.id }}" class="form-label form-label-sm">{{ t('clubroles.kind') }}</label>
+                                            <select id="role-kind-{{ r.id }}" name="kind" class="form-select form-select-sm">
+                                                <option value="function" {% if (error_role_id == r.id ? input.kind : r.kind) == 'function' %}selected{% endif %}>Funktion</option>
+                                                <option value="membership_type" {% if (error_role_id == r.id ? input.kind : r.kind) == 'membership_type' %}selected{% endif %}>Mitgliedsart</option>
+                                            </select>
+                                            {% if error_role_id == r.id and errors.kind %}
+                                            <div class="text-danger small">{{ t(errors.kind) }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-2 col-12">
+                                            <div class="form-check form-check-inline mt-4">
+                                                <input class="form-check-input" type="checkbox" name="single_holder" value="1" id="single-{{ r.id }}"
+                                                       {% if (error_role_id == r.id ? input.single_holder : r.single_holder) %}checked{% endif %}>
+                                                <label class="form-check-label small" for="single-{{ r.id }}">Nur 1 Träger</label>
+                                            </div>
+                                            <div class="form-check form-check-inline mt-1">
+                                                <input class="form-check-input" type="checkbox" name="active" value="1" id="active-{{ r.id }}"
+                                                       {% if (error_role_id == r.id ? input.active : r.active) %}checked{% endif %}>
+                                                <label class="form-check-label small" for="active-{{ r.id }}">Aktiv</label>
+                                            </div>
+                                            {% if error_role_id == r.id and errors.single_holder %}
+                                            <div class="text-danger small">{{ t(errors.single_holder) }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-2 col-12 text-end">
+                                            <button type="submit" class="btn btn-sm btn-primary w-100">{{ t('common.save') }}</button>
+                                        </div>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

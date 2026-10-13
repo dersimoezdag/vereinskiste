@@ -22,7 +22,7 @@ final class ReviewService
             if (!$row || $row['transaction_id'] !== null) { throw new Conflict(); }
             $decision = $input['decision'] ?? '';
             if (!in_array($decision, ['new','duplicate','excluded'], true)) { throw new ValidationError(['decision' => 'bank.decision.invalid']); }
-            $reason = Fields::read($input, ['reason' => 500], ['reason'])['reason'];
+            $reason = Fields::read($input, ['reason' => 500], $decision === 'new' ? [] : ['reason'])['reason'];
             $data = json_decode($row['proposal'], true, 32, JSON_THROW_ON_ERROR); $duplicate = null;
             if ($decision === 'duplicate') {
                 foreach ($repo->candidates((int) $import['account_id'], $data) as $candidate) {
@@ -48,7 +48,7 @@ final class ReviewService
     }
     public function reset(int $id, int $version, string $reason, int $actor): void
     {
-        $reason = Fields::read(['reason' => $reason], ['reason' => 500], ['reason'])['reason'];
+        $reason = Fields::read(['reason' => $reason], ['reason' => 500])['reason'];
         Transaction::run($this->db, function () use ($id, $version, $reason, $actor): void {
             $repo = new Repository($this->db); $import = $repo->find($id, true);
             if (!$import || (int) $import['version'] !== $version || !in_array($import['status'], ['review','failed','cancelled'], true)

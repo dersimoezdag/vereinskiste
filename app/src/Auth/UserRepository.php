@@ -57,7 +57,7 @@ final class UserRepository
     public function findById(int $id): ?array
     {
         $stmt = $this->db()->prepare(
-            'SELECT id, email, name, password_hash, active FROM users WHERE id = ?'
+            'SELECT id, email, name, password_hash, active, member_id FROM users WHERE id = ?'
         );
         $stmt->execute([$id]);
         return $this->hydrate($stmt->fetch());
@@ -75,13 +75,17 @@ final class UserRepository
             $roles[(int) $r['user_id']][] = (string) $r['role'];
         }
         $users = [];
-        $rows = $this->db()->query('SELECT id, email, name, active FROM users ORDER BY lower(name), id')->fetchAll();
+        $rows = $this->db()->query('SELECT u.id, u.email, u.name, u.active, u.member_id, m.name AS member_name, m.member_no
+            FROM users u LEFT JOIN members m ON m.id = u.member_id ORDER BY lower(u.name), u.id')->fetchAll();
         foreach ($rows as $row) {
             $users[] = [
                 'id' => (int) $row['id'],
                 'email' => (string) $row['email'],
                 'name' => (string) $row['name'],
                 'active' => (bool) $row['active'],
+                'member_id' => $row['member_id'] === null ? null : (int) $row['member_id'],
+                'member_name' => $row['member_name'],
+                'member_no' => $row['member_no'] === null ? null : (int) $row['member_no'],
                 'roles' => $roles[(int) $row['id']] ?? [],
             ];
         }
@@ -338,6 +342,7 @@ final class UserRepository
             'name' => (string) $row['name'],
             'password_hash' => (string) $row['password_hash'],
             'active' => (bool) $row['active'],
+            'member_id' => isset($row['member_id']) && $row['member_id'] !== null ? (int) $row['member_id'] : null,
             'roles' => array_map('strval', $stmt->fetchAll(PDO::FETCH_COLUMN)),
         ];
     }

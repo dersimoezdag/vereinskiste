@@ -1,0 +1,113 @@
+{% extends 'layout.twig' %}
+{% import 'components/icons.twig' as icons %}
+
+{% block content %}
+<div class="container-xl">
+    <div class="page-header d-print-none mb-3">
+        <h1 class="page-title">{{ t('members.new') }}</h1>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{{ t('members.new') }}</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="/members/new" novalidate>
+                        {{ csrf_field() }}
+                        <input type="hidden" name="version" value="{{ input.version|default(0) }}">
+
+                        <div class="mb-3">
+                            <label for="member-name" class="form-label required">{{ t('members.field.name') }}</label>
+                            <input type="text" id="member-name" name="name" value="{{ input.name|default('') }}"
+                                   class="form-control{% if errors.name %} is-invalid{% endif %}" required maxlength="200">
+                            {% if errors.name %}
+                            <div class="invalid-feedback">{{ t(errors.name) }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6 col-12">
+                                <label for="member-email" class="form-label">{{ t('members.field.email') }}</label>
+                                <input type="email" id="member-email" name="email" value="{{ input.email|default('') }}"
+                                       class="form-control{% if errors.email %} is-invalid{% endif %}" maxlength="254">
+                                {% if errors.email %}
+                                <div class="invalid-feedback">{{ t(errors.email) }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 col-12">
+                                <label for="member-phone" class="form-label">{{ t('members.field.phone') }}</label>
+                                <input type="text" id="member-phone" name="phone" value="{{ input.phone|default('') }}"
+                                       class="form-control{% if errors.phone %} is-invalid{% endif %}" maxlength="50">
+                                {% if errors.phone %}
+                                <div class="invalid-feedback">{{ t(errors.phone) }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="member-address" class="form-label">{{ t('members.field.address') }}</label>
+                            <input type="text" id="member-address" name="address" value="{{ input.address|default('') }}"
+                                   class="form-control{% if errors.address %} is-invalid{% endif %}" maxlength="200">
+                            {% if errors.address %}
+                            <div class="invalid-feedback">{{ t(errors.address) }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4 col-12">
+                                <label for="member-zip" class="form-label">{{ t('members.field.zip') }}</label>
+                                <input type="text" id="member-zip" name="zip" value="{{ input.zip|default('') }}"
+                                       class="form-control{% if errors.zip %} is-invalid{% endif %}" maxlength="20">
+                                {% if errors.zip %}
+                                <div class="invalid-feedback">{{ t(errors.zip) }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-5 col-12">
+                                <label for="member-city" class="form-label">{{ t('members.field.city') }}</label>
+                                <input type="text" id="member-city" name="city" value="{{ input.city|default('') }}"
+                                       class="form-control{% if errors.city %} is-invalid{% endif %}" maxlength="100">
+                                {% if errors.city %}
+                                <div class="invalid-feedback">{{ t(errors.city) }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 col-12">
+                                <label for="member-country" class="form-label">{{ t('members.field.country') }}</label>
+                                <input type="text" id="member-country" name="country" value="{{ input.country|default('Deutschland') }}"
+                                       class="form-control{% if errors.country %} is-invalid{% endif %}" maxlength="100">
+                                {% if errors.country %}
+                                <div class="invalid-feedback">{{ t(errors.country) }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="member-birth-date" class="form-label">{{ t('members.field.birth_date') }}</label>
+                            <input type="date" id="member-birth-date" name="birth_date" value="{{ input.birth_date|default('') }}"
+                                   class="form-control{% if errors.birth_date %} is-invalid{% endif %}">
+                            {% if errors.birth_date %}
+                            <div class="invalid-feedback">{{ t(errors.birth_date) }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="member-notes" class="form-label">{{ t('members.field.notes') }}</label>
+                            <textarea id="member-notes" name="notes" rows="3"
+                                      class="form-control{% if errors.notes %} is-invalid{% endif %}" maxlength="1000">{{ input.notes|default('') }}</textarea>
+                            {% if errors.notes %}
+                            <div class="invalid-feedback">{{ t(errors.notes) }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <a href="/members" class="btn btn-outline-secondary">{{ t('common.cancel') }}</a>
+                            <button type="submit" class="btn btn-primary">{{ t('common.save') }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

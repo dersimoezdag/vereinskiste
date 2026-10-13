@@ -12,7 +12,7 @@ foreach (['app/vendor/autoload.php', 'app/bootstrap.php', 'app/VERSION', 'app/mi
     'app/src/Text/de/core.php', 'app/src/Text/de/foundation.php', 'app/src/Text/de/bank_import.php',
     'app/src/Text/de/updates.php', 'app/src/Text/de/dashboard.php', 'app/src/Install/GitHubTransport.php', 'app/src/Install/UpdateCheckFailure.php',
     'app/cron.php', 'docs/hosting.md', 'docs/automatic-updates.md', 'docs/plans/ausbau/10-csv-import.md', 'app/config/', 'app/storage/',
-    'public/index.php', 'public/.htaccess', 'public/assets/logo.svg', 'public/assets/app.css', 'public/assets/user-card.css', 'public/assets/bank-import.js', 'public/assets/dashboard.js',
+    'public/index.php', 'public/.htaccess', 'public/assets/logo.svg', 'public/assets/logo-dark.svg', 'public/assets/app.css', 'public/assets/user-card.css', 'public/assets/bank-import.js', 'public/assets/dashboard.js', 'public/assets/theme.js',
     'public/assets/vendor/chartjs/chart.umd.min.js', 'public/assets/vendor/chartjs/LICENSE',
     'public/assets/vendor/material-symbols/symbols.svg', 'public/assets/vendor/material-symbols/LICENSE',
     'public/assets/vendor/tabler/tabler.min.css', 'public/assets/vendor/tabler/tabler.min.js', 'LICENSE', 'README.md'] as $name) {

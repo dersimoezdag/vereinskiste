@@ -1,4 +1,4 @@
-{# Pflichtgrund fuer den Aenderungsverlauf. Erwartet: reason, errors; optional: reason_label, reason_id #}
+{# Pflichtbegruendung fuer den Aenderungsverlauf. Erwartet: reason, errors; optional: reason_label, reason_id #}
 {% set reason_id = reason_id ?? 'b-reason' %}
 <div class="mt-3">
     <label class="form-label required" for="{{ reason_id }}">{{ t(reason_label ?? 'bookings.reason') }}</label>

@@ -9,14 +9,8 @@
     <link rel="stylesheet" href="{{ asset('vendor/tabler/tabler.min.css') }}">
     <link rel="stylesheet" href="{{ asset('app.css') }}">
     <link rel="stylesheet" href="{{ asset('user-card.css') }}">
-    <script>
-        (function() {
-            var t = null;
-            try { t = localStorage.getItem('vk-theme'); } catch(e) {}
-            if (!t) { t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
-            document.documentElement.setAttribute('data-bs-theme', t);
-        })();
-    </script>
+    <meta name="color-scheme" content="light dark">
+    <script src="{{ asset('theme.js') }}"></script>
 </head>
 <body>
 <a class="skip-link" href="#main-content">{{ t('nav.skip') }}</a>
@@ -32,7 +26,7 @@
             </button>
             <h1 class="navbar-brand navbar-brand-autodark">
                 <a href="/" class="d-flex align-items-center gap-2 text-decoration-none">
-                    <img src="{{ asset('logo.svg') }}" alt="" width="32" height="32" class="navbar-brand-image">
+                    <img src="{{ asset('logo-dark.svg') }}" alt="" width="32" height="32" class="navbar-brand-image">
                     <span>{{ t('app.name') }}</span>
                 </a>
             </h1>
@@ -41,6 +35,11 @@
                     <li class="nav-item{% if path == '/' %} active{% endif %}">
                         <a class="nav-link" href="/"><span class="nav-link-icon">{{ icons.icon('home') }}</span><span class="nav-link-title">{{ t('nav.home') }}</span></a>
                     </li>
+                    {% if can('members.read') %}
+                    <li class="nav-item{% if path starts with '/members' %} active{% endif %}">
+                        <a class="nav-link" href="/members"><span class="nav-link-icon">{{ icons.icon('members') }}</span><span class="nav-link-title">{{ t('nav.members') }}</span></a>
+                    </li>
+                    {% endif %}
                     {% if can('bookings.read') %}
                     {% set cashActive = path starts with '/bookings' or path starts with '/accounts' or path starts with '/categories' %}
                     <li class="nav-item dropdown{% if cashActive %} active{% endif %}">
@@ -88,67 +87,21 @@
     </aside>
     {% endif %}
     <div class="page-wrapper">
+        {% if user %}{% include 'components/topbar.twig' %}{% endif %}
         <main class="page-body" id="main-content" tabindex="-1">
             <div class="{% if user %}container-xl{% else %}container-tight py-4{% endif %}">
-                {% if user %}
-                <div class="topbar border-bottom py-2 px-1 mb-4 d-flex align-items-center justify-content-between">
-                    <nav aria-label="Brotkrumen">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item"><a href="/" class="text-decoration-none d-flex align-items-center gap-1">{{ icons.icon('home') }}<span>{{ t('nav.home') }}</span></a></li>
-                            {% if path != '/' %}
-                                {% if path starts with '/bookings' %}
-                                    <li class="breadcrumb-item"><a href="/bookings" class="text-decoration-none">{{ t('nav.bookings') }}</a></li>
-                                    {% if path == '/bookings/new' %}<li class="breadcrumb-item active" aria-current="page">Neu</li>{% endif %}
-                                {% elseif path starts with '/transfers/new' %}
-                                    <li class="breadcrumb-item"><a href="/bookings" class="text-decoration-none">{{ t('nav.bookings') }}</a></li>
-                                    <li class="breadcrumb-item active" aria-current="page">Umbuchung</li>
-                                {% elseif path starts with '/corrections/new' %}
-                                    <li class="breadcrumb-item"><a href="/bookings" class="text-decoration-none">{{ t('nav.bookings') }}</a></li>
-                                    <li class="breadcrumb-item active" aria-current="page">Korrektur</li>
-                                {% elseif path starts with '/accounts' %}
-                                    <li class="breadcrumb-item"><a href="/accounts" class="text-decoration-none">{{ t('nav.accounts') }}</a></li>
-                                {% elseif path starts with '/categories' %}
-                                    <li class="breadcrumb-item"><a href="/categories" class="text-decoration-none">{{ t('nav.categories') }}</a></li>
-                                {% elseif path starts with '/reports' %}
-                                    <li class="breadcrumb-item"><a href="/reports/summary" class="text-decoration-none">{{ t('nav.reports') }}</a></li>
-                                {% elseif path starts with '/settings' %}
-                                    <li class="breadcrumb-item"><a href="/settings" class="text-decoration-none">{{ t('nav.settings') }}</a></li>
-                                    {% if path == '/settings/club' %}<li class="breadcrumb-item active" aria-current="page">{{ t('foundation.club') }}</li>
-                                    {% elseif path == '/settings/closing' %}<li class="breadcrumb-item active" aria-current="page">{{ t('nav.closing') }}</li>{% endif %}
-                                {% elseif path starts with '/users' %}
-                                    <li class="breadcrumb-item"><a href="/users" class="text-decoration-none">{{ t('nav.users') }}</a></li>
-                                {% elseif path starts with '/contacts' %}
-                                    <li class="breadcrumb-item"><a href="/contacts" class="text-decoration-none">{{ t('foundation.contacts') }}</a></li>
-                                {% elseif path starts with '/imports' %}
-                                    <li class="breadcrumb-item"><a href="/imports/bank" class="text-decoration-none">Kontoauszug-Import</a></li>
-                                {% elseif path == '/audit-log' %}
-                                    <li class="breadcrumb-item active" aria-current="page">{{ t('nav.audit') }}</li>
-                                {% elseif path == '/update' %}
-                                    <li class="breadcrumb-item active" aria-current="page">Aktualisierung</li>
-                                {% endif %}
-                            {% endif %}
-                        </ol>
-                    </nav>
-                    <div class="topbar-actions d-flex align-items-center gap-2">
-                        <button type="button" class="btn btn-icon theme-toggle" id="theme-toggle"
-                                aria-label="Farbschema wechseln" title="Farbschema wechseln">
-                            <span class="theme-icon-light d-none">{{ icons.icon('light-mode') }}</span>
-                            <span class="theme-icon-dark">{{ icons.icon('dark-mode') }}</span>
-                        </button>
-                    </div>
-                </div>
-                {% endif %}
                 {% if not user %}
                 <div class="d-flex justify-content-end mb-2">
                     <button type="button" class="btn btn-icon theme-toggle" id="auth-theme-toggle"
                             aria-label="Farbschema wechseln" title="Farbschema wechseln">
-                        <span class="theme-icon-light d-none">{{ icons.icon('light-mode') }}</span>
+                        <span class="theme-icon-light">{{ icons.icon('light-mode') }}</span>
                         <span class="theme-icon-dark">{{ icons.icon('dark-mode') }}</span>
                     </button>
                 </div>
                 <div class="text-center mb-4">
                     <a href="/" class="navbar-brand navbar-brand-autodark d-inline-flex align-items-center gap-2 text-decoration-none">
-                        <img src="{{ asset('logo.svg') }}" alt="" width="48" height="48" class="navbar-brand-image">
+                        <img src="{{ asset('logo.svg') }}" alt="" width="48" height="48" class="navbar-brand-image brand-logo-light">
+                        <img src="{{ asset('logo-dark.svg') }}" alt="" width="48" height="48" class="navbar-brand-image brand-logo-dark">
                         <span class="fs-1 fw-bold text-reset">{{ t('app.name') }}</span>
                     </a>
                 </div>

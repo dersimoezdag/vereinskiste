@@ -1,0 +1,129 @@
+{% extends 'layout.twig' %}
+{% import 'components/icons.twig' as icons %}
+
+{% block content %}
+<div class="container-xl">
+    <div class="page-header d-print-none mb-3">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="page-title">{{ t('members.title') }}</h1>
+            </div>
+            {% if can('members.write') %}
+            <div class="col-auto ms-auto d-print-none">
+                <a href="/members/new" class="btn btn-primary">
+                    {{ t('members.new') }}
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Navigation Tabs zwischen Kartei und Online-Anträgen -->
+    <ul class="nav nav-tabs mb-3" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" href="/members" aria-current="page">
+                {{ icons.icon('members') }} {{ t('applications.tab_members') }}
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/members/applications">
+                {{ icons.icon('contacts') }} {{ t('applications.tab_applications') }}
+                {% if pending_count > 0 %}
+                <span class="badge bg-danger ms-1">{{ pending_count }}</span>
+                {% endif %}
+            </a>
+        </li>
+    </ul>
+
+    <!-- Filter und Suche -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get" action="/members" class="row g-2 align-items-center">
+                <div class="col-md-6 col-12">
+                    <div class="input-group">
+                        <input type="text" name="q" value="{{ search }}" class="form-control"
+                               placeholder="{{ t('members.search') }}" aria-label="{{ t('members.search') }}">
+                        <button type="submit" class="btn btn-outline-secondary">{{ t('common.search') }}</button>
+                    </div>
+                </div>
+                <div class="col-md-6 col-12 d-flex gap-2 justify-content-md-end">
+                    <a href="/members?state=current{% if search %}&q={{ search|url_encode }}{% endif %}"
+                       class="btn btn-sm {% if state == 'current' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                        {{ t('members.state.current') }}
+                    </a>
+                    <a href="/members?state=left{% if search %}&q={{ search|url_encode }}{% endif %}"
+                       class="btn btn-sm {% if state == 'left' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                        {{ t('members.state.left') }}
+                    </a>
+                    <a href="/members?state=all{% if search %}&q={{ search|url_encode }}{% endif %}"
+                       class="btn btn-sm {% if state == 'all' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                        {{ t('members.state.all') }}
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mitglieder-Tabelle -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-vcenter table-cards table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="w-1">{{ t('members.no') }}</th>
+                        <th>{{ t('members.field.name') }}</th>
+                        <th>{{ t('members.field.email') }}</th>
+                        <th>Status</th>
+                        <th class="w-1 text-center" title="Benutzerzugang">{{ icons.icon('users') }}</th>
+                        <th class="w-1 text-end">Aktion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% if members is empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            Keine Mitglieder gefunden.
+                        </td>
+                    </tr>
+                {% else %}
+                    {% for m in members %}
+                    <tr>
+                        <td data-label="{{ t('members.no') }}" class="text-muted font-monospace">
+                            #{{ m.member_no }}
+                        </td>
+                        <td data-label="{{ t('members.field.name') }}">
+                            <a href="/members/{{ m.id }}" class="fw-semibold text-reset">
+                                {{ m.name }}
+                            </a>
+                        </td>
+                        <td data-label="{{ t('members.field.email') }}" class="text-muted">
+                            {{ m.data.email ?: '–' }}
+                        </td>
+                        <td data-label="Status">
+                            {% if m.current %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">Aktiv</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Ausgetreten</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Benutzerzugang" class="text-center">
+                            {% if m.user_id %}
+                                <span class="text-primary" title="Benutzerzugang vorhanden">{{ icons.icon('users') }}</span>
+                            {% else %}
+                                <span class="text-muted opacity-25">–</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Aktion" class="text-end">
+                            <a href="/members/{{ m.id }}" class="btn btn-sm btn-outline-secondary">
+                                Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

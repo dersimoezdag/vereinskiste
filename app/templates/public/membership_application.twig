@@ -1,0 +1,173 @@
+{% extends 'layout.twig' %}
+{% import 'components/icons.twig' as icons %}
+
+{% block content %}
+<div class="container-xl py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10 col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white py-4 text-center border-0 rounded-top">
+                    <img src="{{ asset('logo.svg') }}" alt="Vereinskiste Logo" width="48" height="48" class="mb-2">
+                    <h1 class="h2 mb-1 fw-bold text-white">{{ t('applications.public_title') }}</h1>
+                    <p class="mb-0 opacity-75">
+                        {% if invite.title %}
+                            Mitgliedsantrag für <strong>{{ invite.title }}</strong>
+                        {% else %}
+                            {{ t('applications.public_subtitle') }}
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    {% if errors is not empty %}
+                    <div class="alert alert-danger mb-4">
+                        <div class="fw-semibold mb-1">Bitte überprüfe deine Angaben:</div>
+                        <ul class="mb-0 ps-3">
+                            {% for err in errors %}
+                            <li>{{ t(err) }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <form method="post" action="/antrag/{{ token }}" novalidate>
+                        {{ csrf_field() }}
+
+                        <!-- Honeypot gegen Spam-Bots (fuer Menschen unsichtbar) -->
+                        <div style="display:none;" aria-hidden="true">
+                            <label for="antrag-website">Website</label>
+                            <input type="text" id="antrag-website" name="website" tabindex="-1" autocomplete="off">
+                        </div>
+
+                        <!-- Persönliche Daten -->
+                        <h2 class="h5 text-primary border-bottom pb-2 mb-3">1. Persönliche Angaben</h2>
+
+                        <div class="mb-3">
+                            <label for="antrag-name" class="form-label required">{{ t('members.field.name') }}</label>
+                            <input type="text" id="antrag-name" name="name" value="{{ input.name|default('') }}"
+                                   class="form-control form-control-lg{% if errors.name %} is-invalid{% endif %}"
+                                   placeholder="Vor- und Nachname" required maxlength="200">
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6 col-12">
+                                <label for="antrag-email" class="form-label required">{{ t('members.field.email') }}</label>
+                                <input type="email" id="antrag-email" name="email" value="{{ input.email|default('') }}"
+                                       class="form-control{% if errors.email %} is-invalid{% endif %}"
+                                       placeholder="deine.email@beispiel.de" required maxlength="254">
+                            </div>
+                            <div class="col-md-6 col-12">
+                                <label for="antrag-phone" class="form-label">{{ t('members.field.phone') }}</label>
+                                <input type="tel" id="antrag-phone" name="phone" value="{{ input.phone|default('') }}"
+                                       class="form-control" placeholder="z. B. +49 170 1234567" maxlength="50">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="antrag-birth-date" class="form-label">{{ t('members.field.birth_date') }}</label>
+                            <input type="date" id="antrag-birth-date" name="birth_date" value="{{ input.birth_date|default('') }}"
+                                   class="form-control{% if errors.birth_date %} is-invalid{% endif %}">
+                        </div>
+
+                        <!-- Anschrift -->
+                        <h2 class="h5 text-primary border-bottom pb-2 mt-4 mb-3">2. Anschrift</h2>
+
+                        <div class="mb-3">
+                            <label for="antrag-address" class="form-label">{{ t('members.field.address') }}</label>
+                            <input type="text" id="antrag-address" name="address" value="{{ input.address|default('') }}"
+                                   class="form-control" placeholder="Musterstraße 12" maxlength="200">
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4 col-12">
+                                <label for="antrag-zip" class="form-label">{{ t('members.field.zip') }}</label>
+                                <input type="text" id="antrag-zip" name="zip" value="{{ input.zip|default('') }}"
+                                       class="form-control" placeholder="12345" maxlength="20">
+                            </div>
+                            <div class="col-md-5 col-12">
+                                <label for="antrag-city" class="form-label">{{ t('members.field.city') }}</label>
+                                <input type="text" id="antrag-city" name="city" value="{{ input.city|default('') }}"
+                                       class="form-control" placeholder="Musterstadt" maxlength="100">
+                            </div>
+                            <div class="col-md-3 col-12">
+                                <label for="antrag-country" class="form-label">{{ t('members.field.country') }}</label>
+                                <input type="text" id="antrag-country" name="country" value="{{ input.country|default('Deutschland') }}"
+                                       class="form-control" maxlength="100">
+                            </div>
+                        </div>
+
+                        <!-- SEPA-Lastschriftmandat (falls im Einladungs-Link gefordert) -->
+                        {% if invite.require_sepa %}
+                        <h2 class="h5 text-primary border-bottom pb-2 mt-4 mb-3">3. {{ t('applications.sepa.section_title') }}</h2>
+
+                        <div class="mb-3">
+                            <label for="antrag-account-holder" class="form-label required">{{ t('applications.sepa.account_holder') }}</label>
+                            <input type="text" id="antrag-account-holder" name="account_holder" value="{{ input.account_holder|default('') }}"
+                                   class="form-control{% if errors.account_holder %} is-invalid{% endif %}" required maxlength="200">
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-8 col-12">
+                                <label for="antrag-iban" class="form-label required">{{ t('applications.sepa.iban') }}</label>
+                                <input type="text" id="antrag-iban" name="iban" value="{{ input.iban|default('') }}"
+                                       class="form-control font-monospace{% if errors.iban %} is-invalid{% endif %}"
+                                       placeholder="DE00 0000 0000 0000 0000 00" required maxlength="34">
+                            </div>
+                            <div class="col-md-4 col-12">
+                                <label for="antrag-bic" class="form-label">{{ t('applications.sepa.bic') }}</label>
+                                <input type="text" id="antrag-bic" name="bic" value="{{ input.bic|default('') }}"
+                                       class="form-control font-monospace" placeholder="XXXXXXXXXXX" maxlength="11">
+                            </div>
+                        </div>
+
+                        <div class="card bg-light-subtle border p-3 mb-3">
+                            <div class="small text-muted mb-2">{{ t('applications.sepa.mandate_text') }}</div>
+                            <div class="form-check">
+                                <input class="form-check-input{% if errors.sepa_mandate_consent %} is-invalid{% endif %}" type="checkbox"
+                                       id="sepa-consent" name="sepa_mandate_consent" value="1" {% if input.sepa_mandate_consent %}checked{% endif %} required>
+                                <label class="form-check-label fw-semibold" for="sepa-consent">
+                                    {{ t('applications.sepa.mandate_consent') }}
+                                </label>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Bemerkungen -->
+                        <h2 class="h5 text-primary border-bottom pb-2 mt-4 mb-3">{% if invite.require_sepa %}4.{% else %}3.{% endif %} Bemerkungen</h2>
+
+                        <div class="mb-3">
+                            <label for="antrag-notes" class="form-label">{{ t('members.field.notes') }}</label>
+                            <textarea id="antrag-notes" name="notes" rows="2" class="form-control"
+                                      placeholder="Möchtest du uns noch etwas mitteilen?" maxlength="1000">{{ input.notes|default('') }}</textarea>
+                        </div>
+
+                        <!-- Einverständnisse -->
+                        <h2 class="h5 text-primary border-bottom pb-2 mt-4 mb-3">{% if invite.require_sepa %}5.{% else %}4.{% endif %} Bestätigung</h2>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input{% if errors.consent_statute %} is-invalid{% endif %}" type="checkbox"
+                                   id="consent-statute" name="consent_statute" value="1" {% if input.consent_statute %}checked{% endif %} required>
+                            <label class="form-check-label" for="consent-statute">
+                                {{ t('applications.consent_statute') }}
+                            </label>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input{% if errors.consent_privacy %} is-invalid{% endif %}" type="checkbox"
+                                   id="consent-privacy" name="consent_privacy" value="1" {% if input.consent_privacy %}checked{% endif %} required>
+                            <label class="form-check-label" for="consent-privacy">
+                                {{ t('applications.consent_privacy') }}
+                            </label>
+                        </div>
+
+                        <div class="pt-3 border-top text-center">
+                            <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm">
+                                {{ t('applications.submit') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

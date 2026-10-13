@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
+    <!-- Variante fuer dunkle Flaechen (dunkle Seitenleiste, Dark Mode): hellere Flanken, damit die Kiste Kontur behaelt -->
+    <defs>
+        <linearGradient id="iso-top" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#7dd3fc"/>
+            <stop offset="100%" stop-color="#3b82f6"/>
+        </linearGradient>
+        <linearGradient id="iso-left" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#2563eb"/>
+            <stop offset="100%" stop-color="#1e40af"/>
+        </linearGradient>
+        <linearGradient id="iso-right" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#60a5fa"/>
+            <stop offset="100%" stop-color="#2563eb"/>
+        </linearGradient>
+        <linearGradient id="iso-gold" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#fde047"/>
+            <stop offset="50%" stop-color="#f59e0b"/>
+            <stop offset="100%" stop-color="#d97706"/>
+        </linearGradient>
+    </defs>
+
+    <!-- Heller, weicher Boden-Schimmer statt dunklem Schatten -->
+    <ellipse cx="24" cy="43" rx="16" ry="2.8" fill="#94a3b8" opacity="0.18"/>
+
+    <!-- Linke Flanke -->
+    <path d="M 7 16.5 L 24 26 L 24 41 L 7 31.5 Z" fill="url(#iso-left)"/>
+
+    <!-- Rechte Flanke -->
+    <path d="M 24 26 L 41 16.5 L 41 31.5 L 24 41 Z" fill="url(#iso-right)"/>
+
+    <!-- Planken-Fuge -->
+    <path d="M 32.5 21.2 L 32.5 36.2" stroke="#0f172a" stroke-width="1.2" opacity="0.35"/>
+
+    <!-- Deckel -->
+    <path d="M 24 7 L 41 16.5 L 24 26 L 7 16.5 Z" fill="url(#iso-top)"/>
+
+    <!-- Muenzschlitz -->
+    <path d="M 18 14.5 L 27 19.5" stroke="#0f172a" stroke-width="2.6" stroke-linecap="round" opacity="0.6"/>
+
+    <!-- Vereinstaler -->
+    <g>
+        <ellipse cx="22.5" cy="14" rx="4.8" ry="2.7" fill="url(#iso-gold)" stroke="#fffbeb" stroke-width="0.8"/>
+        <ellipse cx="22.5" cy="14" rx="2.5" ry="1.2" fill="#fde047" opacity="0.7"/>
+    </g>
+
+    <!-- Vereins-V auf der linken Flanke -->
+    <path d="M 12 23 L 15.5 30 L 19 25" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
+
+    <!-- Glanzkante -->
+    <path d="M 7 16.5 L 24 7 L 41 16.5" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+</svg>

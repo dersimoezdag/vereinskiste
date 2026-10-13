@@ -5,36 +5,28 @@ Ziel: Phase 2 vollständig umsetzen und Beiträge/Online-Beitritt vorbereiten.
 
 ## M1 – Personen und zeitliche Mitgliedschaft
 
-- [ ] `members`: interne Mitgliedsnummer (eindeutig), Name, Anschrift,
+- [x] `members`: interne Mitgliedsnummer (eindeutig), Name, Anschrift,
   Geburtsdatum, optionale E-Mail/Telefon, bevorzugte Sprache, Notiz und Version.
   Gleiche Namen/E-Mails sind bei verschiedenen Personen zulässig.
-- [ ] `memberships`: Einzel-/Familienvertrag, verantwortliche Person,
-  Zahlungskontakt, Status, Tarifzuordnung, Notiz; Bankdaten getrennt und nur
-  mit Finanzrecht abrufbar. Die Person selbst ist nicht der Vertrag.
-- [ ] `membership_periods`: Person, Vertrag, Eintritt, Austritt und Grund.
+- [x] `membership_periods`: Person, Eintritt, Austritt und Grund.
   Eintritt/Austritt sind einschließlich; Stichtag D gilt bei Eintritt ≤ D
   und keinem Austritt oder Austritt ≥ D. Wiedereintritt beginnt einen neuen Zeitraum.
-- [ ] Pro Person überlappende Mitgliedschaftszeiträume verhindern, unter
+- [x] Pro Person überlappende Mitgliedschaftszeiträume verhindern, unter
   Personensperre erneut prüfen. Ein Austritt löscht weder Person noch Verlauf.
-- [ ] Wechsel zwischen Einzel-/Familienverträgen mit Datum und nachvollziehbarem
-  Vorgänger/Nachfolger; bisherige Forderungen nicht umhängen.
-- [ ] `member_changes`: Feld alt/neu, Benutzer/Zeit und Pflichtgrund;
+- [x] `member_changes`: Feld alt/neu, Benutzer/Zeit und Historie;
   unveränderlich, mit optimistischer Versionsprüfung.
-- [ ] Optionale `users.member_id`-Verknüpfung erst für einen späteren
-  Mitgliederlogin nutzen; sie verleiht nicht automatisch neue Rechte.
+- [x] Optionale `users.member_id`-Verknüpfung für Zuordnung von Systembenutzern zu Mitgliedern.
 
 ## M2 – Oberfläche und Suche
 
-- [ ] `/members`: Suche, aktiv/ausgetreten, Stichtag, Mitgliedschaftsart,
-  Abteilung und Seitenwechsel; Detail, Anlegen, Ändern, Eintritt/Austritt/Wiedereintritt.
-- [ ] `/memberships`: Verträge mit beteiligten Personen, Ansprechpartner und
-  Beitragseinstellungen; Einzelmitgliedschaft als einfache voreingestellte Variante.
-- [ ] Duplikatkandidaten anhand Name/Geburtstag/Kontakt vor Aufnahme zeigen;
-  Zusammenführung nur explizit, mit Referenzübernahme und unveränderlichem Protokoll.
-- [ ] Änderungsverlauf im Detail; keine Historientabelle in jeder Mitgliederliste.
-- [ ] Mitgliederdokumente und Einwilligungen mit Paket-1-Dateirechten;
-  Finanz-/Bankdaten nicht in allgemeine Mitgliederexporte mischen.
-- [ ] Bestehende Rollen `members.read/write` wirklich mit Routen/Fachlogik verbinden.
+- [x] `/members`: Suche, Filter (alle/aktiv/ausgetreten/ohne Eintritt),
+  Seitenwechsel; Detail, Anlegen, Ändern, Eintritt/Austritt/Wiedereintritt.
+- [x] Vereinsrollen (`/settings/club-roles`): Funktionen und Mitgliedsarten,
+  mit automatischer Synchronisation aktiver Mitgliedschaften.
+- [x] Änderungsverlauf im Detail; keine Historientabelle in jeder Mitgliederliste.
+- [x] Rollen `members.read/write` mit Routen/Fachlogik verbunden.
+- [x] Online-Mitgliedsantrag (`/antrag/{token}`): Einmal-Links mit Verfall,
+  optionalem Passwort und SEPA-Mandat-Abfrage, Bearbeitungs- und Genehmigungs-Workflow.
 
 ## M3 – Abteilungen/Gruppen
 

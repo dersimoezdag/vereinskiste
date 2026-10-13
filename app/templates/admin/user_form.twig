@@ -24,6 +24,19 @@
                            value="{{ input.email }}">
                     {% if errors.email is defined %}<div class="invalid-feedback">{{ t(errors.email) }}</div>{% endif %}
                 </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="user-member-id">{{ t('members.user.field') }}</label>
+                    <select id="user-member-id" name="member_id" class="form-select{% if errors.member_id is defined %} is-invalid{% endif %}">
+                        <option value="">{{ t('members.user.field.none') }}</option>
+                        {% for m in linkable_members %}
+                        <option value="{{ m.id }}"{% if input.member_id == m.id %} selected{% endif %}>
+                            #{{ m.member_no }} {{ m.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% if errors.member_id is defined %}<div class="invalid-feedback">{{ t(errors.member_id) }}</div>{% endif %}
+                    <div class="form-hint">{{ t('members.user.hint') }}</div>
+                </div>
                 {% if not editing %}
                 <div class="col-md-6">
                     <label class="form-label" for="user-password">{{ t('users.password.initial') }}</label>

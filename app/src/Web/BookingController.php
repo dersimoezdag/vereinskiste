@@ -74,12 +74,12 @@ final class BookingController extends LedgerController
         $pdo = ($this->pdo)();
         $userId = $this->userId($req);
         try {
-            // Optionaler Beleg: Buchung und Beleg entstehen gemeinsam oder gar nicht.
-            $upload = UploadInput::fromRequest($req);
-            $booking = Transaction::run($pdo, function () use ($pdo, $input, $upload, $userId): array {
+            // Optionale Belege (Dropzone): Buchung und alle Belege entstehen gemeinsam oder gar nicht.
+            $uploads = UploadInput::allFromRequest($req);
+            $booking = Transaction::run($pdo, function () use ($pdo, $input, $uploads, $userId): array {
                 $created = (new BookingService($pdo))->create($input, $userId);
-                if ($upload !== null) {
-                    (new ReceiptStore($pdo, $this->receiptsDir))->add($created['id'], $upload['path'], $upload['name'], $userId, false);
+                if ($uploads !== []) {
+                    (new ReceiptStore($pdo, $this->receiptsDir))->addMany($created['id'], $uploads, $userId, false);
                 }
                 return $created;
             });

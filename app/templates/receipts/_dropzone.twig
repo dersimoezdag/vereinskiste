@@ -1,0 +1,24 @@
+{# Dropzone fuer Belege: Dateien hineinziehen oder anklicken; alle gewaehlten Dateien werden hinzugefuegt.
+   Erwartet: id_prefix; optional: errors, name (Standard 'receipts[]'), multiple (Standard true) #}
+{% import 'components/icons.twig' as dz_icons %}
+{% set zone_name = name ?? 'receipts[]' %}
+{% set zone_multiple = multiple ?? true %}
+<div class="mb-3">
+    <div class="dropzone{% if errors.receipt is defined %} is-invalid{% endif %}" data-dropzone data-multiple="{{ zone_multiple ? '1' : '0' }}"
+         data-label-remove="{{ t('receipts.drop.remove') }}" data-label-count="{{ t('receipts.drop.count') }}">
+        <input type="file" id="{{ id_prefix }}-file" name="{{ zone_name }}" class="dropzone-input"
+               accept="image/jpeg,image/png,application/pdf"{% if zone_multiple %} multiple{% endif %}
+               aria-label="{{ zone_multiple ? t('receipts.drop') : t('receipts.drop_single') }}" aria-describedby="{{ id_prefix }}-help">
+        <input type="file" id="{{ id_prefix }}-camera" name="receipt_camera" class="d-none"
+               accept="image/jpeg,image/png" capture="environment"
+               aria-label="{{ t('receipts.camera') }}">
+        <div class="dropzone-body" aria-hidden="true">
+            <span class="dropzone-icon">{{ dz_icons.icon('imports') }}</span>
+            <span class="dropzone-title">{{ zone_multiple ? t('receipts.drop') : t('receipts.drop_single') }}</span>
+            <span class="dropzone-sub">{{ t('receipts.drop.or') }}</span>
+        </div>
+    </div>
+    <ul class="dropzone-files list-unstyled mt-2 mb-0" data-dropzone-list aria-live="polite"></ul>
+    {% if errors.receipt is defined %}<div class="invalid-feedback d-block">{{ t(errors.receipt) }}</div>{% endif %}
+    <div class="form-hint mt-1" id="{{ id_prefix }}-help">{{ t('receipts.help') }}</div>
+</div>

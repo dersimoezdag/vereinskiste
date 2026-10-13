@@ -258,6 +258,35 @@ final class Kernel
         $app->post('/contacts/new', [$contacts, 'save'])->add(Auth::requires('contacts.write'));
         $app->get('/contacts/{id:[0-9]+}', [$contacts, 'show'])->add(Auth::requires('contacts.read'));
         $app->post('/contacts/{id:[0-9]+}', [$contacts, 'save'])->add(Auth::requires('contacts.write'));
+
+        $onlineApp = new \Vereinskiste\Web\MembershipApplicationController($pdoProvider);
+        $app->get('/antrag/danke', [$onlineApp, 'thankYou']);
+        $app->get('/antrag/{token}', [$onlineApp, 'show']);
+        $app->post('/antrag/{token}/unlock', [$onlineApp, 'unlock']);
+        $app->post('/antrag/{token}', [$onlineApp, 'submit']);
+
+        $members = new \Vereinskiste\Web\MemberController($pdoProvider);
+        $app->get('/members', [$members, 'index'])->add(Auth::requires('members.read'));
+        $app->get('/members/applications', [$members, 'applications'])->add(Auth::requires('members.read'));
+        $app->post('/members/invites/new', [$members, 'createInvite'])->add(Auth::requires('members.write'));
+        $app->post('/members/applications/{id:[0-9]+}/approve', [$members, 'approveApplication'])->add(Auth::requires('members.write'));
+        $app->post('/members/applications/{id:[0-9]+}/reject', [$members, 'rejectApplication'])->add(Auth::requires('members.write'));
+        $app->get('/members/new', [$members, 'create'])->add(Auth::requires('members.write'));
+        $app->post('/members/new', [$members, 'save'])->add(Auth::requires('members.write'));
+        $app->get('/members/{id:[0-9]+}', [$members, 'show'])->add(Auth::requires('members.read'));
+        $app->post('/members/{id:[0-9]+}', [$members, 'save'])->add(Auth::requires('members.write'));
+        $app->post('/members/{id:[0-9]+}/join', [$members, 'join'])->add(Auth::requires('members.write'));
+        $app->post('/members/{id:[0-9]+}/leave', [$members, 'leave'])->add(Auth::requires('members.write'));
+        $app->post('/members/{id:[0-9]+}/user', [$members, 'linkUser'])->add(Auth::requires('users.manage'));
+        $app->post('/members/{id:[0-9]+}/user/unlink', [$members, 'unlinkUser'])->add(Auth::requires('users.manage'));
+        $app->post('/members/{id:[0-9]+}/club-roles', [$members, 'assignRole'])->add(Auth::requires('members.write'));
+        $app->post('/members/{id:[0-9]+}/club-roles/{assignment:[0-9]+}/end', [$members, 'endRole'])->add(Auth::requires('members.write'));
+
+        $clubRoles = new \Vereinskiste\Web\ClubRoleController($pdoProvider);
+        $app->get('/settings/club-roles', [$clubRoles, 'index'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/club-roles', [$clubRoles, 'create'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/club-roles/{id:[0-9]+}', [$clubRoles, 'update'])->add(Auth::requires('settings.manage'));
+
         $app->get('/settings/closing', [$settings, 'closing'])->add(Auth::requires('settings.manage'));
         $app->post('/settings/closing', [$settings, 'saveClosing'])->add(Auth::requires('settings.manage'));
         $app->get('/audit-log', [$settings, 'auditLog'])->add(Auth::requires('settings.manage'));

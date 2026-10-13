@@ -74,8 +74,6 @@ final class FoundationTest extends TestCase
         (new ContactRepository($this->db))->save(null, ['name' => 'X', 'kind' => 'person'], 0, 1, '');
         $this->assertSame(1, (int) $this->db->query('SELECT count(*) FROM finance_contacts')->fetchColumn());
         $bank = new AccountBank($this->db);
-        try { $bank->save(1, '', '', 1, 1, ''); $this->fail('Pflichtgrund fuer Kontodaten'); }
-        catch (ValidationError) { $this->assertSame('', (string) $bank->get(1)['iban']); }
         $bank->save(1, '', '', 1, 1, 'Barkasse');
         $bank->save(1, 'DE89 3704 0044 0532 0130 00', 'COBADEFFXXX', 1, 1, 'Bankdaten');
         $this->assertSame('DE89370400440532013000', $bank->get(1)['iban']);

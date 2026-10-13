@@ -84,6 +84,32 @@ final class ReceiptStore
     }
 
     /**
+     * Mehrere Belege gemeinsam hinzufuegen: entweder werden alle gespeichert oder keiner (auch keine Dateien).
+     *
+     * @param list<array{path:string,name:string}> $uploads
+     * @return list<array<string,mixed>> die angelegten Belege
+     * @throws ValidationError
+     * @throws BookingNotFound
+     */
+    public function addMany(int $bookingId, array $uploads, int $userId, bool $logChange = true): array
+    {
+        $stored = [];
+        try {
+            return Transaction::run($this->pdo, function () use (&$stored, $bookingId, $uploads, $userId, $logChange): array {
+                foreach ($uploads as $upload) {
+                    $stored[] = $this->add($bookingId, $upload['path'], $upload['name'], $userId, $logChange);
+                }
+                return $stored;
+            });
+        } catch (Throwable $e) {
+            foreach ($stored as $receipt) {
+                @unlink($this->dir . '/' . $receipt['storage_name']);
+            }
+            throw $e;
+        }
+    }
+
+    /**
      * Beleg durch eine neue Datei ersetzen. Die alte Datei bleibt erhalten und downloadbar
      * (`replaced_at` gesetzt); der neue Beleg gehoert zur selben Buchung.
      *

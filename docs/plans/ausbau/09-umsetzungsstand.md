@@ -16,6 +16,15 @@
 - Gemeinsamer Job-Runner mit Priorität, Lease, Wiederaufnahme und begrenzten Versuchen;
   Passwort-Reset-Mail, Registrierung alter Belege und Bereinigung unregistrierter Uploads.
 - Erweiterte Finanzrechte an den vorhandenen Rollen und geschützte neue Routen.
+- Mitgliederverwaltung (Migration `0011_members.sql`): Mitgliederverzeichnis mit Suche und Filter,
+  Stammdaten, zeitliche Mitgliedschaftsperioden (Eintritt/Austritt/Wiedereintritt ohne Überlappungen),
+  Vereinsrollen (`club_roles` und `member_club_roles` für Funktionen wie Vorsitz/Kassenprüfer und
+  Mitgliedsarten wie Aktiv/Fördermitglied mit automatischer Synchronisation) sowie optionale
+  1-zu-1-Verknüpfung zwischen Systembenutzer und Mitglied.
+- Online-Mitgliedsantrag per Einladungs-Link (`/antrag/{token}`): Erstellung geschützter Einmal-Links
+  mit Gültigkeitsdauer, optionalem Passwortschutz (Argon2id) und konfigurierbarer Abfrage von
+  Bankverbindung & SEPA-Lastschriftmandat (`require_sepa`). Prüfung und Genehmigung mit
+  automatischer Mitglieder- und Periodenerstellung.
 
 ## Betrieb nach Veröffentlichung
 

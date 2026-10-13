@@ -29,12 +29,12 @@ final class UpgradeTest extends TestCase
             $db->exec("INSERT INTO accounts(name,type,opening_date) VALUES ('Barkasse','cash','2026-01-01')");
             $before = $db->query('SELECT id,name,type,opening_date FROM accounts')->fetchAll();
             $migrator = new Migrator($db, $source);
-            $this->assertSame(['0008_foundation.sql', '0009_stored_files_jobs.sql', '0010_bank_import.sql'], $migrator->migrate());
+            $this->assertSame(['0008_foundation.sql', '0009_stored_files_jobs.sql', '0010_bank_import.sql', '0011_members.sql'], $migrator->migrate());
             $this->assertSame('Bestandsverein', (new Profile($db))->name());
             $this->assertSame($before, $db->query('SELECT id,name,type,opening_date FROM accounts')->fetchAll());
             $this->assertSame('', $db->query('SELECT iban FROM accounts')->fetchColumn());
             $this->assertSame([], $migrator->migrate());
-            $this->assertSame(10, (int) $db->query('SELECT count(*) FROM schema_migrations')->fetchColumn());
+            $this->assertSame(11, (int) $db->query('SELECT count(*) FROM schema_migrations')->fetchColumn());
         } finally {
             foreach ($files as $file) { unlink($file); }
             rmdir($old);

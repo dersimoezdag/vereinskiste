@@ -65,21 +65,9 @@ document.querySelectorAll('form[data-stepper]').forEach(function (form) {
 (function () {
     function updateThemeUI(theme) {
         document.querySelectorAll('.theme-toggle').forEach(function (btn) {
-            var lightIcon = btn.querySelector('.theme-icon-light');
-            var darkIcon = btn.querySelector('.theme-icon-dark');
-            if (lightIcon && darkIcon) {
-                if (theme === 'dark') {
-                    lightIcon.classList.remove('d-none');
-                    darkIcon.classList.add('d-none');
-                    btn.setAttribute('aria-label', 'Zum hellen Modus wechseln');
-                    btn.setAttribute('title', 'Zum hellen Modus wechseln');
-                } else {
-                    lightIcon.classList.add('d-none');
-                    darkIcon.classList.remove('d-none');
-                    btn.setAttribute('aria-label', 'Zum dunklen Modus wechseln');
-                    btn.setAttribute('title', 'Zum dunklen Modus wechseln');
-                }
-            }
+            var label = theme === 'dark' ? 'Zum hellen Modus wechseln' : 'Zum dunklen Modus wechseln';
+            btn.setAttribute('aria-label', label);
+            btn.setAttribute('title', label);
         });
     }
 
@@ -104,3 +92,89 @@ document.querySelectorAll('form[data-stepper]').forEach(function (form) {
         updateThemeUI(next);
     });
 })();
+
+// Beleg-Dropzone: Dateien hineinziehen oder anklicken; alle gesammelten Dateien gehen mit dem Formular ab.
+document.querySelectorAll('[data-dropzone]').forEach(function (zone) {
+    var input = zone.querySelector('input[type="file"]');
+    var list = zone.parentNode.querySelector('[data-dropzone-list]');
+    if (!input || !list) {
+        return;
+    }
+    var multiple = zone.dataset.multiple === '1';
+    var canCollect = typeof DataTransfer !== 'undefined';
+    var files = [];
+
+    function sameFile(a, b) {
+        return a.name === b.name && a.size === b.size && a.lastModified === b.lastModified;
+    }
+
+    function render() {
+        list.textContent = '';
+        files.forEach(function (file, index) {
+            var item = document.createElement('li');
+            item.className = 'dropzone-file';
+            var name = document.createElement('span');
+            name.className = 'dropzone-file-name';
+            name.textContent = file.name + ' (' + Math.max(1, Math.round(file.size / 1024)) + ' KB)';
+            item.appendChild(name);
+            if (canCollect) {
+                var remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'btn btn-sm btn-ghost-secondary';
+                remove.textContent = zone.dataset.labelRemove || 'Entfernen';
+                remove.setAttribute('aria-label', remove.textContent + ': ' + file.name);
+                remove.addEventListener('click', function () {
+                    files.splice(index, 1);
+                    sync();
+                });
+                item.appendChild(remove);
+            }
+            list.appendChild(item);
+        });
+    }
+
+    function sync() {
+        if (canCollect) {
+            var transfer = new DataTransfer();
+            files.forEach(function (file) { transfer.items.add(file); });
+            input.files = transfer.files;
+        }
+        render();
+    }
+
+    function add(selected) {
+        Array.prototype.forEach.call(selected, function (file) {
+            if (!multiple) {
+                files = [file];
+            } else if (!files.some(function (known) { return sameFile(known, file); })) {
+                files.push(file);
+            }
+        });
+        sync();
+    }
+
+    input.addEventListener('change', function () {
+        if (canCollect) {
+            add(input.files);
+        } else {
+            files = Array.prototype.slice.call(input.files);
+            render();
+        }
+    });
+
+    ['dragenter', 'dragover'].forEach(function (type) {
+        zone.addEventListener(type, function (event) {
+            event.preventDefault();
+            zone.classList.add('is-dragover');
+        });
+    });
+    ['dragleave', 'dragend', 'drop'].forEach(function (type) {
+        zone.addEventListener(type, function () { zone.classList.remove('is-dragover'); });
+    });
+    zone.addEventListener('drop', function (event) {
+        event.preventDefault();
+        if (canCollect && event.dataTransfer && event.dataTransfer.files.length) {
+            add(event.dataTransfer.files);
+        }
+    });
+});

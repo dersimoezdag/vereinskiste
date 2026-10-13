@@ -1,0 +1,87 @@
+{# Obere Leiste: Brotkrumen (Bereich > Seite) links, Farbschema-Umschalter rechts. Erwartet: path, icons #}
+{% set segs = path|split('/') %}
+{% set cash = {'label': t('nav.cashbook')} %}
+{% set settings = {'label': t('nav.settings'), 'url': '/settings'} %}
+{% set crumbs = [] %}
+{% if path == '/' %}
+    {% set crumbs = [{'label': t('nav.home')}] %}
+{% elseif path == '/bookings' %}
+    {% set crumbs = [cash, {'label': t('nav.bookings')}] %}
+{% elseif path == '/bookings/new' %}
+    {% set crumbs = [cash, {'label': t('nav.bookings'), 'url': '/bookings'}, {'label': 'Neu'}] %}
+{% elseif path matches '#^/bookings/\\d+/edit$#' %}
+    {% set crumbs = [cash, {'label': t('nav.bookings'), 'url': '/bookings'}, {'label': 'Buchung', 'url': '/bookings/' ~ segs[2]}, {'label': 'Bearbeiten'}] %}
+{% elseif path starts with '/bookings' %}
+    {% set crumbs = [cash, {'label': t('nav.bookings'), 'url': '/bookings'}, {'label': 'Buchung'}] %}
+{% elseif path starts with '/transfers' %}
+    {% set crumbs = [cash, {'label': t('nav.bookings'), 'url': '/bookings'}, {'label': 'Umbuchung'}] %}
+{% elseif path starts with '/corrections' %}
+    {% set crumbs = [cash, {'label': t('nav.bookings'), 'url': '/bookings'}, {'label': 'Korrektur'}] %}
+{% elseif path == '/accounts' %}
+    {% set crumbs = [cash, {'label': t('nav.accounts')}] %}
+{% elseif path starts with '/accounts' %}
+    {% set crumbs = [cash, {'label': t('nav.accounts'), 'url': '/accounts'}, {'label': t('foundation.bank')}] %}
+{% elseif path starts with '/categories' %}
+    {% set crumbs = [cash, {'label': t('nav.categories')}] %}
+{% elseif path starts with '/reports' %}
+    {% set crumbs = [{'label': t('nav.reports'), 'url': '/reports/summary'}, {'label': path == '/reports/dashboard' ? t('reports.tab.dashboard') : t('reports.tab.summary')}] %}
+{% elseif path == '/settings' %}
+    {% set crumbs = [{'label': t('nav.settings')}] %}
+{% elseif path == '/settings/club' %}
+    {% set crumbs = [settings, {'label': t('foundation.club')}] %}
+{% elseif path starts with '/settings/closing' %}
+    {% set crumbs = [settings, {'label': t('nav.closing')}] %}
+{% elseif path == '/audit-log' %}
+    {% set crumbs = [settings, {'label': t('nav.audit')}] %}
+{% elseif path == '/update' %}
+    {% set crumbs = [settings, {'label': 'Aktualisierung'}] %}
+{% elseif path == '/users' %}
+    {% set crumbs = [settings, {'label': t('settings.users')}] %}
+{% elseif path starts with '/users' %}
+    {% set crumbs = [settings, {'label': t('settings.users'), 'url': '/users'}, {'label': path ends with '/new' ? 'Neu' : 'Bearbeiten'}] %}
+{% elseif path starts with '/settings' %}
+    {% set crumbs = [{'label': t('nav.settings')}] %}
+{% elseif path == '/contacts' %}
+    {% set crumbs = [{'label': t('foundation.contacts')}] %}
+{% elseif path starts with '/contacts' %}
+    {% set crumbs = [{'label': t('foundation.contacts'), 'url': '/contacts'}, {'label': path == '/contacts/new' ? 'Neu' : 'Kontakt'}] %}
+{% elseif path == '/members' %}
+    {% set crumbs = [{'label': t('nav.members')}] %}
+{% elseif path == '/members/applications' %}
+    {% set crumbs = [{'label': t('nav.members'), 'url': '/members'}, {'label': t('applications.tab_applications')}] %}
+{% elseif path starts with '/members' %}
+    {% set crumbs = [{'label': t('nav.members'), 'url': '/members'}, {'label': path == '/members/new' ? 'Neu' : 'Mitglied'}] %}
+{% elseif path == '/settings/club-roles' %}
+    {% set crumbs = [settings, {'label': t('nav.club_roles')}] %}
+{% elseif path == '/imports/bank' %}
+    {% set crumbs = [{'label': 'Kontoauszug-Import'}] %}
+{% elseif path starts with '/imports' %}
+    {% set crumbs = [{'label': 'Kontoauszug-Import', 'url': '/imports/bank'}, {'label': path ends with '/new' ? 'Neuer Import' : 'Import'}] %}
+{% elseif path starts with '/account/password' %}
+    {% set crumbs = [{'label': t('nav.password')}] %}
+{% endif %}
+<header class="topbar">
+    <div class="container-xl topbar-inner">
+        <nav class="topbar-crumbs" aria-label="Brotkrumen">
+            <ol class="breadcrumb">
+                {% if path != '/' %}
+                <li class="breadcrumb-item"><a href="/" aria-label="{{ t('nav.home') }}" title="{{ t('nav.home') }}">{{ icons.icon('home') }}</a></li>
+                {% endif %}
+                {% for crumb in crumbs %}
+                    {% if loop.last %}
+                    <li class="breadcrumb-item active" aria-current="page"><span class="breadcrumb-label">{{ crumb.label }}</span></li>
+                    {% elseif crumb.url is defined %}
+                    <li class="breadcrumb-item"><a href="{{ crumb.url }}">{{ crumb.label }}</a></li>
+                    {% else %}
+                    <li class="breadcrumb-item"><span class="breadcrumb-label">{{ crumb.label }}</span></li>
+                    {% endif %}
+                {% endfor %}
+            </ol>
+        </nav>
+        <button type="button" class="btn btn-icon theme-toggle" id="theme-toggle"
+                aria-label="Farbschema wechseln" title="Farbschema wechseln">
+            <span class="theme-icon-light">{{ icons.icon('light-mode') }}</span>
+            <span class="theme-icon-dark">{{ icons.icon('dark-mode') }}</span>
+        </button>
+    </div>
+</header>

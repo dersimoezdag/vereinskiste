@@ -5,7 +5,7 @@
 <form class="card card-body" method="post" action="/accounts/{{ account.id }}/bank">
     {{ csrf_field() }}
     <input type="hidden" name="version" value="{{ version }}">
-    {% include 'components/foundation_fields.twig' %}
+    {% include 'components/foundation_fields.twig' with {'reason_required': false} %}
     <button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button>
 </form>
 <a class="btn btn-link" href="/accounts">{{ t('common.back') }}</a>

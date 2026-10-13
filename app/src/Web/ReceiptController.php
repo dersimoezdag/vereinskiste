@@ -33,15 +33,17 @@ final class ReceiptController extends AdminController
     {
         $bookingId = (int) $args['id'];
         try {
-            $upload = UploadInput::fromRequest($req)
-                ?? throw new ValidationError(['receipt' => 'validation.receipt.none']);
-            $this->store()->add($bookingId, $upload['path'], $upload['name'], $this->userId($req));
+            $uploads = UploadInput::allFromRequest($req);
+            if ($uploads === []) {
+                throw new ValidationError(['receipt' => 'validation.receipt.none']);
+            }
+            $this->store()->addMany($bookingId, $uploads, $this->userId($req));
         } catch (ValidationError $e) {
             return $this->failed($req, $bookingId, $e);
         } catch (BookingNotFound) {
             return $this->notFound($req);
         }
-        $this->flash($req, 'receipts.flash.added');
+        $this->flash($req, count($uploads) > 1 ? 'receipts.flash.added_many' : 'receipts.flash.added');
         return $this->redirect('/bookings/' . $bookingId . '#receipts');
     }
 

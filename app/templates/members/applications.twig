@@ -1,0 +1,253 @@
+{% extends 'layout.twig' %}
+{% import 'components/icons.twig' as icons %}
+
+{% block content %}
+<div class="container-xl">
+    <div class="page-header d-print-none mb-3">
+        <h1 class="page-title">{{ t('applications.title') }}</h1>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link" href="/members">
+                {{ icons.icon('members') }} {{ t('applications.tab_members') }}
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" href="/members/applications" aria-current="page">
+                {{ icons.icon('contacts') }} {{ t('applications.tab_applications') }}
+                {% if pending_count > 0 %}
+                <span class="badge bg-danger ms-1">{{ pending_count }}</span>
+                {% endif %}
+            </a>
+        </li>
+    </ul>
+
+    <div class="row g-4">
+        <!-- Link-Erstellung und Übersicht -->
+        <div class="col-lg-5 col-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">{{ t('applications.invites.create') }}</h3>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">
+                        {{ t('applications.invites.description') }}
+                    </p>
+
+                    {% if can('members.write') %}
+                    <form method="post" action="/members/invites/new">
+                        {{ csrf_field() }}
+
+                        <div class="mb-3">
+                            <label for="invite-title" class="form-label">{{ t('applications.invites.label') }}</label>
+                            <input type="text" id="invite-title" name="title" class="form-control"
+                                   placeholder="{{ t('applications.invites.label_placeholder') }}" maxlength="200">
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label for="invite-days" class="form-label">{{ t('applications.invites.validity_days') }}</label>
+                                <input type="number" id="invite-days" name="valid_days" value="14" min="1" max="365" class="form-control">
+                            </div>
+                            <div class="col-6">
+                                <label for="invite-pwd" class="form-label">{{ t('applications.invites.password') }}</label>
+                                <input type="text" id="invite-pwd" name="password" class="form-control"
+                                       placeholder="{{ t('applications.invites.password_placeholder') }}" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="form-text text-muted mb-3">{{ t('applications.invites.password_hint') }}</div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="require-sepa" name="require_sepa" value="1">
+                            <label class="form-check-label fw-semibold" for="require-sepa">
+                                {{ t('applications.invites.require_sepa') }}
+                            </label>
+                            <div class="form-text text-muted">{{ t('applications.invites.require_sepa_hint') }}</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            {{ t('applications.invites.create') }}
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Liste der erstellten Einladungs-Links -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{{ t('applications.invites.title') }}</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-vcenter table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Empfänger / Link</th>
+                                <th>Gültig bis</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% if invites is empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-3 small">
+                                    {{ t('applications.invites.none') }}
+                                </td>
+                            </tr>
+                        {% else %}
+                            {% for inv in invites %}
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">
+                                        {{ inv.title ?: 'Einladungs-Link' }}
+                                        {% if inv.has_password %}
+                                        <span class="badge bg-warning-subtle text-warning border ms-1" title="Passwortgeschützt">PW</span>
+                                        {% endif %}
+                                        {% if inv.require_sepa %}
+                                        <span class="badge bg-info-subtle text-info border ms-1" title="Inkl. SEPA">SEPA</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <input type="text" readonly value="/antrag/{{ inv.token }}" id="inv-link-{{ inv.id }}" aria-label="Einladungs-Link"
+                                               class="form-control form-control-sm font-monospace text-muted py-0 px-1 bg-light border-0" style="max-width: 140px;">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                                onclick="navigator.clipboard.writeText(window.location.origin + '/antrag/{{ inv.token }}'); this.innerText='{{ t('applications.invites.copied') }}'; setTimeout(() => this.innerText='{{ t('applications.invites.copy_link') }}', 2000);">
+                                            {{ t('applications.invites.copy_link') }}
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="small text-muted">
+                                    {{ inv.expires_at|date('d.m.Y H:i') }}
+                                </td>
+                                <td>
+                                    {% if inv.is_used %}
+                                        <span class="badge bg-success-subtle text-success">{{ t('applications.invites.used') }}</span>
+                                    {% elseif inv.is_expired %}
+                                        <span class="badge bg-secondary-subtle text-secondary">{{ t('applications.invites.expired') }}</span>
+                                    {% else %}
+                                        <span class="badge bg-primary-subtle text-primary">{{ t('applications.invites.open') }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rechte Spalte: Eingegangene Mitgliedsanträge -->
+        <div class="col-lg-7 col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h3 class="card-title m-0">{{ t('applications.title') }}</h3>
+                    <div class="d-flex gap-1">
+                        <a href="/members/applications?filter=all" class="btn btn-sm {% if filter == 'all' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Alle</a>
+                        <a href="/members/applications?filter=pending" class="btn btn-sm {% if filter == 'pending' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Offen</a>
+                        <a href="/members/applications?filter=approved" class="btn btn-sm {% if filter == 'approved' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Angenommen</a>
+                        <a href="/members/applications?filter=rejected" class="btn btn-sm {% if filter == 'rejected' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Abgelehnt</a>
+                    </div>
+                </div>
+
+                {% if applications is empty %}
+                <div class="card-body text-center text-muted py-5">
+                    {{ t('applications.none') }}
+                </div>
+                {% else %}
+                <div class="list-group list-group-flush">
+                    {% for a in applications %}
+                    <div class="list-group-item p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h4 class="h5 mb-0 fw-semibold">{{ a.applicant_name }}</h4>
+                                <div class="text-muted small">
+                                    {{ a.email }}
+                                    {% if a.data.phone %} · Tel: {{ a.data.phone }}{% endif %}
+                                    {% if a.data.birth_date %} · Geb.: {{ a.data.birth_date|date('d.m.Y') }}{% endif %}
+                                </div>
+                            </div>
+                            <div>
+                                {% if a.status == 'pending' %}
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle">{{ t('applications.status.pending') }}</span>
+                                {% elseif a.status == 'approved' %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">{{ t('applications.status.approved') }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">{{ t('applications.status.rejected') }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Anschrift -->
+                        {% if a.data.address or a.data.city %}
+                        <div class="text-muted small mb-2">
+                            {{ icons.icon('home') }} {{ a.data.address }}, {{ a.data.zip }} {{ a.data.city }} ({{ a.data.country }})
+                        </div>
+                        {% endif %}
+
+                        <!-- SEPA Details falls vorhanden -->
+                        {% if a.require_sepa and a.data.iban %}
+                        <div class="border rounded p-2 bg-light-subtle small mb-2">
+                            <div class="fw-semibold text-primary mb-1">Bankverbindung & Lastschriftmandat:</div>
+                            <div>Inhaber: {{ a.data.account_holder }}</div>
+                            <div class="font-monospace">IBAN: {{ a.data.iban }} {% if a.data.bic %}· BIC: {{ a.data.bic }}{% endif %}</div>
+                            <div class="text-success small">✓ SEPA-Lastschriftmandat vom Antragsteller erteilt</div>
+                        </div>
+                        {% endif %}
+
+                        {% if a.data.notes %}
+                        <div class="small fst-italic text-muted mb-2">
+                            Notiz des Antragstellers: „{{ a.data.notes }}“
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                            <span class="text-muted small">
+                                Eingegangen: {{ a.created_at|date('d.m.Y H:i') }}
+                                {% if a.reviewer_name %} · Geprüft von: {{ a.reviewer_name }}{% endif %}
+                            </span>
+
+                            {% if a.status == 'pending' and can('members.write') %}
+                            <div class="d-flex gap-2">
+                                <form method="post" action="/members/applications/{{ a.id }}/approve" class="m-0">
+                                    {{ csrf_field() }}
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        {{ t('applications.approve') }}
+                                    </button>
+                                </form>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="document.getElementById('reject-form-{{ a.id }}').classList.toggle('d-none');">
+                                    {{ t('applications.reject') }}
+                                </button>
+                            </div>
+                            {% elseif a.status == 'approved' and a.member_id %}
+                            <a href="/members/{{ a.member_id }}" class="btn btn-sm btn-outline-primary">
+                                Zum Mitglied (#{{ a.member_no }})
+                            </a>
+                            {% elseif a.status == 'rejected' and a.rejection_reason %}
+                            <span class="text-danger small">Grund: {{ a.rejection_reason }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Ausklappbares Ablehnen-Formular -->
+                        <div id="reject-form-{{ a.id }}" class="d-none mt-3 p-3 border rounded bg-light-subtle">
+                            <form method="post" action="/members/applications/{{ a.id }}/reject">
+                                {{ csrf_field() }}
+                                <label for="reject-reason-{{ a.id }}" class="form-label small">{{ t('applications.reject_reason') }}</label>
+                                <div class="input-group input-group-sm mb-2">
+                                    <input type="text" id="reject-reason-{{ a.id }}" name="reason" class="form-control" placeholder="z. B. Aufnahmestopp">
+                                    <button type="submit" class="btn btn-danger">{{ t('applications.reject') }}</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

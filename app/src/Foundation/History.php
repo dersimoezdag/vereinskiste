@@ -16,8 +16,8 @@ final class History
         if (!\Vereinskiste\Auth\UserRepository::isStorableText($reason)) {
             throw new \Vereinskiste\Ledger\ValidationError(['reason' => 'validation.text.encoding']);
         }
-        // Nur Aenderungen an Finanzdaten (Kontodaten, Buchungen) brauchen eine Begruendung.
-        if (trim($reason) === '' && in_array($subject, ['club', 'contact'], true)) {
+        // Stammdaten (Verein, Kontakte, Kontodaten, Mitglieder) brauchen keine Begruendung; nur Buchungen, Belege und Abschluss.
+        if (trim($reason) === '' && in_array($subject, ['club', 'contact', 'account_bank', 'member', 'club_role'], true)) {
             $reason = '–';
         }
         $reason = ChangeLog::normalizeReason($reason);

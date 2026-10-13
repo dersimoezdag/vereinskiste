@@ -36,20 +36,34 @@ final class UserController extends AdminController
 
     public function showNew(Request $req, Response $res): Response
     {
+        $query = $req->getQueryParams();
+        $memberId = isset($query['member']) && ctype_digit((string) $query['member']) ? (int) $query['member'] : null;
+        $name = '';
+        $email = '';
+        if ($memberId !== null) {
+            $member = (new \Vereinskiste\Members\MemberRepository(($this->pdo)()))->find($memberId);
+            if ($member !== null) {
+                $name = $member['name'];
+                $email = $member['data']['email'] ?? '';
+            }
+        }
         return $this->renderForm($req, $res, 200, [
             'user_id' => null,
-            'input' => ['name' => '', 'email' => '', 'roles' => [], 'active' => true],
+            'input' => ['name' => $name, 'email' => $email, 'roles' => [], 'active' => true, 'member_id' => $memberId],
         ]);
     }
 
     public function create(Request $req, Response $res): Response
     {
         $body = $this->body($req);
+        $memberId = isset($body['member_id']) && ctype_digit((string) $body['member_id']) && (int) $body['member_id'] > 0
+            ? (int) $body['member_id'] : null;
         $input = [
             'name' => $this->str($body, 'name'),
             'email' => UserRepository::normalizeEmail($this->str($body, 'email')),
             'roles' => [],
             'active' => true,
+            'member_id' => $memberId,
         ];
         $errors = $this->profileErrors($input['name'], $input['email']);
         [$input['roles'], $rolesError] = $this->roles($body);
@@ -64,15 +78,24 @@ final class UserController extends AdminController
 
         if ($errors === []) {
             try {
-                $this->repo()->create(
-                    $input['name'],
-                    $input['email'],
-                    password_hash($password, PASSWORD_DEFAULT),
-                    $input['roles'],
-                    $this->actorId($req)
-                );
+                \Vereinskiste\Ledger\Transaction::run(($this->pdo)(), function () use ($input, $password, $memberId, $req): void {
+                    $userId = $this->repo()->create(
+                        $input['name'],
+                        $input['email'],
+                        password_hash($password, PASSWORD_DEFAULT),
+                        $input['roles'],
+                        $this->actorId($req)
+                    );
+                    if ($memberId !== null) {
+                        (new \Vereinskiste\Members\MemberUserLink(($this->pdo)()))->link($memberId, $userId, $this->actorId($req));
+                    }
+                });
             } catch (ValidationError $e) {
-                $errors = $e->errors;
+                if (isset($e->errors['user'])) {
+                    $errors['member_id'] = $e->errors['user'];
+                } else {
+                    $errors = $e->errors;
+                }
             }
         }
         if ($errors !== []) {
@@ -92,7 +115,11 @@ final class UserController extends AdminController
         return $this->renderForm($req, $res, 200, [
             'user_id' => $user['id'],
             'input' => [
-                'name' => $user['name'], 'email' => $user['email'], 'roles' => $user['roles'], 'active' => $user['active'],
+                'name' => $user['name'],
+                'email' => $user['email'],
+                'roles' => $user['roles'],
+                'active' => $user['active'],
+                'member_id' => $user['member_id'],
             ],
         ]);
     }
@@ -108,11 +135,14 @@ final class UserController extends AdminController
         }
 
         $body = $this->body($req);
+        $memberId = isset($body['member_id']) && ctype_digit((string) $body['member_id']) && (int) $body['member_id'] > 0
+            ? (int) $body['member_id'] : null;
         $input = [
             'name' => $this->str($body, 'name'),
             'email' => UserRepository::normalizeEmail($this->str($body, 'email')),
             'roles' => [],
             'active' => ($body['active'] ?? '') === '1',
+            'member_id' => $memberId,
         ];
         $errors = $this->profileErrors($input['name'], $input['email']);
         [$input['roles'], $rolesError] = $this->roles($body);
@@ -123,13 +153,29 @@ final class UserController extends AdminController
         $changed = [];
         if ($errors === []) {
             try {
-                $changed = $repo->update(
-                    $id, $input['name'], $input['email'], $input['roles'], $input['active'], $this->actorId($req)
-                );
+                \Vereinskiste\Ledger\Transaction::run(($this->pdo)(), function () use ($repo, $id, $input, $existing, $memberId, $req, &$changed): void {
+                    $changed = $repo->update(
+                        $id, $input['name'], $input['email'], $input['roles'], $input['active'], $this->actorId($req)
+                    );
+                    $oldMemberId = $existing['member_id'];
+                    if ($oldMemberId !== $memberId) {
+                        $link = new \Vereinskiste\Members\MemberUserLink(($this->pdo)());
+                        if ($oldMemberId !== null) {
+                            $link->unlink($oldMemberId, $this->actorId($req));
+                        }
+                        if ($memberId !== null) {
+                            $link->link($memberId, $id, $this->actorId($req));
+                        }
+                    }
+                });
             } catch (UserNotFound) {
                 return $this->notFound($req);
             } catch (ValidationError $e) {
-                $errors = $e->errors;
+                if (isset($e->errors['user'])) {
+                    $errors['member_id'] = $e->errors['user'];
+                } else {
+                    $errors = $e->errors;
+                }
             }
         }
         if ($errors !== []) {
@@ -285,7 +331,22 @@ final class UserController extends AdminController
     /** @param array<string,mixed> $context */
     private function renderForm(Request $req, Response $res, int $status, array $context): Response
     {
-        $context += ['errors' => [], 'password_error' => null, 'me' => $this->actorId($req), 'roles' => Permissions::ROLES];
+        $link = new \Vereinskiste\Members\MemberUserLink(($this->pdo)());
+        $members = $link->linkableMembers();
+        $currentMemberId = $context['input']['member_id'] ?? null;
+        if ($currentMemberId !== null && !in_array($currentMemberId, array_column($members, 'id'), true)) {
+            $m = (new \Vereinskiste\Members\MemberRepository(($this->pdo)()))->find($currentMemberId);
+            if ($m !== null) {
+                array_unshift($members, ['id' => $m['id'], 'member_no' => $m['member_no'], 'name' => $m['name']]);
+            }
+        }
+        $context += [
+            'errors' => [],
+            'password_error' => null,
+            'me' => $this->actorId($req),
+            'roles' => Permissions::ROLES,
+            'linkable_members' => $members,
+        ];
         return $req->getAttribute('view')->render($res->withStatus($status), 'admin/user_form.twig', $context);
     }
 

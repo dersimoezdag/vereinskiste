@@ -1,0 +1,353 @@
+{% extends 'layout.twig' %}
+{% import 'components/icons.twig' as icons %}
+
+{% block content %}
+<div class="container-xl">
+    <div class="page-header d-print-none mb-3">
+        <div class="row align-items-center">
+            <div class="col">
+                <div class="text-muted font-monospace mb-1">{{ t('members.no') }} {{ member.member_no }}</div>
+                <h1 class="page-title d-flex align-items-center gap-2">
+                    {{ member.name }}
+                    {% if member.current %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle fs-6">Aktiv</span>
+                    {% else %}
+                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle fs-6">Ausgetreten</span>
+                    {% endif %}
+                </h1>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <a href="/members" class="btn btn-outline-secondary">{{ t('common.back') }}</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Linke Spalte: Stammdaten -->
+        <div class="col-lg-7 col-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">Stammdaten</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="/members/{{ member.id }}" novalidate>
+                        {{ csrf_field() }}
+                        <input type="hidden" name="version" value="{{ member.version }}">
+
+                        {% if errors.version %}
+                        <div class="alert alert-danger mb-3">{{ t(errors.version) }}</div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="detail-name" class="form-label required">{{ t('members.field.name') }}</label>
+                            <input type="text" id="detail-name" name="name" value="{{ input.name|default(member.name) }}"
+                                   class="form-control{% if errors.name %} is-invalid{% endif %}" required maxlength="200"
+                                   {% if not can('members.write') %}disabled{% endif %}>
+                            {% if errors.name %}
+                            <div class="invalid-feedback">{{ t(errors.name) }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6 col-12">
+                                <label for="detail-email" class="form-label">{{ t('members.field.email') }}</label>
+                                <input type="email" id="detail-email" name="email" value="{{ input.email|default(member.data.email) }}"
+                                       class="form-control{% if errors.email %} is-invalid{% endif %}" maxlength="254"
+                                       {% if not can('members.write') %}disabled{% endif %}>
+                                {% if errors.email %}
+                                <div class="invalid-feedback">{{ t(errors.email) }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 col-12">
+                                <label for="detail-phone" class="form-label">{{ t('members.field.phone') }}</label>
+                                <input type="text" id="detail-phone" name="phone" value="{{ input.phone|default(member.data.phone) }}"
+                                       class="form-control{% if errors.phone %} is-invalid{% endif %}" maxlength="50"
+                                       {% if not can('members.write') %}disabled{% endif %}>
+                                {% if errors.phone %}
+                                <div class="invalid-feedback">{{ t(errors.phone) }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="detail-address" class="form-label">{{ t('members.field.address') }}</label>
+                            <input type="text" id="detail-address" name="address" value="{{ input.address|default(member.data.address) }}"
+                                   class="form-control{% if errors.address %} is-invalid{% endif %}" maxlength="200"
+                                   {% if not can('members.write') %}disabled{% endif %}>
+                            {% if errors.address %}
+                            <div class="invalid-feedback">{{ t(errors.address) }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4 col-12">
+                                <label for="detail-zip" class="form-label">{{ t('members.field.zip') }}</label>
+                                <input type="text" id="detail-zip" name="zip" value="{{ input.zip|default(member.data.zip) }}"
+                                       class="form-control{% if errors.zip %} is-invalid{% endif %}" maxlength="20"
+                                       {% if not can('members.write') %}disabled{% endif %}>
+                                {% if errors.zip %}
+                                <div class="invalid-feedback">{{ t(errors.zip) }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-5 col-12">
+                                <label for="detail-city" class="form-label">{{ t('members.field.city') }}</label>
+                                <input type="text" id="detail-city" name="city" value="{{ input.city|default(member.data.city) }}"
+                                       class="form-control{% if errors.city %} is-invalid{% endif %}" maxlength="100"
+                                       {% if not can('members.write') %}disabled{% endif %}>
+                                {% if errors.city %}
+                                <div class="invalid-feedback">{{ t(errors.city) }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 col-12">
+                                <label for="detail-country" class="form-label">{{ t('members.field.country') }}</label>
+                                <input type="text" id="detail-country" name="country" value="{{ input.country|default(member.data.country) }}"
+                                       class="form-control{% if errors.country %} is-invalid{% endif %}" maxlength="100"
+                                       {% if not can('members.write') %}disabled{% endif %}>
+                                {% if errors.country %}
+                                <div class="invalid-feedback">{{ t(errors.country) }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="detail-birth-date" class="form-label">{{ t('members.field.birth_date') }}</label>
+                            <input type="date" id="detail-birth-date" name="birth_date" value="{{ input.birth_date|default(member.data.birth_date) }}"
+                                   class="form-control{% if errors.birth_date %} is-invalid{% endif %}"
+                                   {% if not can('members.write') %}disabled{% endif %}>
+                            {% if errors.birth_date %}
+                            <div class="invalid-feedback">{{ t(errors.birth_date) }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="detail-notes" class="form-label">{{ t('members.field.notes') }}</label>
+                            <textarea id="detail-notes" name="notes" rows="3"
+                                      class="form-control{% if errors.notes %} is-invalid{% endif %}" maxlength="1000"
+                                      {% if not can('members.write') %}disabled{% endif %}>{{ input.notes|default(member.data.notes) }}</textarea>
+                            {% if errors.notes %}
+                            <div class="invalid-feedback">{{ t(errors.notes) }}</div>
+                            {% endif %}
+                        </div>
+
+                        {% if can('members.write') %}
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">{{ t('common.save') }}</button>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+
+            <!-- Änderungshistorie -->
+            {% include 'components/foundation_history.twig' %}
+        </div>
+
+        <!-- Rechte Spalte: Mitgliedschaft, Vereinsrollen, Benutzer -->
+        <div class="col-lg-5 col-12">
+            <!-- Karte: Mitgliedschaft (Eintritt / Austritt) -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">{{ t('members.period.title') }}</h3>
+                </div>
+                <div class="card-body">
+                    {% if errors.date %}
+                    <div class="alert alert-danger mb-3">{{ t(errors.date) }}</div>
+                    {% endif %}
+
+                    {% if member.current %}
+                        <p class="text-success fw-semibold mb-3">
+                            Das Mitglied hat eine aktive Mitgliedschaft.
+                        </p>
+                        {% if can('members.write') %}
+                        <form method="post" action="/members/{{ member.id }}/leave" class="border rounded p-3 bg-light-subtle mb-3">
+                            {{ csrf_field() }}
+                            <h4 class="h5 mb-2">{{ t('members.period.leave') }}</h4>
+                            <div class="mb-2">
+                                <label for="leave-date" class="form-label">{{ t('members.period.end') }}</label>
+                                <input type="date" id="leave-date" name="date" value="{{ today }}" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="leave-reason" class="form-label">{{ t('members.period.end_reason') }}</label>
+                                <input type="text" id="leave-reason" name="end_reason" class="form-control form-control-sm" maxlength="500">
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-outline-danger w-100">{{ t('members.period.leave') }} erfassen</button>
+                        </form>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted mb-3">
+                            Aktuell keine laufende Mitgliedschaft.
+                        </p>
+                        {% if can('members.write') %}
+                        <form method="post" action="/members/{{ member.id }}/join" class="border rounded p-3 bg-light-subtle mb-3">
+                            {{ csrf_field() }}
+                            <h4 class="h5 mb-2">{{ t('members.period.join') }}</h4>
+                            <div class="mb-3">
+                                <label for="join-date" class="form-label">{{ t('members.period.start') }}</label>
+                                <input type="date" id="join-date" name="date" value="{{ today }}" class="form-control form-control-sm" required>
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-primary w-100">{{ t('members.period.join') }} erfassen</button>
+                        </form>
+                        {% endif %}
+                    {% endif %}
+
+                    <!-- Liste bisheriger Mitgliedszeiträume -->
+                    {% if member.periods is not empty %}
+                    <div class="mt-3">
+                        <div class="text-muted small fw-bold mb-2">Zeiträume:</div>
+                        <ul class="list-group list-group-flush small">
+                            {% for p in member.periods %}
+                            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-semibold">{{ p.start_date|date('d.m.Y') }}</span> bis
+                                    {% if p.end_date %}
+                                        <span class="fw-semibold">{{ p.end_date|date('d.m.Y') }}</span>
+                                        {% if p.end_reason %}<div class="text-muted fst-italic">Grund: {{ p.end_reason }}</div>{% endif %}
+                                    {% else %}
+                                        <span class="badge bg-success-subtle text-success">heute (offen)</span>
+                                    {% endif %}
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Karte: Vereinsrollen -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">{{ t('clubroles.assign.title') }}</h3>
+                </div>
+                <div class="card-body">
+                    {% if errors.role %}
+                    <div class="alert alert-danger mb-3">{{ t(errors.role) }}</div>
+                    {% endif %}
+
+                    <p class="text-muted small mb-3">
+                        {{ t('clubroles.help') }}
+                    </p>
+
+                    <!-- Zugewiesene Rollen -->
+                    <div class="mb-3">
+                        {% if assignments is empty %}
+                        <div class="text-muted small fst-italic">{{ t('clubroles.assign.none') }}</div>
+                        {% else %}
+                        <ul class="list-group list-group-flush">
+                            {% for a in assignments %}
+                            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center {% if a.end_date %}text-muted opacity-75{% endif %}">
+                                <div>
+                                    <div class="fw-semibold">
+                                        {{ a.role_name }}
+                                        {% if a.scope %}<span class="badge bg-info-subtle text-info ms-1">{{ a.scope }}</span>{% endif %}
+                                        {% if a.role_kind == 'membership_type' %}<span class="badge bg-light text-dark ms-1">Mitgliedsart</span>{% endif %}
+                                    </div>
+                                    <div class="small text-muted">
+                                        {% if a.start_date %}Seit {{ a.start_date|date('d.m.Y') }}{% endif %}
+                                        {% if a.end_date %} · {{ t('clubroles.assign.ended') }} {{ a.end_date|date('d.m.Y') }}{% endif %}
+                                    </div>
+                                </div>
+                                {% if not a.end_date and can('members.write') %}
+                                <form method="post" action="/members/{{ member.id }}/club-roles/{{ a.id }}/end" class="d-inline">
+                                    {{ csrf_field() }}
+                                    <input type="hidden" name="date" value="{{ today }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="{{ t('clubroles.assign.end') }}">
+                                        {{ t('clubroles.assign.end') }}
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+
+                    <!-- Vereinsrolle zuweisen (Formular) -->
+                    {% if can('members.write') %}
+                    <form method="post" action="/members/{{ member.id }}/club-roles" class="border rounded p-3 bg-light-subtle">
+                        {{ csrf_field() }}
+                        <h4 class="h5 mb-2">{{ t('clubroles.assign.add') }}</h4>
+                        <div class="mb-2">
+                            <label for="assign-role-id" class="form-label">{{ t('clubroles.assign.role') }}</label>
+                            <select id="assign-role-id" name="role_id" class="form-select form-select-sm" required>
+                                <option value="">– Bitte wählen –</option>
+                                {% for r in club_roles %}
+                                    {% if r.kind != 'membership_type' or not has_open_membership_type %}
+                                    <option value="{{ r.id }}">{{ r.name }} ({{ r.kind == 'membership_type' ? 'Mitgliedsart' : 'Funktion' }})</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label for="assign-scope" class="form-label">{{ t('clubroles.assign.scope') }}</label>
+                            <input type="text" id="assign-scope" name="scope" class="form-control form-control-sm" placeholder="z. B. Jugend">
+                        </div>
+                        <div class="mb-3">
+                            <label for="assign-start-date" class="form-label">{{ t('clubroles.assign.start') }}</label>
+                            <input type="date" id="assign-start-date" name="start_date" value="{{ today }}" class="form-control form-control-sm">
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-outline-primary w-100">{{ t('clubroles.assign.add') }}</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Karte: Benutzerzugang -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">{{ t('members.user.title') }}</h3>
+                </div>
+                <div class="card-body">
+                    {% if errors.user %}
+                    <div class="alert alert-danger mb-3">{{ t(errors.user) }}</div>
+                    {% endif %}
+
+                    <p class="text-muted small mb-3">
+                        {{ t('members.user.hint') }}
+                    </p>
+
+                    {% if member.user_id %}
+                        <div class="alert alert-success d-flex justify-content-between align-items-center mb-0">
+                            <div>
+                                {{ icons.icon('users') }}
+                                <strong>Verknüpft mit Benutzer-ID #{{ member.user_id }}</strong>
+                            </div>
+                            {% if can('users.manage') %}
+                            <form method="post" action="/members/{{ member.id }}/user/unlink" class="m-0">
+                                {{ csrf_field() }}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">{{ t('members.user.unlink') }}</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-3">{{ t('members.user.none') }}</p>
+
+                        {% if can('users.manage') %}
+                            {% if linkable_users is not empty %}
+                            <form method="post" action="/members/{{ member.id }}/user" class="border rounded p-3 bg-light-subtle mb-3">
+                                {{ csrf_field() }}
+                                <h4 class="h5 mb-2">{{ t('members.user.link') }}</h4>
+                                <div class="mb-3">
+                                    <label for="link-user-id" class="form-label">Vorhandenen Benutzer wählen</label>
+                                    <select id="link-user-id" name="user_id" class="form-select form-select-sm" required>
+                                        <option value="">– Benutzer auswählen –</option>
+                                        {% for u in linkable_users %}
+                                        <option value="{{ u.id }}">{{ u.name }} ({{ u.email }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-primary w-100">{{ t('members.user.link') }}</button>
+                            </form>
+                            {% endif %}
+
+                            <a href="/users/new?member={{ member.id }}" class="btn btn-outline-secondary btn-sm w-100">
+                                {{ t('members.user.create') }}
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

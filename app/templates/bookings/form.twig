@@ -9,7 +9,7 @@
             {{ csrf_field() }}
             {% include 'bookings/_fields.twig' %}
             <h2 class="card-title mt-4">{{ t('receipts.optional') }}</h2>
-            {% include 'receipts/_input.twig' with {id_prefix: 'b-receipt'} %}
+            {% include 'receipts/_dropzone.twig' with {id_prefix: 'b-receipt', errors: errors|default({})} %}
             <div class="mt-4 d-flex flex-wrap gap-2">
                 <button type="submit" class="btn btn-primary">{{ t('bookings.create') }}</button>
                 <a class="btn" href="/bookings">{{ t('common.cancel') }}</a>

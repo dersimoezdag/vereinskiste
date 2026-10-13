@@ -28,11 +28,14 @@ final class ResponsiveMarkupTest extends TestCase
         $this->pdo->exec("INSERT INTO categories (name) VALUES ('Spenden')");
         $booking = (new BookingService($this->pdo))->create(['account_id' => '1', 'booking_date' => '2026-10-01',
             'amount' => '10,00', 'direction' => 'in', 'description' => 'Spende'], $user);
+        $memberId = (new \Vereinskiste\Members\MemberRepository($this->pdo))->save(null, ['name' => 'Test Mitglied'], 0, $user);
+        $invite = (new \Vereinskiste\Members\ApplicationRepository($this->pdo))->createInvite($user, 'Test', 7, null, true);
         $paths = ['/', '/accounts', '/categories', '/bookings', '/bookings/new',
             '/bookings/' . $booking['id'], '/bookings/' . $booking['id'] . '/edit',
             '/corrections/new', '/transfers/new', '/reports/summary', '/reports/dashboard', '/settings/closing', '/audit-log',
             '/users', '/users/new', '/users/' . $user . '/edit', '/account/password', '/update', '/settings',
-            '/settings/club', '/contacts', '/contacts/new', '/accounts/1/bank', '/imports/bank', '/imports/bank/new', '/settings/auto-update'];
+            '/settings/club', '/contacts', '/contacts/new', '/accounts/1/bank', '/imports/bank', '/imports/bank/new', '/settings/auto-update',
+            '/members', '/members/new', '/members/' . $memberId, '/members/applications', '/settings/club-roles', '/antrag/' . $invite['token'], '/antrag/danke'];
         foreach ($paths as $path) {
             $response = $this->get($path);
             $this->assertSame(200, $response->getStatusCode(), $path);

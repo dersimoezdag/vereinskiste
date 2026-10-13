@@ -1,0 +1,28 @@
+{% extends 'layout.twig' %}
+{% import 'components/icons.twig' as icons %}
+
+{% block content %}
+<div class="container-xl py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-12">
+            <div class="card shadow-sm border-0 text-center p-5">
+                <div class="mb-3">
+                    <img src="{{ asset('logo.svg') }}" alt="Vereinskiste Logo" width="64" height="64">
+                </div>
+                <div class="badge bg-success-subtle text-success p-3 rounded-circle d-inline-block mx-auto mb-3" style="width: 60px; height: 60px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                <h1 class="h2 fw-bold text-success mb-2">{{ t('applications.success_title') }}</h1>
+                <p class="lead text-muted mb-4">
+                    {{ t('applications.success_message') }}
+                </p>
+                <div>
+                    <a href="/" class="btn btn-primary px-4">{{ t('applications.back_home') }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

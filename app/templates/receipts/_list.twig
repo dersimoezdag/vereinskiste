@@ -33,7 +33,7 @@
                             <form method="post" action="/receipts/{{ receipt.id }}/replace" enctype="multipart/form-data" class="mt-2" novalidate>
                                 {{ csrf_field() }}
                                 <p class="text-secondary">{{ t('receipts.replace.hint') }}</p>
-                                {% include 'receipts/_input.twig' with {id_prefix: 'rep-' ~ receipt.id, errors: {}} %}
+                                {% include 'receipts/_dropzone.twig' with {id_prefix: 'rep-' ~ receipt.id, name: 'receipt', multiple: false, errors: {}} %}
                                 {% include 'bookings/_reason.twig' with {reason_id: 'rep-reason-' ~ receipt.id, reason: '', errors: {}} %}
                                 <div class="mt-3">
                                     <button type="submit" class="btn btn-primary">{{ t('receipts.replace.submit') }}</button>
@@ -53,7 +53,7 @@
         <h3 class="card-subtitle">{{ t('receipts.add') }}</h3>
         <form method="post" action="/bookings/{{ booking.id }}/receipts" enctype="multipart/form-data" novalidate>
             {{ csrf_field() }}
-            {% include 'receipts/_input.twig' with {id_prefix: 'new-receipt', errors: {}} %}
+            {% include 'receipts/_dropzone.twig' with {id_prefix: 'new-receipt', errors: {}} %}
             <button type="submit" class="btn btn-primary">{{ t('receipts.submit') }}</button>
         </form>
     </div>
