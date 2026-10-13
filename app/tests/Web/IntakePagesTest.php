@@ -29,8 +29,19 @@ final class IntakePagesTest extends TestCase
         $html=(string)$this->get('/receipt-inbox')->getBody();
         $this->assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;',$html);$this->assertStringNotContainsString('<script>alert(1)</script>',$html);
         $this->assertSame(403,$this->get('/settings/receipt-mailbox')->getStatusCode());
+        $this->assertSame(403,$this->get('/settings/payments')->getStatusCode());
         $this->assertSame(403,$this->postForm('/invoices/1/payment',['action'=>'approve','version'=>'1'])->getStatusCode());
         $this->assertSame(403,$this->postForm('/receipt-inbox/documents/1/retry',[])->getStatusCode());
+    }
+    public function test_payment_policy_is_configurable_versioned_and_audited():void
+    {
+        $this->loginAs(['admin']);
+        $this->assertSame(200,$this->get('/settings/payments')->getStatusCode());
+        $this->assertFalse((new \Vereinskiste\Invoices\PaymentPolicy($this->pdo))->get()['four_eyes']);
+        $this->assertSame(302,$this->postForm('/settings/payments',['version'=>'1','four_eyes'=>'1','reason'=>'Vereinsbeschluss'])->getStatusCode());
+        $this->assertTrue((new \Vereinskiste\Invoices\PaymentPolicy($this->pdo))->get()['four_eyes']);
+        $this->assertSame(409,$this->postForm('/settings/payments',['version'=>'1','reason'=>'Veraltet'])->getStatusCode());
+        $this->assertSame(1,(int)$this->pdo->query("SELECT count(*) FROM foundation_changes WHERE subject='payment_policy'")->fetchColumn());
     }
     public function test_settings_never_render_password_and_csrf_is_required():void
     {

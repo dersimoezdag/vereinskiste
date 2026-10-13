@@ -15,7 +15,7 @@ final class DocumentAccess
     {
         if ($auth->currentUser() === null) { return false; }
         if ($auth->can('invoices.read')) {
-            $stmt = $this->pdo->prepare('SELECT 1 FROM invoice_documents WHERE file_id = ? AND security_status IN ('clean','legacy')');
+            $stmt = $this->pdo->prepare("SELECT 1 FROM invoice_documents WHERE file_id = ? AND security_status IN ('clean','legacy')");
             $stmt->execute([$id]);
             if ($stmt->fetchColumn() !== false) { return true; }
         }

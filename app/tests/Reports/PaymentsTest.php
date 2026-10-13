@@ -22,7 +22,7 @@ final class PaymentsTest extends TestCase
     private int $invoice;
     protected function setUp():void
     {
-        $this->migrated();$this->author=$this->user('author@example.org');$this->reviewer=$this->user('reviewer@example.org');
+        $this->migrated();$this->pdo->exec('UPDATE finance_payment_settings SET four_eyes=true');$this->author=$this->user('author@example.org');$this->reviewer=$this->user('reviewer@example.org');
         $dir=$this->scratchDir().'/documents';
         $this->invoice=(new Import($this->pdo,$dir))->upload($this->tmpFile(InvoicesTest::xml()),'beleg.xml',$this->author);
         (new Extraction($this->pdo,['documents'=>$dir],static fn():array=>['security'=>'clean']))->process(1);
@@ -59,9 +59,13 @@ final class PaymentsTest extends TestCase
         $a=$this->account();$b=$this->booking($a,$this->author,'2026-10-13','out','60.00');
         $p->allocate($this->invoice,$b,2,'Teilzahlung',$this->reviewer);
         $this->assertSame('59.00',$p->overview($this->invoice)['remaining']);
+        $this->assertCount(1,(new InvoiceRepository($this->pdo))->list('partially_paid'));
+        $this->assertCount(0,(new InvoiceRepository($this->pdo))->list('paid'));
         $this->assertSame('60.00',$p->overview($this->invoice)['paid']);
         $c=$this->booking($a,$this->author,'2026-10-14','out','59.00');$p->allocate($this->invoice,$c,3,'Restzahlung',$this->reviewer);
         $this->assertSame('0.00',$p->overview($this->invoice)['remaining']);
+        $this->assertCount(1,(new InvoiceRepository($this->pdo))->list('paid'));
+        $this->assertCount(0,(new InvoiceRepository($this->pdo))->list('overdue'));
         (new BookingService($this->pdo))->cancel($b,'Storno',1,$this->author);
         $this->assertSame('60.00',$p->overview($this->invoice)['remaining']);
         $p->unlink($this->invoice,$b,4,'Falsche Zuordnung',$this->reviewer);
@@ -77,6 +81,14 @@ final class PaymentsTest extends TestCase
         try {$p->allocate($this->invoice,$valid,3,'Doppelt',$this->reviewer);$this->fail('duplicate');}catch(ValidationError) {}
         try {(new BookingService($this->pdo))->update($valid,['amount'=>'60.00'],'Ändern',1,$this->reviewer);$this->fail('linked edit');}catch(ValidationError) {}
         $this->expectException(Conflict::class);$p->unlink($this->invoice,$valid,2,'Veraltet',$this->reviewer);
+    }
+    public function test_single_person_mode_allows_treasurer_to_prepare_and_approve():void
+    {
+        $this->pdo->exec('UPDATE finance_payment_settings SET four_eyes=false');
+        $p=new Payments($this->pdo);$p->save($this->invoice,$this->input(),0,$this->author);$p->approve($this->invoice,1,'Einzelbearbeitung',$this->author);
+        $this->assertSame('approved',$p->get($this->invoice)['status']);
+        $after=json_decode($this->pdo->query('SELECT after_data FROM invoice_payment_changes ORDER BY id DESC LIMIT 1')->fetchColumn(),true);
+        $this->assertFalse($after['four_eyes_required']);
     }
     public function test_missing_verification_and_unreviewed_invoice_cannot_be_approved():void
     {

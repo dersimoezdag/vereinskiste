@@ -63,6 +63,7 @@ final class InvoiceController extends AdminController
         foreach(($input??$defaults) as $key=>$value) {$safe[$key]=(is_string($value)||is_int($value))&&mb_check_encoding((string)$value,'UTF-8')?(string)$value:'';}
         $contacts=($this->pdo)()->query('SELECT id,name FROM finance_contacts ORDER BY lower(name),id LIMIT 500')->fetchAll();
         return $req->getAttribute('view')->render($res,'invoices/detail.twig',['invoice'=>$invoice,'input'=>$safe,'errors'=>$errors,'fields'=>InvoiceRepository::FIELDS,'contacts'=>$contacts,
+            'payment_policy'=>(new \Vereinskiste\Invoices\PaymentPolicy(($this->pdo)()))->get(),
             'payment'=>$id===null?null:(new \Vereinskiste\Invoices\Payments(($this->pdo)()))->overview($id),
             'members'=>$req->getAttribute('auth')->can('members.read')?($this->pdo)()->query('SELECT id,name FROM members WHERE anonymized_at IS NULL ORDER BY lower(name) LIMIT 1000')->fetchAll():[],
             'mail_source'=>$id===null?null:$this->mailSource($id),

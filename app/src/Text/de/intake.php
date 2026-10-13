@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 return [
+'intake.payment.settings'=>'Zahlungsfreigabe',
+'invoices.status.unpaid'=>'Unbezahlt',
+'invoices.status.partially_paid'=>'Teilweise bezahlt',
+'invoices.status.paid'=>'Bezahlt',
 'intake.ocr.check'=>'OCR-Vorschläge bitte mit dem Original vergleichen. Keine automatische Freigabe.',
 'intake.security.required'=>'Die Sicherheitsprüfung ist noch offen oder fehlgeschlagen. Download und Freigabe bleiben gesperrt.',
 'intake.security.blocked'=>'Die Datei wurde durch die Sicherheitsprüfung gesperrt. Bitte einen sicheren Ersatzbeleg einreichen.',
@@ -12,7 +16,7 @@ return [
 'intake.payment.verify'=>'Empfänger und Bankverbindung müssen unabhängig geprüft und bestätigt werden.',
 'intake.payment.locked'=>'Dieser Zahlungsvorschlag kann nicht mehr geändert werden.',
 'intake.payment.review_first'=>'Bitte zuerst den Beleg prüfen und die Zahlung freigeben.',
-'intake.payment.self_approval'=>'Vier-Augen-Prinzip: Eigene Belege, eigene Zahlungsvorschläge und Erstattungen an dich selbst darfst du nicht freigeben.',
+'intake.payment.self_approval'=>'Diese Freigabe erfordert eine andere Person: entweder ist das Vier-Augen-Prinzip aktiv oder die Erstattung betrifft dein eigenes verknüpftes Mitglied.',
 'intake.payment.invalid_booking'=>'Die Buchung ist bereits zugeordnet, keine aktive Ausgabe oder größer als der verbleibende Betrag.',
 'intake.payment.booking_locked'=>'Diese Buchung ist einer Zahlung zugeordnet. Bitte zuerst die Zuordnung mit Begründung aufheben.',
 'intake.payment.draft'=>'Vorschlag – Freigabe ausstehend',

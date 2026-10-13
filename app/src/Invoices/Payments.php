@@ -62,7 +62,9 @@ final class Payments
             if(!$reject) {
                 if($row['status']!=='reviewed'||$row['kind']!=='invoice') {throw new ValidationError(['payment'=>'intake.payment.review_first']);}
                 $s=$this->pdo->prepare('SELECT member_id FROM users WHERE id=?');$s->execute([$actor]);$member=$s->fetchColumn();
-                if((int)$before['created_by']===$actor||(int)$row['created_by']===$actor||($member!==false&&$member!==null&&(int)$member===(int)$before['member_id'])) {
+                $policy=(new PaymentPolicy($this->pdo))->get(true);
+                if(($member!==false&&$member!==null&&(int)$member===(int)$before['member_id'])
+                    || ($policy['four_eyes']&&((int)$before['created_by']===$actor||(int)$row['created_by']===$actor))) {
                     throw new ValidationError(['payment'=>'intake.payment.self_approval']);
                 }
                 $s=$this->pdo->prepare("SELECT count(*) FROM invoice_documents WHERE invoice_id=? AND security_status NOT IN ('clean','legacy')");$s->execute([$invoice]);
@@ -70,7 +72,8 @@ final class Payments
             }
             $this->pdo->prepare('UPDATE invoice_payment_requests SET status=?,approved_by=?,approved_at=now(),version=version+1 WHERE invoice_id=?')
                 ->execute([$reject?'rejected':'approved',$reject?null:$actor,$invoice]);
-            $this->history($invoice,$before,$this->get($invoice),$actor,$reason);
+            $after=$this->get($invoice);$after['four_eyes_required']=$policy['four_eyes']??null;
+            $this->history($invoice,$before,$after,$actor,$reason);
         });
     }
     public function allocate(int $invoice,int $booking,int $version,string $reason,int $actor): void

@@ -4,6 +4,7 @@
     {% for tab in [
         {'url': '/settings', 'label': 'settings.version_updates', 'active': settings_path in ['/settings', '/update', '/settings/update']},
         {'url': '/settings/privacy', 'label': 'privacy.title', 'active': settings_path == '/settings/privacy'},
+        {'url': '/settings/payments', 'label': 'intake.payment.settings', 'active': settings_path == '/settings/payments', 'right': 'settings.manage'},
         {'url': '/settings/email', 'label': 'mail.settings.title', 'active': settings_path == '/settings/email'},
         {'url': '/settings/club', 'label': 'foundation.club', 'active': settings_path == '/settings/club'},
         {'url': '/settings/club-roles', 'label': 'nav.club_roles', 'active': settings_path == '/settings/club-roles', 'right': 'settings.manage'},

@@ -34,6 +34,23 @@ final class IntakeController extends AdminController
         catch(Conflict) {return $this->renderSettings($req,$res->withStatus(409),['version'=>'foundation.conflict']);}
         return $this->redirect('/settings/receipt-mailbox');
     }
+    public function paymentSettings(Request $req,Response $res): Response
+    {
+        return $this->renderPaymentSettings($req,$res);
+    }
+    public function savePaymentSettings(Request $req,Response $res): Response
+    {
+        $input=$this->body($req);
+        try {(new \Vereinskiste\Invoices\PaymentPolicy(($this->pdo)()))->save(($input['four_eyes']??'')==='1',Fields::version($input['version']??null),$this->userId($req),$this->str($input,'reason'));}
+        catch(ValidationError $e) {return $this->renderPaymentSettings($req,$res->withStatus(422),$e->errors);}
+        catch(Conflict) {return $this->renderPaymentSettings($req,$res->withStatus(409),['version'=>'foundation.conflict']);}
+        return $this->redirect('/settings/payments');
+    }
+    private function renderPaymentSettings(Request $req,Response $res,array $errors=[]): Response
+    {
+        $pdo=($this->pdo)();return $req->getAttribute('view')->render($res,'intake/payment-settings.twig',[
+            'policy'=>(new \Vereinskiste\Invoices\PaymentPolicy($pdo))->get(),'errors'=>$errors,'history'=>(new \Vereinskiste\Foundation\History($pdo))->for('payment_policy',1)]);
+    }
     public function retry(Request $req,Response $res,array $args): Response
     {
         $pdo=($this->pdo)();$id=(int)$args['id'];
