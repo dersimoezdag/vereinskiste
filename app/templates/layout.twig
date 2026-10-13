@@ -7,6 +7,7 @@
     <title>{% block title %}{{ t('app.name') }}{% endblock %} – {{ t('app.name') }}</title>
     <link rel="stylesheet" href="/assets/vendor/tabler/tabler.min.css">
     <link rel="stylesheet" href="/assets/app.css">
+    <link rel="stylesheet" href="/assets/user-card.css">
 </head>
 <body>
 <a class="skip-link" href="#main-content">{{ t('nav.skip') }}</a>
@@ -71,27 +72,7 @@
                     <a class="btn btn-outline-secondary w-100 mb-3{% if path starts with '/settings' or path in ['/update', '/audit-log'] %} active{% endif %}"
                        href="/settings"{% if path == '/settings' or path == '/update' %} aria-current="page"{% endif %}>{{ icons.icon('settings') }}{{ t('nav.settings') }}</a>
                     {% endif %}
-                    {% set nameParts = user.name|split(' ') %}
-                    <div class="user-card">
-                        <div class="user-card-head">
-                            <span class="avatar bg-primary-lt" aria-hidden="true">{{ (nameParts|first|slice(0, 1) ~ (nameParts|length > 1 ? nameParts|last|slice(0, 1) : ''))|upper }}</span>
-                            <div class="user-card-info">
-                                <div class="user-card-name">{{ user.name }}</div>
-                                <div class="user-card-role">{% for role in user.roles %}{{ t('users.role.' ~ role) }}{% if not loop.last %}, {% endif %}{% endfor %}</div>
-                            </div>
-                        <div class="dropdown dropup user-card-menu">
-                            <button type="button" class="btn btn-icon btn-ghost-secondary" data-bs-toggle="dropdown" aria-expanded="false"
-                                    aria-label="{{ t('nav.usermenu') }}">{{ icons.icon('more') }}</button>
-                            <div class="dropdown-menu dropdown-menu-end">
-                                <a class="dropdown-item" href="/account/password">{{ icons.icon('password') }}{{ t('nav.password') }}</a>
-                                <form method="post" action="/logout">
-                                    {{ csrf_field() }}
-                                    <button type="submit" class="dropdown-item">{{ icons.icon('logout') }}{{ t('nav.logout') }}</button>
-                                </form>
-                            </div>
-                        </div>
-                        </div>
-                    </div>
+                    {% include 'components/user_card.twig' %}
                     </div>
                 </div>
             </div>

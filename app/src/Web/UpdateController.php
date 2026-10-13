@@ -24,8 +24,11 @@ final class UpdateController extends AdminController
 
     public function check(Request $req, Response $res): Response
     {
-        $req->getAttribute('session')->set('github_release', $this->releases->check($this->version));
-        $req->getAttribute('session')->set('github_release_installed', $this->version);
+        $session = $req->getAttribute('session');
+        $session->commit(); // Do not hold the PHP session lock during the HTTPS request.
+        $release = $this->releases->check($this->version);
+        $session->set('github_release', $release);
+        $session->set('github_release_installed', $this->version);
         return $this->redirect('/settings');
     }
 

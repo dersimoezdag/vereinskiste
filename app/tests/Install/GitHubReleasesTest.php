@@ -38,7 +38,9 @@ final class GitHubReleasesTest extends TestCase
     {
         $this->assertSame(['status' => 'none'], $this->checker([], 404)->check('0.1.0'));
         foreach ([403, 429, 500, 302] as $status) {
-            $this->assertSame(['status' => 'error'], $this->checker([], $status)->check('0.1.0'));
+            $result = $this->checker([], $status)->check('0.1.0');
+            $this->assertSame('error', $result['status']);
+            $this->assertSame($status === 429 ? 'rate_limit' : 'http', $result['reason']);
         }
         $failed = new GitHubReleases(static function (): array { throw new \RuntimeException('network'); });
         $this->assertSame(['status' => 'error'], $failed->check('0.1.0'));
@@ -50,5 +52,18 @@ final class GitHubReleasesTest extends TestCase
         $this->assertSame(['status' => 'error'], $this->checker([
             'tag_name' => '1.0.0', 'draft' => true, 'prerelease' => false,
         ])->check('0.1.0'));
+    }
+    public function test_rate_limits_and_transport_failures_have_safe_diagnostics(): void
+    {
+        $limited = new GitHubReleases(static fn (): array => ['status' => 403,'body' => 'private transport data','rate_remaining' => 0]);
+        $this->assertSame(['status' => 'error','reason' => 'rate_limit'], $limited->check('0.1.2'));
+        foreach (['transport_unavailable','timeout','tls','connection','invalid_response'] as $reason) {
+            $checker = new GitHubReleases(static function () use ($reason): array {
+                throw new \Vereinskiste\Install\UpdateCheckFailure($reason);
+            });
+            $this->assertSame(['status' => 'error','reason' => $reason], $checker->check('0.1.2'));
+        }
+        $large = new GitHubReleases(static fn (): array => ['status' => 200,'body' => str_repeat('x', 262145)]);
+        $this->assertSame(['status' => 'error','reason' => 'invalid_response'], $large->check('0.1.2'));
     }
 }

@@ -47,4 +47,15 @@ final class UpdatePagesTest extends TestCase
         $this->assertStringContainsString('Neue Version verfügbar:', $html);
         $this->assertStringContainsString('/releases/download/v0.2.0/vereinskiste-0.2.0.zip', $html);
     }
+    public function test_error_page_explains_rate_limits_without_exposing_the_response(): void
+    {
+        $checker = new GitHubReleases(static fn (): array => ['status' => 429, 'body' => 'private-response-content']);
+        $this->app = Kernel::create(['pdo' => $this->pdo,'session_store' => $this->store,'security_dir' => $this->securityDir(),
+            'require_https' => false,'release_checker' => $checker]);
+        $this->loginAs(['vorstand']);
+        $this->assertSame(302, $this->postForm('/settings/check-updates', [])->getStatusCode());
+        $html = (string) $this->get('/settings')->getBody();
+        $this->assertStringContainsString('Hosting-IP', $html);
+        $this->assertStringNotContainsString('private-response-content', $html);
+    }
 }

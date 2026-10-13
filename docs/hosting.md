@@ -122,3 +122,16 @@ passende alte Release und dessen Datenbanksicherung gemeinsam.
 
 Diese Anleitung ersetzt keinen erfolgreichen Hosting-Test: vor dem ersten
 Produktivbetrieb alle obigen Punkte mit den tatsächlichen Zugängen prüfen.
+
+## GitHub-Updateprüfung
+
+Die Updateprüfung benötigt ausgehendes HTTPS zu `api.github.com` und entweder
+die PHP-Erweiterung cURL (bevorzugt) oder aktiviertes `allow_url_fopen`.
+Bei TLS-Fehlern den CA-Zertifikatsspeicher der PHP-Installation korrigieren lassen;
+die Zertifikatsprüfung nicht deaktivieren. Gemeinsame Hosting-IP-Adressen können
+von GitHubs Anfragelimit betroffen sein. Ab 0.1.3 zeigt die Einstellungsseite
+die Fehlerkategorie, gegebenenfalls mit HTTP-Status.
+
+Die Prüfung findet verfügbare Releases und bietet das ZIP zum Download an.
+Dateien werden per FTP/SFTP eingespielt; die Schaltfläche zur Datenbankaktualisierung
+führt ausschließlich Migrationen der bereits hochgeladenen Programmversion aus.

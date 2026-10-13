@@ -18,6 +18,9 @@
 </form>
 {% if release.status != 'unchecked' %}
 <p role="status">{{ t('settings.github.' ~ release.status) }}{% if release.version is defined %} {{ release.version }}{% endif %}</p>
+{% if release.status == 'error' and release.reason is defined %}
+<p class="alert alert-warning">{{ t('settings.github.error.' ~ release.reason) }}{% if release.http_status is defined %} (HTTP {{ release.http_status }}){% endif %}</p>
+{% endif %}
 {% if release.status == 'available' %}
     {% if release.download is defined %}<a class="btn btn-primary mb-3" href="{{ release.download }}" rel="noreferrer">{{ t('settings.github.download') }}</a>
     {% else %}<p>{{ t('settings.github.missing_package') }}</p>{% endif %}

@@ -1,0 +1,22 @@
+{% import 'components/icons.twig' as icons %}
+{% set nameParts = user.name|trim|split(' ') %}
+<div class="dropdown dropup user-card">
+    <button type="button" class="user-card-trigger" data-bs-toggle="dropdown" aria-expanded="false"
+            aria-label="{{ t('nav.usermenu') }}: {{ user.name }}" aria-controls="user-card-actions">
+        <span class="user-card-avatar" aria-hidden="true">{{ (nameParts|first|slice(0, 1) ~ (nameParts|length > 1 ? nameParts|last|slice(0, 1) : ''))|upper }}</span>
+        <span class="user-card-info">
+            <span class="user-card-name">{{ user.name }}</span>
+            <span class="user-card-role">{% for role in user.roles %}{{ t('users.role.' ~ role) }}{% if not loop.last %}, {% endif %}{% endfor %}</span>
+        </span>
+        <span class="user-card-chevron">{{ icons.icon('chevron-up') }}</span>
+    </button>
+    <div class="dropdown-menu dropdown-menu-end user-card-actions" id="user-card-actions">
+        <div class="dropdown-header">{{ t('nav.usermenu') }}</div>
+        <a class="dropdown-item" href="/account/password">{{ icons.icon('password') }}{{ t('nav.password') }}</a>
+        <div class="dropdown-divider"></div>
+        <form method="post" action="/logout">
+            {{ csrf_field() }}
+            <button type="submit" class="dropdown-item">{{ icons.icon('logout') }}{{ t('nav.logout') }}</button>
+        </form>
+    </div>
+</div>
