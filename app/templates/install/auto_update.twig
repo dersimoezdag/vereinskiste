@@ -1,8 +1,9 @@
 {% extends 'layout.twig' %}
 {% import 'components/icons.twig' as icons %}
+{% import 'components/stepper.twig' as stepper %}
 {% block title %}{{ t('auto_update.title') }}{% endblock %}
 {% block content %}
-<div class="container-md py-4">
+<div class="row"><div class="col-lg-8 mx-auto py-3">
     <div class="text-center mb-4">
         <span class="avatar avatar-xl bg-primary-subtle text-primary rounded-circle mb-3">
             {{ icons.icon('sync') }}
@@ -21,36 +22,40 @@
     {% endif %}
 
     <section class="card shadow-sm border-0 mb-3" id="automatic-update" data-phase="{{ operation.phase }}">
-        <!-- Pipeline Visualizer -->
-        <div class="card-header bg-transparent border-bottom py-3">
-            <ol class="update-pipeline mb-0" aria-label="Update Phasen">
-                <li class="update-pipeline-step{% if operation.phase in ['manifest','signature'] %} is-active{% elseif operation.phase not in ['idle'] %} is-done{% endif %}">
-                    <span class="update-pipeline-icon">{{ icons.icon('shield') }}</span>
-                    <span class="update-pipeline-text">Prüfung</span>
-                </li>
-                <li class="update-pipeline-step{% if operation.phase in ['download','inspect','extract'] %} is-active{% elseif operation.phase in ['backup','activate','waiting','verify','done'] %} is-done{% endif %}">
-                    <span class="update-pipeline-icon">{{ icons.icon('download') }}</span>
-                    <span class="update-pipeline-text">Download</span>
-                </li>
-                <li class="update-pipeline-step{% if operation.phase in ['backup'] %} is-active{% elseif operation.phase in ['activate','waiting','verify','done'] %} is-done{% endif %}">
-                    <span class="update-pipeline-icon">{{ icons.icon('database') }}</span>
-                    <span class="update-pipeline-text">Backup</span>
-                </li>
-                <li class="update-pipeline-step{% if operation.phase in ['activate','waiting'] %} is-active{% elseif operation.phase in ['verify','done'] %} is-done{% endif %}">
-                    <span class="update-pipeline-icon">{{ icons.icon('rocket') }}</span>
-                    <span class="update-pipeline-text">Aktivierung</span>
-                </li>
-                <li class="update-pipeline-step{% if operation.phase in ['verify'] %} is-active{% elseif operation.phase in ['done'] %} is-done{% endif %}">
-                    <span class="update-pipeline-icon">{{ icons.icon('check') }}</span>
-                    <span class="update-pipeline-text">Abschluss</span>
-                </li>
-            </ol>
+        <!-- Phasen-Anzeige (gleiche Komponente wie die Einrichtung; wird von auto-update.js live nachgefuehrt) -->
+        {% set stages = [
+            {'title': t('auto_update.step.check'), 'icon': 'shield', 'phases': ['manifest', 'signature']},
+            {'title': t('auto_update.step.download'), 'icon': 'download', 'phases': ['download', 'inspect', 'extract']},
+            {'title': t('auto_update.step.backup'), 'icon': 'database', 'phases': ['waiting', 'backup']},
+            {'title': t('auto_update.step.activate'), 'icon': 'rocket', 'phases': ['activate']},
+            {'title': t('auto_update.step.finish'), 'icon': 'check', 'phases': ['verify']}
+        ] %}
+        {% set stopped = operation.phase in ['failed', 'cancelled', 'rollback', 'rolled_back', 'recovery_required'] %}
+        {% set focus = stopped ? operation.failed_phase|default('') : operation.phase %}
+        {% set current = -1 %}
+        {% for stage in stages %}{% if focus in stage.phases %}{% set current = loop.index0 %}{% endif %}{% endfor %}
+        {% if operation.phase == 'done' %}{% set current = stages|length %}{% endif %}
+        {% set stageItems = [] %}
+        {% for stage in stages %}
+            {% set state = loop.index0 < current ? 'done' : (loop.index0 == current ? (stopped ? 'failed' : 'active') : '') %}
+            {% set stageItems = stageItems|merge([stage|merge({'state': state})]) %}
+        {% endfor %}
+        <div class="card-header bg-transparent border-bottom py-4 pb-2">
+            {{ stepper.steps(stageItems, t('auto_update.pipeline')) }}
         </div>
 
         <div class="card-body p-4 text-center">
             <!-- Animated Progress Bar -->
-            <div class="progress progress-sm mb-4">
+            <div class="progress progress-sm mb-4" aria-hidden="true">
+                {% if operation.phase == 'done' %}
+                <div class="progress-bar w-100 bg-success" id="automatic-progress"></div>
+                {% elseif operation.phase in ['failed', 'cancelled', 'rolled_back'] %}
+                <div class="progress-bar w-100 bg-danger" id="automatic-progress"></div>
+                {% elseif operation.phase == 'recovery_required' %}
+                <div class="progress-bar w-100 bg-warning" id="automatic-progress"></div>
+                {% else %}
                 <div class="progress-bar progress-bar-indeterminate bg-primary" id="automatic-progress"></div>
+                {% endif %}
             </div>
 
             <!-- Status Headline & Details -->
@@ -67,15 +72,30 @@
                 <span>{% if operation.error is defined %}{{ t('auto_update.error.' ~ operation.error) }}{% endif %}</span>
             </p>
 
+            <p id="automatic-stalled" class="alert alert-warning d-flex align-items-center gap-2 text-start mt-3 mb-0" role="alert" hidden>
+                {{ icons.icon('error') }}
+                <span>{{ t('auto_update.stalled') }}</span>
+            </p>
+
             {% if operation.phase not in ['idle','done','failed','cancelled','rolled_back'] %}
             <div class="mt-4 p-3 bg-light-subtle rounded border text-start">
+                {% if operation.phase == 'recovery_required' %}
+                <div class="d-flex align-items-start gap-2 small">
+                    <span class="text-warning mt-1">{{ icons.icon('error') }}</span>
+                    <div>
+                        <strong>{{ t('auto_update.keep_open') }}</strong>
+                        <div class="mt-1 text-secondary">{{ t('auto_update.recovery_hint') }}</div>
+                    </div>
+                </div>
+                {% else %}
                 <div class="d-flex align-items-start gap-2 text-secondary small">
                     <span class="spinner-border spinner-border-sm text-primary mt-1" role="status"></span>
                     <div>
                         <strong>{{ t('auto_update.keep_open') }}</strong>
-                        <div class="mt-1">Der Vorgang läuft vollautomatisch im Hintergrund. Bei Netzwerkunterbrechungen wird der aktuelle Teilschritt automatisch wiederholt.</div>
+                        <div class="mt-1">{{ operation.phase == 'rollback' ? t('auto_update.rolling_back_hint') : t('auto_update.automatic_hint') }}</div>
                     </div>
                 </div>
+                {% endif %}
             </div>
 
             {% if operation.probe_url is defined %}
@@ -106,7 +126,7 @@
             <div class="mt-4">
                 <a href="/settings" class="btn btn-success d-inline-flex align-items-center gap-2">
                     {{ icons.icon('check') }}
-                    <span>Zurück zu den Einstellungen</span>
+                    <span>{{ t('auto_update.settings_back') }}</span>
                 </a>
             </div>
             {% endif %}
@@ -125,10 +145,11 @@
         {% for phase in ['idle','manifest','signature','download','inspect','extract','waiting','backup','activate','verify','rollback','recovery_required','done','failed','cancelled','rolled_back'] %}
         <span data-phase="{{ phase }}">{{ t('auto_update.phase.' ~ phase) }}</span>
         {% endfor %}
-        {% for reason in ['signature','manifest','requirements','download','download_url','download_limit','range','checksum','archive','archive_limit','php','space','storage','schema','backup','backup_limit','restore_timeout','update','health','busy','state'] %}
+        <span data-label="backup_rows">{{ t('auto_update.backup_rows') }}</span>
+        {% for reason in ['signature','manifest','requirements','download','download_url','download_limit','range','checksum','archive','archive_limit','php','space','storage','schema','backup','backup_limit','restore_timeout','update','health','busy','state','signed_release','schema_pending','release_changed'] %}
         <span data-error="{{ reason }}">{{ t('auto_update.error.' ~ reason) }}</span>
         {% endfor %}
     </div>
-</div>
+</div></div>
 {% endblock %}
 {% block scripts %}<script src="{{ asset('auto-update.js') }}"></script>{% endblock %}

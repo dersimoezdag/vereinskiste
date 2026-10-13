@@ -508,7 +508,7 @@ main, .table-cards td {
     flex: 1 1 12rem;
 }
 
-fieldset.card legend {
+fieldset.card legend:not(.visually-hidden) {
     float: none;
     width: auto;
 }
@@ -556,30 +556,18 @@ fieldset.card legend {
     }
 }
 
-/* Einrichtungsassistent (Stepper) */
+/* Schrittanzeige (Einrichtung und Aktualisierung): Verbindungslinie je Schritt, daher immer buendig zu den Kreisen */
 .stepper {
     display: flex;
-    justify-content: space-between;
     position: relative;
+    isolation: isolate;
     margin: 0 0 2rem;
     padding: 0;
     list-style: none;
 }
 
-.stepper::before {
-    content: '';
-    position: absolute;
-    top: 1.25rem;
-    left: 2rem;
-    right: 2rem;
-    height: 3px;
-    background: var(--tblr-border-color);
-    z-index: 1;
-}
-
 .stepper-item {
     position: relative;
-    z-index: 2;
     flex: 1 1 0;
     display: flex;
     flex-direction: column;
@@ -588,6 +576,22 @@ fieldset.card legend {
     text-align: center;
     font-size: 0.85rem;
     color: var(--tblr-secondary);
+}
+
+.stepper-item + .stepper-item::before {
+    content: '';
+    position: absolute;
+    top: 1.25rem;
+    right: 50%;
+    width: 100%;
+    height: 3px;
+    margin-top: -1.5px;
+    background: var(--tblr-border-color);
+    z-index: -1;
+}
+
+.stepper-item.is-done + .stepper-item::before {
+    background: var(--tblr-success, #2fb344);
 }
 
 .stepper-num {
@@ -600,7 +604,14 @@ fieldset.card legend {
     background: var(--tblr-card-bg, #fff);
     border: 2px solid var(--tblr-border-color);
     font-weight: 600;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.stepper-num .material-symbol,
+.stepper-num-val {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .stepper-num .stepper-check {
@@ -613,15 +624,15 @@ fieldset.card legend {
 }
 
 .stepper-item.is-active .stepper-num {
-    border-color: #1976d2;
-    background: #1976d2;
+    border-color: var(--tblr-primary);
+    background: var(--tblr-primary);
     color: #fff;
-    box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.25);
+    box-shadow: 0 0 0 4px rgba(var(--tblr-primary-rgb), 0.25);
 }
 
 .stepper-item.is-done .stepper-num {
-    border-color: #2fb344;
-    background: #2fb344;
+    border-color: var(--tblr-success, #2fb344);
+    background: var(--tblr-success, #2fb344);
     color: #fff;
 }
 
@@ -635,10 +646,19 @@ fieldset.card legend {
     height: 1.25rem;
 }
 
+.stepper-item.is-failed {
+    color: var(--tblr-danger, #d63939);
+    font-weight: 600;
+}
+
+.stepper-item.is-failed .stepper-num {
+    border-color: var(--tblr-danger, #d63939);
+    background: var(--tblr-danger, #d63939);
+    color: #fff;
+}
+
 @media (max-width: 575.98px) {
-    .stepper::before {
-        left: 1rem;
-        right: 1rem;
+    .stepper-item + .stepper-item::before {
         top: 1rem;
     }
     .stepper-num {
@@ -647,82 +667,17 @@ fieldset.card legend {
         font-size: 0.8rem;
     }
     .stepper-title { display: none; }
-    .stepper-item.is-active .stepper-title { display: block; font-size: 0.75rem; }
+    .stepper-item.is-active .stepper-title,
+    .stepper-item.is-failed .stepper-title { display: block; font-size: 0.75rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .stepper-num { transition: none; }
 }
 
 .stepper-actions { display: flex; gap: 0.5rem; }
 .stepper-actions [hidden] { display: none !important; }
 form:not(.is-stepper) .stepper { display: none; }
-
-/* Update-Pipeline (Auto-Update Phasen visualisieren) */
-.update-pipeline {
-    display: flex;
-    justify-content: space-between;
-    position: relative;
-    margin: 1rem 0;
-    padding: 0;
-    list-style: none;
-}
-
-.update-pipeline::before {
-    content: '';
-    position: absolute;
-    top: 1.25rem;
-    left: 2rem;
-    right: 2rem;
-    height: 3px;
-    background: var(--tblr-border-color);
-    z-index: 1;
-}
-
-.update-pipeline-step {
-    position: relative;
-    z-index: 2;
-    flex: 1 1 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.35rem;
-    text-align: center;
-    font-size: 0.75rem;
-    color: var(--tblr-secondary);
-}
-
-.update-pipeline-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
-    background: var(--tblr-card-bg, #fff);
-    border: 2px solid var(--tblr-border-color);
-    color: var(--tblr-secondary);
-    transition: all 0.2s ease;
-}
-
-.update-pipeline-step.is-active {
-    color: #1976d2;
-    font-weight: 600;
-}
-
-.update-pipeline-step.is-active .update-pipeline-icon {
-    border-color: #1976d2;
-    background: #1976d2;
-    color: #fff;
-    box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.25);
-}
-
-.update-pipeline-step.is-done .update-pipeline-icon {
-    border-color: #2fb344;
-    background: #2fb344;
-    color: #fff;
-}
-
-@media (max-width: 575.98px) {
-    .update-pipeline-text { display: none; }
-    .update-pipeline-step.is-active .update-pipeline-text { display: block; }
-}
 
 /* Farbschema-Umschalter: Symbol folgt dem Schema-Attribut, kein Umschalten per JavaScript noetig */
 .theme-toggle .theme-icon-light { display: none; }

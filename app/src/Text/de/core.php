@@ -477,4 +477,11 @@ return [
     'validation.password.mismatch' => 'Die beiden neuen Passwörter stimmen nicht überein.',
     'validation.password.self_reset' => 'Das eigene Passwort kann hier nicht gesetzt werden. Nutzen Sie „Passwort ändern“ (mit Eingabe des aktuellen Passworts).',
     'validation.password.current_wrong' => 'Das aktuelle Passwort ist falsch.',
+    'install.subtitle' => 'Richten Sie Ihre Vereinskiste in wenigen Schritten ein.',
+    'install.step' => 'Schritt',
+    'install.step.of' => 'von',
+    'install.ready.title' => 'Bereit zur Einrichtung:',
+    'install.ready.text' => 'Alle Systemvoraussetzungen sind erfüllt.',
+    'install.ok' => 'OK',
+    'nav.login' => 'Zur Anmeldung',
 ];

@@ -38,7 +38,7 @@ final class Activation
             (new AuditLog($this->db))->record('auto_update_completed',$data['actor'],['operation'=>$data['id'],'version'=>$data['version']]);
             $data['phase']='done'; $this->state->save($data); $this->unfreeze(); return $data;
         }
-        if (time()>$data['verify_until']) { $data['phase']='rollback'; $data['error']='health'; }
+        if (time()>$data['verify_until']) { $data['phase']='rollback'; $data['error']='health'; $data['failed_phase']='verify'; }
         return $data;
     }
     public function rollback(array $data): array

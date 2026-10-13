@@ -58,7 +58,13 @@ document.querySelectorAll('form[data-stepper]').forEach(function (form) {
             next.click();
         }
     });
-    show(0);
+    // Ungueltiges Feld in einem verborgenen Schritt: zu diesem Schritt wechseln, statt still abzubrechen.
+    form.addEventListener('invalid', function (event) {
+        var index = panels.indexOf(event.target.closest('[data-step]'));
+        if (index !== -1 && index !== current) { show(index); }
+    }, true);
+    // Nach einem Serverfehler direkt zum letzten Schritt: die Eingaben sind erhalten, nur Passwoerter muessen neu eingegeben werden.
+    show(form.hasAttribute('data-start-last') ? panels.length - 1 : 0);
 });
 
 // Dark-Mode Umschaltung & Synchronisation

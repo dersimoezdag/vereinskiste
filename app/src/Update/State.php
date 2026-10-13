@@ -28,7 +28,7 @@ final class State
     {
         $data=$this->load();
         if ($data===null) { return ['phase'=>'idle']; }
-        $result=array_intersect_key($data,array_flip(['id','version','phase','error','downloaded','size','extracted','entries','backup_rows']));
+        $result=array_intersect_key($data,array_flip(['id','version','phase','error','downloaded','size','extracted','entries','backup_rows','failed_phase']));
         if ($data['phase']==='verify') { $result['probe_url']='/_update-probe/' . $data['probe']; }
         return $result;
     }

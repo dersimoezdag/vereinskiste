@@ -61,11 +61,11 @@
 {% endif %}
 
 <!-- Laufendes Auto-Update Banner -->
-{% if operation.phase != 'idle' %}
+{% if operation.phase not in ['idle', 'done', 'failed', 'cancelled', 'rolled_back'] %}
 <div class="alert alert-info d-flex align-items-center justify-content-between p-3 mb-4">
     <div class="d-flex align-items-center gap-2">
         <span class="spinner-border spinner-border-sm" role="status"></span>
-        <div><strong>Aktualisierung läuft:</strong> Status ist derzeit <em>{{ t('auto_update.phase.' ~ operation.phase) }}</em>.</div>
+        <div><strong>{{ t('auto_update.running') }}</strong> {{ t('auto_update.status_is') }} <em>{{ t('auto_update.phase.' ~ operation.phase) }}</em>.</div>
     </div>
     <a href="/settings/auto-update" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1">
         <span>{{ t('auto_update.progress') }}</span>
@@ -85,12 +85,12 @@
         {% if release.manifest is defined and release.signature is defined and automatic_supported and not pending %}
         <div class="row g-4 align-items-center">
             <div class="col-lg-8 col-12">
-                <h3 class="h4 mb-2">Automatische 1-Klick-Aktualisierung (Empfohlen)</h3>
+                <h3 class="h4 mb-2">{{ t('auto_update.recommended') }}</h3>
                 <p class="text-secondary mb-3">{{ t('auto_update.explain') }}</p>
                 <div class="d-flex align-items-center gap-3 text-secondary small flex-wrap">
-                    <span class="d-inline-flex align-items-center gap-1">{{ icons.icon('shield') }} Signaturgeprüft</span>
-                    <span class="d-inline-flex align-items-center gap-1">{{ icons.icon('database') }} Automatisches Backup</span>
-                    <span class="d-inline-flex align-items-center gap-1">{{ icons.icon('sync') }} Rollback bei Fehlern</span>
+                    <span class="d-inline-flex align-items-center gap-1">{{ icons.icon('shield') }} {{ t('auto_update.feature.signed') }}</span>
+                    <span class="d-inline-flex align-items-center gap-1">{{ icons.icon('database') }} {{ t('auto_update.feature.backup') }}</span>
+                    <span class="d-inline-flex align-items-center gap-1">{{ icons.icon('sync') }} {{ t('auto_update.feature.rollback') }}</span>
                 </div>
             </div>
             <div class="col-lg-4 col-12">
@@ -139,8 +139,8 @@
 {% if pending %}
 <div class="card mb-4 border-warning shadow-sm">
     <div class="card-header bg-warning-subtle py-3 d-flex align-items-center gap-2">
-        <span class="avatar avatar-sm bg-warning text-white rounded-circle">{{ icons.icon('database') }}</span>
-        <h2 class="card-title h3 mb-0 text-warning">{{ t('update.title') }}</h2>
+        <span class="avatar avatar-sm bg-warning text-dark rounded-circle">{{ icons.icon('database') }}</span>
+        <h2 class="card-title h3 mb-0">{{ t('update.title') }}</h2>
     </div>
     <div class="card-body p-4">
         <p class="lead mb-3">{{ t('update.instructions') }}</p>

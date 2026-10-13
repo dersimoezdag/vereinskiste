@@ -73,6 +73,7 @@ final class Coordinator
                 }
             } catch (\Throwable $error) {
                 $data['error']=$error instanceof Failure?$error->reason:'update';
+                $data['failed_phase']??=$data['phase'];
                 $data['phase']=$data['phase']==='rollback' || $data['phase']==='recovery_required' ? 'recovery_required'
                     : ($this->runtime->maintenance()===null?'failed':'rollback');
             } finally { if ($exclusive) { $this->db->query('SELECT pg_advisory_unlock(' . self::BARRIER . ')'); } }
@@ -83,6 +84,7 @@ final class Coordinator
     {
         $this->state->locked(function(): void {
             $data=$this->state->load(); if ($data===null || in_array($data['phase'],self::TERMINAL,true)) { return; }
+            $data['failed_phase']??=$data['phase'];
             $data['phase']=$this->runtime->maintenance()===null?'cancelled':'rollback'; $this->state->save($data);
         });
     }

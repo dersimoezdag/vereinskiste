@@ -1,0 +1,17 @@
+{# Gemeinsame Schrittanzeige fuer Einrichtung und Aktualisierung.
+   items: Liste aus {title, icon, state?, phases?}; state: active | done | failed.
+   numbers: Schrittnummern statt Icons zeigen. #}
+{% macro steps(items, label, numbers = false) %}
+{% import 'components/icons.twig' as icons %}
+<ol class="stepper" aria-label="{{ label }}">
+{% for item in items %}
+    <li class="stepper-item{% if item.state|default('') != '' %} is-{{ item.state }}{% endif %}" data-step-label="{{ loop.index0 }}"{% if item.phases is defined %} data-phases="{{ item.phases|join(' ') }}"{% endif %}{% if item.state|default('') == 'active' %} aria-current="step"{% endif %}>
+        <span class="stepper-num">
+            <span class="stepper-num-val">{% if numbers %}{{ loop.index }}{% else %}{{ icons.icon(item.icon) }}{% endif %}</span>
+            <span class="stepper-check" aria-hidden="true">{{ icons.icon('check') }}</span>
+        </span>
+        <span class="stepper-title">{{ item.title }}</span>
+    </li>
+{% endfor %}
+</ol>
+{% endmacro %}
