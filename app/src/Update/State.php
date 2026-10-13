@@ -6,7 +6,11 @@ final class State
 {
     public function __construct(private Runtime $runtime) {}
     public function load(): ?array { return Files::read($this->runtime->directory() . '/operation.json'); }
-    public function save(array $data): void { Files::json($this->runtime->directory() . '/operation.json',$data); }
+    public function save(array $data): void
+    {
+        Files::json($this->runtime->directory() . '/operation.json',$data);
+        Files::json($this->path($data) . '/state.json',$data);
+    }
     public function path(array $data): string
     {
         if (!preg_match('/^[a-f0-9]{32}\z/',$data['id']??'')) { throw new Failure('state'); }

@@ -105,8 +105,8 @@ Kontosalden, Buchungsverläufe und mehrere Belegdownloads prüfen.
 Nur für Entwickler: PHP mit ZIP-Erweiterung, Composer und eine POSIX-Shell.
 
 ```sh
-sh scripts/build-release.sh 0.1.0
-sh scripts/verify-release.sh dist/vereinskiste-0.1.0.zip
+sh scripts/build-release.sh 0.1.5
+php scripts/verify-signed-release.php dist/vereinskiste-0.1.5.zip 0.1.5
 ```
 
 Der Build installiert Produktionsabhängigkeiten in einem temporären Verzeichnis.
@@ -114,3 +114,6 @@ Lokale Konfiguration, Belege, Tests und Entwicklungscontainer gelangen nicht ins
 Paket. Die CI prüft Tests gegen PostgreSQL und erzeugt ein geprüftes Release-ZIP.
 
 Die ausführliche Hosting-, SMTP- und Wiederherstellungsprüfung steht in [docs/hosting.md](docs/hosting.md).
+
+Ab 0.1.5 werden stabile Releases signiert. Einrichtung, Schlüsselverwaltung und
+automatische Installation beschreibt [docs/automatic-updates.md](docs/automatic-updates.md).

@@ -29,8 +29,9 @@ final class DashboardServiceTest extends TestCase
 
     private function book(int $account, string $date, string $amount, string $direction, string $kind = 'regular', string $status = 'active'): void
     {
-        $this->db->prepare('INSERT INTO bookings(account_id,booking_date,amount,direction,description,kind,status,created_by)
-            VALUES (?,?,?,?,?,?,?,1)')->execute([$account, $date, $amount, $direction, 'Test', $kind, $status]);
+        $this->db->prepare("INSERT INTO bookings(account_id,booking_date,amount,direction,description,kind,status,created_by,transfer_id)
+            VALUES (?,?,?,?,?,?,?,1,CASE WHEN ? = 'transfer' THEN nextval('booking_transfer_id_seq') ELSE NULL END)")
+            ->execute([$account, $date, $amount, $direction, 'Test', $kind, $status, $kind]);
     }
 
     public function test_monthly_lists_every_month_ignores_transfers_and_cancelled_and_accumulates(): void

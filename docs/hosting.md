@@ -132,6 +132,8 @@ die Zertifikatsprüfung nicht deaktivieren. Gemeinsame Hosting-IP-Adressen könn
 von GitHubs Anfragelimit betroffen sein. Ab 0.1.3 zeigt die Einstellungsseite
 die Fehlerkategorie, gegebenenfalls mit HTTP-Status.
 
-Die Prüfung findet verfügbare Releases und bietet das ZIP zum Download an.
-Dateien werden per FTP/SFTP eingespielt; die Schaltfläche zur Datenbankaktualisierung
-führt ausschließlich Migrationen der bereits hochgeladenen Programmversion aus.
+Ab 0.1.5 kann die Anwendung signierte Releases automatisch installieren.
+Eine ältere Installation muss einmal per FTP/SFTP auf 0.1.5 umgestellt werden.
+Voraussetzungen, Signierung, Wartungsmodus und Wiederherstellung beschreibt
+[Automatische Updates](automatic-updates.md). Der manuelle ZIP-Upload bleibt möglich;
+die Schaltfläche zur Datenbankaktualisierung migriert bereits hochgeladenen Code.

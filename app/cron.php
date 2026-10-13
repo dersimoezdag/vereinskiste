@@ -21,6 +21,7 @@ if ($lock === false) { throw new RuntimeException('Cron-Sperre nicht verfuegbar.
 chmod($directory . '/mail-worker.lock', 0600);
 if (!flock($lock, LOCK_EX | LOCK_NB)) { fclose($lock); exit; }
 try {
+    $cronStarted=microtime(true);
     $pdo = Vereinskiste\Db\Connection::fromConfig($config['db']);
     $cronRuntime=new Vereinskiste\Update\Runtime($instance);
     $updateState=(new Vereinskiste\Update\State($cronRuntime))->load();
@@ -58,7 +59,7 @@ try {
         'upload_cleanup' => static function () use ($pdo): void {
             (new Vereinskiste\Files\UnregisteredUploads($pdo, VK_INSTANCE_APP . '/storage/documents'))->clean();
         },
-    ]))->run(20, 20);
+    ]))->run(max(1,20-(int)ceil(microtime(true)-$cronStarted)), 20);
 } finally {
     if (($workerShared??false) && isset($pdo)) { $pdo->query('SELECT pg_advisory_unlock_shared(' . Vereinskiste\Update\Coordinator::BARRIER . ')'); }
     flock($lock, LOCK_UN);

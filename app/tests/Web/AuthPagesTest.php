@@ -321,6 +321,7 @@ final class AuthPagesTest extends TestCase
         $this->user('chef@example.org', 'richtig-richtig', ['vorstand']);
         $this->login('chef@example.org', 'richtig-richtig');
 
-        $this->assertStringContainsString('Benutzer verwalten', (string) $this->get('/')->getBody());
+        $this->assertStringContainsString('href="/settings"', (string) $this->get('/')->getBody());
+        $this->assertStringContainsString('href="/users"', (string) $this->get('/settings')->getBody());
     }
 }

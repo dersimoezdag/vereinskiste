@@ -22,6 +22,7 @@ final class CoordinatorTest extends TestCase
         $this->db=$this->pdo(); (new Migrator($this->db,dirname(__DIR__,2) . '/migrations'))->migrate();
         $this->db->exec("INSERT INTO users(name,email,password_hash) VALUES ('Admin','admin@example.org','hash')");
         $this->runtime=new Runtime($this->scratchDir() . '/app'); Files::mkdir($this->runtime->instance);
+        Files::mkdir($this->runtime->instance . '/storage');
     }
     protected function tearDown(): void { $this->cleanScratch(); }
     private function until(Coordinator $worker,string $phase): void

@@ -22,7 +22,7 @@ final class NativeBootTest extends TestCase
         if (!$artifact || !is_file($artifact)) { $this->markTestSkipped('Build a release fixture and set VK_UPDATE_PACKAGE.'); }
         $db=$this->pdo(); (new Migrator($db,dirname(__DIR__,2) . '/migrations'))->migrate();
         $db->exec("INSERT INTO users(name,email,password_hash) VALUES ('Admin','admin@example.org','hash')");
-        $root=$this->scratchDir() . '/instance'; $app=$root . '/app'; Files::mkdir($app . '/config'); Files::mkdir($root . '/public');
+        $root=$this->scratchDir() . '/instance'; $app=$root . '/app'; Files::mkdir($app . '/config'); Files::mkdir($app . '/storage'); Files::mkdir($root . '/public');
         $fixture=$this->scratchDir() . '/full.zip'; copy($artifact,$fixture);
         $zip=new \ZipArchive(); $zip->open($fixture); $zip->addFromString('app/VERSION','1.1.0'); $zip->close();
         [$release,$http]=$this->signed($app,file_get_contents($fixture),'1.1.0');

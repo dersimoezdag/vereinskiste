@@ -16,6 +16,10 @@ final class DatabaseSchema
     }
     public function capture(): array
     {
+        foreach (['users','settings','schema_migrations'] as $coreTable) {
+            $lookup=$this->db->prepare('SELECT n.nspname FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE c.oid=?::regclass');
+            $lookup->execute([$coreTable]); if ($lookup->fetchColumn()!=='public') { throw new Failure('schema'); }
+        }
         $unsupported = $this->db->query("SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
             WHERE n.nspname='public' AND (c.relkind NOT IN ('r','S','i') OR c.relowner<>current_user::regrole) LIMIT 1")->fetchColumn();
         $types = $this->db->query("SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace

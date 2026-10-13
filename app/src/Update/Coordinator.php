@@ -19,7 +19,7 @@ final class Coordinator
         $this->state->locked(function() use($release,$installed,$actor): void {
             $old=$this->state->load();
             if ($old!==null && !in_array($old['phase'],self::TERMINAL,true)) { throw new Failure('busy'); }
-            if (!extension_loaded('zip') || !extension_loaded('sodium') || !is_file($this->runtime->instance . '/update-trust.json')) { throw new Failure('requirements'); }
+            if (!Requirements::supported($this->runtime)) { throw new Failure('requirements'); }
             $current=$this->runtime->active()['version']??$installed;
             if (($release['status']??'')!=='available' || !isset($release['download'],$release['manifest'],$release['signature'])
                 || !preg_match('/^\d+\.\d+\.\d+\z/',$release['version']??'') || !version_compare($release['version'],$installed,'>')) { throw new Failure('signed_release'); }

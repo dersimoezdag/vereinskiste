@@ -19,7 +19,7 @@ return [
     'auto_update.phase.recovery_required'=>'Wiederherstellung benötigt Hilfe. Wartungsmodus bleibt aktiv.',
     'auto_update.error.signature'=>'Die Signatur stimmt nicht zum vertrauenswürdigen Prüfschlüssel. Das Paket wird nicht installiert.',
     'auto_update.error.manifest'=>'Die signierten Releaseinformationen sind ungültig oder nicht mit dieser Installation kompatibel.',
-    'auto_update.error.requirements'=>'Automatische Updates benötigen PHP-ZIP, Sodium, HTTPS-Zugriff und den installierten Prüfschlüssel.',
+    'auto_update.error.requirements'=>'Automatische Updates benötigen PHP-ZIP, Sodium, HTTPS-Zugriff, mindestens 128 MB PHP-Speicher und den installierten Prüfschlüssel.',
     'auto_update.error.signed_release'=>'Dieses Release ist nicht für die automatische Installation signiert. Bitte das Paket manuell einspielen.',
     'auto_update.error.release_changed'=>'Die verfügbare Version hat sich geändert. Bitte erneut auf Updates prüfen.',
     'auto_update.error.schema_pending'=>'Bitte zuerst die Datenbankmigrationen der bereits installierten Version ausführen.',

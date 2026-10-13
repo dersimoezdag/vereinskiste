@@ -16,7 +16,8 @@ final class AutoUpdateController extends AdminController
 {
     public function __construct(private Closure $pdo,private Runtime $runtime,private string $version,
         private string $migrations,private GitHubReleases $releases) {}
-    public function show(Request $req,Response $res,?string $error=null): Response
+    public function show(Request $req,Response $res): Response { return $this->render($req,$res); }
+    private function render(Request $req,Response $res,?string $error=null): Response
     {
         return $req->getAttribute('view')->render($res->withHeader('Cache-Control','no-store'),'install/auto_update.twig',[
             'operation'=>(new State($this->runtime))->publicStatus(),'error'=>$error]);
@@ -24,14 +25,14 @@ final class AutoUpdateController extends AdminController
     public function start(Request $req,Response $res): Response
     {
         $body=$this->body($req);
-        if (($body['backup_confirmed']??'')!=='1') { return $this->show($req,$res->withStatus(422),'update.backup_required'); }
+        if (($body['backup_confirmed']??'')!=='1') { return $this->render($req,$res->withStatus(422),'update.backup_required'); }
         $actor=$this->userId($req); $req->getAttribute('session')->commit();
         try {
             if ((new Updater(($this->pdo)(),$this->migrations))->needsUpdate()) { throw new Failure('schema_pending'); }
             $release=$this->releases->check($this->version);
             if (($body['version']??'')!==($release['version']??null)) { throw new Failure('release_changed'); }
             (new Coordinator(($this->pdo)(),$this->runtime))->start($release,$this->version,$actor);
-        } catch (Failure $e) { return $this->show($req,$res->withStatus(422),'auto_update.error.' . $e->reason); }
+        } catch (Failure $e) { return $this->render($req,$res->withStatus(422),'auto_update.error.' . $e->reason); }
         return $this->redirect('/settings/auto-update');
     }
     public function status(Request $req,Response $res): Response { return $this->json($res,(new State($this->runtime))->publicStatus()); }
@@ -46,7 +47,7 @@ final class AutoUpdateController extends AdminController
     {
         $req->getAttribute('session')->commit();
         try { (new Coordinator(($this->pdo)(),$this->runtime))->cancel(); }
-        catch (Failure $e) { return $this->show($req,$res->withStatus(409),'auto_update.error.' . $e->reason); }
+        catch (Failure $e) { return $this->render($req,$res->withStatus(409),'auto_update.error.' . $e->reason); }
         return $this->redirect('/settings/auto-update');
     }
     public function probe(Request $req,Response $res,array $args): Response

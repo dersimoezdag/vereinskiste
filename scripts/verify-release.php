@@ -11,7 +11,7 @@ foreach (['app/vendor/autoload.php', 'app/bootstrap.php', 'app/VERSION', 'app/mi
     'app/migrations/0006_reset_request_queue.sql', 'app/migrations/0010_bank_import.sql',
     'app/src/Text/de/core.php', 'app/src/Text/de/foundation.php', 'app/src/Text/de/bank_import.php',
     'app/src/Text/de/updates.php', 'app/src/Text/de/dashboard.php', 'app/src/Install/GitHubTransport.php', 'app/src/Install/UpdateCheckFailure.php',
-    'app/cron.php', 'docs/hosting.md', 'docs/plans/ausbau/10-csv-import.md', 'app/config/', 'app/storage/',
+    'app/cron.php', 'docs/hosting.md', 'docs/automatic-updates.md', 'docs/plans/ausbau/10-csv-import.md', 'app/config/', 'app/storage/',
     'public/index.php', 'public/.htaccess', 'public/assets/logo.svg', 'public/assets/app.css', 'public/assets/user-card.css', 'public/assets/bank-import.js', 'public/assets/dashboard.js',
     'public/assets/vendor/chartjs/chart.umd.min.js', 'public/assets/vendor/chartjs/LICENSE',
     'public/assets/vendor/material-symbols/symbols.svg', 'public/assets/vendor/material-symbols/LICENSE',
@@ -20,7 +20,8 @@ foreach (['app/vendor/autoload.php', 'app/bootstrap.php', 'app/VERSION', 'app/mi
 }
 for ($i = 0; $i < $zip->numFiles; $i++) {
     $name = $zip->getNameIndex($i);
-    if (preg_match('~(^|/)(\.git|\.github|\.phpunit\.cache|tests)(/|$)~', $name)
+    if (preg_match('~(^|/)(\.git|\.github|\.phpunit\.cache|\.release-secrets|tests)(/|$)~', $name)
+        || basename($name)==='signing.key'
         || str_starts_with($name, 'app/vendor/phpunit/')
         || preg_match('~^app/config/.+~', $name) || preg_match('~^app/storage/.+~', $name)
         || in_array($name, ['Dockerfile.dev', 'docker-compose.dev.yml'], true)) {

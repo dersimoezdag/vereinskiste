@@ -136,7 +136,7 @@
 {% endblock %}
 {% block scripts %}
 {% if summary and (summary.income != '0.00' or summary.expense != '0.00') %}
-<script src="/assets/vendor/chartjs/chart.umd.min.js"></script>
-<script src="/assets/dashboard.js"></script>
+<script src="{{ asset('vendor/chartjs/chart.umd.min.js') }}"></script>
+<script src="{{ asset('dashboard.js') }}"></script>
 {% endif %}
 {% endblock %}

@@ -394,7 +394,8 @@ final class AccountsPagesTest extends TestCase
 
         $html = (string) $this->get('/')->getBody();
 
-        $this->assertStringContainsString('href="/users"', $html);
+        $this->assertStringContainsString('href="/settings"', $html);
+        $this->assertStringContainsString('href="/users"', (string) $this->get('/settings')->getBody());
         $this->assertStringContainsString('href="/accounts"', $html);
     }
 

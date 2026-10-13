@@ -32,7 +32,7 @@ final class ResponsiveMarkupTest extends TestCase
             '/bookings/' . $booking['id'], '/bookings/' . $booking['id'] . '/edit',
             '/corrections/new', '/transfers/new', '/reports/summary', '/reports/dashboard', '/settings/closing', '/audit-log',
             '/users', '/users/new', '/users/' . $user . '/edit', '/account/password', '/update', '/settings',
-            '/settings/club', '/contacts', '/contacts/new', '/accounts/1/bank', '/imports/bank', '/imports/bank/new'];
+            '/settings/club', '/contacts', '/contacts/new', '/accounts/1/bank', '/imports/bank', '/imports/bank/new', '/settings/auto-update'];
         foreach ($paths as $path) {
             $response = $this->get($path);
             $this->assertSame(200, $response->getStatusCode(), $path);
