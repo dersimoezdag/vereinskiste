@@ -10,6 +10,7 @@ Geprüfter Ausgangsstand: `ce525d1` (main, 13.10.2026). Statische Prüfung der P
 - Der seit Entfernung des Mailimports ungenutzte Verzeichniskonstruktorparameter im Belegeingangs-Controller und die alten `intake.mail.*`-Texte wurden entfernt.
 - Auditbereiche wie `payment_policy` erhalten deutsche Fachbezeichnungen; die allgemeine Änderungsmeldung deckt auch Einstellungen ab.
 - Der Erstattungshinweis verweist jetzt auf den eingereichten Beleg und nicht mehr auf eine automatisch eingegangene E-Mail.
+- Die Startseite heißt konsistent „Übersicht“. Ihre Finanzkarte führt direkt zum bestehenden Finanzdashboard unter Auswertungen; Mitgliederkarten und Schnellaktionen bleiben nach ihren eigenen Berechtigungen erreichbar.
 - Tests sichern fehlende literale Twig-Schlüssel und mehrfach definierte Katalogschlüssel ab.
 
 ## Verbleibende Übersetzungsthemen

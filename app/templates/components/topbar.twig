@@ -7,7 +7,7 @@
 {% if path == '/' %}
     {% set crumbs = [{'label': t('nav.home')}] %}
 {% elseif path == '/dashboard/preferences' %}
-    {% set crumbs = [{'label': 'Dashboard anpassen'}] %}
+    {% set crumbs = [{'label': t('home.customize')}] %}
 {% elseif path == '/bookings' %}
     {% set crumbs = [cash, {'label': t('nav.bookings')}] %}
 {% elseif path == '/bookings/new' %}

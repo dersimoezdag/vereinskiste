@@ -7,7 +7,7 @@ final class Catalog
     public const CARDS = [
         'members' => ['label' => 'Mitglieder', 'permission' => 'members.read', 'url' => '/members?state=all', 'icon' => 'members'],
         'applications' => ['label' => 'Offene Mitgliedsanträge', 'permission' => 'members.write', 'url' => '/members/applications', 'icon' => 'members'],
-        'finance' => ['label' => 'Finanzen', 'permission' => 'reports.read', 'url' => '/reports/summary', 'icon' => 'reports'],
+        'finance' => ['label' => 'Finanzen', 'permission' => 'reports.read', 'url' => '/reports/dashboard', 'icon' => 'reports'],
         'invoices' => ['label' => 'Rechnungsentwürfe', 'permission' => 'invoices.read', 'url' => '/invoices', 'icon' => 'bookings'],
         'contacts' => ['label' => 'Aktive Kontakte', 'permission' => 'contacts.read', 'url' => '/contacts', 'icon' => 'contacts'],
         'operations' => ['label' => 'E-Mail-Versand', 'permission' => 'settings.manage', 'url' => '/settings/email', 'icon' => 'mail'],

@@ -126,6 +126,10 @@ return [
     'auth.login.error' => 'E-Mail-Adresse oder Passwort ist falsch.',
 
     'home.title' => 'Übersicht',
+    'home.customize' => 'Übersicht anpassen',
+    'home.tagline' => 'Dein Verein auf einen Blick.',
+    'home.empty.cards' => 'Hier erscheinen deine ausgewählten Karten. Wähle sie unter „Übersicht anpassen“ aus.',
+    'home.empty.shortcuts' => 'Du kannst deine Schnellaktionen unter „Übersicht anpassen“ auswählen.',
     'home.welcome' => 'Willkommen bei der Vereinskiste.',
 
     'accounts.title' => 'Konten',

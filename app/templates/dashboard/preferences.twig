@@ -1,7 +1,7 @@
 {% extends 'layout.twig' %}
-{% block title %}Dashboard anpassen{% endblock %}
+{% block title %}{{ t('home.customize') }}{% endblock %}
 {% block content %}
-<h1>Dashboard anpassen</h1>
+<h1>{{ t('home.customize') }}</h1>
 <p class="text-muted">Wähle deine Karten und Schnellaktionen. Ziehe sie am Griff in die gewünschte Reihenfolge oder ändere die Positionsnummern. Deine Auswahl gilt für dein Benutzerkonto auf allen Geräten.</p>
 {% if error is defined %}<div class="alert alert-danger" role="alert">{{ error }} <a href="/dashboard/preferences">Seite neu laden</a></div>{% endif %}
 <form method="post" action="/dashboard/preferences" data-dashboard-form>
