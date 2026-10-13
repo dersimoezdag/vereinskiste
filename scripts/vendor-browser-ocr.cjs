@@ -11,4 +11,9 @@ for(const lang of ['deu','eng'])copy('@tesseract.js-data/'+lang+'/4.0.0_best_int
 copy('pdfjs-dist/build/pdf.min.mjs','pdf.min.mjs');copy('pdfjs-dist/build/pdf.worker.min.mjs','pdf.worker.min.mjs');
 copy('tesseract.js/LICENSE.md','LICENSE-tesseract.txt');copy('tesseract.js-core/LICENSE','LICENSE-core.txt');copy('pdfjs-dist/LICENSE','LICENSE-pdfjs.txt');
 fs.writeFileSync(path.join(target,'README.txt'),'Pinned dependencies and language data: see tests/package-lock.json. Tesseract, PDF.js and Tesseract language data are Apache-2.0 licensed. All processing assets are served by this installation; no CDN is used.\n');
+fs.writeFileSync(path.join(target,'.htaccess'), `<IfModule mod_headers.c>
+Header set Content-Security-Policy "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'; img-src 'self' data:; font-src 'self'; worker-src 'self'"
+Header set X-Content-Type-Options "nosniff"
+</IfModule>
+`);
 console.log('Browser OCR assets packaged.');
