@@ -3,10 +3,6 @@
 
 {% block content %}
 <div class="container-xl">
-    <div class="page-header d-print-none mb-3">
-        <h1 class="page-title">{{ t('nav.settings') }}</h1>
-    </div>
-
     {% include 'components/settings_tabs.twig' %}
 
     <div class="alert alert-info d-flex align-items-center mb-4">
@@ -113,7 +109,7 @@
                                 </td>
                                 <td class="text-end">
                                     <button type="button" class="btn btn-sm btn-outline-secondary"
-                                            onclick="document.getElementById('edit-role-{{ r.id }}').classList.toggle('d-none');">
+                                            data-toggle-target="edit-role-{{ r.id }}" aria-controls="edit-role-{{ r.id }}">
                                         Bearbeiten
                                     </button>
                                 </td>

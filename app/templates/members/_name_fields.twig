@@ -1,0 +1,33 @@
+{# Anrede, Titel, Vorname, Nachname. Erwartet: id_prefix, values, errors; optional: disabled, large #}
+{% set control = (large ?? false) ? ' form-control-lg' : '' %}
+{% set off = (disabled ?? false) ? ' disabled' : '' %}
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+        <label for="{{ id_prefix }}-salutation" class="form-label">{{ t('members.field.salutation') }}</label>
+        <select id="{{ id_prefix }}-salutation" name="salutation" class="form-select{{ control }}{% if errors.salutation %} is-invalid{% endif %}"{{ off }}>
+            <option value="">{{ t('members.salutation.none') }}</option>
+            {% for key in ['frau', 'herr', 'divers'] %}
+            <option value="{{ key }}"{% if values.salutation|default('') == key %} selected{% endif %}>{{ t('members.salutation.' ~ key) }}</option>
+            {% endfor %}
+        </select>
+        {% if errors.salutation %}<div class="invalid-feedback">{{ t(errors.salutation) }}</div>{% endif %}
+    </div>
+    <div class="col-6 col-md-3">
+        <label for="{{ id_prefix }}-title" class="form-label">{{ t('members.field.title') }}</label>
+        <input type="text" id="{{ id_prefix }}-title" name="title" value="{{ values.title|default('') }}" maxlength="50"
+               autocomplete="honorific-prefix" class="form-control{{ control }}{% if errors.title %} is-invalid{% endif %}"{{ off }}>
+        {% if errors.title %}<div class="invalid-feedback">{{ t(errors.title) }}</div>{% endif %}
+    </div>
+    <div class="col-12 col-md-3">
+        <label for="{{ id_prefix }}-first-name" class="form-label required">{{ t('members.field.first_name') }}</label>
+        <input type="text" id="{{ id_prefix }}-first-name" name="first_name" value="{{ values.first_name|default('') }}" maxlength="100"
+               autocomplete="given-name" class="form-control{{ control }}{% if errors.first_name %} is-invalid{% endif %}" required{{ off }}>
+        {% if errors.first_name %}<div class="invalid-feedback">{{ t(errors.first_name) }}</div>{% endif %}
+    </div>
+    <div class="col-12 col-md-3">
+        <label for="{{ id_prefix }}-last-name" class="form-label required">{{ t('members.field.last_name') }}</label>
+        <input type="text" id="{{ id_prefix }}-last-name" name="last_name" value="{{ values.last_name|default('') }}" maxlength="100"
+               autocomplete="family-name" class="form-control{{ control }}{% if errors.last_name %} is-invalid{% endif %}" required{{ off }}>
+        {% if errors.last_name %}<div class="invalid-feedback">{{ t(errors.last_name) }}</div>{% endif %}
+    </div>
+</div>

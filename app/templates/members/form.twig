@@ -18,14 +18,7 @@
                         {{ csrf_field() }}
                         <input type="hidden" name="version" value="{{ input.version|default(0) }}">
 
-                        <div class="mb-3">
-                            <label for="member-name" class="form-label required">{{ t('members.field.name') }}</label>
-                            <input type="text" id="member-name" name="name" value="{{ input.name|default('') }}"
-                                   class="form-control{% if errors.name %} is-invalid{% endif %}" required maxlength="200">
-                            {% if errors.name %}
-                            <div class="invalid-feedback">{{ t(errors.name) }}</div>
-                            {% endif %}
-                        </div>
+                        {% include 'members/_name_fields.twig' with {id_prefix: 'member', values: input, errors: errors} %}
 
                         <div class="row g-3 mb-3">
                             <div class="col-md-6 col-12">

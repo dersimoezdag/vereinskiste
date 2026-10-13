@@ -1,7 +1,6 @@
 {% extends 'layout.twig' %}
 {% block title %}{{ t('foundation.club') }}{% endblock %}
 {% block content %}
-<h1>{{ t('nav.settings') }}</h1>
 {% include 'components/settings_tabs.twig' %}
 <h2>{{ t('foundation.club') }}</h2>
 <form method="post" action="/settings/club" class="card card-body">

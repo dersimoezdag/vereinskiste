@@ -69,4 +69,30 @@ final class MemberRepositoryTest extends TestCase
         $this->assertSame(['Bernd Beispiel'], array_column($repo->list('2', 'all'), 'name'));
         $this->assertSame([], $repo->list('', 'left'));
     }
+
+    public function test_names_are_stored_separately_and_the_display_name_is_derived(): void
+    {
+        $repo = new MemberRepository($this->db);
+        $erika = $repo->save(null, ['salutation' => 'frau', 'title' => 'Dr.', 'first_name' => 'Erika', 'last_name' => 'Muster'], 0, 1);
+        $repo->save(null, ['first_name' => 'Anna', 'last_name' => 'Zander'], 0, 1);
+        $repo->save(null, ['first_name' => 'Bernd', 'last_name' => 'Abel'], 0, 1);
+        $member = $repo->find($erika);
+        $this->assertSame('Dr. Erika Muster', $member['name']);
+        $this->assertSame(['frau', 'Dr.', 'Erika', 'Muster'],
+            [$member['data']['salutation'], $member['data']['title'], $member['data']['first_name'], $member['data']['last_name']]);
+        $this->assertSame(['Bernd Abel', 'Dr. Erika Muster', 'Anna Zander'], array_column($repo->list('', 'all'), 'name'));
+        $this->assertSame(['Dr. Erika Muster'], array_column($repo->list('muster', 'all'), 'name'));
+    }
+
+    public function test_missing_first_name_or_bad_salutation_is_rejected_together_with_other_field_errors(): void
+    {
+        $repo = new MemberRepository($this->db);
+        try {
+            $repo->save(null, ['first_name' => '', 'last_name' => 'X', 'salutation' => 'graf', 'email' => 'kein-mail'], 0, 1);
+            $this->fail('Fehler');
+        } catch (ValidationError $e) {
+            $this->assertArrayHasKey('first_name', $e->errors);
+            $this->assertArrayHasKey('email', $e->errors);
+        }
+    }
 }

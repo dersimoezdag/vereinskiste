@@ -1,57 +1,174 @@
 {% extends 'layout.twig' %}
+{% import 'components/icons.twig' as icons %}
 {% block title %}{{ t('nav.settings') }}{% endblock %}
 {% block content %}
-<h1>{{ t('nav.settings') }}</h1>
+<div class="page-header d-print-none mb-3">
+    <h1 class="page-title">{{ t('nav.settings') }}</h1>
+</div>
+
 {% include 'components/settings_tabs.twig' %}
-<section class="card mb-4" aria-labelledby="version-title">
-    <div class="card-body">
-        <h2 class="card-title" id="version-title">{{ t('settings.version') }}</h2>
-        <p class="h2 mb-0">{{ version }}</p>
+
+<!-- Version Header Card -->
+<section class="card mb-4 shadow-sm border-0" aria-labelledby="version-title">
+    <div class="card-body p-4">
+        <div class="row align-items-center g-3">
+            <div class="col-auto">
+                <div class="avatar avatar-lg bg-primary-subtle text-primary rounded-circle">
+                    {{ icons.icon('settings') }}
+                </div>
+            </div>
+            <div class="col">
+                <h2 class="card-title text-secondary small fw-bold text-uppercase mb-1" id="version-title">{{ t('settings.version') }}</h2>
+                <div class="d-flex align-items-center gap-3 mt-1 flex-wrap">
+                    <span class="h1 mb-0 fw-bold">v{{ version }}</span>
+                    {% if release.status == 'current' %}
+                        <span class="badge bg-success-subtle text-success fs-6 py-2 px-3 d-inline-flex align-items-center gap-1">
+                            {{ icons.icon('check') }}
+                            <span>{{ t('update.current') }}</span>
+                        </span>
+                    {% elseif release.status == 'available' %}
+                        <span class="badge bg-primary-subtle text-primary fs-6 py-2 px-3 d-inline-flex align-items-center gap-1">
+                            {{ icons.icon('rocket') }}
+                            <span>{{ t('settings.github.available') }} v{{ release.version }}</span>
+                        </span>
+                    {% elseif release.status != 'unchecked' %}
+                        <span class="badge bg-secondary-subtle text-secondary fs-6 py-2 px-3">
+                            {{ t('settings.github.' ~ release.status) }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-auto">
+                <form method="post" action="/settings/check-updates">
+                    {{ csrf_field() }}
+                    <button class="btn btn-outline-primary d-inline-flex align-items-center gap-2" type="submit">
+                        {{ icons.icon('sync') }}
+                        <span>{{ t('settings.github.check') }}</span>
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 </section>
-<section class="card" aria-labelledby="updates-title"><div class="card-body">
-<h2 class="card-title" id="updates-title">{{ t('settings.updates') }}</h2>
-<p>{{ t('settings.github.source') }} <a href="https://github.com/dersimoezdag/vereinskiste/releases" rel="noreferrer">GitHub Releases</a></p>
-<form method="post" action="/settings/check-updates" class="mb-3">
-    {{ csrf_field() }}
-    <button class="btn btn-outline-primary" type="submit">{{ t('settings.github.check') }}</button>
-</form>
-{% if release.status != 'unchecked' %}
-<p role="status">{{ t('settings.github.' ~ release.status) }}{% if release.version is defined %} {{ release.version }}{% endif %}</p>
+
+<!-- Fehlermeldungen & Benachrichtigungen -->
+{% if error %}<p class="alert alert-danger d-flex align-items-center gap-2 mb-4" role="alert">{{ icons.icon('error') }}<span>{{ t(error) }}</span></p>{% endif %}
+{% if done %}<p class="alert alert-success d-flex align-items-center gap-2 mb-4" role="status">{{ icons.icon('check') }}<span>{{ t('update.done') }}</span></p>{% endif %}
+{% if not compatible %}<p class="alert alert-danger d-flex align-items-center gap-2 mb-4" role="alert">{{ icons.icon('error') }}<span>{{ t('update.incompatible') }}</span></p>{% endif %}
+
 {% if release.status == 'error' and release.reason is defined %}
-<p class="alert alert-warning">{{ t('settings.github.error.' ~ release.reason) }}{% if release.http_status is defined %} (HTTP {{ release.http_status }}){% endif %}</p>
+<p class="alert alert-warning d-flex align-items-center gap-2 mb-4">{{ icons.icon('error') }}<span>{{ t('settings.github.error.' ~ release.reason) }}{% if release.http_status is defined %} (HTTP {{ release.http_status }}){% endif %}</span></p>
 {% endif %}
+
+<!-- Laufendes Auto-Update Banner -->
+{% if operation.phase != 'idle' %}
+<div class="alert alert-info d-flex align-items-center justify-content-between p-3 mb-4">
+    <div class="d-flex align-items-center gap-2">
+        <span class="spinner-border spinner-border-sm" role="status"></span>
+        <div><strong>Aktualisierung läuft:</strong> Status ist derzeit <em>{{ t('auto_update.phase.' ~ operation.phase) }}</em>.</div>
+    </div>
+    <a href="/settings/auto-update" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1">
+        <span>{{ t('auto_update.progress') }}</span>
+        {{ icons.icon('arrow-forward') }}
+    </a>
+</div>
+{% endif %}
+
+<!-- Wenn neues Release verfügbar ist -->
 {% if release.status == 'available' %}
-    {% if release.manifest is defined and release.signature is defined and automatic_supported and not pending %}
-    <form method="post" action="/settings/auto-update/start" class="card card-body mb-3">
-        {{ csrf_field() }}<input type="hidden" name="version" value="{{ release.version }}">
-        <p>{{ t('auto_update.explain') }}</p>
-        <label class="form-check mb-3"><input type="checkbox" name="backup_confirmed" value="1" class="form-check-input" required>
-            {{ t('auto_update.backup_confirm') }}</label>
-        <button class="btn btn-primary" type="submit">{{ t('auto_update.install') }} {{ release.version }}</button>
-    </form>
-    {% endif %}
-    {% if release.download is defined %}<a class="btn btn-primary mb-3" href="{{ release.download }}" rel="noreferrer">{{ t('settings.github.download') }}</a>
-    {% else %}<p>{{ t('settings.github.missing_package') }}</p>{% endif %}
-    <a class="btn btn-link mb-3" href="{{ release.url }}" rel="noreferrer">{{ t('settings.github.release') }}</a>
+<div class="card mb-4 border-primary shadow-sm">
+    <div class="card-header bg-primary-subtle py-3 d-flex align-items-center gap-2">
+        <span class="avatar avatar-sm bg-primary text-white rounded-circle">{{ icons.icon('rocket') }}</span>
+        <h2 class="card-title h3 mb-0 text-primary">{{ t('settings.github.available') }}: Version {{ release.version }}</h2>
+    </div>
+    <div class="card-body p-4">
+        {% if release.manifest is defined and release.signature is defined and automatic_supported and not pending %}
+        <div class="row g-4 align-items-center">
+            <div class="col-lg-8 col-12">
+                <h3 class="h4 mb-2">Automatische 1-Klick-Aktualisierung (Empfohlen)</h3>
+                <p class="text-secondary mb-3">{{ t('auto_update.explain') }}</p>
+                <div class="d-flex align-items-center gap-3 text-secondary small flex-wrap">
+                    <span class="d-inline-flex align-items-center gap-1">{{ icons.icon('shield') }} Signaturgeprüft</span>
+                    <span class="d-inline-flex align-items-center gap-1">{{ icons.icon('database') }} Automatisches Backup</span>
+                    <span class="d-inline-flex align-items-center gap-1">{{ icons.icon('sync') }} Rollback bei Fehlern</span>
+                </div>
+            </div>
+            <div class="col-lg-4 col-12">
+                <form method="post" action="/settings/auto-update/start" class="card bg-light-subtle p-3 border shadow-none">
+                    {{ csrf_field() }}
+                    <input type="hidden" name="version" value="{{ release.version }}">
+                    <div class="form-check mb-3">
+                        <input type="checkbox" name="backup_confirmed" value="1" id="auto-backup-confirm" class="form-check-input" required>
+                        <label class="form-check-label small" for="auto-backup-confirm">
+                            {{ t('auto_update.backup_confirm') }}
+                        </label>
+                    </div>
+                    <button class="btn btn-primary w-100 d-inline-flex align-items-center justify-content-center gap-2" type="submit">
+                        {{ icons.icon('rocket') }}
+                        <span>{{ t('auto_update.install') }} {{ release.version }}</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+        <hr class="my-4">
+        {% endif %}
+
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="text-secondary small">
+                {{ t('settings.github.source') }} <a href="https://github.com/dersimoezdag/vereinskiste/releases" target="_blank" rel="noreferrer" class="text-reset text-decoration-underline">GitHub Releases</a>
+            </div>
+            <div class="d-flex gap-2">
+                {% if release.download is defined %}
+                <a class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1" href="{{ release.download }}" rel="noreferrer">
+                    {{ icons.icon('download') }}
+                    <span>{{ t('settings.github.download') }}</span>
+                </a>
+                {% else %}
+                <span class="text-muted small">{{ t('settings.github.missing_package') }}</span>
+                {% endif %}
+                <a class="btn btn-link btn-sm text-secondary" href="{{ release.url }}" target="_blank" rel="noreferrer">
+                    {{ t('settings.github.release') }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endif %}
+
+<!-- Ausstehende Datenbank-Migrationen -->
+{% if pending %}
+<div class="card mb-4 border-warning shadow-sm">
+    <div class="card-header bg-warning-subtle py-3 d-flex align-items-center gap-2">
+        <span class="avatar avatar-sm bg-warning text-white rounded-circle">{{ icons.icon('database') }}</span>
+        <h2 class="card-title h3 mb-0 text-warning">{{ t('update.title') }}</h2>
+    </div>
+    <div class="card-body p-4">
+        <p class="lead mb-3">{{ t('update.instructions') }}</p>
+        <form method="post" action="/settings/update" class="card bg-light-subtle p-3 border shadow-none">
+            {{ csrf_field() }}
+            <div class="form-check mb-3">
+                <input class="form-check-input" id="backup" type="checkbox" name="backup_confirmed" value="1" required>
+                <label class="form-check-label" for="backup">{{ t('update.backup') }}</label>
+            </div>
+            <div>
+                <button class="btn btn-warning d-inline-flex align-items-center gap-2" type="submit">
+                    {{ icons.icon('check') }}
+                    <span>{{ t('update.run') }}</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endif %}
-{% if operation.phase != 'idle' %}<p><a href="/settings/auto-update">{{ t('auto_update.progress') }}</a></p>{% endif %}
-<p class="text-secondary">{{ t('settings.updates.help') }}</p>
-{% if error %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endif %}
-{% if done %}<p class="alert alert-success" role="status">{{ t('update.done') }}</p>{% endif %}
-{% if not compatible %}
-<p class="alert alert-danger" role="alert">{{ t('update.incompatible') }}</p>
-{% elseif pending %}
-<p>{{ t('update.instructions') }}</p>
-<form method="post" action="/settings/update">
-    {{ csrf_field() }}
-    <label class="form-check mb-3" for="backup">
-        <input class="form-check-input" id="backup" type="checkbox" name="backup_confirmed" value="1" required>
-        <span class="form-check-label">{{ t('update.backup') }}</span>
-    </label>
-    <button class="btn btn-primary" type="submit">{{ t('update.run') }}</button>
-</form>
-{% else %}<p>{{ t('update.current') }}</p>{% endif %}
-</div></section>
+
+<!-- Allgemeine Update-Hinweise -->
+<section class="card border-0 bg-transparent mb-0" aria-labelledby="updates-title">
+    <div class="card-body p-0">
+        <h2 class="h4 mb-2" id="updates-title">{{ t('settings.updates') }}</h2>
+        <div class="text-secondary small d-flex align-items-start gap-2">
+            <span class="text-muted mt-1">{{ icons.icon('shield') }}</span>
+            <p class="mb-0">{{ t('settings.updates.help') }}</p>
+        </div>
+    </div>
+</section>
 {% endblock %}

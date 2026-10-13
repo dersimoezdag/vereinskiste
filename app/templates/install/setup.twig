@@ -1,69 +1,172 @@
 {% extends 'layout.twig' %}
+{% import 'components/icons.twig' as icons %}
 {% block title %}{{ t('install.title') }}{% endblock %}
 {% block content %}
-<h1>{{ t('install.title') }}</h1>
-{% if installed %}<p role="alert">{{ t('install.locked') }}</p>
+{% if installed %}
+<div class="card card-md shadow-sm border-0">
+    <div class="card-body p-4 text-center">
+        <div class="avatar avatar-lg bg-success-subtle text-success rounded-circle mb-3 mx-auto">
+            {{ icons.icon('check') }}
+        </div>
+        <h1 class="card-title h2 mb-2">{{ t('install.title') }}</h1>
+        <p class="text-secondary mb-4" role="alert">{{ t('install.locked') }}</p>
+        <a href="/login" class="btn btn-primary d-inline-flex align-items-center gap-2">
+            <span>{{ t('nav.login')|default('Zur Anmeldung') }}</span>
+            {{ icons.icon('arrow-forward') }}
+        </a>
+    </div>
+</div>
 {% elseif not authorized %}
-<p>{{ t('install.key.help') }}</p>
-{% if error %}<p class="alert alert-danger" role="alert">{{ t('install.key.invalid') }}</p>{% endif %}
-<form method="post" action="/install/unlock">
-    {{ csrf_field() }}
-    <label class="form-label" for="setup-key">{{ t('install.key.label') }}</label>
-    <input class="form-control mb-3" id="setup-key" type="password" name="setup_key" autocomplete="off" required>
-    <button class="btn btn-primary" type="submit">{{ t('install.key.submit') }}</button>
-</form>
+<div class="card card-md shadow-sm border-0">
+    <div class="card-body p-4 text-center">
+        <div class="avatar avatar-lg bg-primary-subtle text-primary rounded-circle mb-3 mx-auto">
+            {{ icons.icon('shield') }}
+        </div>
+        <h1 class="card-title h2 mb-2">{{ t('install.title') }}</h1>
+        <p class="text-secondary mb-4">{{ t('install.key.help') }}</p>
+        {% if error %}<div class="alert alert-danger text-start d-flex align-items-center gap-2" role="alert">{{ icons.icon('error') }}<div>{{ t('install.key.invalid') }}</div></div>{% endif %}
+        <form method="post" action="/install/unlock" class="text-start">
+            {{ csrf_field() }}
+            <div class="mb-3">
+                <label class="form-label required" for="setup-key">{{ t('install.key.label') }}</label>
+                <div class="input-group">
+                    <span class="input-group-text">{{ icons.icon('password') }}</span>
+                    <input class="form-control" id="setup-key" type="password" name="setup_key" autocomplete="off" placeholder="••••••••••••" required autofocus>
+                </div>
+            </div>
+            <button class="btn btn-primary w-100 d-inline-flex align-items-center justify-content-center gap-2" type="submit">
+                <span>{{ t('install.key.submit') }}</span>
+                {{ icons.icon('arrow-forward') }}
+            </button>
+        </form>
+    </div>
+</div>
 {% else %}
 {% set steps = [
-    {'title': 'install.step.check', 'fields': {}},
-    {'title': 'install.club', 'fields': {'club_name': 'text', 'base_url': 'url'}},
-    {'title': 'install.database', 'fields': {'db_host': 'text', 'db_port': 'number', 'db_name': 'text', 'db_user': 'text', 'db_password': 'password'}},
-    {'title': 'install.admin', 'fields': {'admin_name': 'text', 'admin_email': 'email', 'admin_password': 'password'}},
-    {'title': 'install.smtp', 'fields': {'smtp_host': 'text', 'smtp_port': 'number', 'smtp_from': 'email', 'smtp_username': 'text', 'smtp_password': 'password', 'smtp_encryption': 'select'}}
+    {'title': 'install.step.check', 'icon': 'shield', 'fields': {}},
+    {'title': 'install.club', 'icon': 'club', 'fields': {'club_name': 'text', 'base_url': 'url'}},
+    {'title': 'install.database', 'icon': 'database', 'fields': {'db_host': 'text', 'db_port': 'number', 'db_name': 'text', 'db_user': 'text', 'db_password': 'password'}},
+    {'title': 'install.admin', 'icon': 'admin', 'fields': {'admin_name': 'text', 'admin_email': 'email', 'admin_password': 'password'}},
+    {'title': 'install.smtp', 'icon': 'mail', 'fields': {'smtp_host': 'text', 'smtp_port': 'number', 'smtp_from': 'email', 'smtp_username': 'text', 'smtp_password': 'password', 'smtp_encryption': 'select'}}
 ] %}
 {% set allOk = true %}{% for check in checks %}{% if not check.ok %}{% set allOk = false %}{% endif %}{% endfor %}
-{% if error %}<p class="alert alert-danger" role="alert">{{ t('install.error') }}</p>{% endif %}
+
+<div class="text-center mb-4">
+    <h1 class="h2 mb-1">{{ t('install.title') }}</h1>
+    <p class="text-secondary mb-0">Richten Sie Ihre Vereinskiste in wenigen Schritten ein.</p>
+</div>
+
+{% if error %}
+<div class="alert alert-danger d-flex align-items-center gap-2 mb-4" role="alert">
+    {{ icons.icon('error') }}
+    <div>{{ t('install.error') }}</div>
+</div>
+{% endif %}
+
 <form method="post" action="/install" data-stepper data-checks-ok="{{ allOk ? '1' : '0' }}">
     {{ csrf_field() }}
     <ol class="stepper" aria-label="{{ t('install.steps') }}">
-    {% for step in steps %}<li class="stepper-item" data-step-label="{{ loop.index0 }}"><span class="stepper-num">{{ loop.index }}</span><span class="stepper-title">{{ t(step.title) }}</span></li>{% endfor %}
-    </ol>
     {% for step in steps %}
-    <fieldset class="card card-body mb-4 stepper-panel" data-step="{{ loop.index0 }}"><legend class="card-title h3">{{ loop.index }}. {{ t(step.title) }}</legend>
-    {% if loop.first %}
-        <ul class="list-group list-group-flush mb-2">
-        {% for check in checks %}
-        <li class="list-group-item check-item {{ check.ok ? 'check-ok' : 'check-fail' }}">
-            <span class="check-dot" aria-hidden="true"></span>
-            <span class="check-name">{{ check.name }}</span>
-            <span class="check-message text-secondary">{{ check.message }}</span>
-            {% if not check.ok %}<span class="badge bg-red-lt">{{ t('install.failed') }}</span>{% endif %}
+        <li class="stepper-item" data-step-label="{{ loop.index0 }}">
+            <span class="stepper-num">
+                <span class="stepper-num-val">{{ loop.index }}</span>
+                <span class="stepper-check" aria-hidden="true">{{ icons.icon('check') }}</span>
+            </span>
+            <span class="stepper-title">{{ t(step.title) }}</span>
         </li>
-        {% endfor %}
-        </ul>
-        {% if not allOk %}<p class="text-danger mb-0" role="alert">{{ t('install.check.blocked') }}</p>{% endif %}
-    {% endif %}
-    {% if step.title == 'install.smtp' %}<p class="text-secondary">{{ t('install.smtp.optional') }}</p>{% endif %}
-    {% for field, type in step.fields %}
-    <div class="mb-3">
-        <label class="form-label" for="{{ field }}">{{ t('install.' ~ field) }}</label>
-        {% if type == 'select' %}
-        <select class="form-select" id="{{ field }}" name="{{ field }}">
-            {% for value in ['tls', 'ssl'] %}<option value="{{ value }}" {% if input[field]|default('tls') == value %}selected{% endif %}>{{ value|upper }}</option>{% endfor %}
-        </select>
-        {% else %}
-        <input class="form-control" type="{{ type }}" id="{{ field }}" name="{{ field }}"
-               {% if type != 'password' %}value="{{ input[field]|default('') }}"{% else %}autocomplete="new-password"{% endif %}
-               {% if step.title != 'install.smtp' and field != 'db_password' %}required{% endif %}
-               {% if field == 'admin_password' %}minlength="10"{% endif %}>
-        {% endif %}
-    </div>
     {% endfor %}
+    </ol>
+
+    {% for step in steps %}
+    <fieldset class="card mb-4 stepper-panel shadow-sm border-0" data-step="{{ loop.index0 }}">
+        <div class="card-header bg-transparent py-3 border-bottom d-flex align-items-center gap-3">
+            <span class="avatar avatar-md bg-primary-subtle text-primary rounded-circle">
+                {{ icons.icon(step.icon) }}
+            </span>
+            <div>
+                <div class="text-uppercase text-secondary small fw-bold">Schritt {{ loop.index }} von {{ steps|length }}</div>
+                <legend class="card-title h3 mb-0">{{ t(step.title) }}</legend>
+            </div>
+        </div>
+        <div class="card-body p-4">
+        {% if loop.first %}
+            <div class="list-group mb-3">
+            {% for check in checks %}
+            <div class="list-group-item check-item {{ check.ok ? 'check-ok' : 'check-fail' }} p-3 d-flex align-items-center gap-3">
+                <span class="avatar avatar-sm rounded-circle {{ check.ok ? 'bg-success text-white' : 'bg-danger text-white' }}" aria-hidden="true">
+                    {{ icons.icon(check.ok ? 'check' : 'error') }}
+                </span>
+                <div class="flex-fill">
+                    <div class="check-name fw-bold font-monospace">{{ check.name }}</div>
+                    <div class="check-message text-secondary small">{{ check.message }}</div>
+                </div>
+                {% if not check.ok %}
+                    <span class="badge bg-danger text-white">{{ t('install.failed') }}</span>
+                {% else %}
+                    <span class="badge bg-success-subtle text-success">OK</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+            </div>
+            {% if not allOk %}
+                <div class="alert alert-danger d-flex align-items-center gap-2 mb-0" role="alert">
+                    {{ icons.icon('error') }}
+                    <div>{{ t('install.check.blocked') }}</div>
+                </div>
+            {% else %}
+                <div class="alert alert-success d-flex align-items-center gap-2 mb-0" role="status">
+                    {{ icons.icon('check') }}
+                    <div><strong>Bereit zur Einrichtung:</strong> Alle Systemvoraussetzungen sind erfüllt.</div>
+                </div>
+            {% endif %}
+        {% endif %}
+
+        {% if step.title == 'install.smtp' %}
+        <p class="text-secondary small mb-3">{{ t('install.smtp.optional') }}</p>
+        {% endif %}
+
+        <div class="row g-3">
+        {% for field, type in step.fields %}
+            {% set colClass = 'col-12' %}
+            {% if field in ['db_host', 'smtp_host'] %}
+                {% set colClass = 'col-md-9 col-12' %}
+            {% elseif field in ['db_port', 'smtp_port'] %}
+                {% set colClass = 'col-md-3 col-12' %}
+            {% elseif field in ['db_user', 'db_password', 'admin_name', 'admin_email', 'smtp_username', 'smtp_password'] %}
+                {% set colClass = 'col-md-6 col-12' %}
+            {% endif %}
+            <div class="{{ colClass }}">
+                <label class="form-label{% if step.title != 'install.smtp' and field != 'db_password' %} required{% endif %}" for="{{ field }}">{{ t('install.' ~ field) }}</label>
+                {% if type == 'select' %}
+                <select class="form-select" id="{{ field }}" name="{{ field }}">
+                    {% for value in ['tls', 'ssl'] %}<option value="{{ value }}" {% if input[field]|default('tls') == value %}selected{% endif %}>{{ value|upper }}</option>{% endfor %}
+                </select>
+                {% else %}
+                <input class="form-control" type="{{ type }}" id="{{ field }}" name="{{ field }}"
+                       {% if type != 'password' %}value="{{ input[field]|default('') }}"{% else %}autocomplete="new-password"{% endif %}
+                       {% if step.title != 'install.smtp' and field != 'db_password' %}required{% endif %}
+                       {% if field == 'admin_password' %}minlength="10"{% endif %}>
+                {% endif %}
+            </div>
+        {% endfor %}
+        </div>
+        </div>
     </fieldset>
     {% endfor %}
-    <div class="stepper-actions">
-        <button class="btn btn-outline-secondary" type="button" data-step-prev hidden>{{ t('install.back') }}</button>
-        <button class="btn btn-primary ms-auto" type="button" data-step-next hidden>{{ t('install.next') }}</button>
-        <button class="btn btn-primary w-100" type="submit" data-step-submit>{{ t('install.submit') }}</button>
+
+    <div class="stepper-actions d-flex justify-content-between align-items-center mt-3 pt-3">
+        <button class="btn btn-outline-secondary d-inline-flex align-items-center gap-1" type="button" data-step-prev hidden>
+            {{ icons.icon('arrow-back') }}
+            <span>{{ t('install.back') }}</span>
+        </button>
+        <button class="btn btn-primary ms-auto d-inline-flex align-items-center gap-1" type="button" data-step-next hidden>
+            <span>{{ t('install.next') }}</span>
+            {{ icons.icon('arrow-forward') }}
+        </button>
+        <button class="btn btn-success ms-auto d-inline-flex align-items-center gap-1" type="submit" data-step-submit>
+            {{ icons.icon('check') }}
+            <span>{{ t('install.submit') }}</span>
+        </button>
     </div>
 </form>
 {% endif %}

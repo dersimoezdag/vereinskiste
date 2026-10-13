@@ -3,7 +3,7 @@
 {% block content %}
 {% include 'components/settings_tabs.twig' %}
 {% set editing = user_id is not null %}
-<h1 class="mb-4">{{ editing ? t('users.edit.title') : t('users.new') }}</h1>
+<h2 class="h2 mb-4">{{ editing ? t('users.edit.title') : t('users.new') }}</h2>
 
 <div class="card mb-4">
     <div class="card-body">

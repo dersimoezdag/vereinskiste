@@ -162,4 +162,35 @@ final class ApplicationRepositoryTest extends TestCase
         $this->assertSame('Aufnahmestopp', $app['rejection_reason']);
         $this->assertSame(0, $this->repo->countPending());
     }
+
+    public function test_application_with_separate_name_fields_becomes_a_member_with_the_same_fields(): void
+    {
+        $invite = $this->repo->createInvite(1, 'Getrennte Namen', 14, null, false);
+        $appId = $this->repo->submit($invite['token'], [
+            'salutation' => 'frau', 'title' => 'Dr.', 'first_name' => 'Erika', 'last_name' => 'Muster',
+            'email' => 'erika@example.org', 'consent_statute' => '1', 'consent_privacy' => '1',
+        ]);
+        $app = $this->repo->findApplication($appId);
+        $this->assertSame('Dr. Erika Muster', $app['applicant_name']);
+        $this->assertSame('Erika', $app['data']['first_name']);
+
+        $member = (new MemberRepository($this->db))->find($this->repo->approve($appId, 1));
+        $this->assertSame('Dr. Erika Muster', $member['name']);
+        $this->assertSame('frau', $member['data']['salutation']);
+        $this->assertSame('Muster', $member['data']['last_name']);
+    }
+
+    public function test_submit_requires_first_and_last_name(): void
+    {
+        $invite = $this->repo->createInvite(1, 'Pflichtnamen', 14, null, false);
+        try {
+            $this->repo->submit($invite['token'], [
+                'first_name' => '', 'last_name' => 'Muster', 'email' => 'e@example.org',
+                'consent_statute' => '1', 'consent_privacy' => '1',
+            ]);
+            $this->fail('Vorname fehlt');
+        } catch (ValidationError $e) {
+            $this->assertArrayHasKey('first_name', $e->errors);
+        }
+    }
 }

@@ -5,7 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{{ t('app.name') }}{% endblock %} – {{ t('app.name') }}</title>
-    <link rel="icon" href="{{ asset('logo.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('logo.svg') }}" type="image/svg+xml" media="(prefers-color-scheme: light)">
+    <link rel="icon" href="{{ asset('logo-dark.svg') }}" type="image/svg+xml" media="(prefers-color-scheme: dark)">
     <link rel="stylesheet" href="{{ asset('vendor/tabler/tabler.min.css') }}">
     <link rel="stylesheet" href="{{ asset('app.css') }}">
     <link rel="stylesheet" href="{{ asset('user-card.css') }}">
@@ -89,7 +90,7 @@
     <div class="page-wrapper">
         {% if user %}{% include 'components/topbar.twig' %}{% endif %}
         <main class="page-body" id="main-content" tabindex="-1">
-            <div class="{% if user %}container-xl{% else %}container-tight py-4{% endif %}">
+            <div class="{% if user %}container-xl{% elseif path starts with '/install' and authorized|default(false) %}container-md py-4{% else %}container-tight py-4{% endif %}">
                 {% if not user %}
                 <div class="d-flex justify-content-end mb-2">
                     <button type="button" class="btn btn-icon theme-toggle" id="auth-theme-toggle"
@@ -100,8 +101,7 @@
                 </div>
                 <div class="text-center mb-4">
                     <a href="/" class="navbar-brand navbar-brand-autodark d-inline-flex align-items-center gap-2 text-decoration-none">
-                        <img src="{{ asset('logo.svg') }}" alt="" width="48" height="48" class="navbar-brand-image brand-logo-light">
-                        <img src="{{ asset('logo-dark.svg') }}" alt="" width="48" height="48" class="navbar-brand-image brand-logo-dark">
+                        {% include 'components/logo.twig' with {size: 48, class: 'navbar-brand-image'} %}
                         <span class="fs-1 fw-bold text-reset">{{ t('app.name') }}</span>
                     </a>
                 </div>

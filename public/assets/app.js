@@ -178,3 +178,41 @@ document.querySelectorAll('[data-dropzone]').forEach(function (zone) {
         }
     });
 });
+
+// Ersatz fuer Inline-onclick (von der Content-Security-Policy blockiert): Link kopieren und Bereiche ein-/ausblenden.
+document.addEventListener('click', function (event) {
+    var copy = event.target.closest('[data-copy-path]');
+    if (copy) {
+        var url = window.location.origin + copy.dataset.copyPath;
+        var original = copy.textContent;
+        var done = function () {
+            copy.textContent = copy.dataset.copiedLabel || 'Kopiert!';
+            window.setTimeout(function () { copy.textContent = original; }, 2000);
+        };
+        var fallback = function () {
+            var area = document.createElement('textarea');
+            area.value = url;
+            area.setAttribute('readonly', '');
+            area.style.position = 'fixed';
+            area.style.opacity = '0';
+            document.body.appendChild(area);
+            area.select();
+            try { if (document.execCommand('copy')) { done(); } } catch (e) {}
+            document.body.removeChild(area);
+        };
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(url).then(done, fallback);
+        } else {
+            fallback();
+        }
+        return;
+    }
+    var toggle = event.target.closest('[data-toggle-target]');
+    if (toggle) {
+        var target = document.getElementById(toggle.dataset.toggleTarget);
+        if (target) {
+            var hidden = target.classList.toggle('d-none');
+            toggle.setAttribute('aria-expanded', hidden ? 'false' : 'true');
+        }
+    }
+});

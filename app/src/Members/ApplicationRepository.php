@@ -6,7 +6,6 @@ namespace Vereinskiste\Members;
 use DateTimeImmutable;
 use PDO;
 use Vereinskiste\Audit\AuditLog;
-use Vereinskiste\Auth\UserRepository;
 use Vereinskiste\Foundation\Fields;
 use Vereinskiste\Ledger\TextInput;
 use Vereinskiste\Ledger\Transaction;
@@ -120,12 +119,13 @@ final class ApplicationRepository
 
             // Validierung
             $errors = [];
-            $name = trim((string) ($input['applicant_name'] ?? $input['name'] ?? ''));
-            if (TextInput::isBlank($name)) {
-                $errors['name'] = 'foundation.required';
-            } elseif (mb_strlen($name) > 200 || !UserRepository::isStorableText($name)) {
-                $errors['name'] = 'foundation.invalid';
+            $names = ['salutation' => '', 'title' => '', 'first_name' => '', 'last_name' => ''];
+            try {
+                $names = PersonName::read($input);
+            } catch (ValidationError $e) {
+                $errors += $e->errors;
             }
+            $name = PersonName::display($names);
 
             $email = trim((string) ($input['email'] ?? ''));
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -182,8 +182,7 @@ final class ApplicationRepository
                 throw new ValidationError($errors);
             }
 
-            $data = [
-                'name' => $name,
+            $data = $names + [
                 'email' => $email,
                 'address' => $address,
                 'zip' => $zip,
@@ -271,8 +270,11 @@ final class ApplicationRepository
 
             // Mitglied anlegen
             $memberRepo = new MemberRepository($this->pdo);
-            $memberInput = [
-                'name' => $app['applicant_name'],
+            $names = array_intersect_key($data, PersonName::LIMITS);
+            if (!isset($names['last_name']) || $names['last_name'] === '') {
+                $names = ['name' => $app['applicant_name']]; // aeltere Antraege ohne getrennte Namensfelder
+            }
+            $memberInput = $names + [
                 'email' => $app['email'],
                 'address' => $data['address'] ?? '',
                 'zip' => $data['zip'] ?? '',

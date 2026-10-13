@@ -1,5 +1,6 @@
 {% set settings_path = current_path() %}
-<nav class="nav nav-tabs mb-4" aria-label="{{ t('nav.settings') }}">
+<h1 class="mb-3">{{ t('nav.settings') }}</h1>
+<nav class="mui-tabs" aria-label="{{ t('nav.settings') }}">
     {% for tab in [
         {'url': '/settings', 'label': 'settings.version_updates', 'active': settings_path in ['/settings', '/update', '/settings/update']},
         {'url': '/settings/club', 'label': 'foundation.club', 'active': settings_path == '/settings/club'},
@@ -9,7 +10,7 @@
         {'url': '/users', 'label': 'settings.users', 'active': settings_path starts with '/users', 'right': 'users.manage'}
     ] %}
     {% if tab.right is not defined or can(tab.right) %}
-    <a class="nav-link{% if tab.active %} active{% endif %}" href="{{ tab.url }}"{% if tab.active %} aria-current="page"{% endif %}>{{ t(tab.label) }}</a>
+    <a class="mui-tab{% if tab.active %} active{% endif %}" href="{{ tab.url }}"{% if tab.active %} aria-current="page"{% endif %}>{{ t(tab.label) }}</a>
     {% endif %}
     {% endfor %}
 </nav>

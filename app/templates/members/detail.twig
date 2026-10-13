@@ -38,15 +38,7 @@
                         <div class="alert alert-danger mb-3">{{ t(errors.version) }}</div>
                         {% endif %}
 
-                        <div class="mb-3">
-                            <label for="detail-name" class="form-label required">{{ t('members.field.name') }}</label>
-                            <input type="text" id="detail-name" name="name" value="{{ input.name|default(member.name) }}"
-                                   class="form-control{% if errors.name %} is-invalid{% endif %}" required maxlength="200"
-                                   {% if not can('members.write') %}disabled{% endif %}>
-                            {% if errors.name %}
-                            <div class="invalid-feedback">{{ t(errors.name) }}</div>
-                            {% endif %}
-                        </div>
+                        {% include 'members/_name_fields.twig' with {id_prefix: 'detail', values: ((input.first_name is defined or input.last_name is defined) ? input : member.data), errors: errors, disabled: not can('members.write')} %}
 
                         <div class="row g-3 mb-3">
                             <div class="col-md-6 col-12">

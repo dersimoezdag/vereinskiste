@@ -113,7 +113,7 @@
                                         <input type="text" readonly value="/antrag/{{ inv.token }}" id="inv-link-{{ inv.id }}" aria-label="Einladungs-Link"
                                                class="form-control form-control-sm font-monospace text-muted py-0 px-1 bg-light border-0" style="max-width: 140px;">
                                         <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2"
-                                                onclick="navigator.clipboard.writeText(window.location.origin + '/antrag/{{ inv.token }}'); this.innerText='{{ t('applications.invites.copied') }}'; setTimeout(() => this.innerText='{{ t('applications.invites.copy_link') }}', 2000);">
+                                                data-copy-path="/antrag/{{ inv.token }}" data-copied-label="{{ t('applications.invites.copied') }}">
                                             {{ t('applications.invites.copy_link') }}
                                         </button>
                                     </div>
@@ -218,7 +218,7 @@
                                     </button>
                                 </form>
                                 <button type="button" class="btn btn-sm btn-outline-danger"
-                                        onclick="document.getElementById('reject-form-{{ a.id }}').classList.toggle('d-none');">
+                                        data-toggle-target="reject-form-{{ a.id }}" aria-controls="reject-form-{{ a.id }}">
                                     {{ t('applications.reject') }}
                                 </button>
                             </div>

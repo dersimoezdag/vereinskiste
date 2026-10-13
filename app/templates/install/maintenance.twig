@@ -1,7 +1,18 @@
 {% extends 'layout.twig' %}
+{% import 'components/icons.twig' as icons %}
 {% block title %}{{ t('update.maintenance.title') }}{% endblock %}
 {% block content %}
-<h1>{{ t('update.maintenance.title') }}</h1>
-<p>{{ t('update.maintenance.text') }}</p>
-<a class="btn btn-primary" href="/update">{{ t('update.title') }}</a>
+<div class="card card-md shadow-sm border-0">
+    <div class="card-body p-4 text-center">
+        <div class="avatar avatar-lg bg-warning-subtle text-warning rounded-circle mb-3 mx-auto">
+            {{ icons.icon('settings') }}
+        </div>
+        <h1 class="card-title h2 mb-2">{{ t('update.maintenance.title') }}</h1>
+        <p class="text-secondary mb-4">{{ t('update.maintenance.text') }}</p>
+        <a class="btn btn-primary d-inline-flex align-items-center gap-2" href="/update">
+            {{ icons.icon('rocket') }}
+            <span>{{ t('update.title') }}</span>
+        </a>
+    </div>
+</div>
 {% endblock %}

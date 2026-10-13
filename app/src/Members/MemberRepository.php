@@ -13,7 +13,8 @@ use Vereinskiste\Ledger\ValidationError;
 
 final class MemberRepository
 {
-    public const FIELDS = ['name' => 200, 'address' => 200, 'zip' => 20, 'city' => 100, 'country' => 100,
+    /** Namensfelder (Anrede, Titel, Vorname, Nachname) plus Anschrift und Kontakt; `members.name` ist der Anzeigename. */
+    public const FIELDS = PersonName::LIMITS + ['address' => 200, 'zip' => 20, 'city' => 100, 'country' => 100,
         'email' => 254, 'phone' => 50, 'birth_date' => 10, 'notes' => 1000];
 
     public function __construct(private PDO $pdo) {}
@@ -32,7 +33,7 @@ final class MemberRepository
                      OR (?::text = 'current' AND EXISTS (SELECT 1 FROM membership_periods p WHERE p.member_id = m.id AND p.end_date IS NULL))
                      OR (?::text = 'left' AND EXISTS (SELECT 1 FROM membership_periods p WHERE p.member_id = m.id)
                          AND NOT EXISTS (SELECT 1 FROM membership_periods p WHERE p.member_id = m.id AND p.end_date IS NULL)))
-              ORDER BY lower(m.name), m.id LIMIT 50 OFFSET ?"
+              ORDER BY lower(COALESCE(m.data->>'last_name', m.name)), lower(COALESCE(m.data->>'first_name', '')), m.id LIMIT 50 OFFSET ?"
         );
         $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search) . '%';
         $state = in_array($state, ['current', 'left', 'all'], true) ? $state : 'current';
@@ -62,9 +63,26 @@ final class MemberRepository
     /** @throws ValidationError|Conflict */
     public function save(?int $id, array $input, int $version, int $actor, string $reason = ''): int
     {
-        $data = Fields::read($input, self::FIELDS, ['name']);
+        $errors = [];
+        try {
+            $names = PersonName::read($input);
+        } catch (ValidationError $e) {
+            $errors += $e->errors;
+            $names = [];
+        }
+        try {
+            $rest = Fields::read($input, array_diff_key(self::FIELDS, PersonName::LIMITS));
+        } catch (ValidationError $e) {
+            $errors += $e->errors;
+            $rest = ['birth_date' => ''];
+        }
+        if ($errors !== []) {
+            throw new ValidationError($errors);
+        }
+        $data = $names + $rest;
         self::checkBirthDate($data['birth_date']);
-        return Transaction::run($this->pdo, function () use ($id, $data, $version, $actor, $reason): int {
+        $display = PersonName::display($data);
+        return Transaction::run($this->pdo, function () use ($id, $data, $display, $version, $actor, $reason): int {
             $before = $id === null ? null : $this->find($id, true);
             if ($id !== null && ($before === null || $before['version'] !== $version)) {
                 throw new Conflict();
@@ -72,11 +90,11 @@ final class MemberRepository
             $json = json_encode($data, JSON_THROW_ON_ERROR);
             if ($id === null) {
                 $stmt = $this->pdo->prepare('INSERT INTO members (name, data) VALUES (?, ?::jsonb) RETURNING id');
-                $stmt->execute([$data['name'], $json]);
+                $stmt->execute([$display, $json]);
                 $id = (int) $stmt->fetchColumn();
             } else {
                 $this->pdo->prepare('UPDATE members SET name = ?, data = ?::jsonb, version = version + 1 WHERE id = ?')
-                    ->execute([$data['name'], $json, $id]);
+                    ->execute([$display, $json, $id]);
             }
             (new History($this->pdo))->record('member', $id, $before['data'] ?? [], $data, $actor, $reason);
             return $id;
