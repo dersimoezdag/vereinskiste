@@ -113,6 +113,8 @@ final class Kernel
             static fn (): string => $state->path
         ));
         $env->addFilter(new TwigFilter('eur', [MoneyFormat::class, 'eur']));
+        $runtime = new \Vereinskiste\Update\Runtime($appDir);
+        $env->addFunction(new TwigFunction('asset', static fn (string $path): string => $runtime->asset($path)));
         $env->addFunction(new TwigFunction(
             'password_reset_available',
             static fn (): bool => $resetService->isConfigured()
@@ -125,7 +127,8 @@ final class Kernel
         // Ausfuehrung von aussen nach innen: Fehler, Session, Kontext, Body-Parsing, CSRF, Routing.
         $app->addRoutingMiddleware();
         if (!$installerMode && ($config['maintenance'] ?? false)) {
-            $app->add(new Maintenance($pdoProvider, $migrationDir));
+            $app->add(new Maintenance($pdoProvider, $migrationDir, $runtime));
+            $app->add(new \Vereinskiste\Http\Middleware\UpdateBarrier($pdoProvider,$runtime));
         }
         $app->add(new Csrf($store, $view));
         $app->addBodyParsingMiddleware();
@@ -155,10 +158,18 @@ final class Kernel
                 $res->withStatus(302)->withHeader('Location', '/install'));
             return $app;
         }
-        $versionFile = $appDir . '/VERSION';
+        $versionFile = ($config['code_dir'] ?? $appDir) . '/VERSION';
         $version = is_file($versionFile) ? trim((string) file_get_contents($versionFile)) : '–';
         $updater = new UpdateController($pdoProvider, $migrationDir, $version,
             $config['release_checker'] ?? new \Vereinskiste\Install\GitHubReleases());
+        $automatic=new \Vereinskiste\Web\AutoUpdateController($pdoProvider,$runtime,$version,$migrationDir,
+            $config['release_checker']??new \Vereinskiste\Install\GitHubReleases());
+        $app->get('/settings/auto-update',[$automatic,'show'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/auto-update/start',[$automatic,'start'])->add(Auth::requires('settings.manage'));
+        $app->get('/settings/auto-update/status',[$automatic,'status'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/auto-update/step',[$automatic,'step'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/auto-update/cancel',[$automatic,'cancel'])->add(Auth::requires('settings.manage'));
+        $app->get('/_update-probe/{token:[a-f0-9]{64}}',[$automatic,'probe']);
         $app->get('/settings', [$updater, 'show'])->add(Auth::requires('settings.manage'));
         $app->post('/settings/check-updates', [$updater, 'check'])->add(Auth::requires('settings.manage'));
         $app->post('/settings/update', [$updater, 'update'])->add(Auth::requires('settings.manage'));

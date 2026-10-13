@@ -44,7 +44,10 @@ final class GitHubReleases
                 if (($asset['name'] ?? '') === $name && ($asset['state'] ?? '') === 'uploaded'
                     && ($asset['size'] ?? 0) > 0 && ($asset['browser_download_url'] ?? '') === $expected) {
                     $result['download'] = $expected;
-                    break;
+                }
+                foreach (['manifest'=>'.manifest.json','signature'=>'.manifest.sig'] as $key=>$suffix) {
+                    if (($asset['name']??'')===$name . $suffix && ($asset['state']??'')==='uploaded' && ($asset['size']??0)>0
+                        && ($asset['browser_download_url']??'')===$expected . $suffix) { $result[$key]=$expected . $suffix; }
                 }
             }
             return $result;

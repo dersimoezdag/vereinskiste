@@ -1,6 +1,7 @@
 {% extends 'layout.twig' %}
 {% block title %}{{ t('users.title') }}{% endblock %}
 {% block content %}
+{% include 'components/settings_tabs.twig' %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <h1 class="mb-0">{{ t('users.title') }}</h1>
     <a class="btn btn-primary" href="/users/new">{{ t('users.new') }}</a>

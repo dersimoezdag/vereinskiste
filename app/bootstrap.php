@@ -10,10 +10,12 @@ use Vereinskiste\Http\Kernel;
  */
 function vk_create_app(): \Slim\App
 {
-    $file = __DIR__ . '/config/config.php';
+    $instance = defined('VK_INSTANCE_APP') ? VK_INSTANCE_APP : __DIR__;
+    $file = $instance . '/config/config.php';
     if (!is_file($file)) {
         return Kernel::createInstaller();
     }
     $config = is_file($file) ? require $file : [];
-    return Kernel::create((is_array($config) ? $config : []) + ['maintenance' => true]);
+    return Kernel::create(['app_dir'=>$instance,'code_dir'=>__DIR__,'templates'=>__DIR__ . '/templates',
+        'migration_dir'=>__DIR__ . '/migrations'] + (is_array($config) ? $config : []) + ['maintenance' => true]);
 }

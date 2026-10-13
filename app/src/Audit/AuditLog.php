@@ -21,6 +21,7 @@ final class AuditLog
         'category_created', 'category_renamed', 'category_activated', 'category_deactivated',
         'foundation_updated',
         'bank_import_uploaded', 'bank_import_reviewed', 'bank_import_confirmed', 'bank_import_cancelled', 'bank_import_reset',
+        'auto_update_started', 'auto_update_completed', 'auto_update_rolled_back',
     ];
 
     /** Aktionen, deren Details nie angezeigt werden (keine Personendaten im Protokoll-Bildschirm). */

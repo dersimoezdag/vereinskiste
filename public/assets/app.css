@@ -1,9 +1,23 @@
-/* Eigene Styles der Vereinskiste (ergaenzen Tabler). */
+/* Eigene Styles der Vereinskiste (Modernes Material UI / MUI Design). */
 .material-symbol { fill: currentColor; stroke: none; flex-shrink: 0; }
 
+:root {
+    --tblr-font-sans-serif: 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --tblr-primary: #1976d2;
+    --tblr-primary-rgb: 25, 118, 210;
+}
+
+body {
+    font-family: var(--tblr-font-sans-serif);
+    background-color: #f8fafc;
+    color: #1e293b;
+    letter-spacing: 0.01em;
+    -webkit-font-smoothing: antialiased;
+}
+
 :focus-visible {
-    outline: 3px solid #005fcc;
-    outline-offset: 3px;
+    outline: 3px solid #1976d2;
+    outline-offset: 2px;
 }
 
 .skip-link {
@@ -13,8 +27,12 @@
     z-index: 1100;
     padding: 0.75rem 1rem;
     background: #fff;
-    color: #005fcc;
+    color: #1976d2;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-weight: 500;
     transform: translateY(-150%);
+    transition: transform 0.2s ease;
 }
 
 .skip-link:focus {
@@ -29,17 +47,17 @@ main, .table-cards td {
     overflow-wrap: anywhere;
 }
 
-.form-check {
-    padding-left: 0;
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+/* Logo & Branding */
+.navbar-brand-image {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    object-fit: contain;
 }
 
-.form-check .form-check-input {
-    margin-left: 0;
-    flex-shrink: 0;
+.page-center .navbar-brand-image {
+    width: 48px;
+    height: 48px;
 }
 
 /* Touch-Ziele mindestens 44 px */
@@ -51,9 +69,138 @@ main, .table-cards td {
     min-height: 44px;
 }
 
-.navbar-nav .nav-link {
+/* MUI Buttons */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-primary {
+    background-color: #1976d2;
+    border-color: #1976d2;
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(25, 118, 210, 0.25);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: #1565c0;
+    border-color: #1565c0;
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(25, 118, 210, 0.35);
+    transform: translateY(-1px);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(25, 118, 210, 0.2);
+}
+
+.btn-outline-secondary {
+    border-color: #cbd5e1;
+    color: #475569;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #f1f5f9;
+    border-color: #94a3b8;
+    color: #1e293b;
+}
+
+/* MUI Cards */
+.card {
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 14px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.02);
+    background-color: #ffffff;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    font-weight: 600;
+}
+
+.card-footer {
+    background: transparent;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* MUI Form Controls */
+.form-label {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #334155;
+    margin-bottom: 0.35rem;
+}
+
+.form-control,
+.form-select {
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    padding: 0.55rem 0.85rem;
+    background-color: #ffffff;
+    color: #1e293b;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #1976d2;
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.18);
+    background-color: #ffffff;
+}
+
+.form-check {
+    padding-left: 0;
+    min-height: 44px;
     display: flex;
     align-items: center;
+    gap: 0.5rem;
+}
+
+.form-check .form-check-input {
+    margin-left: 0;
+    flex-shrink: 0;
+    border-radius: 4px;
+}
+
+/* MUI Navigation Drawer (Sidebar) */
+.navbar-vertical {
+    background-color: #0f172a !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.navbar-vertical .navbar-brand {
+    padding: 1.25rem 1rem;
+    letter-spacing: -0.01em;
+}
+
+.navbar-vertical .navbar-nav .nav-link {
+    display: flex;
+    align-items: center;
+    border-radius: 10px;
+    margin: 2px 8px;
+    padding: 0.55rem 0.85rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.75);
+    transition: all 0.15s ease;
+}
+
+.navbar-vertical .navbar-nav .nav-link:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.07);
+}
+
+.navbar-vertical .navbar-nav .nav-item.active > .nav-link,
+.navbar-vertical .navbar-nav .nav-link.active {
+    color: #ffffff;
+    background-color: rgba(37, 99, 235, 0.25);
+    font-weight: 600;
 }
 
 .navbar-vertical .nav-link-icon {
@@ -62,13 +209,56 @@ main, .table-cards td {
     align-items: center;
     justify-content: center;
     margin-right: 0.75rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.navbar-vertical .nav-item.active .nav-link-icon {
+    color: #60a5fa;
 }
 
 .navbar-vertical .icon {
     flex-shrink: 0;
 }
 
-/* Kleine Links (z. B. Kennzeichen "geändert") als vollwertiges Touch-Ziel */
+.navbar-vertical .nav-user {
+    width: 100%;
+}
+
+.navbar-toggler {
+    min-width: 44px;
+}
+
+/* MUI Chips & Badges */
+.badge {
+    border-radius: 9999px;
+    font-weight: 600;
+    padding: 0.3em 0.75em;
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+}
+
+/* MUI Alerts */
+.alert {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    font-weight: 500;
+}
+
+/* MUI Tables */
+.table {
+    --tblr-table-hover-bg: rgba(25, 118, 210, 0.03);
+}
+
+.table th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: #64748b;
+}
+
+/* Kleine Links als Touch-Ziel */
 .touch-target {
     display: inline-flex;
     align-items: center;
@@ -77,15 +267,7 @@ main, .table-cards td {
     justify-content: center;
 }
 
-.navbar-toggler {
-    min-width: 44px;
-}
-
-.navbar-vertical .nav-user {
-    width: 100%;
-}
-
-/* Systemprüfung der Installation: farbiger Punkt plus Text (nie nur Farbe). */
+/* Systemprüfung der Installation */
 .check-item {
     display: flex;
     flex-wrap: wrap;
@@ -121,7 +303,7 @@ fieldset.card legend {
     width: auto;
 }
 
-/* Tabellen werden auf kleinen Bildschirmen zu Karten (td braucht data-label). */
+/* Tabellen werden auf kleinen Bildschirmen zu Karten */
 @media (max-width: 767.98px) {
     table.table-cards thead {
         position: absolute;
@@ -164,7 +346,7 @@ fieldset.card legend {
     }
 }
 
-/* Einrichtungsassistent */
+/* Einrichtungsassistent (Stepper) */
 .stepper {
     display: flex;
     gap: 0.5rem;
@@ -196,7 +378,7 @@ fieldset.card legend {
 }
 
 .stepper-item.is-active { color: var(--tblr-body-color); font-weight: 600; }
-.stepper-item.is-active .stepper-num { border-color: var(--tblr-primary); background: var(--tblr-primary); color: #fff; }
+.stepper-item.is-active .stepper-num { border-color: #1976d2; background: #1976d2; color: #fff; }
 .stepper-item.is-done .stepper-num { border-color: #2fb344; background: #2fb344; color: #fff; }
 
 @media (max-width: 575.98px) {

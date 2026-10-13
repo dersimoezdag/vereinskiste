@@ -94,6 +94,7 @@ return [
     'nav.categories' => 'Kategorien',
     'nav.logout' => 'Abmelden',
     'nav.users' => 'Benutzer verwalten',
+    'settings.users' => 'Benutzer',
     'nav.reports' => 'Auswertung',
     'nav.closing' => 'Abschluss',
     'nav.audit' => 'Protokoll',

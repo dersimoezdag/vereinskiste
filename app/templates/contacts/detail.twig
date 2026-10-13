@@ -10,7 +10,7 @@
     <select class="form-select mb-3" id="contact-kind" name="kind">{% for value, label in {'person':'Person','company':'Firma'} %}
         <option value="{{ value }}"{% if input.kind|default('person') == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
     {% if errors.kind is defined %}<p role="alert">{{ t(errors.kind) }}</p>{% endif %}
-    {% include 'components/foundation_fields.twig' %}
+    {% include 'components/foundation_fields.twig' with {'reason_required': false} %}
     {% if duplicates %}
     <div class="alert alert-warning" role="alert">{{ t('foundation.duplicates') }}
         <ul>{% for duplicate in duplicates %}<li><a href="/contacts/{{ duplicate.id }}">{{ duplicate.name }}</a></li>{% endfor %}</ul>

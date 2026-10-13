@@ -6,3 +6,4 @@ app/storage/*
 dist/
 .superpowers/
 .phpunit.cache/
+.release-secrets/

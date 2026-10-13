@@ -1,6 +1,7 @@
 {% extends 'layout.twig' %}
 {% block title %}{{ user_id is not null ? t('users.edit.title') : t('users.new') }}{% endblock %}
 {% block content %}
+{% include 'components/settings_tabs.twig' %}
 {% set editing = user_id is not null %}
 <h1 class="mb-4">{{ editing ? t('users.edit.title') : t('users.new') }}</h1>
 

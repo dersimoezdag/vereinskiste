@@ -7,7 +7,7 @@
 <form method="post" action="/settings/club" class="card card-body">
     {{ csrf_field() }}
     <input type="hidden" name="version" value="{{ version }}">
-    {% include 'components/foundation_fields.twig' %}
+    {% include 'components/foundation_fields.twig' with {'reason_required': false} %}
     <button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button>
 </form>
 <h2 class="h3 mt-4">{{ t('foundation.logo') }}</h2>
@@ -17,8 +17,6 @@
     <input type="hidden" name="version" value="{{ version }}">
     <label class="form-label" for="club-logo">{{ t('foundation.logo') }} (PNG/JPEG, max. 2 MB)</label>
     <input class="form-control mb-3" id="club-logo" type="file" name="receipt" accept="image/png,image/jpeg" required>
-    <label class="form-label" for="logo-reason">{{ t('bookings.reason') }}</label>
-    <input class="form-control mb-3" id="logo-reason" name="reason" maxlength="500" required>
     <button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button>
 </form>
 {% include 'components/foundation_history.twig' %}

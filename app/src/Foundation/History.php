@@ -16,6 +16,10 @@ final class History
         if (!\Vereinskiste\Auth\UserRepository::isStorableText($reason)) {
             throw new \Vereinskiste\Ledger\ValidationError(['reason' => 'validation.text.encoding']);
         }
+        // Nur Aenderungen an Finanzdaten (Kontodaten, Buchungen) brauchen eine Begruendung.
+        if (trim($reason) === '' && in_array($subject, ['club', 'contact'], true)) {
+            $reason = '–';
+        }
         $reason = ChangeLog::normalizeReason($reason);
         $changes = [];
         foreach ($after as $key => $value) {
