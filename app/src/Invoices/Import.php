@@ -26,8 +26,8 @@ final class Import
                 $fileId=(new StoredFileRepository($this->pdo))->register($file,'documents',FileStorage::cleanName($name,$file['ext']),$actor);
                 $xml=$file['mime']==='application/xml';
                 $stmt=$this->pdo->prepare("INSERT INTO invoice_documents(invoice_id,file_id,original_sha256,role,extraction_status,extraction) VALUES(?,?,?,?,?,?::jsonb) RETURNING id");
-                $stmt->execute([$invoice,$fileId,$file['sha256'],count($repo->documents($invoice))===0?'original':'supplement',$xml?'pending':'manual',json_encode($xml?(object)[]:['fields'=>[],'warning'=>'invoices.extraction.manual'],JSON_THROW_ON_ERROR)]);$document=(int)$stmt->fetchColumn();
-                if($xml) {(new \Vereinskiste\Jobs\Queue($this->pdo))->enqueue('invoice_extract',['document_id'=>$document],(string)$document,20);}
+                $stmt->execute([$invoice,$fileId,$file['sha256'],count($repo->documents($invoice))===0?'original':'supplement','pending',json_encode($xml?(object)[]:['fields'=>[],'warning'=>'invoices.extraction.manual'],JSON_THROW_ON_ERROR)]);$document=(int)$stmt->fetchColumn();
+                (new \Vereinskiste\Jobs\Queue($this->pdo))->enqueue('invoice_extract',['document_id'=>$document],(string)$document,20);
                 $this->pdo->prepare('UPDATE invoices SET version=version+1 WHERE id=?')->execute([$invoice]);
                 return $invoice;
             });

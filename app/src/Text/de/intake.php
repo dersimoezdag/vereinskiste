@@ -1,0 +1,26 @@
+<?php
+declare(strict_types=1);
+return [
+'intake.ocr.check'=>'OCR-Vorschläge bitte mit dem Original vergleichen. Keine automatische Freigabe.',
+'intake.security.required'=>'Die Sicherheitsprüfung ist noch offen oder fehlgeschlagen. Download und Freigabe bleiben gesperrt.',
+'intake.security.blocked'=>'Die Datei wurde durch die Sicherheitsprüfung gesperrt. Bitte einen sicheren Ersatzbeleg einreichen.',
+'intake.security.pending'=>'Sicherheitsprüfung ausstehend – Datei gesperrt.',
+'intake.security.error'=>'Sicherheitsprüfung nicht verfügbar oder fehlgeschlagen – Datei gesperrt.',
+'intake.security.clean'=>'Sicherheitsprüfung erfolgreich.',
+'intake.security.legacy'=>'Bestandsbeleg aus einer früheren Version; noch nicht durch den neuen Scanner geprüft.',
+'intake.payment.title'=>'Zahlung / Auslagenerstattung',
+'intake.payment.verify'=>'Empfänger und Bankverbindung müssen unabhängig geprüft und bestätigt werden.',
+'intake.payment.locked'=>'Dieser Zahlungsvorschlag kann nicht mehr geändert werden.',
+'intake.payment.review_first'=>'Bitte zuerst den Beleg prüfen und die Zahlung freigeben.',
+'intake.payment.self_approval'=>'Vier-Augen-Prinzip: Eigene Belege, eigene Zahlungsvorschläge und Erstattungen an dich selbst darfst du nicht freigeben.',
+'intake.payment.invalid_booking'=>'Die Buchung ist bereits zugeordnet, keine aktive Ausgabe oder größer als der verbleibende Betrag.',
+'intake.payment.booking_locked'=>'Diese Buchung ist einer Zahlung zugeordnet. Bitte zuerst die Zuordnung mit Begründung aufheben.',
+'intake.payment.draft'=>'Vorschlag – Freigabe ausstehend',
+'intake.payment.approved'=>'Freigegeben',
+'intake.payment.rejected'=>'Abgelehnt',
+'intake.mail.received'=>'Eingegangen',
+'intake.mail.imported'=>'Als Entwurf übernommen',
+'intake.mail.rejected'=>'Nicht übernommen',
+'intake.mail.message_rejected'=>'Nachricht überschreitet Grenzen oder enthält nicht zugelassene Anhänge.',
+'intake.mail.invalid_or_duplicate_attachment'=>'Ungültiger oder bereits vorhandener Beleg. Original bitte prüfen.',
+];

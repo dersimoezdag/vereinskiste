@@ -70,6 +70,7 @@
                         <a class="nav-link" href="/imports/bank"><span class="nav-link-icon">{{ icons.icon('imports') }}</span><span class="nav-link-title">Kontoauszug-Import</span></a>
                     </li>
                     {% endif %}
+                    {% if can('invoices.read') %}<li class="nav-item{% if path == '/receipt-inbox' %} active{% endif %}"><a class="nav-link" href="/receipt-inbox"><span class="nav-link-icon">{{ icons.icon('mail') }}</span><span class="nav-link-title">Belegeingang</span></a></li>{% endif %}
                     {% if can('invoices.read') %}<li class="nav-item{% if path starts with '/invoices' %} active{% endif %}"><a class="nav-link" href="/invoices"><span class="nav-link-icon">{{ icons.icon('bookings') }}</span><span class="nav-link-title">{{ t('invoices.title') }}</span></a></li>{% endif %}
                     {% if can('contacts.read') %}
                     <li class="nav-item{% if path starts with '/contacts' %} active{% endif %}">

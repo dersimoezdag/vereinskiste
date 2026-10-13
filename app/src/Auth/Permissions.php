@@ -13,7 +13,7 @@ final class Permissions
         'reports.read',
         'users.manage',
         'settings.manage',
-        'imports.read', 'imports.write', 'invoices.read', 'invoices.write',
+        'imports.read', 'imports.write', 'invoices.read', 'invoices.write', 'payments.approve',
         'contacts.read', 'contacts.write', 'contributions.read', 'contributions.write',
     ];
 
@@ -24,7 +24,7 @@ final class Permissions
         'admin' => self::ALL,
         'vorstand' => self::ALL,
         'kassenwart' => ['bookings.read', 'bookings.write', 'members.read', 'reports.read',
-            'imports.read', 'imports.write', 'invoices.read', 'invoices.write',
+            'imports.read', 'imports.write', 'invoices.read', 'invoices.write', 'payments.approve',
             'contacts.read', 'contacts.write', 'contributions.read', 'contributions.write'],
         'schriftfuehrer' => ['members.read', 'members.write', 'bookings.read'],
         'kassenpruefer' => ['bookings.read', 'members.read', 'reports.read',
