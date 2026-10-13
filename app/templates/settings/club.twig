@@ -10,11 +10,11 @@
     <button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button>
 </form>
 <h2 class="h3 mt-4">{{ t('foundation.logo') }}</h2>
-{% if logo_id %}<a class="btn btn-outline-secondary mb-3" href="/documents/{{ logo_id }}">{{ t('foundation.logo') }} herunterladen</a>{% endif %}
+{% if logo_id %}<a class="btn btn-outline-secondary mb-3" href="/documents/{{ logo_id }}">{{ t('foundation.logo') }} {{ t('ui.herunterladen') }}</a>{% endif %}
 <form method="post" action="/settings/club/logo" enctype="multipart/form-data" class="card card-body">
     {{ csrf_field() }}
     <input type="hidden" name="version" value="{{ version }}">
-    <label class="form-label" for="club-logo">{{ t('foundation.logo') }} (PNG/JPEG, max. 2 MB)</label>
+    <label class="form-label" for="club-logo">{{ t('foundation.logo') }} {{ t('ui.png_jpeg_max_2_mb') }}</label>
     <input class="form-control mb-3" id="club-logo" type="file" name="receipt" accept="image/png,image/jpeg" required>
     <button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button>
 </form>

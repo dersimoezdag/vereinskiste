@@ -11,7 +11,7 @@ test('OCR needs explicit click, uses same-origin assets, and only saves suggesti
  const {window,document}=setup();let terminated=false;const calls=[];let options;
  window.Tesseract={createWorker:async(lang,mode,opts)=>{options=opts;return {recognize:async()=>({data:{text:'Gesamtbetrag: 12,50 EUR'}}),terminate:async()=>{terminated=true;}};}};
  window.fetch=async(url,opts)=>{calls.push({url,opts});return url==='/documents/1'?{ok:true,blob:async()=>new Blob(['x'],{type:'image/png'})}:{ok:true};};
- window.eval(script);assert.equal(calls.length,0);
+ require('./browser-texts.cjs')(window); window.eval(script);assert.equal(calls.length,0);
  document.querySelector('button').click();await new Promise(r=>setTimeout(r,20));
  assert.equal(options.workerBlobURL,false);assert.equal(options.workerPath,'/assets/vendor/ocr/worker.min.js');assert.equal(options.langPath,'/assets/vendor/ocr/lang');
  assert.equal(calls.length,2);assert.equal(calls[1].opts.body.get('_csrf'),'token');assert.match(calls[1].opts.body.get('text'),/12,50/);
@@ -22,6 +22,6 @@ test('failed OCR terminates worker and leaves invoice fields unchanged',async()=
  const {window,document}=setup();let terminated=false;const calls=[];
  window.Tesseract={createWorker:async()=>({recognize:async()=>{throw Error('Nicht erkannt');},terminate:async()=>{terminated=true;}})};
  window.fetch=async(url)=>{calls.push(url);return {ok:true,blob:async()=>new Blob(['x'],{type:'image/png'})};};
- window.eval(script);document.querySelector('button').click();await new Promise(r=>setTimeout(r,20));
+ require('./browser-texts.cjs')(window); window.eval(script);document.querySelector('button').click();await new Promise(r=>setTimeout(r,20));
  assert.equal(calls.length,1);assert.equal(terminated,true);assert.equal(document.querySelector('[data-ocr-status]').textContent,'Nicht erkannt');window.close();
 });

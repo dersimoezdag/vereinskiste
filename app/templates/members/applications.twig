@@ -30,7 +30,7 @@
         <div class="col-lg-5 col-12">
             <div class="card mb-4">
                 <div class="card-header">
-                    <h3 class="card-title">{{ t('applications.invites.create') }} {{ help.tip('Erzeugt einen geschützten Online-Aufnahmelink für Beitrittsinteressierte. Nach Einreichung des Antrags verfällt der Link automatisch.') }}</h3>
+                    <h3 class="card-title">{{ t('applications.invites.create') }} {{ help.tip(t('ui.erzeugt_einen_geschuetzten_online_aufnahmelink_fuer_beitrittsinte')) }}</h3>
                 </div>
                 <div class="card-body">
                     <p class="text-muted small mb-3">
@@ -49,11 +49,11 @@
 
                         <div class="row g-2 mb-3">
                             <div class="col-6">
-                                <label for="invite-days" class="form-label">{{ t('applications.invites.validity_days') }} {{ help.tip('Gültigkeitsdauer: Nach Ablauf dieser Frist kann der Link nicht mehr geöffnet werden.') }}</label>
+                                <label for="invite-days" class="form-label">{{ t('applications.invites.validity_days') }} {{ help.tip(t('ui.gueltigkeitsdauer_nach_ablauf_dieser_frist_kann_der_link_nicht_me')) }}</label>
                                 <input type="number" id="invite-days" name="valid_days" value="14" min="1" max="365" class="form-control">
                             </div>
                             <div class="col-6">
-                                <label for="invite-pwd" class="form-label">{{ t('applications.invites.password') }} {{ help.tip('Zusätzlicher Schutz: Der Antragsteller muss vor dem Ausfüllen diesen Code eingeben.') }}</label>
+                                <label for="invite-pwd" class="form-label">{{ t('applications.invites.password') }} {{ help.tip(t('ui.zusaetzlicher_schutz_der_antragsteller_muss_vor_dem_ausfuellen_di')) }}</label>
                                 <input type="text" id="invite-pwd" name="password" class="form-control"
                                        placeholder="{{ t('applications.invites.password_placeholder') }}" autocomplete="off">
                             </div>
@@ -63,7 +63,7 @@
                         <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" id="require-sepa" name="require_sepa" value="1">
                             <label class="form-check-label fw-semibold" for="require-sepa">
-                                {{ t('applications.invites.require_sepa') }} {{ help.tip('Verpflichtendes SEPA-Lastschriftmandat: Der Antragsteller muss Bankverbindung (IBAN) und Mandatsermächtigung für den Beitragseinzug angeben.') }}
+                                {{ t('applications.invites.require_sepa') }} {{ help.tip(t('ui.verpflichtendes_sepa_lastschriftmandat_der_antragsteller_muss_ban')) }}
                             </label>
                             <div class="form-text text-muted">{{ t('applications.invites.require_sepa_hint') }}</div>
                         </div>
@@ -85,9 +85,9 @@
                     <table class="table table-vcenter table-hover mb-0">
                         <thead>
                             <tr>
-                                <th>Empfänger / Link</th>
-                                <th>Gültig bis</th>
-                                <th>Status</th>
+                                <th>{{ t('ui.empfaenger_link') }}</th>
+                                <th>{{ t('applications.invites.expires_at') }}</th>
+                                <th>{{ t('privacy.field.status') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -104,14 +104,14 @@
                                     <div class="fw-semibold">
                                         {{ inv.title ?: 'Einladungs-Link' }}
                                         {% if inv.has_password %}
-                                        <span class="badge bg-warning-subtle text-warning border ms-1" title="Passwortgeschützt">PW</span>
+                                        <span class="badge bg-warning-subtle text-warning border ms-1" title="{{ t('ui.passwortgeschuetzt') }}">{{ t('ui.pw') }}</span>
                                         {% endif %}
                                         {% if inv.require_sepa %}
-                                        <span class="badge bg-info-subtle text-info border ms-1" title="Inkl. SEPA">SEPA</span>
+                                        <span class="badge bg-info-subtle text-info border ms-1" title="{{ t('ui.inkl_sepa') }}">{{ t('ui.sepa') }}</span>
                                         {% endif %}
                                     </div>
                                     <div class="d-flex align-items-center gap-2 mt-1">
-                                        <input type="text" readonly value="/antrag/{{ inv.token }}" id="inv-link-{{ inv.id }}" aria-label="Einladungs-Link"
+                                        <input type="text" readonly value="/antrag/{{ inv.token }}" id="inv-link-{{ inv.id }}" aria-label="{{ t('ui.einladungs_link') }}"
                                                class="form-control form-control-sm font-monospace text-muted py-0 px-1 bg-light border-0" style="max-width: 140px;">
                                         <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2"
                                                 data-copy-path="/antrag/{{ inv.token }}" data-copied-label="{{ t('applications.invites.copied') }}">
@@ -146,10 +146,10 @@
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h3 class="card-title m-0">{{ t('applications.title') }}</h3>
                     <div class="d-flex gap-1">
-                        <a href="/members/applications?filter=all" class="btn btn-sm {% if filter == 'all' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Alle</a>
-                        <a href="/members/applications?filter=pending" class="btn btn-sm {% if filter == 'pending' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Offen</a>
-                        <a href="/members/applications?filter=approved" class="btn btn-sm {% if filter == 'approved' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Angenommen</a>
-                        <a href="/members/applications?filter=rejected" class="btn btn-sm {% if filter == 'rejected' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Abgelehnt</a>
+                        <a href="/members/applications?filter=all" class="btn btn-sm {% if filter == 'all' %}btn-primary{% else %}btn-outline-secondary{% endif %}">{{ t('invoices.status.all') }}</a>
+                        <a href="/members/applications?filter=pending" class="btn btn-sm {% if filter == 'pending' %}btn-primary{% else %}btn-outline-secondary{% endif %}">{{ t('applications.status.pending') }}</a>
+                        <a href="/members/applications?filter=approved" class="btn btn-sm {% if filter == 'approved' %}btn-primary{% else %}btn-outline-secondary{% endif %}">{{ t('applications.status.approved') }}</a>
+                        <a href="/members/applications?filter=rejected" class="btn btn-sm {% if filter == 'rejected' %}btn-primary{% else %}btn-outline-secondary{% endif %}">{{ t('intake.payment.rejected') }}</a>
                     </div>
                 </div>
 
@@ -166,8 +166,8 @@
                                 <h4 class="h5 mb-0 fw-semibold">{{ a.applicant_name }}</h4>
                                 <div class="text-muted small">
                                     {{ a.email }}
-                                    {% if a.data.phone %} · Tel: {{ a.data.phone }}{% endif %}
-                                    {% if a.data.birth_date %} · Geb.: {{ a.data.birth_date|date('d.m.Y') }}{% endif %}
+                                    {% if a.data.phone %} {{ t('ui.tel') }} {{ a.data.phone }}{% endif %}
+                                    {% if a.data.birth_date %} {{ t('ui.geb') }} {{ a.data.birth_date|date('d.m.Y') }}{% endif %}
                                 </div>
                             </div>
                             <div>
@@ -192,23 +192,23 @@
                         <!-- SEPA Details falls vorhanden -->
                         {% if a.require_sepa and a.data.iban %}
                         <div class="border rounded p-2 bg-light-subtle small mb-2">
-                            <div class="fw-semibold text-primary mb-1">Bankverbindung & Lastschriftmandat:</div>
-                            <div>Inhaber: {{ a.data.account_holder }}</div>
-                            <div class="font-monospace">IBAN: {{ a.data.iban }} {% if a.data.bic %}· BIC: {{ a.data.bic }}{% endif %}</div>
-                            <div class="text-success small">✓ SEPA-Lastschriftmandat vom Antragsteller erteilt</div>
+                            <div class="fw-semibold text-primary mb-1">{{ t('ui.bankverbindung_lastschriftmandat') }}</div>
+                            <div>{{ t('ui.inhaber') }} {{ a.data.account_holder }}</div>
+                            <div class="font-monospace">{{ t('ui.iban') }} {{ a.data.iban }} {% if a.data.bic %}{{ t('ui.bic') }} {{ a.data.bic }}{% endif %}</div>
+                            <div class="text-success small">{{ t('ui.sepa_lastschriftmandat_vom_antragsteller_erteilt') }}</div>
                         </div>
                         {% endif %}
 
                         {% if a.data.notes %}
                         <div class="small fst-italic text-muted mb-2">
-                            Notiz des Antragstellers: „{{ a.data.notes }}“
+                            {{ t('ui.notiz_des_antragstellers') }}{{ a.data.notes }}“
                         </div>
                         {% endif %}
 
                         <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
                             <span class="text-muted small">
-                                Eingegangen: {{ a.created_at|date('d.m.Y H:i') }}
-                                {% if a.reviewer_name %} · Geprüft von: {{ a.reviewer_name }}{% endif %}
+                                {{ t('ui.eingegangen') }} {{ a.created_at|date('d.m.Y H:i') }}
+                                {% if a.reviewer_name %} {{ t('ui.geprueft_von') }} {{ a.reviewer_name }}{% endif %}
                             </span>
 
                             {% if a.status == 'pending' and can('members.write') %}
@@ -218,10 +218,10 @@
                             </div>
                             {% elseif a.status == 'approved' and a.member_id %}
                             <a href="/members/{{ a.member_id }}" class="btn btn-sm btn-outline-primary">
-                                Zum Mitglied (#{{ a.member_no }})
+                                {{ t('ui.zum_mitglied') }}{{ a.member_no }})
                             </a>
                             {% elseif a.status == 'rejected' and a.rejection_reason %}
-                            <span class="text-danger small">Grund: {{ a.rejection_reason }}</span>
+                            <span class="text-danger small">{{ t('ui.grund') }} {{ a.rejection_reason }}</span>
                             {% endif %}
                         </div>
 
@@ -235,7 +235,7 @@
 </div>
 <div class="card card-body mt-3"><h2>{{ t('applications.outbox') }}</h2><p>{{ t('applications.outbox.explanation') }}</p>
 {% if not system_mail_available() %}<p class="alert alert-warning">{{ t('applications.mail.disabled') }}</p>{% endif %}
-<div class="table-responsive"><table class="table"><thead><tr><th>{{ t('applications.mail.subject') }}</th><th>E-Mail</th><th>{{ t('privacy.field.status') }}</th><th></th></tr></thead><tbody>
+<div class="table-responsive"><table class="table"><thead><tr><th>{{ t('applications.mail.subject') }}</th><th>{{ t('ui.e_mail') }}</th><th>{{ t('privacy.field.status') }}</th><th></th></tr></thead><tbody>
 {% for mail in outbox %}<tr><td>{{ mail.subject }} · #{{ mail.application_id }}</td><td>{{ mail.recipient }}</td><td>{{ t('applications.outbox.' ~ mail.status) }}</td><td>{% if mail.status in ['failed','uncertain'] and can('members.write') %}<form method="post" action="/members/application-mails/{{ mail.id }}/retry">{{ csrf_field() }}<input type="hidden" name="version" value="{{ mail.version }}"><button class="btn btn-sm">{{ t('applications.outbox.retry') }}</button></form>{% endif %}</td></tr>{% endfor %}
 </tbody></table></div></div>
 {% endblock %}

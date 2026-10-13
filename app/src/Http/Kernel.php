@@ -115,6 +115,7 @@ final class Kernel
         ));
         $env->addFilter(new TwigFilter('eur', [MoneyFormat::class, 'eur']));
         $runtime = new \Vereinskiste\Update\Runtime($appDir);
+        $env->addFunction(new TwigFunction('interface_texts', static fn (): string => json_encode(array_filter($texts, static fn (string $key): bool => str_starts_with($key, 'js.'), ARRAY_FILTER_USE_KEY), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR)));
         $env->addFunction(new TwigFunction('asset', static fn (string $path): string => $runtime->asset($path)));
         $env->addFunction(new TwigFunction('system_mail_available', static fn (): bool => $mailer->isConfigured()));
         $env->addFunction(new TwigFunction(

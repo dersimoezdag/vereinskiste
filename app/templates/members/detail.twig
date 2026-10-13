@@ -11,9 +11,9 @@
                 <h1 class="page-title d-flex align-items-center gap-2">
                     {{ member.name }}
                     {% if member.current %}
-                        <span class="badge bg-success-subtle text-success border border-success-subtle fs-6">Aktiv</span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle fs-6">{{ t('bookings.status.active') }}</span>
                     {% else %}
-                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle fs-6">Ausgetreten</span>
+                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle fs-6">{{ t('ui.ausgetreten') }}</span>
                     {% endif %}
                 </h1>
             </div>
@@ -29,7 +29,7 @@
         <div class="col-lg-7 col-12">
             <div class="card mb-4">
                 <div class="card-header">
-                    <h3 class="card-title">Stammdaten</h3>
+                    <h3 class="card-title">{{ t('ui.stammdaten') }}</h3>
                 </div>
                 <div class="card-body">
                     <form method="post" action="/members/{{ member.id }}" novalidate>
@@ -141,7 +141,7 @@
             <!-- Karte: Mitgliedschaft (Eintritt / Austritt) -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h3 class="card-title">{{ t('members.period.title') }} {{ help.tip('Mitgliedszeiträume: Bildet die lückenlose Historie aller Beitritte und Austritte für die Vereinsstatistik und Stichtagsberichte.') }}</h3>
+                    <h3 class="card-title">{{ t('members.period.title') }} {{ help.tip(t('ui.mitgliedszeitraeume_bildet_die_lueckenlose_historie_aller_beitrit')) }}</h3>
                 </div>
                 <div class="card-body">
                     {% if errors.date %}
@@ -150,7 +150,7 @@
 
                     {% if member.current %}
                         <p class="text-success fw-semibold mb-3">
-                            Das Mitglied hat eine aktive Mitgliedschaft.
+                            {{ t('ui.das_mitglied_hat_eine_aktive_mitgliedschaft') }}
                         </p>
                         {% if (can('members.write') and not member.anonymized_at) %}
                         <form method="post" action="/members/{{ member.id }}/leave" class="border rounded p-3 bg-light-subtle mb-3">
@@ -164,12 +164,12 @@
                                 <label for="leave-reason" class="form-label">{{ t('members.period.end_reason') }}</label>
                                 <input type="text" id="leave-reason" name="end_reason" class="form-control form-control-sm" maxlength="500">
                             </div>
-                            <button type="submit" class="btn btn-sm btn-outline-danger w-100">{{ t('members.period.leave') }} erfassen</button>
+                            <button type="submit" class="btn btn-sm btn-outline-danger w-100">{{ t('members.period.leave') }} {{ t('ui.erfassen') }}</button>
                         </form>
                         {% endif %}
                     {% else %}
                         <p class="text-muted mb-3">
-                            Aktuell keine laufende Mitgliedschaft.
+                            {{ t('ui.aktuell_keine_laufende_mitgliedschaft') }}
                         </p>
                         {% if (can('members.write') and not member.anonymized_at) %}
                         <form method="post" action="/members/{{ member.id }}/join" class="border rounded p-3 bg-light-subtle mb-3">
@@ -179,7 +179,7 @@
                                 <label for="join-date" class="form-label">{{ t('members.period.start') }}</label>
                                 <input type="date" id="join-date" name="date" value="{{ today }}" class="form-control form-control-sm" required>
                             </div>
-                            <button type="submit" class="btn btn-sm btn-primary w-100">{{ t('members.period.join') }} erfassen</button>
+                            <button type="submit" class="btn btn-sm btn-primary w-100">{{ t('members.period.join') }} {{ t('ui.erfassen') }}</button>
                         </form>
                         {% endif %}
                     {% endif %}
@@ -187,17 +187,17 @@
                     <!-- Liste bisheriger Mitgliedszeiträume -->
                     {% if member.periods is not empty %}
                     <div class="mt-3">
-                        <div class="text-muted small fw-bold mb-2">Zeiträume:</div>
+                        <div class="text-muted small fw-bold mb-2">{{ t('ui.zeitraeume') }}</div>
                         <ul class="list-group list-group-flush small">
                             {% for p in member.periods %}
                             <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
                                 <div>
-                                    <span class="fw-semibold">{{ p.start_date|date('d.m.Y') }}</span> bis
+                                    <span class="fw-semibold">{{ p.start_date|date('d.m.Y') }}</span> {{ t('ui.bis') }}
                                     {% if p.end_date %}
                                         <span class="fw-semibold">{{ p.end_date|date('d.m.Y') }}</span>
-                                        {% if p.end_reason %}<div class="text-muted fst-italic">Grund: {{ p.end_reason }}</div>{% endif %}
+                                        {% if p.end_reason %}<div class="text-muted fst-italic">{{ t('ui.grund') }} {{ p.end_reason }}</div>{% endif %}
                                     {% else %}
-                                        <span class="badge bg-success-subtle text-success">heute (offen)</span>
+                                        <span class="badge bg-success-subtle text-success">{{ t('ui.heute_offen') }}</span>
                                     {% endif %}
                                 </div>
                             </li>
@@ -211,7 +211,7 @@
             <!-- Karte: Vereinsrollen -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h3 class="card-title">{{ t('clubroles.assign.title') }} {{ help.tip('Vereinsrollen weisen dem Mitglied Ämter (z. B. Vorstand) oder Beitragsstatus (z. B. Vollmitglied, Fördermitglied) zu.') }}</h3>
+                    <h3 class="card-title">{{ t('clubroles.assign.title') }} {{ help.tip(t('ui.vereinsrollen_weisen_dem_mitglied_aemter_z_b_vorstand_oder_beitra')) }}</h3>
                 </div>
                 <div class="card-body">
                     {% if errors.role %}
@@ -234,10 +234,10 @@
                                     <div class="fw-semibold">
                                         {{ a.role_name }}
                                         {% if a.scope %}<span class="badge bg-info-subtle text-info ms-1">{{ a.scope }}</span>{% endif %}
-                                        {% if a.role_kind == 'membership_type' %}<span class="badge bg-light text-dark ms-1">Mitgliedsart</span>{% endif %}
+                                        {% if a.role_kind == 'membership_type' %}<span class="badge bg-light text-dark ms-1">{{ t('clubroles.assign.type') }}</span>{% endif %}
                                     </div>
                                     <div class="small text-muted">
-                                        {% if a.start_date %}Seit {{ a.start_date|date('d.m.Y') }}{% endif %}
+                                        {% if a.start_date %}{{ t('ui.seit') }} {{ a.start_date|date('d.m.Y') }}{% endif %}
                                         {% if a.end_date %} · {{ t('clubroles.assign.ended') }} {{ a.end_date|date('d.m.Y') }}{% endif %}
                                     </div>
                                 </div>
@@ -264,7 +264,7 @@
                         <div class="mb-2">
                             <label for="assign-role-id" class="form-label">{{ t('clubroles.assign.role') }}</label>
                             <select id="assign-role-id" name="role_id" class="form-select form-select-sm" required>
-                                <option value="">– Bitte wählen –</option>
+                                <option value="">{{ t('ui.bitte_waehlen') }}</option>
                                 {% for r in club_roles %}
                                     {% if r.kind != 'membership_type' or not has_open_membership_type %}
                                     <option value="{{ r.id }}">{{ r.name }} ({{ r.kind == 'membership_type' ? 'Mitgliedsart' : 'Funktion' }})</option>
@@ -274,7 +274,7 @@
                         </div>
                         <div class="mb-2">
                             <label for="assign-scope" class="form-label">{{ t('clubroles.assign.scope') }}</label>
-                            <input type="text" id="assign-scope" name="scope" class="form-control form-control-sm" placeholder="z. B. Jugend">
+                            <input type="text" id="assign-scope" name="scope" class="form-control form-control-sm" placeholder="{{ t('ui.z_b_jugend') }}">
                         </div>
                         <div class="mb-3">
                             <label for="assign-start-date" class="form-label">{{ t('clubroles.assign.start') }}</label>
@@ -289,7 +289,7 @@
             <!-- Karte: Benutzerzugang -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h3 class="card-title">{{ t('members.user.title') }} {{ help.tip('Benutzerzugang: Verknüpft das Mitglied mit einem Login-Benutzerkonto im System mit den entsprechenden Rechten.') }}</h3>
+                    <h3 class="card-title">{{ t('members.user.title') }} {{ help.tip(t('ui.benutzerzugang_verknuepft_das_mitglied_mit_einem_login_benutzerko')) }}</h3>
                 </div>
                 <div class="card-body">
                     {% if errors.user %}
@@ -304,7 +304,7 @@
                         <div class="alert alert-success d-flex justify-content-between align-items-center mb-0">
                             <div>
                                 {{ icons.icon('users') }}
-                                <strong>Verknüpft mit Benutzer-ID #{{ member.user_id }}</strong>
+                                <strong>{{ t('ui.verknuepft_mit_benutzer_id') }}{{ member.user_id }}</strong>
                             </div>
                             {% if can('users.manage') %}
                             <form method="post" action="/members/{{ member.id }}/user/unlink" class="m-0">
@@ -322,9 +322,9 @@
                                 {{ csrf_field() }}
                                 <h4 class="h5 mb-2">{{ t('members.user.link') }}</h4>
                                 <div class="mb-3">
-                                    <label for="link-user-id" class="form-label">Vorhandenen Benutzer wählen</label>
+                                    <label for="link-user-id" class="form-label">{{ t('ui.vorhandenen_benutzer_waehlen') }}</label>
                                     <select id="link-user-id" name="user_id" class="form-select form-select-sm" required>
-                                        <option value="">– Benutzer auswählen –</option>
+                                        <option value="">{{ t('ui.benutzer_auswaehlen') }}</option>
                                         {% for u in linkable_users %}
                                         <option value="{{ u.id }}">{{ u.name }} ({{ u.email }})</option>
                                         {% endfor %}

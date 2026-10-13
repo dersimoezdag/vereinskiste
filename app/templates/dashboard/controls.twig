@@ -1,5 +1,5 @@
 <div class="dashboard-controls">
-    <button type="button" class="dashboard-grip" data-drag-handle aria-label="{{ label }} verschieben" title="Ziehen zum Verschieben"><span aria-hidden="true">⠿</span></button>
-    <button type="button" class="btn btn-sm" data-move="up" aria-label="{{ label }} nach vorne verschieben" title="Nach vorne">↑</button>
-    <button type="button" class="btn btn-sm" data-move="down" aria-label="{{ label }} nach hinten verschieben" title="Nach hinten">↓</button>
+    <button type="button" class="dashboard-grip" data-drag-handle aria-label="{{ t('home.move')|replace({'{label}': label}) }}" title="{{ t('ui.ziehen_zum_verschieben') }}"><span aria-hidden="true">⠿</span></button>
+    <button type="button" class="btn btn-sm" data-move="up" aria-label="{{ t('home.move_up')|replace({'{label}': label}) }}" title="{{ t('ui.nach_vorne') }}">↑</button>
+    <button type="button" class="btn btn-sm" data-move="down" aria-label="{{ t('home.move_down')|replace({'{label}': label}) }}" title="{{ t('ui.nach_hinten') }}">↓</button>
 </div>

@@ -1,0 +1,6 @@
+{% set master_path = current_path() %}
+<nav class="mui-tabs mb-3" aria-label="{{ t('finance.master_data') }}">
+    <a class="mui-tab{% if master_path starts with '/accounts' %} active{% endif %}" href="/accounts">{{ t('nav.accounts') }}</a>
+    <a class="mui-tab{% if master_path starts with '/categories' %} active{% endif %}" href="/categories">{{ t('nav.categories') }}</a>
+    {% if can('contacts.read') %}<a class="mui-tab{% if master_path starts with '/contacts' %} active{% endif %}" href="/contacts">{{ t('foundation.contacts') }}</a>{% endif %}
+</nav>

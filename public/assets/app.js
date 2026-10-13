@@ -139,7 +139,7 @@ document.querySelectorAll('[data-dropzone]').forEach(function (zone) {
                 var remove = document.createElement('button');
                 remove.type = 'button';
                 remove.className = 'btn btn-sm btn-ghost-secondary';
-                remove.textContent = zone.dataset.labelRemove || 'Entfernen';
+                remove.textContent = zone.dataset.labelRemove || window.vkText('js.entfernen');
                 remove.setAttribute('aria-label', remove.textContent + ': ' + file.name);
                 remove.addEventListener('click', function () {
                     files.splice(index, 1);
@@ -204,7 +204,7 @@ document.addEventListener('click', function (event) {
         var url = window.location.origin + copy.dataset.copyPath;
         var original = copy.textContent;
         var done = function () {
-            copy.textContent = copy.dataset.copiedLabel || 'Kopiert!';
+            copy.textContent = copy.dataset.copiedLabel || window.vkText('js.kopiert');
             window.setTimeout(function () { copy.textContent = original; }, 2000);
         };
         var fallback = function () {

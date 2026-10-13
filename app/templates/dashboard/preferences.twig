@@ -2,28 +2,28 @@
 {% block title %}{{ t('home.customize') }}{% endblock %}
 {% block content %}
 <h1>{{ t('home.customize') }}</h1>
-<p class="text-muted">Wähle deine Karten und Schnellaktionen. Ziehe sie am Griff in die gewünschte Reihenfolge oder ändere die Positionsnummern. Deine Auswahl gilt für dein Benutzerkonto auf allen Geräten.</p>
-{% if error is defined %}<div class="alert alert-danger" role="alert">{{ error }} <a href="/dashboard/preferences">Seite neu laden</a></div>{% endif %}
+<p class="text-muted">{{ t('ui.waehle_deine_karten_und_schnellaktionen_ziehe_sie_am_griff_in_die') }}</p>
+{% if error is defined %}<div class="alert alert-danger" role="alert">{{ error }} <a href="/dashboard/preferences">{{ t('ui.seite_neu_laden') }}</a></div>{% endif %}
 <form method="post" action="/dashboard/preferences" data-dashboard-form>
     {{ csrf_field() }}<input type="hidden" name="version" value="{{ preferences.version }}">
     {% for key, catalog in {'cards': cards, 'shortcuts': shortcuts} %}
     <section class="card mb-3"><div class="card-body">
-        <h2>{{ key == 'cards' ? 'Karten' : 'Schnellaktionen' }}</h2>
+        <h2>{{ key == 'cards' ? t('home.cards') : t('ui.schnellaktionen') }}</h2>
         <div class="dashboard-options" data-dashboard-list>
         {% set ordered = preferences[key] %}
         {% for id in catalog|keys %}{% if id not in ordered %}{% set ordered = ordered|merge([id]) %}{% endif %}{% endfor %}
         {% for id in ordered %}
         {% set item = catalog[id] %}
         <div class="dashboard-option" data-dashboard-item>
-            {% include 'dashboard/controls.twig' with {label: item.label} %}
-            <label class="dashboard-option-label"><input type="checkbox" class="form-check-input" name="{{ key }}[]" value="{{ id }}" {% if id in preferences[key] %}checked{% endif %}> {{ item.label }}</label>
-            <label class="dashboard-position">Position <input class="form-control" type="number" name="{{ key }}_positions[{{ id }}]" min="1" max="99" value="{{ loop.index }}" data-position aria-label="Position: {{ item.label }}"></label>
+            {% include 'dashboard/controls.twig' with {label: t(item.label)} %}
+            <label class="dashboard-option-label"><input type="checkbox" class="form-check-input" name="{{ key }}[]" value="{{ id }}" {% if id in preferences[key] %}checked{% endif %}> {{ t(item.label) }}</label>
+            <label class="dashboard-position">{{ t('ui.position') }} <input class="form-control" type="number" name="{{ key }}_positions[{{ id }}]" min="1" max="99" value="{{ loop.index }}" data-position aria-label="{{ t('home.position')|replace({'{label}': t(item.label)}) }}"></label>
         </div>
-        {% else %}<p class="text-muted">Für deine Berechtigungen sind keine Einträge verfügbar.</p>{% endfor %}
+        {% else %}<p class="text-muted">{{ t('ui.fuer_deine_berechtigungen_sind_keine_eintraege_verfuegbar') }}</p>{% endfor %}
         </div>
     </div></section>
     {% endfor %}
-    <div class="d-flex gap-3 align-items-center"><button class="btn btn-primary">Auswahl speichern</button><a class="btn" href="/">Abbrechen</a><span role="status" aria-live="polite" data-dashboard-status></span></div>
+    <div class="d-flex gap-3 align-items-center"><button class="btn btn-primary">{{ t('ui.auswahl_speichern') }}</button><a class="btn" href="/">{{ t('common.cancel') }}</a><span role="status" aria-live="polite" data-dashboard-status></span></div>
 </form>
 {% endblock %}
 {% block scripts %}<script src="{{ asset('home-dashboard.js') }}"></script>{% endblock %}

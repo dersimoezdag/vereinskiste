@@ -36,7 +36,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="new-role-kind" class="form-label required">{{ t('clubroles.kind') }} {{ help.tip('Funktionen bezeichnen Ämter wie 1. Vorstand oder Kassenprüfer. Mitgliedsarten regeln z. B. Vollmitglied, Jugend oder Fördermitglied.') }}</label>
+                            <label for="new-role-kind" class="form-label required">{{ t('clubroles.kind') }} {{ help.tip(t('ui.funktionen_bezeichnen_aemter_wie_1_vorstand_oder_kassenpruefer_mi')) }}</label>
                             <select id="new-role-kind" name="kind" class="form-select">
                                 <option value="function">{{ t('clubroles.kind.function') }}</option>
                                 <option value="membership_type">{{ t('clubroles.kind.membership_type') }}</option>
@@ -46,7 +46,7 @@
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" id="new-single-holder" name="single_holder" value="1">
                             <label class="form-check-label" for="new-single-holder">
-                                {{ t('clubroles.single') }} {{ help.tip('Nur 1 Träger: Verhindert Mehrfachbesetzungen für Ämter, die laut Satzung nur einfach besetzt sein dürfen (z. B. 1. Vorsitzender).') }}
+                                {{ t('clubroles.single') }} {{ help.tip(t('ui.nur_1_traeger_verhindert_mehrfachbesetzungen_fuer_aemter_die_laut')) }}
                             </label>
                         </div>
 
@@ -69,7 +69,7 @@
                                 <th>{{ t('clubroles.name') }}</th>
                                 <th>{{ t('clubroles.kind') }}</th>
                                 <th>{{ t('clubroles.holders') }}</th>
-                                <th class="text-end">Aktion</th>
+                                <th class="text-end">{{ t('audit.action') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -98,10 +98,10 @@
                                 </td>
                                 <td>
                                     {% if r.holders_list is empty %}
-                                        <span class="text-muted small">0 Träger</span>
+                                        <span class="text-muted small">{{ t('ui.0_traeger') }}</span>
                                     {% else %}
                                         <div class="small">
-                                            <strong>{{ r.holders }} Träger:</strong>
+                                            <strong>{{ r.holders }} {{ t('ui.traeger') }}</strong>
                                             {% for h in r.holders_list %}
                                                 <a href="/members/{{ h.member_id }}" class="text-reset text-decoration-underline me-1">{{ h.name }}{% if h.scope %} ({{ h.scope }}){% endif %}</a>{% if not loop.last %}, {% endif %}
                                             {% endfor %}
@@ -111,7 +111,7 @@
                                 <td class="text-end">
                                     <button type="button" class="btn btn-sm btn-outline-secondary"
                                             data-toggle-target="edit-role-{{ r.id }}" aria-controls="edit-role-{{ r.id }}">
-                                        Bearbeiten
+                                        {{ t('bookings.edit') }}
                                     </button>
                                 </td>
                             </tr>
@@ -136,8 +136,8 @@
                                         <div class="col-md-2 col-12">
                                             <label for="role-kind-{{ r.id }}" class="form-label form-label-sm">{{ t('clubroles.kind') }}</label>
                                             <select id="role-kind-{{ r.id }}" name="kind" class="form-select form-select-sm">
-                                                <option value="function" {% if (error_role_id == r.id ? input.kind : r.kind) == 'function' %}selected{% endif %}>Funktion</option>
-                                                <option value="membership_type" {% if (error_role_id == r.id ? input.kind : r.kind) == 'membership_type' %}selected{% endif %}>Mitgliedsart</option>
+                                                <option value="function" {% if (error_role_id == r.id ? input.kind : r.kind) == 'function' %}selected{% endif %}>{{ t('ui.funktion') }}</option>
+                                                <option value="membership_type" {% if (error_role_id == r.id ? input.kind : r.kind) == 'membership_type' %}selected{% endif %}>{{ t('clubroles.assign.type') }}</option>
                                             </select>
                                             {% if error_role_id == r.id and errors.kind %}
                                             <div class="text-danger small">{{ t(errors.kind) }}</div>
@@ -147,12 +147,12 @@
                                             <div class="form-check form-check-inline mt-4">
                                                 <input class="form-check-input" type="checkbox" name="single_holder" value="1" id="single-{{ r.id }}"
                                                        {% if (error_role_id == r.id ? input.single_holder : r.single_holder) %}checked{% endif %}>
-                                                <label class="form-check-label small" for="single-{{ r.id }}">Nur 1 Träger</label>
+                                                <label class="form-check-label small" for="single-{{ r.id }}">{{ t('ui.nur_1_traeger') }}</label>
                                             </div>
                                             <div class="form-check form-check-inline mt-1">
                                                 <input class="form-check-input" type="checkbox" name="active" value="1" id="active-{{ r.id }}"
                                                        {% if (error_role_id == r.id ? input.active : r.active) %}checked{% endif %}>
-                                                <label class="form-check-label small" for="active-{{ r.id }}">Aktiv</label>
+                                                <label class="form-check-label small" for="active-{{ r.id }}">{{ t('bookings.status.active') }}</label>
                                             </div>
                                             {% if error_role_id == r.id and errors.single_holder %}
                                             <div class="text-danger small">{{ t(errors.single_holder) }}</div>

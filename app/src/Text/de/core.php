@@ -3,6 +3,14 @@ declare(strict_types=1);
 
 /** Zentrale deutsche Oberflaechentexte (Schluessel => Text). */
 return [
+    'finance.master_data' => 'Konten und Stammdaten',
+    'finance.bank_imports' => 'Kontoauszüge importieren',
+    'finance.documents' => 'Belege und Rechnungen',
+    'finance.document_upload' => 'Beleg hochladen',
+    'finance.document_manual' => 'Rechnung manuell erfassen',
+    'receipts.from_invoice' => 'Rechnungsbeleg',
+    'receipts.open_invoice' => 'Rechnung öffnen',
+    'language.de' => 'Deutsch',
     'theme.choose' => 'Darstellung wählen',
     'theme.current' => 'Darstellung',
     'theme.light' => 'Hell',

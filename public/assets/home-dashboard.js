@@ -20,16 +20,16 @@
             if (!form.hasAttribute('data-autosave') || blocked || saving || drag || !dirty) { return; }
             saving = true;
             dirty = false;
-            message('Reihenfolge wird gespeichert …');
+            message(window.vkText('js.reihenfolge_wird_gespeichert'));
             try {
                 var response = await fetch(form.action, { method: 'POST', body: new FormData(form), credentials: 'same-origin', headers: { Accept: 'application/json' } });
                 var result = await response.json();
-                if (!response.ok || !Number.isInteger(result.version)) { throw new Error(result.error || 'Speichern fehlgeschlagen. Bitte neu laden und erneut versuchen.'); }
+                if (!response.ok || !Number.isInteger(result.version)) { throw new Error(result.error || window.vkText('js.speichern_fehlgeschlagen_bitte_neu_laden_und_erneut_versuchen')); }
                 form.querySelector('[name="version"]').value = result.version;
-                message(dirty ? 'Reihenfolge wird gespeichert …' : 'Reihenfolge gespeichert.');
+                message(dirty ? window.vkText('js.reihenfolge_wird_gespeichert') : window.vkText('js.reihenfolge_gespeichert'));
             } catch (error) {
                 blocked = true;
-                message(error.message || 'Speichern fehlgeschlagen. Bitte neu laden.');
+                message(error.message || window.vkText('js.speichern_fehlgeschlagen_bitte_neu_laden'));
             } finally {
                 saving = false;
                 if (dirty && !blocked) { save(); }
@@ -38,7 +38,7 @@
         function changed(list) {
             positions(list);
             if (blocked) { return; }
-            message('Reihenfolge geändert.');
+            message(window.vkText('js.reihenfolge_geandert'));
             dirty = true;
             save();
         }
@@ -96,7 +96,7 @@
         if (form.hasAttribute('data-autosave')) {
             form.addEventListener('submit', function (event) {
                 event.preventDefault();
-                if (blocked) { message('Bitte lade die Seite neu, bevor du erneut speicherst.'); return; }
+                if (blocked) { message(window.vkText('js.bitte_lade_die_seite_neu_bevor_du_erneut_speicherst')); return; }
                 dirty = true;
                 save();
             });

@@ -15,9 +15,7 @@ final class IntakeController extends AdminController
     public function __construct(private Closure $pdo) {}
     public function index(Request $req,Response $res): Response
     {
-        $pdo=($this->pdo)();
-        $documents=$pdo->query("SELECT d.*,f.original_name FROM invoice_documents d JOIN stored_files f ON f.id=d.file_id JOIN invoices i ON i.id=d.invoice_id WHERE i.status='draft' ORDER BY d.id DESC LIMIT 100")->fetchAll();
-        return $req->getAttribute('view')->render($res,'intake/index.twig',['documents'=>$documents]);
+        return $this->redirect('/invoices?state=draft');
     }
     public function paymentSettings(Request $req,Response $res): Response {return $this->renderPaymentSettings($req,$res);}
     public function savePaymentSettings(Request $req,Response $res): Response

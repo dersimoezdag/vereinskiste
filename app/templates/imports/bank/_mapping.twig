@@ -1,10 +1,9 @@
-<h2>Spalten zuordnen</h2>
-<p>{{ import.settings.encoding }} · {{ import.total_rows }} Zeilen. Nicht zugeordnete Währung wird als EUR behandelt.
-CSV enthält hier keine überprüfbaren Anfangs-/Endsalden; ein Saldenabgleich ist daher nicht möglich.</p>
+<h2>{{ t('ui.spalten_zuordnen') }}</h2>
+<p>{{ import.settings.encoding }} · {{ import.total_rows }} {{ t('ui.zeilen_nicht_zugeordnete_waehrung_wird_als_eur_behandelt_csv_enth') }}</p>
 <form method="get" action="/imports/bank/{{ import.id }}" class="d-flex flex-wrap gap-2 mb-3">
-<label for="bank-profile">Gespeichertes CSV-Profil</label><select id="bank-profile" name="profile" class="form-select">
-<option value="">Bitte auswählen</option>{% for profile in profiles %}<option value="{{ profile.id }}">{{ profile.name }}</option>{% endfor %}</select>
-<button type="submit" class="btn btn-outline-secondary">Zuordnung laden</button></form>
+<label for="bank-profile">{{ t('ui.gespeichertes_csv_profil') }}</label><select id="bank-profile" name="profile" class="form-select">
+<option value="">{{ t('ui.bitte_auswaehlen') }}</option>{% for profile in profiles %}<option value="{{ profile.id }}">{{ profile.name }}</option>{% endfor %}</select>
+<button type="submit" class="btn btn-outline-secondary">{{ t('ui.zuordnung_laden') }}</button></form>
 <div class="table-responsive mb-3"><table class="table"><thead><tr>{% for header in import.settings.headers %}<th>{{ header }}</th>{% endfor %}</tr></thead>
 <tbody>{% for row in import.settings.preview %}<tr>{% for value in row %}<td>{{ value }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>
 {% if can('imports.write') %}
@@ -12,11 +11,11 @@ CSV enthält hier keine überprüfbaren Anfangs-/Endsalden; ein Saldenabgleich i
 {{ csrf_field() }}<input type="hidden" name="version" value="{{ import.version }}">
 {% for field in fields %}<label for="map-{{ field }}" class="form-label">{{ t('bank.field.' ~ field) }}</label>
 <select id="map-{{ field }}" name="{{ field }}" class="form-select mb-2"{% if field in ['booking_date','amount'] %} required{% endif %}>
-<option value="">Nicht zuordnen</option>{% for header in import.settings.headers %}<option value="{{ loop.index0 }}"{% if defaults.mapping[field] is defined and defaults.mapping[field] is not null and defaults.mapping[field] == loop.index0 %} selected{% endif %}>{{ loop.index }}: {{ header }}</option>{% endfor %}</select>{% endfor %}
-<label for="map-date">Datumsformat</label><select id="map-date" name="date_format" class="form-select mb-2">
+<option value="">{{ t('ui.nicht_zuordnen') }}</option>{% for header in import.settings.headers %}<option value="{{ loop.index0 }}"{% if defaults.mapping[field] is defined and defaults.mapping[field] is not null and defaults.mapping[field] == loop.index0 %} selected{% endif %}>{{ loop.index }}: {{ header }}</option>{% endfor %}</select>{% endfor %}
+<label for="map-date">{{ t('ui.datumsformat') }}</label><select id="map-date" name="date_format" class="form-select mb-2">
 {% for format,label in {'d.m.Y':'31.12.2026','Y-m-d':'2026-12-31','d/m/Y':'31/12/2026','m/d/Y':'12/31/2026'} %}<option value="{{ format }}"{% if defaults.date_format|default('d.m.Y') == format %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
-<label for="map-decimal">Zahlenformat</label><select id="map-decimal" name="decimal_format" class="form-select mb-2"><option value="comma"{% if defaults.decimal_format|default('comma') == 'comma' %} selected{% endif %}>1.234,56</option><option value="dot"{% if defaults.decimal_format|default('comma') == 'dot' %} selected{% endif %}>1,234.56</option></select>
-<label class="form-check mb-2"><input type="checkbox" name="reference_unique" value="1" class="form-check-input">Die zugeordnete Bank-ID bezeichnet einen einzelnen Umsatz eindeutig. Keine End-to-End-, Mandats- oder Sammelreferenz.</label>
-<label for="map-profile">Zuordnung als neues Profil speichern (optional)</label><input id="map-profile" name="profile_name" maxlength="100" class="form-control mb-2">
-<label class="form-check mb-3"><input type="checkbox" name="account_checked" value="1" class="form-check-input" required>Vorschau und Zuordnung geprüft; die Datei gehört zu {{ import.account_name }} und verwendet EUR, soweit keine Währungsspalte zugeordnet ist.</label>
-<button type="submit" class="btn btn-primary">Umsätze vorprüfen</button></form>{% endif %}
+<label for="map-decimal">{{ t('ui.zahlenformat') }}</label><select id="map-decimal" name="decimal_format" class="form-select mb-2"><option value="comma"{% if defaults.decimal_format|default('comma') == 'comma' %} selected{% endif %}>1.234,56</option><option value="dot"{% if defaults.decimal_format|default('comma') == 'dot' %} selected{% endif %}>1,234.56</option></select>
+<label class="form-check mb-2"><input type="checkbox" name="reference_unique" value="1" class="form-check-input">{{ t('ui.die_zugeordnete_bank_id_bezeichnet_einen_einzelnen_umsatz_eindeut') }}</label>
+<label for="map-profile">{{ t('ui.zuordnung_als_neues_profil_speichern_optional') }}</label><input id="map-profile" name="profile_name" maxlength="100" class="form-control mb-2">
+<label class="form-check mb-3"><input type="checkbox" name="account_checked" value="1" class="form-check-input" required>{{ t('ui.vorschau_und_zuordnung_geprueft_die_datei_gehoert_zu') }} {{ import.account_name }} {{ t('ui.und_verwendet_eur_soweit_keine_waehrungsspalte_zugeordnet_ist') }}</label>
+<button type="submit" class="btn btn-primary">{{ t('ui.umsaetze_vorpruefen') }}</button></form>{% endif %}

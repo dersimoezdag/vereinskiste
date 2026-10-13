@@ -30,7 +30,7 @@ return [
     'foundation.field.constitution_url' => 'Satzung (HTTPS-Link)',
     'foundation.field.contribution_url' => 'Beitragsordnung (HTTPS-Link)',
     'foundation.field.privacy_url' => 'Datenschutz (HTTPS-Link)',
-    'foundation.field.locale' => 'Bevorzugte Sprache (de/en)',
+    'foundation.field.locale' => 'Sprache',
     'foundation.field.year_start' => 'Geschäftsjahresbeginn (MM-TT)',
     'foundation.field.color' => 'Vereinsfarbe (z. B. #005fcc)',
     'foundation.field.kind' => 'Art', 'foundation.field.active' => 'Aktiv',

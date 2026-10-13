@@ -30,6 +30,8 @@ final class DocumentAccess
             if ($stmt->fetchColumn() !== false) { return true; }
         }
         if ($auth->can('bookings.read')) {
+            $linked=$this->pdo->prepare("SELECT 1 FROM invoice_documents d JOIN invoice_payment_allocations a ON a.invoice_id=d.invoice_id JOIN bookings b ON b.id=a.booking_id WHERE d.file_id=? AND d.security_status IN ('validated','clean','legacy')");
+            $linked->execute([$id]);if($linked->fetchColumn()!==false) {return true;}
             $stmt = $this->pdo->prepare('SELECT 1 FROM receipts r JOIN bookings b ON b.id = r.booking_id WHERE r.stored_file_id = ?');
             $stmt->execute([$id]);
             return $stmt->fetchColumn() !== false;

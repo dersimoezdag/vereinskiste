@@ -7,7 +7,7 @@ test('German date fields retain canonical form values, block invalid submit and 
     const dom = new JSDOM('<form novalidate><input id="date" type="date" name="date" value="2026-10-13" min="2026-01-01" required><input id="money" name="amount" value="1234.56"><input id="iban" name="iban"><button>Save</button></form>', {runScripts: 'outside-only'});
     const w = dom.window, document = w.document;
     try {
-        w.eval(readFileSync(require.resolve('../public/assets/input-masks.js'), 'utf8'));
+        require('./browser-texts.cjs')(w); w.eval(readFileSync(require.resolve('../public/assets/input-masks.js'), 'utf8'));
         await new Promise(resolve => setTimeout(resolve, 20));
         assert.equal(document.querySelectorAll('input').length, 5);
         const date = document.querySelector('#date'), money = document.querySelector('#money'), iban = document.querySelector('#iban');
@@ -43,8 +43,8 @@ test('invoice suggestions populate German masks, keep zero tax valid and retain 
     const dom = new JSDOM('<form id="invoice-form"><input id="invoice-invoice_date" type="date" name="invoice_date"><input id="invoice-net" name="net"><input id="invoice-tax" name="tax"><input id="invoice-gross" name="gross"><button type="button" id="apply"></button></form>', {runScripts: 'outside-only'});
     const w=dom.window, document=w.document;
     try {
-        w.eval(readFileSync(require.resolve('../public/assets/input-masks.js'),'utf8'));
-        w.eval(readFileSync(require.resolve('../public/assets/invoices.js'),'utf8'));
+        require('./browser-texts.cjs')(w); w.eval(readFileSync(require.resolve('../public/assets/input-masks.js'),'utf8'));
+        require('./browser-texts.cjs')(w); w.eval(readFileSync(require.resolve('../public/assets/invoices.js'),'utf8'));
         const button=document.querySelector('#apply');
         button.dataset.invoiceSuggestions=JSON.stringify({invoice_date:'2026-10-13',net:'100.00',tax:'0',gross:'100.00'});
         button.click();

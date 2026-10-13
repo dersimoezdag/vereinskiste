@@ -24,8 +24,8 @@
             <div class="mb-3">
                 <label class="form-label" for="mail-encryption">{{ t('mail.field.encryption') }}</label>
                 <select class="form-select" name="encryption" id="mail-encryption">
-                    <option value="tls"{% if input.encryption == 'tls' %} selected{% endif %}>STARTTLS</option>
-                    <option value="ssl"{% if input.encryption == 'ssl' %} selected{% endif %}>TLS</option>
+                    <option value="tls"{% if input.encryption == 'tls' %} selected{% endif %}>{{ t('ui.starttls') }}</option>
+                    <option value="ssl"{% if input.encryption == 'ssl' %} selected{% endif %}>{{ t('ui.tls') }}</option>
                 </select>
                 {% if errors.encryption %}<p role="alert">{{ t(errors.encryption) }}</p>{% endif %}
             </div>

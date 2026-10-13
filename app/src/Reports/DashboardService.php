@@ -53,11 +53,10 @@ final class DashboardService
                                         interval '1 month')::date AS m
              )
              SELECT to_char(months.m, 'YYYY-MM') AS month,
-                    COALESCE(SUM(b.amount) FILTER (WHERE b.direction = 'in'), 0)::numeric(14,2)::text AS income,
-                    COALESCE(SUM(b.amount) FILTER (WHERE b.direction = 'out'), 0)::numeric(14,2)::text AS expense
+                    " . BookingAggregation::COLUMNS . "
                FROM months
                LEFT JOIN bookings b
-                 ON b.status = 'active' AND b.kind <> 'transfer'
+                 ON " . BookingAggregation::ELIGIBLE . "
                 AND date_trunc('month', b.booking_date)::date = months.m
                 AND b.booking_date >= CAST(:from_b AS date) AND b.booking_date <= CAST(:to_b AS date)$accountCond
               GROUP BY months.m

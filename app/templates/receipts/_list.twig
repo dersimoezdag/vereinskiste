@@ -1,7 +1,7 @@
 {# Belege einer Buchung. Erwartet: booking, receipts (ReceiptStore::forBooking) #}
 <div class="card mb-4" id="receipts">
     <div class="card-header"><h2 class="card-title">{{ t('receipts.title') }}</h2></div>
-    {% if receipts is empty %}
+    {% if receipts is empty and invoice_documents|default([]) is empty %}
     <div class="card-body text-secondary">{{ t('receipts.empty') }}</div>
     {% else %}
     <div class="table-responsive">
@@ -23,7 +23,7 @@
                         {% if receipt.replaced_at %}<span class="badge bg-secondary-lt">{{ t('receipts.replaced') }}</span>{% endif %}
                     </td>
                     <td data-label="{{ t('receipts.col.uploaded') }}">{{ receipt.uploaded_at|date('d.m.Y H:i') }} · {{ receipt.uploaded_by_name }}</td>
-                    <td data-label="{{ t('receipts.col.size') }}">{{ (receipt.size / 1024)|number_format(0, ',', '.') }} KB</td>
+                    <td data-label="{{ t('receipts.col.size') }}">{{ (receipt.size / 1024)|number_format(0, ',', '.') }} {{ t('ui.kb') }}</td>
                     <td data-label="{{ t('receipts.col.sha256') }}"><code class="text-break">{{ receipt.sha256 }}</code></td>
                     <td data-label="{{ t('receipts.col.actions') }}">
                         <a class="btn btn-sm" href="/receipts/{{ receipt.id }}">{{ t('receipts.download') }}</a>
@@ -42,6 +42,15 @@
                         </details>
                         {% endif %}
                     </td>
+                </tr>
+            {% endfor %}
+            {% for document in invoice_documents|default([]) %}
+                <tr>
+                    <td data-label="{{ t('receipts.col.name') }}"><a href="/documents/{{ document.file_id }}">{{ document.original_name }}</a><span class="badge bg-primary-lt">{{ t('receipts.from_invoice') }} #{{ document.invoice_id }}</span></td>
+                    <td data-label="{{ t('receipts.col.uploaded') }}">{{ document.uploaded_at|date('d.m.Y H:i') }} · {{ document.uploaded_by_name }}</td>
+                    <td data-label="{{ t('receipts.col.size') }}">{{ (document.size / 1024)|number_format(0, ',', '.') }} {{ t('ui.kb') }}</td>
+                    <td data-label="{{ t('receipts.col.sha256') }}"><code class="text-break">{{ document.sha256 }}</code></td>
+                    <td data-label="{{ t('receipts.col.actions') }}"><a class="btn btn-sm" href="/documents/{{ document.file_id }}">{{ t('receipts.download') }}</a>{% if can('invoices.read') %} <a class="btn btn-sm" href="/invoices/{{ document.invoice_id }}">{{ t('receipts.open_invoice') }}</a>{% endif %}</td>
                 </tr>
             {% endfor %}
             </tbody>
