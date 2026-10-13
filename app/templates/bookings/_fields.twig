@@ -1,4 +1,14 @@
             <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label" for="b-contact">{{ t('foundation.contacts') }}</label>
+                    <select class="form-select" id="b-contact" name="finance_contact_id">
+                        <option value="">{{ t('bookings.choose') }}</option>
+                        {% for contact in contacts|default([]) %}{% if contact.active or input.finance_contact_id|default('') == contact.id ~ '' %}
+                        <option value="{{ contact.id }}"{% if input.finance_contact_id|default('') == contact.id ~ '' %} selected{% endif %}>{{ contact.name }}</option>
+                        {% endif %}{% endfor %}
+                    </select>
+                    {% if errors.finance_contact_id is defined %}<p role="alert">{{ t(errors.finance_contact_id) }}</p>{% endif %}
+                </div>
                 <div class="col-md-6">
                     <label class="form-label" for="b-account">{{ t('bookings.account') }}</label>
                     <select id="b-account" name="account_id" required

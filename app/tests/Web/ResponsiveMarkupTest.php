@@ -31,7 +31,8 @@ final class ResponsiveMarkupTest extends TestCase
         $paths = ['/', '/accounts', '/categories', '/bookings', '/bookings/new',
             '/bookings/' . $booking['id'], '/bookings/' . $booking['id'] . '/edit',
             '/corrections/new', '/transfers/new', '/reports/summary', '/settings/closing', '/audit-log',
-            '/users', '/users/new', '/users/' . $user . '/edit', '/account/password', '/update', '/settings'];
+            '/users', '/users/new', '/users/' . $user . '/edit', '/account/password', '/update', '/settings',
+            '/settings/club', '/contacts', '/contacts/new', '/accounts/1/bank', '/imports/bank', '/imports/bank/new'];
         foreach ($paths as $path) {
             $response = $this->get($path);
             $this->assertSame(200, $response->getStatusCode(), $path);

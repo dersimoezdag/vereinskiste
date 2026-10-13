@@ -127,7 +127,8 @@ final class ClosingPagesTest extends TestCase
         $this->assertSame(302, $res->getStatusCode());
         $html = (string) $this->get('/')->getBody();
         $this->assertStringContainsString('href="/settings/closing"', $html);
-        $this->assertStringContainsString('href="/audit-log"', $html);
+        $this->assertStringNotContainsString('href="/audit-log"', $html);
+        $this->assertStringContainsString('href="/audit-log"', (string) $this->get('/settings')->getBody());
     }
 
     public function test_audit_log_lists_newest_first_with_labels_and_readable_detail(): void

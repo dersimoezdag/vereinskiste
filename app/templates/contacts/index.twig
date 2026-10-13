@@ -1,0 +1,26 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('foundation.contacts') }}{% endblock %}
+{% block content %}
+<h1>{{ t('foundation.contacts') }}</h1>
+<div class="d-flex flex-wrap gap-2 mb-3">
+    {% if can('contacts.write') %}<a class="btn btn-primary" href="/contacts/new">{{ t('foundation.contact.new') }}</a>{% endif %}
+    <a class="btn btn-outline-secondary" href="/contacts.csv">CSV (alle Kontakte)</a>
+</div>
+<form method="get" action="/contacts" class="d-flex flex-wrap gap-2 mb-3">
+    <label for="contact-search" class="form-label">{{ t('foundation.search') }}</label>
+    <input class="form-control" type="search" id="contact-search" name="q" value="{{ search }}" maxlength="200">
+    <label for="contact-state" class="form-label">{{ t('foundation.field.active') }}</label>
+    <select class="form-select" id="contact-state" name="state">{% for value, label in {'active':'Aktiv','archived':'Archiviert','all':'Alle'} %}
+        <option value="{{ value }}"{% if state == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+    <button class="btn btn-outline-primary" type="submit">{{ t('foundation.search') }}</button>
+</form>
+<div class="card"><table class="table table-cards"><thead><tr><th>Name</th><th>E-Mail</th><th>Status</th></tr></thead><tbody>
+{% for contact in contacts %}<tr><td data-label="Name"><a href="/contacts/{{ contact.id }}">{{ contact.name }}</a></td>
+    <td data-label="E-Mail">{{ contact.data.email }}</td><td data-label="Status">{{ contact.active ? 'Aktiv' : 'Archiviert' }}</td></tr>
+{% else %}<tr><td colspan="3">{{ t('foundation.empty') }}</td></tr>{% endfor %}
+</tbody></table></div>
+<div class="d-flex gap-2 mt-3">
+{% if page > 1 %}<a class="btn btn-outline-secondary" href="/contacts?q={{ search|url_encode }}&amp;state={{ state|url_encode }}&amp;page={{ page - 1 }}">← Zurück</a>{% endif %}
+{% if contacts|length == 50 %}<a class="btn btn-outline-secondary" href="/contacts?q={{ search|url_encode }}&amp;state={{ state|url_encode }}&amp;page={{ page + 1 }}">Weiter →</a>{% endif %}
+</div>
+{% endblock %}

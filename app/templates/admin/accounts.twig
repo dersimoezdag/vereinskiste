@@ -27,6 +27,7 @@
                     {% if can('settings.manage') %}
                     <td data-label="{{ t('common.actions') }}">
                         <div class="d-flex flex-wrap gap-2">
+                            <a class="btn" href="/accounts/{{ account.id }}/bank">{{ t('foundation.bank') }}</a>
                             <form method="post" action="/accounts/{{ account.id }}" class="d-flex gap-2 flex-grow-1">
                                 {{ csrf_field() }}
                                 <div class="flex-grow-1">

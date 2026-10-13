@@ -19,6 +19,8 @@ final class AuditLog
         'user_password_reset', 'password_changed', 'password_reset_completed',
         'account_created', 'account_renamed', 'account_activated', 'account_deactivated',
         'category_created', 'category_renamed', 'category_activated', 'category_deactivated',
+        'foundation_updated',
+        'bank_import_uploaded', 'bank_import_reviewed', 'bank_import_confirmed', 'bank_import_cancelled', 'bank_import_reset',
     ];
 
     /** Aktionen, deren Details nie angezeigt werden (keine Personendaten im Protokoll-Bildschirm). */

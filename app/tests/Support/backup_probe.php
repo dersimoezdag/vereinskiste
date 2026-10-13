@@ -15,6 +15,16 @@ if ($operation === 'seed') {
     $user = (new Vereinskiste\Auth\UserRepository($pdo))->create('Restore Test', 'restore@example.org',
         password_hash('restore-test-only-123', PASSWORD_DEFAULT), ['vorstand'], null);
     $pdo->exec("INSERT INTO accounts (name, type, opening_balance, opening_date) VALUES ('Kasse', 'cash', 25, '2026-01-01')");
+    $pdo->exec("INSERT INTO accounts (name, type, opening_date) VALUES ('Bank', 'bank', '2026-01-01')");
+    file_put_contents($directory . '/bank.csv', "Datum;Betrag\n02.01.2026;12,50\n");
+    $importId = (new Vereinskiste\BankImport\Upload($pdo, $directory . '/source/documents'))->create(
+        2, $directory . '/bank.csv', 'bank.csv', $user);
+    $parser = new Vereinskiste\BankImport\ParseService($pdo, $directory . '/source/documents');
+    $parser->configure($importId, 1, ['booking_date' => '0','amount' => '1','date_format' => 'd.m.Y',
+        'decimal_format' => 'comma','account_checked' => '1'], $user);
+    $parser->step($importId);
+    $import = (new Vereinskiste\BankImport\Repository($pdo))->find($importId);
+    (new Vereinskiste\BankImport\ConfirmService($pdo))->step($importId, (int) $import['version'], $user);
     $service = new Vereinskiste\Ledger\BookingService($pdo);
     $booking = $service->create(['account_id' => '1', 'booking_date' => '2026-10-01',
         'amount' => '12,50', 'direction' => 'in', 'description' => 'Restore Spende'], $user);
@@ -24,23 +34,28 @@ if ($operation === 'seed') {
         (int) $updated['id'], $directory . '/receipt.pdf', 'restore.pdf', $user);
     file_put_contents($directory . '/source/config.php', "<?php return ['base_url' => 'https://restore.example.org'];\n");
 } elseif ($operation === 'check') {
-    mkdir($directory . '/restored/receipts', 0700, true);
+    mkdir($directory . '/restored', 0700, true);
     copy($directory . '/source/config.php', $directory . '/restored/config.php');
-    foreach (glob($directory . '/source/receipts/*') as $file) {
-        copy($file, $directory . '/restored/receipts/' . basename($file));
+    foreach (['receipts','documents'] as $root) {
+        mkdir($directory . '/restored/' . $root, 0700, true);
+        foreach (glob($directory . '/source/' . $root . '/*') as $file) {
+            copy($file, $directory . '/restored/' . $root . '/' . basename($file));
+        }
     }
 } else { throw new RuntimeException('Unbekannte Probe.'); }
 $tables = ['users', 'user_roles', 'accounts', 'categories', 'bookings', 'booking_changes',
-    'receipts', 'audit_log', 'settings', 'schema_migrations', 'password_resets', 'password_reset_requests'];
+    'receipts', 'audit_log', 'settings', 'schema_migrations', 'password_resets', 'password_reset_requests',
+    'club_profile','finance_contacts','foundation_changes','stored_files','jobs','bank_csv_profiles',
+    'bank_imports','bank_import_rows','bank_import_attempts','bank_statements','bank_transactions'];
 $snapshot = [];
 foreach ($tables as $table) { $snapshot[$table] = $pdo->query('SELECT * FROM ' . $table . ' ORDER BY 1')->fetchAll(); }
 $snapshot['balance'] = (new Vereinskiste\Ledger\AccountRepository($pdo))->balance(1);
 $snapshot['files'] = [];
 $tree = $directory . '/' . ($operation === 'seed' ? 'source' : 'restored');
-foreach ($snapshot['receipts'] as $receipt) {
-    $hash = hash_file('sha256', $tree . '/receipts/' . $receipt['storage_name']);
-    if ($hash !== trim($receipt['sha256'])) { throw new RuntimeException('Beleg beschädigt'); }
-    $snapshot['files'][$receipt['storage_name']] = $hash;
+foreach ($snapshot['stored_files'] as $file) {
+    $hash = hash_file('sha256', $tree . '/' . $file['root'] . '/' . $file['storage_name']);
+    if ($hash !== trim($file['sha256'])) { throw new RuntimeException('Originaldatei beschädigt'); }
+    $snapshot['files'][$file['root'] . '/' . $file['storage_name']] = $hash;
 }
 $snapshot['config'] = require $tree . '/config.php';
 $fingerprint = hash('sha256', json_encode($snapshot, JSON_THROW_ON_ERROR));

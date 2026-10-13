@@ -1,0 +1,27 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('foundation.club') }}{% endblock %}
+{% block content %}
+<h1>{{ t('nav.settings') }}</h1>
+{% include 'components/settings_tabs.twig' %}
+<h2>{{ t('foundation.club') }}</h2>
+<form method="post" action="/settings/club" class="card card-body">
+    {{ csrf_field() }}
+    <input type="hidden" name="version" value="{{ version }}">
+    {% include 'components/foundation_fields.twig' %}
+    <button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button>
+</form>
+<h2 class="h3 mt-4">{{ t('foundation.logo') }}</h2>
+{% if logo_id %}<a class="btn btn-outline-secondary mb-3" href="/documents/{{ logo_id }}">{{ t('foundation.logo') }} herunterladen</a>{% endif %}
+<form method="post" action="/settings/club/logo" enctype="multipart/form-data" class="card card-body">
+    {{ csrf_field() }}
+    <input type="hidden" name="version" value="{{ version }}">
+    <label class="form-label" for="club-logo">{{ t('foundation.logo') }} (PNG/JPEG, max. 2 MB)</label>
+    <input class="form-control mb-3" id="club-logo" type="file" name="receipt" accept="image/png,image/jpeg" required>
+    <label class="form-label" for="logo-reason">{{ t('bookings.reason') }}</label>
+    <input class="form-control mb-3" id="logo-reason" name="reason" maxlength="500" required>
+    <button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button>
+</form>
+{% include 'components/foundation_history.twig' %}
+{% if jobs %}<h2 class="h3 mt-4">{{ t('foundation.jobs') }}</h2>
+<ul>{% for job in jobs %}<li>{{ t('foundation.job.' ~ job.status) }}: {{ job.count }}</li>{% endfor %}</ul>{% endif %}
+{% endblock %}

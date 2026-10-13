@@ -1,0 +1,21 @@
+<div class="card mt-3"><table class="table table-cards"><thead><tr><th>Zeile / Datum</th><th>Betrag</th><th>Gegenpartei / Zweck</th><th>Prüfung</th></tr></thead><tbody>
+{% for row in rows %}<tr><td data-label="Zeile / Datum">{{ row.row_number }} · {{ row.proposal.booking_date }}<br>Valuta: {{ row.proposal.value_date|default('–') }}</td>
+<td data-label="Betrag">{{ row.proposal.amount }} {{ row.proposal.currency }}</td><td data-label="Gegenpartei / Zweck">{{ row.proposal.counterparty }}<br>{{ row.proposal.purpose }}</td>
+<td data-label="Prüfung">
+{% for issue in row.issues %}<p class="text-danger">{{ t(issue) }}</p>{% endfor %}
+{% if row.transaction_id %}Übernommen (#{{ row.transaction_id }}){% else %}{{ t('bank.decision.' ~ row.decision) }}{% endif %}
+{% if row.candidates and not row.transaction_id %}<p class="text-warning">Mögliche Dublette. Gleiche Zahlungen können tatsächlich mehrfach vorkommen; bitte einzeln prüfen.</p>{% endif %}
+{% if row.same_file > 0 %}<p class="text-warning">Ähnlicher Umsatz auch in dieser Datei.</p>{% endif %}
+{% if row.reason %}<p>Grund: {{ row.reason }}</p>{% endif %}
+{% if import.status == 'review' and can('imports.write') and not row.transaction_id %}
+<form method="post" action="/imports/bank/{{ import.id }}/decision">{{ csrf_field() }}
+<input type="hidden" name="version" value="{{ import.version }}"><input type="hidden" name="row_number" value="{{ row.row_number }}"><input type="hidden" name="page" value="{{ page }}">
+<label for="decision-{{ row.id }}">Entscheidung</label><select id="decision-{{ row.id }}" name="decision" class="form-select mb-1">
+<option value="new">Tatsächlich neuer Umsatz</option>{% if row.candidates %}<option value="duplicate">Bereits vorhandener Umsatz</option>{% endif %}<option value="excluded">Begründet ausschließen</option></select>
+{% if row.candidates %}<label for="duplicate-{{ row.id }}">Vorhandener Umsatz</label><select id="duplicate-{{ row.id }}" name="duplicate_id" class="form-select mb-1">
+{% for candidate in row.candidates %}<option value="{{ candidate.id }}">#{{ candidate.id }} · {{ candidate.booking_date }} · {{ candidate.amount }} EUR · {{ candidate.counterparty }}</option>{% endfor %}</select>{% endif %}
+<label for="reason-{{ row.id }}">Prüfgrund</label><input id="reason-{{ row.id }}" name="reason" class="form-control mb-1" maxlength="500" required>
+<button type="submit" class="btn btn-sm btn-outline-primary">Entscheidung speichern</button></form>{% endif %}
+</td></tr>{% else %}<tr><td colspan="4">Noch keine vorgeprüften Zeilen.</td></tr>{% endfor %}</tbody></table></div>
+<div class="d-flex gap-2 mt-3">{% if page > 1 %}<a href="?page={{ page - 1 }}">← Zurück</a>{% endif %}
+{% if page * 250 < import.parsed_rows %}<a href="?page={{ page + 1 }}">Weiter →</a>{% endif %}</div>

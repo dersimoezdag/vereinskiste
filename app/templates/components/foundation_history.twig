@@ -1,0 +1,12 @@
+{% if history %}
+<h2 class="h3 mt-4">{{ t('foundation.history') }}</h2>
+{% for entry in history %}
+<div class="card mb-2"><div class="card-body">
+    <p>{{ entry.at|date('d.m.Y H:i') }} · {{ entry.actor }} · {{ entry.reason }}</p>
+    <ul class="mb-0">{% for change in entry.changes %}
+        <li>{{ t('foundation.field.' ~ change.field) }}: {{ change.from is same as(true) ? 'Ja' : (change.from is same as(false) ? 'Nein' : change.from|default('–')) }}
+            → {{ change.to is same as(true) ? 'Ja' : (change.to is same as(false) ? 'Nein' : change.to|default('–')) }}</li>
+    {% endfor %}</ul>
+</div></div>
+{% endfor %}
+{% endif %}

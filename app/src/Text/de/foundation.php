@@ -1,0 +1,32 @@
+<?php
+declare(strict_types=1);
+
+return [
+    'foundation.jobs' => 'Hintergrundaufgaben', 'foundation.job.pending' => 'Wartend',
+    'foundation.job.running' => 'In Bearbeitung', 'foundation.job.done' => 'Erledigt', 'foundation.job.failed' => 'Fehlgeschlagen',
+    'foundation.duplicates' => 'Es gibt bereits ähnliche Finanzkontakte. Bitte vor dem Anlegen prüfen.',
+    'foundation.duplicates.confirm' => 'Dies ist ein anderer Kontakt. Trotzdem anlegen.',
+    'foundation.club' => 'Verein', 'foundation.contacts' => 'Finanzkontakte',
+    'foundation.contact.new' => 'Finanzkontakt anlegen', 'foundation.save' => 'Speichern',
+    'foundation.saved' => 'Die Änderungen wurden gespeichert.', 'foundation.history' => 'Änderungsverlauf',
+    'foundation.search' => 'Suchen', 'foundation.empty' => 'Keine Kontakte gefunden.',
+    'foundation.invalid' => 'Bitte prüfen Sie dieses Feld.', 'foundation.required' => 'Dieses Feld ist erforderlich.',
+    'foundation.conflict' => 'Der Datensatz wurde inzwischen geändert. Bitte neu laden und Änderungen erneut prüfen.',
+    'foundation.iban.invalid' => 'Die IBAN hat ein ungültiges Format oder eine falsche Prüfsumme.',
+    'foundation.bank' => 'Bankdaten', 'foundation.logo' => 'Vereinslogo',
+    'foundation.field.name' => 'Name', 'foundation.field.address' => 'Straße und Hausnummer',
+    'foundation.field.zip' => 'Postleitzahl', 'foundation.field.city' => 'Ort',
+    'foundation.field.country' => 'Land', 'foundation.field.email' => 'E-Mail-Adresse',
+    'foundation.field.phone' => 'Telefon', 'foundation.field.website_url' => 'Website (HTTPS)',
+    'foundation.field.constitution_url' => 'Satzung (HTTPS-Link)',
+    'foundation.field.contribution_url' => 'Beitragsordnung (HTTPS-Link)',
+    'foundation.field.privacy_url' => 'Datenschutz (HTTPS-Link)',
+    'foundation.field.locale' => 'Bevorzugte Sprache (de/en)',
+    'foundation.field.year_start' => 'Geschäftsjahresbeginn (MM-TT)',
+    'foundation.field.color' => 'Vereinsfarbe (z. B. #005fcc)',
+    'foundation.field.kind' => 'Art', 'foundation.field.active' => 'Aktiv',
+    'foundation.field.iban' => 'IBAN', 'foundation.field.bic' => 'BIC',
+    'foundation.field.notes' => 'Notizen', 'foundation.field.logo_id' => 'Logo',
+    'audit.action.foundation_updated' => 'Vereins-/Kontaktstammdaten geändert',
+    'audit.detail.subject' => 'Bereich',
+];

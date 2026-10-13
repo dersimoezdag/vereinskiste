@@ -4,6 +4,9 @@ Kassenbuch fuer kleine Vereine (PHP 8.4, Slim 4, PostgreSQL 15). Lizenz: AGPL-3.
 
 ## Entwicklung
 
+Der laufende Ausbau um Vereinsprofil, Finanzkontakte und Importgrundlagen ist im
+[Umsetzungsstand](docs/plans/ausbau/09-umsetzungsstand.md) dokumentiert.
+
 Auf dem Entwicklungsrechner werden nur Docker und Docker Compose benoetigt
 (kein PHP, Composer oder PostgreSQL). `docker-compose.dev.yml` und `Dockerfile.dev`
 dienen nur der Entwicklung und sind nie Teil des Release.

@@ -1,5 +1,12 @@
 # Vereinskiste – Entwurf
 
+**Ergänzung vom 12. Oktober 2026:** Der vollständige Folgeplan für Finanzimporte,
+Rechnungen mit optionaler OCR, Mitglieder und die weiteren Vereinsfunktionen
+steht unter [Ausbauplan](../../plans/ausbau/00-umsetzungsplan.md).
+Die nachfolgenden Nicht-Ziele beziehen sich weiterhin auf die ursprüngliche
+erste Version; der Ausbauplan erweitert den Umfang bei unveränderter Vorgabe
+„eine Installation = ein Verein“ und einer Laufzeit ab PHP 8.4.
+
 Stand: 2026-10-12 · Status: freigegeben durch Auftraggeber am 2026-10-12 (Frontend: serverseitig, responsiv)
 
 ## 1. Worum es geht

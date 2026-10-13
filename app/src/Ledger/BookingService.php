@@ -20,7 +20,7 @@ final class BookingService
 
     /** Ueber `update` aenderbare Felder, in dieser Reihenfolge auch im Verlauf. */
     public const EDITABLE = [
-        'booking_date', 'amount', 'direction', 'account_id', 'category_id', 'description', 'counterparty', 'receipt_no',
+        'booking_date', 'amount', 'direction', 'account_id', 'category_id', 'description', 'counterparty', 'receipt_no', 'finance_contact_id',
     ];
 
     private ClosingService $closing;
@@ -102,7 +102,7 @@ final class BookingService
                 'UPDATE bookings
                     SET booking_date = :booking_date, amount = :amount, direction = :direction,
                         account_id = :account_id, category_id = :category_id, description = :description,
-                        counterparty = :counterparty, receipt_no = :receipt_no,
+                        counterparty = :counterparty, receipt_no = :receipt_no, finance_contact_id = :finance_contact_id,
                         version = version + 1, updated_at = now()
                   WHERE id = :id AND version = :expected'
             );
@@ -298,6 +298,17 @@ final class BookingService
             $errors['description'] = $error;
         }
         $counterparty = $str('counterparty');
+        $contactId = $str('finance_contact_id') === '' ? null : $id($str('finance_contact_id'));
+        if ($str('finance_contact_id') !== '' && ($contactId === null || $contactId !== ($current['finance_contact_id'] ?? null))) {
+            $stmt = $this->pdo->prepare('SELECT name, active FROM finance_contacts WHERE id = ?');
+            $stmt->execute([$contactId]);
+            $contact = $stmt->fetch();
+            if ($contact === false || !$contact['active']) {
+                $errors['finance_contact_id'] = 'foundation.invalid';
+            } else {
+                $counterparty = $contact['name'];
+            }
+        }
         $error = self::textError($counterparty, self::COUNTERPARTY_MAX, 'validation.booking.counterparty.too_long');
         if ($error !== null) {
             $errors['counterparty'] = $error;
@@ -317,6 +328,7 @@ final class BookingService
             'description' => $description,
             'counterparty' => $counterparty === '' ? null : $counterparty,
             'receipt_no' => $receiptNo === '' ? null : $receiptNo,
+            'finance_contact_id' => $contactId,
         ], $errors];
     }
 
@@ -355,12 +367,13 @@ final class BookingService
     {
         $stmt = $this->pdo->prepare(
             "INSERT INTO bookings (account_id, booking_date, amount, direction, category_id, description,
-                                   counterparty, receipt_no, kind, status, correction_of_id, version, created_by)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, 1, ?) RETURNING id"
+                                   counterparty, receipt_no, finance_contact_id, kind, status, correction_of_id, version, created_by)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, 1, ?) RETURNING id"
         );
         $stmt->execute([
             $values['account_id'], $values['booking_date'], $values['amount'], $values['direction'],
             $values['category_id'], $values['description'], $values['counterparty'], $values['receipt_no'],
+            $values['finance_contact_id'],
             $kind, $correctionOfId, $userId,
         ]);
         return (int) $stmt->fetchColumn();

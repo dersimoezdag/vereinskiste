@@ -78,9 +78,10 @@ final class ReportController
     private function withSummary(Request $req, Response $res, callable $onSuccess): Response
     {
         $q = $req->getQueryParams();
+        $period = (new \Vereinskiste\Club\Profile(($this->pdo)()))->period();
         $input = [
-            'from' => $this->param($q, 'from') ?: date('Y-01-01'),
-            'to' => $this->param($q, 'to') ?: date('Y-12-31'),
+            'from' => $this->param($q, 'from') ?: $period['from'],
+            'to' => $this->param($q, 'to') ?: $period['to'],
             'account_id' => $this->param($q, 'account_id'),
         ];
 
@@ -132,9 +133,7 @@ final class ReportController
 
     private function clubName(): string
     {
-        $stmt = ($this->pdo)()->prepare("SELECT value FROM settings WHERE key = 'club_name'");
-        $stmt->execute();
-        $name = $stmt->fetchColumn();
+        $name = (new \Vereinskiste\Club\Profile(($this->pdo)()))->name();
         return is_string($name) && trim($name) !== '' ? trim($name) : self::FALLBACK_CLUB_NAME;
     }
 }

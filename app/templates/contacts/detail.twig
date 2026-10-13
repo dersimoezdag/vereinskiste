@@ -1,0 +1,31 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('foundation.contacts') }}{% endblock %}
+{% block content %}
+<h1>{{ contact ? contact.name : t('foundation.contact.new') }}</h1>
+{% if can('contacts.write') %}
+<form method="post" action="{{ contact ? '/contacts/' ~ contact.id : '/contacts/new' }}" class="card card-body">
+    {{ csrf_field() }}
+    <input type="hidden" name="version" value="{{ input.version|default(0) }}">
+    <label class="form-label" for="contact-kind">{{ t('foundation.field.kind') }}</label>
+    <select class="form-select mb-3" id="contact-kind" name="kind">{% for value, label in {'person':'Person','company':'Firma'} %}
+        <option value="{{ value }}"{% if input.kind|default('person') == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+    {% if errors.kind is defined %}<p role="alert">{{ t(errors.kind) }}</p>{% endif %}
+    {% include 'components/foundation_fields.twig' %}
+    {% if duplicates %}
+    <div class="alert alert-warning" role="alert">{{ t('foundation.duplicates') }}
+        <ul>{% for duplicate in duplicates %}<li><a href="/contacts/{{ duplicate.id }}">{{ duplicate.name }}</a></li>{% endfor %}</ul>
+        <label class="form-check" for="contact-duplicate"><input class="form-check-input" id="contact-duplicate" type="checkbox"
+            name="duplicate_confirmed" value="1" required><span class="form-check-label">{{ t('foundation.duplicates.confirm') }}</span></label>
+    </div>
+    {% endif %}
+    <input type="hidden" name="active" value="0">
+    <label class="form-check mb-3" for="contact-active"><input class="form-check-input" id="contact-active" type="checkbox"
+        name="active" value="1"{% if input.active|default('') == '1' %} checked{% endif %}><span class="form-check-label">{{ t('foundation.field.active') }}</span></label>
+    <button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button>
+</form>
+{% else %}
+<dl class="card card-body">{% for field in fields|keys %}<dt>{{ t('foundation.field.' ~ field) }}</dt><dd>{{ input[field]|default('–') }}</dd>{% endfor %}</dl>
+{% endif %}
+<a class="btn btn-link" href="/contacts">{{ t('common.back') }}</a>
+{% include 'components/foundation_history.twig' %}
+{% endblock %}

@@ -13,6 +13,8 @@ final class Permissions
         'reports.read',
         'users.manage',
         'settings.manage',
+        'imports.read', 'imports.write', 'invoices.read', 'invoices.write',
+        'contacts.read', 'contacts.write', 'contributions.read', 'contributions.write',
     ];
 
     /** Zulaessige Rollen (Whitelist fuer Eingaben und Benutzerverwaltung). */
@@ -21,9 +23,12 @@ final class Permissions
     private const BY_ROLE = [
         'admin' => self::ALL,
         'vorstand' => self::ALL,
-        'kassenwart' => ['bookings.read', 'bookings.write', 'members.read', 'reports.read'],
+        'kassenwart' => ['bookings.read', 'bookings.write', 'members.read', 'reports.read',
+            'imports.read', 'imports.write', 'invoices.read', 'invoices.write',
+            'contacts.read', 'contacts.write', 'contributions.read', 'contributions.write'],
         'schriftfuehrer' => ['members.read', 'members.write', 'bookings.read'],
-        'kassenpruefer' => ['bookings.read', 'members.read', 'reports.read'],
+        'kassenpruefer' => ['bookings.read', 'members.read', 'reports.read',
+            'imports.read', 'invoices.read', 'contacts.read', 'contributions.read'],
     ];
 
     /**

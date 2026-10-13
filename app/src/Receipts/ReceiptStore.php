@@ -33,18 +33,9 @@ use Vereinskiste\Ledger\ValidationError;
 final class ReceiptStore
 {
     public const MAX_BYTES = 10485760;
-    public const MAX_PIXELS = 40000000;
-    public const NAME_MAX = 200;
+    public const MAX_PIXELS = \Vereinskiste\Files\UploadValidator::MAX_PIXELS;
+    public const NAME_MAX = \Vereinskiste\Files\FileStorage::NAME_MAX;
     public const ADDED_REASON = 'Beleg hinzugefügt';
-
-    private const TYPES = [
-        'application/pdf' => 'pdf',
-        'image/jpeg' => 'jpg',
-        'image/png' => 'png',
-    ];
-
-    private const HEIC_MIMES = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'];
-    private const HEIC_BRANDS = ['heic', 'heix', 'hevc', 'hevx', 'heim', 'heis', 'hevm', 'hevs', 'mif1', 'msf1'];
 
     public function __construct(private PDO $pdo, private string $dir, private int $maxBytes = self::MAX_BYTES)
     {
@@ -217,15 +208,7 @@ final class ReceiptStore
     /** Anzeigename bereinigen: kein Pfad, keine Steuerzeichen, begrenzte Laenge, nie leer. */
     public static function cleanName(string $name, string $ext): string
     {
-        if (!mb_check_encoding($name, 'UTF-8')) {
-            $name = mb_convert_encoding($name, 'UTF-8', 'UTF-8');
-        }
-        $parts = preg_split('~[/\\\\]~', $name) ?: [''];
-        $name = (string) end($parts);
-        $name = (string) preg_replace('/[\p{Cc}\p{Cf}]+/u', '', $name);
-        $name = ltrim(trim($name), '.');
-        $name = trim(mb_substr($name, 0, self::NAME_MAX));
-        return $name === '' ? 'beleg.' . $ext : $name;
+        return \Vereinskiste\Files\FileStorage::cleanName($name, $ext);
     }
 
     /**
@@ -236,93 +219,7 @@ final class ReceiptStore
      */
     private function ingest(string $tmpPath): array
     {
-        $size = @filesize($tmpPath);
-        if ($size === false || !is_file($tmpPath)) {
-            throw new RuntimeException('Hochgeladene Datei ist nicht lesbar.');
-        }
-        if ($size === 0) {
-            throw new ValidationError(['receipt' => 'validation.receipt.empty']);
-        }
-        if ($size > $this->maxBytes) {
-            throw new ValidationError(['receipt' => 'validation.receipt.too_large']);
-        }
-
-        if (!is_dir($this->dir) && !@mkdir($this->dir, 0750, true) && !is_dir($this->dir)) {
-            throw new RuntimeException('Beleg-Verzeichnis kann nicht angelegt werden.');
-        }
-        $temp = $this->dir . '/.tmp-' . bin2hex(random_bytes(8));
-        if (!@copy($tmpPath, $temp)) {
-            @unlink($temp);
-            throw new RuntimeException('Beleg konnte nicht gespeichert werden.');
-        }
-
-        try {
-            $meta = $this->inspect($temp);
-            $hash = hash_file('sha256', $temp);
-            if ($hash === false) {
-                throw new RuntimeException('Pruefsumme des Belegs konnte nicht berechnet werden.');
-            }
-            $storageName = bin2hex(random_bytes(16)) . '.' . $meta['ext'];
-            $final = $this->dir . '/' . $storageName;
-            if (!@rename($temp, $final)) {
-                throw new RuntimeException('Beleg konnte nicht gespeichert werden.');
-            }
-            // Nur der Besitzer und die Gruppe duerfen lesen; auf Plattformen ohne Modi schlaegt das still fehl.
-            @chmod($final, 0640);
-            clearstatcache(true, $final);
-            $size = filesize($final);
-            if ($size === false) {
-                throw new RuntimeException('Beleg konnte nicht gespeichert werden.');
-            }
-        } catch (Throwable $e) {
-            @unlink($temp);
-            throw $e;
-        }
-        return ['storage_name' => $storageName, 'mime' => $meta['mime'], 'ext' => $meta['ext'], 'size' => $size, 'sha256' => $hash];
-    }
-
-    /**
-     * Typ per Inhalt bestimmen und Bildabmessungen pruefen, ohne zu dekodieren.
-     *
-     * @return array{mime:string,ext:string}
-     * @throws ValidationError
-     */
-    private function inspect(string $path): array
-    {
-        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($path);
-        if ($mime === false) {
-            throw new ValidationError(['receipt' => 'validation.receipt.type']);
-        }
-        if (in_array($mime, self::HEIC_MIMES, true) || $this->hasHeicBrand($path)) {
-            throw new ValidationError(['receipt' => 'validation.receipt.heic']);
-        }
-        if (!isset(self::TYPES[$mime])) {
-            throw new ValidationError(['receipt' => 'validation.receipt.type']);
-        }
-        if ($mime !== 'application/pdf') {
-            // getimagesize liest nur den Kopf der Datei, es dekodiert keine Bilddaten.
-            $info = @getimagesize($path);
-            $expected = $mime === 'image/png' ? IMAGETYPE_PNG : IMAGETYPE_JPEG;
-            if ($info === false || ($info[2] ?? null) !== $expected || $info[0] < 1 || $info[1] < 1) {
-                throw new ValidationError(['receipt' => 'validation.receipt.type']);
-            }
-            if ($info[0] * $info[1] > self::MAX_PIXELS) {
-                throw new ValidationError(['receipt' => 'validation.receipt.megapixels']);
-            }
-        }
-        return ['mime' => $mime, 'ext' => self::TYPES[$mime]];
-    }
-
-    private function hasHeicBrand(string $path): bool
-    {
-        $fh = @fopen($path, 'rb');
-        if ($fh === false) {
-            return false;
-        }
-        $head = (string) fread($fh, 12);
-        fclose($fh);
-        return strlen($head) === 12 && substr($head, 4, 4) === 'ftyp'
-            && in_array(substr($head, 8, 4), self::HEIC_BRANDS, true);
+        return (new \Vereinskiste\Files\FileStorage($this->dir, $this->maxBytes))->ingest($tmpPath);
     }
 
     /**
@@ -333,11 +230,12 @@ final class ReceiptStore
     private function insert(int $bookingId, array $file, string $name, int $userId): array
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO receipts (booking_id, original_name, mime, size, sha256, storage_name, uploaded_by)
-             VALUES (?, ?, ?, ?, ?, ?, ?)
+            'INSERT INTO receipts (booking_id, original_name, mime, size, sha256, storage_name, uploaded_by, stored_file_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
              RETURNING id, uploaded_at::text AS uploaded_at'
         );
-        $stmt->execute([$bookingId, $name, $file['mime'], $file['size'], $file['sha256'], $file['storage_name'], $userId]);
+        $fileId = (new \Vereinskiste\Files\StoredFileRepository($this->pdo))->register($file, 'receipts', $name, $userId);
+        $stmt->execute([$bookingId, $name, $file['mime'], $file['size'], $file['sha256'], $file['storage_name'], $userId, $fileId]);
         $row = $stmt->fetch();
         return [
             'id' => (int) $row['id'],

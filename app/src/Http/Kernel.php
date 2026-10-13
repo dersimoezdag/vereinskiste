@@ -181,6 +181,9 @@ final class Kernel
         $app->post('/accounts', [$accounts, 'create'])->add(Auth::requires('settings.manage'));
         $app->post('/accounts/{id:[0-9]+}', [$accounts, 'rename'])->add(Auth::requires('settings.manage'));
         $app->post('/accounts/{id:[0-9]+}/toggle', [$accounts, 'toggle'])->add(Auth::requires('settings.manage'));
+        $accountBank = new \Vereinskiste\Web\AccountBankController($pdoProvider);
+        $app->get('/accounts/{id:[0-9]+}/bank', [$accountBank, 'show'])->add(Auth::requires('settings.manage'));
+        $app->post('/accounts/{id:[0-9]+}/bank', [$accountBank, 'save'])->add(Auth::requires('settings.manage'));
 
         $categories = new CategoryController($pdoProvider);
         $app->get('/categories', [$categories, 'index'])->add(Auth::requires('bookings.read'));
@@ -222,6 +225,27 @@ final class Kernel
         $app->get('/reports/summary.pdf', [$reports, 'pdf'])->add(Auth::requires('reports.read'));
 
         $settings = new SettingsController($pdoProvider);
+        $club = new \Vereinskiste\Web\ClubController($pdoProvider);
+        $documents = new \Vereinskiste\Web\DocumentController($pdoProvider,
+            ['receipts' => $receiptsDir, 'documents' => $config['documents_dir'] ?? $appDir . '/storage/documents']);
+        $app->post('/settings/club/logo', [$documents, 'logo'])->add(Auth::requires('settings.manage'));
+        $app->get('/documents/{id:[0-9]+}', [$documents, 'download'])->add(Auth::authenticated());
+        $app->get('/settings/club', [$club, 'show'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/club', [$club, 'save'])->add(Auth::requires('settings.manage'));
+        $contacts = new \Vereinskiste\Web\ContactController($pdoProvider);
+        $bankImports = new \Vereinskiste\Web\BankImportController($pdoProvider, $config['documents_dir'] ?? $appDir . '/storage/documents');
+        $app->get('/imports/bank', [$bankImports, 'index'])->add(Auth::requires('imports.read'));
+        $app->get('/imports/bank/new', [$bankImports, 'create'])->add(Auth::requires('imports.write'));
+        $app->post('/imports/bank/new', [$bankImports, 'upload'])->add(Auth::requires('imports.write'));
+        $app->get('/imports/bank/{id:[0-9]+}', [$bankImports, 'show'])->add(Auth::requires('imports.read'));
+        $app->get('/imports/bank/{id:[0-9]+}/status', [$bankImports, 'status'])->add(Auth::requires('imports.read'));
+        $app->post('/imports/bank/{id:[0-9]+}/{action:mapping|parse|decision|confirm|cancel|reset}', [$bankImports, 'action'])->add(Auth::requires('imports.write'));
+        $app->get('/contacts', [$contacts, 'index'])->add(Auth::requires('contacts.read'));
+        $app->get('/contacts.csv', [$contacts, 'csv'])->add(Auth::requires('contacts.read'));
+        $app->get('/contacts/new', [$contacts, 'create'])->add(Auth::requires('contacts.write'));
+        $app->post('/contacts/new', [$contacts, 'save'])->add(Auth::requires('contacts.write'));
+        $app->get('/contacts/{id:[0-9]+}', [$contacts, 'show'])->add(Auth::requires('contacts.read'));
+        $app->post('/contacts/{id:[0-9]+}', [$contacts, 'save'])->add(Auth::requires('contacts.write'));
         $app->get('/settings/closing', [$settings, 'closing'])->add(Auth::requires('settings.manage'));
         $app->post('/settings/closing', [$settings, 'saveClosing'])->add(Auth::requires('settings.manage'));
         $app->get('/audit-log', [$settings, 'auditLog'])->add(Auth::requires('settings.manage'));

@@ -55,6 +55,16 @@
                         <a class="nav-link" href="/users"><span class="nav-link-icon">{{ icons.icon('users') }}</span><span class="nav-link-title">{{ t('nav.users') }}</span></a>
                     </li>
                     {% endif %}
+                    {% if can('imports.read') %}
+                    <li class="nav-item{% if path starts with '/imports/bank' %} active{% endif %}">
+                        <a class="nav-link" href="/imports/bank"><span class="nav-link-icon">{{ icons.icon('bookings') }}</span><span class="nav-link-title">Kontoauszug-Import</span></a>
+                    </li>
+                    {% endif %}
+                    {% if can('contacts.read') %}
+                    <li class="nav-item{% if path starts with '/contacts' %} active{% endif %}">
+                        <a class="nav-link" href="/contacts"><span class="nav-link-icon">{{ icons.icon('users') }}</span><span class="nav-link-title">{{ t('foundation.contacts') }}</span></a>
+                    </li>
+                    {% endif %}
                 </ul>
                 <div class="nav-user mt-auto pt-3">
                     {% if can('settings.manage') %}
@@ -99,5 +109,6 @@
 </div>
 <script src="/assets/vendor/tabler/tabler.min.js"></script>
 <script src="/assets/app.js"></script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

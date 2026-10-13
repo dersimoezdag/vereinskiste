@@ -1,0 +1,16 @@
+{% for field, limit in fields %}
+<div class="mb-3">
+    <label class="form-label" for="field-{{ field }}">{{ t('foundation.field.' ~ field) }}</label>
+    <input class="form-control{% if errors[field] is defined %} is-invalid{% endif %}" id="field-{{ field }}"
+           name="{{ field }}" type="{{ field == 'email' ? 'email' : (field ends with '_url' ? 'url' : 'text') }}"
+           maxlength="{{ limit }}" value="{{ input[field]|default('') }}"{% if field == 'name' %} required{% endif %}>
+    {% if errors[field] is defined %}<div class="invalid-feedback">{{ t(errors[field]) }}</div>{% endif %}
+</div>
+{% endfor %}
+<div class="mb-3">
+    <label class="form-label" for="change-reason">{{ t('bookings.reason') }}</label>
+    <input class="form-control{% if errors.reason is defined %} is-invalid{% endif %}" id="change-reason"
+           name="reason" maxlength="500" required value="{{ reason|default(input.reason|default('')) }}">
+    {% if errors.reason is defined %}<div class="invalid-feedback">{{ t(errors.reason) }}</div>{% endif %}
+</div>
+{% if errors.version is defined %}<p class="alert alert-warning" role="alert">{{ t(errors.version) }}</p>{% endif %}

@@ -7,8 +7,10 @@ if ($argc !== 2 || $zip->open($argv[1]) !== true) {
     exit(1);
 }
 foreach (['app/vendor/autoload.php', 'app/bootstrap.php', 'app/VERSION', 'app/migrations/0001_initial.sql',
-    'app/migrations/0006_reset_request_queue.sql', 'app/cron.php', 'docs/hosting.md', 'app/config/', 'app/storage/',
-    'public/index.php', 'public/.htaccess', 'public/assets/app.css',
+    'app/migrations/0006_reset_request_queue.sql', 'app/migrations/0010_bank_import.sql',
+    'app/src/Text/de/core.php', 'app/src/Text/de/foundation.php', 'app/src/Text/de/bank_import.php',
+    'app/cron.php', 'docs/hosting.md', 'docs/plans/ausbau/10-csv-import.md', 'app/config/', 'app/storage/',
+    'public/index.php', 'public/.htaccess', 'public/assets/app.css', 'public/assets/bank-import.js',
     'public/assets/vendor/tabler/tabler.min.css', 'public/assets/vendor/tabler/tabler.min.js', 'LICENSE', 'README.md'] as $name) {
     if ($zip->locateName($name) === false) { throw new RuntimeException('Release-Datei fehlt: ' . $name); }
 }

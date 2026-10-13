@@ -13,6 +13,8 @@ cp -R "$root/public/." "$stage/public/"
 cp "$root/LICENSE" "$root/README.md" "$stage/"
 mkdir -p "$stage/docs"
 cp "$root/docs/hosting.md" "$stage/docs/"
+mkdir -p "$stage/docs/plans/ausbau"
+cp "$root/docs/plans/ausbau/09-umsetzungsstand.md" "$root/docs/plans/ausbau/10-csv-import.md" "$stage/docs/plans/ausbau/"
 composer install --working-dir="$stage/app" --no-dev --prefer-dist --no-interaction --optimize-autoloader
 php "$root/scripts/package-release.php" "$stage" "$root/dist/vereinskiste-$version.zip"
 php "$root/scripts/verify-release.php" "$root/dist/vereinskiste-$version.zip"

@@ -1,0 +1,13 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('foundation.bank') }}{% endblock %}
+{% block content %}
+<h1>{{ account.name }} – {{ t('foundation.bank') }}</h1>
+<form class="card card-body" method="post" action="/accounts/{{ account.id }}/bank">
+    {{ csrf_field() }}
+    <input type="hidden" name="version" value="{{ version }}">
+    {% include 'components/foundation_fields.twig' %}
+    <button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button>
+</form>
+<a class="btn btn-link" href="/accounts">{{ t('common.back') }}</a>
+{% include 'components/foundation_history.twig' %}
+{% endblock %}

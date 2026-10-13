@@ -16,7 +16,7 @@ final class BookingRepository
     private const SELECT = "
         SELECT b.id, b.account_id, a.name AS account_name, b.booking_date::text AS booking_date,
                b.amount::text AS amount, b.direction, b.category_id, c.name AS category_name,
-               b.description, b.counterparty, b.receipt_no, b.kind, b.status, b.correction_of_id,
+               b.description, b.counterparty, b.receipt_no, b.finance_contact_id, b.kind, b.status, b.correction_of_id,
                b.transfer_id, b.version, b.created_by, u.name AS created_by_name,
                b.created_at::text AS created_at, b.updated_at::text AS updated_at,
                EXISTS (SELECT 1 FROM booking_changes bc
@@ -164,7 +164,7 @@ final class BookingRepository
         foreach (['id', 'account_id', 'version', 'created_by'] as $key) {
             $row[$key] = (int) $row[$key];
         }
-        foreach (['category_id', 'correction_of_id', 'transfer_id'] as $key) {
+        foreach (['category_id', 'correction_of_id', 'transfer_id', 'finance_contact_id'] as $key) {
             $row[$key] = $row[$key] === null ? null : (int) $row[$key];
         }
         $row['changed'] = (bool) $row['changed'];
