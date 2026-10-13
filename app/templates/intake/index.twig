@@ -2,13 +2,9 @@
 {% block title %}Belegeingang{% endblock %}
 {% block content %}
 <h1>Belegeingang</h1>
-<p>Eingehende Belege werden als Rechnungsentwürfe angelegt. Absender und OCR-Daten sind Vorschläge und müssen geprüft werden.</p>
-{% if can('settings.manage') %}<a class="btn mb-3" href="/settings/receipt-mailbox">Belegpostfach einrichten</a>{% endif %}
-<div class="card mb-3"><div class="card-body"><h2>Eingegangene E-Mails</h2><div class="table-responsive"><table class="table"><thead><tr><th>Datum</th><th>Absender / Betreff</th><th>Mitgliedsvorschlag</th><th>Status</th><th>Beleg</th></tr></thead><tbody>
-{% for row in messages %}<tr><td>{{ row.created_at|date('d.m.Y H:i') }}</td><td>{{ row.sender }}<br>{{ row.subject }}</td><td>{{ row.member_name|default('Nicht zugeordnet') }}</td><td>{{ t('intake.mail.' ~ row.status) }}{% if row.error_code %}<br>{{ t('intake.mail.' ~ row.error_code) }}{% endif %}</td><td>{% if row.invoice_id %}<a href="/invoices/{{ row.invoice_id }}">Rechnung #{{ row.invoice_id }}</a>{% endif %}</td></tr>{% else %}<tr><td colspan="5">Noch keine E-Mails übernommen.</td></tr>{% endfor %}
-</tbody></table></div></div></div>
-<div class="card"><div class="card-body"><h2>Sicherheitsprüfung</h2><p>Gesperrte Dateien können weder heruntergeladen noch zur Zahlung freigegeben werden.</p>
-{% for document in documents %}<div class="border-bottom py-3"><a href="/invoices/{{ document.invoice_id }}">Rechnung #{{ document.invoice_id }}</a> · {{ document.original_name }}<p>{{ t('intake.security.' ~ document.security_status) }}</p>
-{% if document.security_status=='error' and can('invoices.write') %}<form method="post" action="/receipt-inbox/documents/{{ document.id }}/retry">{{ csrf_field() }}<button class="btn btn-sm">Prüfung erneut starten</button></form>{% endif %}</div>{% else %}<p>Keine offenen oder gesperrten Dateien.</p>{% endfor %}
+<p>Belege werden ausschließlich gezielt hochgeladen. Eine automatische Übernahme aus E-Mails findet nicht statt.</p>
+{% if can('invoices.write') %}<a class="btn btn-primary mb-3" href="/invoices/import">Beleg hochladen</a>{% endif %}
+<div class="card"><div class="card-body"><h2>Belege zur Prüfung</h2>
+{% for document in documents %}<div class="border-bottom py-3"><a href="/invoices/{{ document.invoice_id }}">Rechnung #{{ document.invoice_id }}</a> · {{ document.original_name }}<p>{{ t('intake.security.' ~ document.security_status) }} · {{ t('invoices.extraction.' ~ document.extraction_status) }}</p></div>{% else %}<p>Keine Belege zur Prüfung.</p>{% endfor %}
 </div></div>
 {% endblock %}

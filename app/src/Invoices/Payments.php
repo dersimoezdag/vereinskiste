@@ -67,7 +67,7 @@ final class Payments
                     || ($policy['four_eyes']&&((int)$before['created_by']===$actor||(int)$row['created_by']===$actor))) {
                     throw new ValidationError(['payment'=>'intake.payment.self_approval']);
                 }
-                $s=$this->pdo->prepare("SELECT count(*) FROM invoice_documents WHERE invoice_id=? AND security_status NOT IN ('clean','legacy')");$s->execute([$invoice]);
+                $s=$this->pdo->prepare("SELECT count(*) FROM invoice_documents WHERE invoice_id=? AND security_status NOT IN ('clean','validated','legacy')");$s->execute([$invoice]);
                 if((int)$s->fetchColumn()>0) {throw new ValidationError(['payment'=>'intake.security.required']);}
             }
             $this->pdo->prepare('UPDATE invoice_payment_requests SET status=?,approved_by=?,approved_at=now(),version=version+1 WHERE invoice_id=?')

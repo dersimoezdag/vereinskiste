@@ -33,7 +33,7 @@ final class InvoicesTest extends TestCase
         $directory=$this->scratchDir().'/documents';$file=$this->tmpFile(self::xml());
         $id=(new Import($this->db,$directory))->upload($file,'rechnung.xml',1);
         $repo=new InvoiceRepository($this->db);$documents=$repo->documents($id);$this->assertCount(1,$documents);$this->assertSame('pending',$documents[0]['extraction_status']);
-        (new Extraction($this->db,['documents'=>$directory],static fn():array=>['security'=>'clean']))->process((int)$documents[0]['id']);
+        (new Extraction($this->db,['documents'=>$directory]))->process((int)$documents[0]['id']);
         $doc=$repo->documents($id)[0];$this->assertSame('done',$doc['extraction_status']);$this->assertSame('119.00',$doc['extraction']['fields']['gross']);
         $this->assertSame('draft',$repo->find($id)['status']);$this->assertSame('',$repo->find($id)['number']);
         $repo->save($id,$this->data(),(int)$repo->find($id)['version'],1,'Original geprüft');
@@ -42,14 +42,14 @@ final class InvoicesTest extends TestCase
         $this->assertSame(hash_file('sha256',$file),$this->db->query('SELECT sha256 FROM stored_files')->fetchColumn());
         $this->expectException(ValidationError::class);$repo->save($id,$this->data(),(int)$repo->find($id)['version'],1,'Überschreiben');
     }
-    public function test_pdf_requires_security_job_before_manual_review():void
+    public function test_pdf_is_format_checked_and_ready_for_explicit_browser_ocr():void
     {
         $repo=new InvoiceRepository($this->db);
         $id=(new Import($this->db,$this->scratchDir().'/documents'))->upload($this->tmpFile($this->pdfBytes()),'rechnung.pdf',1);
-        $this->assertSame('pending',$repo->documents($id)[0]['extraction_status']);
-        (new Extraction($this->db,['documents'=>$this->scratchDir().'/documents'],static fn():array=>['security'=>'clean','manual'=>true]))->process((int)$repo->documents($id)[0]['id']);
         $this->assertSame('manual',$repo->documents($id)[0]['extraction_status']);
-        $this->assertSame(1,(int)$this->db->query("SELECT count(*) FROM jobs WHERE kind='invoice_extract'")->fetchColumn());
+        (new Extraction($this->db,['documents'=>$this->scratchDir().'/documents']))->process((int)$repo->documents($id)[0]['id']);
+        $this->assertSame('manual',$repo->documents($id)[0]['extraction_status']);
+        $this->assertSame(0,(int)$this->db->query("SELECT count(*) FROM jobs WHERE kind='invoice_extract'")->fetchColumn());
         $repo->save($id,$this->data(),2,1,'Manuell geprüft');$repo->transition($id,3,'review','Bestätigt',false,1);
         $this->assertSame('reviewed',$repo->find($id)['status']);
     }

@@ -1,6 +1,4 @@
 {% set request = payment.request %}
-{% if mail_source %}<div class="card card-body mt-3"><h2>E-Mail zum Beleg</h2><p>{{ mail_source.sender }} · {{ mail_source.subject }}</p><pre class="text-wrap">{{ mail_source.body }}</pre>
-{% if mail_source.suggested_member_id %}<p>Mitgliedsvorschlag: {{ mail_source.member_name }}. Absenderzuordnung bitte unabhängig bestätigen.</p>{% endif %}</div>{% endif %}
 <div class="card card-body mt-3"><h2>{{ t('intake.payment.title') }}</h2>
 <p>Bezahlt: {{ payment.paid|eur }} · Verbleibend: {{ payment.remaining|eur }}. Stornierte Bankbuchungen zählen nicht als Zahlung.</p>
 {% if request %}<p>Status: {{ t('intake.payment.' ~ request.status) }}</p><dl><dt>Empfänger</dt><dd>{{ request.recipient }}</dd><dt>IBAN</dt><dd>{{ request.iban }}</dd><dt>Verwendungszweck</dt><dd>{{ request.purpose }}</dd></dl>{% endif %}

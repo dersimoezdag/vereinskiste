@@ -25,7 +25,7 @@ final class PaymentsTest extends TestCase
         $this->migrated();$this->pdo->exec('UPDATE finance_payment_settings SET four_eyes=true');$this->author=$this->user('author@example.org');$this->reviewer=$this->user('reviewer@example.org');
         $dir=$this->scratchDir().'/documents';
         $this->invoice=(new Import($this->pdo,$dir))->upload($this->tmpFile(InvoicesTest::xml()),'beleg.xml',$this->author);
-        (new Extraction($this->pdo,['documents'=>$dir],static fn():array=>['security'=>'clean']))->process(1);
+        (new Extraction($this->pdo,['documents'=>$dir]))->process(1);
         $repo=new InvoiceRepository($this->pdo);
         $repo->save($this->invoice,['kind'=>'invoice','supplier_name'=>'Lieferant','number'=>'R-1','invoice_date'=>'2026-10-13','currency'=>'EUR','net'=>'100','tax'=>'19','gross'=>'119'],2,$this->author,'Beleg geprüft');
         $repo->transition($this->invoice,3,'review','Prüfung',false,$this->reviewer);

@@ -66,13 +66,7 @@ final class InvoiceController extends AdminController
             'payment_policy'=>(new \Vereinskiste\Invoices\PaymentPolicy(($this->pdo)()))->get(),
             'payment'=>$id===null?null:(new \Vereinskiste\Invoices\Payments(($this->pdo)()))->overview($id),
             'members'=>$req->getAttribute('auth')->can('members.read')?($this->pdo)()->query('SELECT id,name FROM members WHERE anonymized_at IS NULL ORDER BY lower(name) LIMIT 1000')->fetchAll():[],
-            'mail_source'=>$id===null?null:$this->mailSource($id),
             'documents'=>$id===null?[]:$repo->documents($id),'duplicates'=>$id===null?[]:$repo->duplicates($invoice,$id),'history'=>$id===null?[]:$repo->historyRows($id)]);
-    }
-    private function mailSource(int $id): ?array
-    {
-        $stmt=($this->pdo)()->prepare('SELECT r.*,m.name AS member_name FROM receipt_mail_messages r LEFT JOIN members m ON m.id=r.suggested_member_id WHERE invoice_id=? ORDER BY r.id LIMIT 1');
-        $stmt->execute([$id]);return $stmt->fetch()?:null;
     }
     private function importPage(Request $req,Response $res,array $errors=[],array $results=[]):Response
     {return $req->getAttribute('view')->render($res,'invoices/import.twig',['errors'=>$errors,'results'=>$results]);}

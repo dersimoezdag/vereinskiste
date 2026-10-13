@@ -285,13 +285,11 @@ final class Kernel
         $app->get('/members/{id:[0-9]+}/disclosure.json', [$privacy, 'disclosure'])->add(Auth::requires('settings.manage'));
         $app->post('/members/{id:[0-9]+}/anonymize', [$privacy, 'anonymize'])->add(Auth::requires('settings.manage'));
         $intake = new \Vereinskiste\Web\IntakeController($pdoProvider,
-            new \Vereinskiste\Intake\MailboxSettings($appDir . '/config'), $config['documents_dir'] ?? $appDir . '/storage/documents');
+            $config['documents_dir'] ?? $appDir . '/storage/documents');
         $app->get('/settings/payments', [$intake, 'paymentSettings'])->add(Auth::requires('settings.manage'));
         $app->post('/settings/payments', [$intake, 'savePaymentSettings'])->add(Auth::requires('settings.manage'));
         $app->get('/receipt-inbox', [$intake, 'index'])->add(Auth::requires('invoices.read'));
-        $app->get('/settings/receipt-mailbox', [$intake, 'settings'])->add(Auth::requires('settings.manage'));
-        $app->post('/settings/receipt-mailbox', [$intake, 'saveSettings'])->add(Auth::requires('settings.manage'));
-        $app->post('/receipt-inbox/documents/{id:[0-9]+}/retry', [$intake, 'retry'])->add(Auth::requires('invoices.write'));
+        $app->post('/invoices/{id:[0-9]+}/ocr/{document:[0-9]+}', [$intake, 'ocr'])->add(Auth::requires('invoices.write'));
         $app->post('/invoices/{id:[0-9]+}/payment', [$intake, 'payment'])->add(Auth::requires('invoices.write'));
         $invoices = new \Vereinskiste\Web\InvoiceController($pdoProvider, $config['documents_dir'] ?? $appDir . '/storage/documents');
         $app->get('/invoices', [$invoices, 'index'])->add(Auth::requires('invoices.read'));

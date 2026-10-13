@@ -3,10 +3,11 @@ set -eu
 version=${1:?Usage: build-release.sh VERSION}
 case "$version" in ''|*[!a-zA-Z0-9._-]*) echo 'Invalid version' >&2; exit 1;; esac
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+node "$root/scripts/vendor-browser-ocr.cjs"
 stage=$(mktemp -d)
 trap 'rm -rf -- "$stage"' EXIT HUP INT TERM
 mkdir -p "$stage/app/config" "$stage/app/storage" "$stage/public" "$root/dist"
-cp "$root/app/composer.json" "$root/app/composer.lock" "$root/app/bootstrap.php" "$root/app/cron.php" "$root/app/intake-poll.php" "$stage/app/"
+cp "$root/app/composer.json" "$root/app/composer.lock" "$root/app/bootstrap.php" "$root/app/cron.php" "$stage/app/"
 cp "$root/app/update-bootstrap.php" "$root/app/update-trust.json" "$stage/app/"
 printf '%s\n' "$version" > "$stage/app/VERSION"
 cp -R "$root/app/src" "$root/app/templates" "$root/app/migrations" "$stage/app/"

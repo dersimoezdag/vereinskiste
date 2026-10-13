@@ -74,7 +74,7 @@ final class InvoiceRepository
                 if($before['net']===null||$before['tax']===null||$before['gross']===null||Money::toCents((string)$before['net'],true)+Money::toCents((string)$before['tax'],true)!==Money::toCents((string)$before['gross'])) {$errors['gross']='invoices.error.sum';}
                 if(!$duplicateConfirmed&&$this->duplicates($before,$id)!==[]) {$errors['duplicate_confirmed']='invoices.error.duplicate';}
                 $docs=$this->documents($id);if($docs===[]) {$errors['receipt']='invoices.error.document';}
-                foreach($docs as $doc) {if(!in_array($doc['security_status'],['clean','legacy'],true)) {$errors['receipt']='intake.security.required';} if($doc['extraction_status']==='pending') {$errors['receipt']='invoices.error.processing';}}
+                foreach($docs as $doc) {if(!in_array($doc['security_status'],['clean','validated','legacy'],true)) {$errors['receipt']='intake.security.required';} if($doc['extraction_status']==='pending') {$errors['receipt']='invoices.error.processing';}}
                 if($errors!==[]) {throw new ValidationError($errors);}
                 $this->pdo->prepare("UPDATE invoices SET status='reviewed',reviewed_by=?,reviewed_at=now(),version=version+1 WHERE id=?")->execute([$actor,$id]);
             } elseif($action==='cancel'&&$before['status']!=='cancelled') {

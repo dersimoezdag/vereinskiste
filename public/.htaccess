@@ -4,3 +4,7 @@ RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.php [QSA,L]
+
+# Browser-only document processing assets.
+AddType application/wasm .wasm
+AddType application/javascript .mjs

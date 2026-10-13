@@ -47,9 +47,6 @@ try {
         $queue->enqueue('password_reset_mail', [], $slot . ':' . $mailSlot, 100);
     }
     $queue->enqueue('application_mail', [], $slot, 90);
-    if (!empty((new Vereinskiste\Intake\MailboxSettings($instance.'/config'))->get()['config']['enabled'])) {
-        $queue->enqueue('receipt_mail_poll', [], $slot, 15);
-    }
     $queue->enqueue('receipt_registration', [], $slot, 10);
     $queue->enqueue('upload_cleanup', [], (string) intdiv(time(), 86400), -10);
     (new Vereinskiste\Jobs\Runner($queue, [
@@ -57,7 +54,6 @@ try {
             $outbox = new Vereinskiste\Mail\Outbox($pdo); $mailer = new Vereinskiste\Mail\Mailer($smtp); $deadline = microtime(true) + 8;
             for ($i = 0; $i < 5 && microtime(true) < $deadline; ++$i) { if (!$outbox->process($mailer)) { break; } }
         },
-        'receipt_mail_poll' => static function () use ($instance): void { Vereinskiste\Intake\PollProcess::run($instance); },
         'invoice_extract' => static function (array $payload) use ($pdo, $config, $instance): void {
             (new Vereinskiste\Invoices\Extraction($pdo, ['documents' => $config['documents_dir'] ?? $instance . '/storage/documents']))->process((int) $payload['document_id']);
         },

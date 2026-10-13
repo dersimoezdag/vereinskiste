@@ -4,10 +4,8 @@ namespace Vereinskiste\Tests\Intake;
 
 use PDO;
 use Vereinskiste\Db\Migrator;
-use Vereinskiste\Intake\MailIntake;
-use Vereinskiste\Intake\MimeParts;
+use Vereinskiste\Intake\DocumentInspection;
 use Vereinskiste\Intake\OcrSuggestions;
-use Vereinskiste\Intake\MailboxSettings;
 use Vereinskiste\Invoices\Import;
 use Vereinskiste\Invoices\Extraction;
 use Vereinskiste\Invoices\InvoiceRepository;
@@ -23,48 +21,46 @@ final class IntakeTest extends TestCase
     protected function setUp():void
     {
         $this->db=$this->pdo();(new Migrator($this->db,dirname(__DIR__,2).'/migrations'))->migrate();
-        $this->db->exec("INSERT INTO users(name,email,password_hash) VALUES('Worker','worker@example.org','x'); INSERT INTO user_roles(user_id,role) VALUES(1,'kassenwart')");
+        $this->db->exec("INSERT INTO users(name,email,password_hash) VALUES('Finanzer','finanzer@example.org','x')");
     }
     protected function tearDown():void {$this->cleanScratch();}
-    public function test_mail_is_idempotent_and_sender_only_suggests_member():void
+    public function test_upload_is_format_checked_and_duplicate_is_rejected():void
     {
-        $this->db->exec("INSERT INTO members(member_no,name,data) VALUES(1,'Erika','{\"email\":\"erika@example.org\"}')");
-        $intake=new MailIntake($this->db,$this->scratchDir().'/documents');
-        $mail=['sender'=>'erika@example.org','subject'=>'Sommerfest','body'=>'<script>alert(1)</script>','files'=>[['name'=>'../beleg.xml','data'=>InvoicesTest::xml()]]];
-        $id=$intake->receive(str_repeat('a',64),1,1,$mail,1);
-        $this->assertSame(1,$id);$this->assertNull($intake->receive(str_repeat('a',64),1,1,$mail,1));
-        $this->assertSame(1,(int)$this->db->query('SELECT suggested_member_id FROM receipt_mail_messages')->fetchColumn());
-        $this->assertSame(0,(int)$this->db->query('SELECT count(*) FROM invoice_payment_requests')->fetchColumn());
-        $this->assertSame('pending',$this->db->query('SELECT security_status FROM invoice_documents')->fetchColumn());
+        $import=new Import($this->db,$this->scratchDir().'/documents');$path=$this->tmpFile(InvoicesTest::xml());
+        $id=$import->upload($path,'../beleg.xml',1);
+        $this->assertSame('validated',$this->db->query('SELECT security_status FROM invoice_documents')->fetchColumn());
         $this->assertSame('beleg.xml',$this->db->query('SELECT original_name FROM stored_files')->fetchColumn());
+        $this->assertSame(0,(int)$this->db->query('SELECT count(*) FROM invoice_payment_requests')->fetchColumn());
+        $this->expectException(ValidationError::class);$import->upload($path,'duplicate.xml',1);
     }
-    public function test_bad_attachment_rolls_back_whole_message_and_ineligible_actor_is_rejected():void
+    public function test_active_pdf_and_obfuscated_names_are_rejected_without_files_or_rows():void
     {
-        $intake=new MailIntake($this->db,$this->scratchDir().'/documents');
-        $mail=['sender'=>'unknown@example.org','subject'=>'x','body'=>'','files'=>[['name'=>'safe.xml','data'=>InvoicesTest::xml()],['name'=>'evil.exe','data'=>'MZ executable']]];
-        try {$intake->receive(str_repeat('b',64),1,1,$mail,1);$this->fail('bad attachment');}catch(ValidationError) {}
+        foreach(['/JavaScript','/J#53','/OpenAction','/EmbeddedFile','/ObjStm','/Encrypt'] as $feature) {
+            $path=$this->tmpFile($this->pdfBytes().$feature."\n%%EOF");
+            try {(new Import($this->db,$this->scratchDir().'/documents'))->upload($path,'x.pdf',1);$this->fail('active PDF');}catch(ValidationError $e) {$this->assertSame('intake.document.active_pdf',$e->errors['receipt']);}
+        }
         $this->assertSame(0,(int)$this->db->query('SELECT count(*) FROM invoices')->fetchColumn());
-        $this->assertSame(0,(int)$this->db->query('SELECT count(*) FROM receipt_mail_messages')->fetchColumn());
-        $this->db->exec("UPDATE user_roles SET role='kassenpruefer'");
-        $this->expectException(ValidationError::class);$intake->validateActor(1);
+        $this->assertCount(0,glob($this->scratchDir().'/documents/*'));
     }
-    public function test_security_errors_never_unlock_files_and_can_be_retried():void
+    public function test_ocr_text_is_untrusted_and_bound_to_draft_document():void
     {
-        $dir=$this->scratchDir().'/documents';$id=(new Import($this->db,$dir))->upload($this->tmpFile(InvoicesTest::xml()),'x.xml',1);
-        $doc=(int)$this->db->query('SELECT id FROM invoice_documents')->fetchColumn();
-        try {(new Extraction($this->db,['documents'=>$dir],static fn():array=>['security'=>'error']))->process($doc);$this->fail('scanner error');}catch(\RuntimeException) {}
-        $this->assertSame('error',$this->db->query('SELECT security_status FROM invoice_documents')->fetchColumn());
-        (new Extraction($this->db,['documents'=>$dir],static fn():array=>['security'=>'clean']))->process($doc);
-        $this->assertSame('clean',$this->db->query('SELECT security_status FROM invoice_documents')->fetchColumn());
-        $this->assertSame('done',(new InvoiceRepository($this->db))->documents($id)[0]['extraction_status']);
+        $dir=$this->scratchDir().'/documents';$id=(new Import($this->db,$dir))->upload($this->tmpFile($this->pdfBytes()),'beleg.pdf',1);
+        $extract=new Extraction($this->db,['documents'=>$dir]);
+        $extract->saveOcr($id,1,"<script>alert(1)</script>\nGesamtbetrag: 12,50 EUR\n13.10.2026");
+        $doc=(new InvoiceRepository($this->db))->documents($id)[0];
+        $this->assertSame('12.50',$doc['extraction']['fields']['gross']);
+        $this->assertSame('',$this->db->query('SELECT number FROM invoices')->fetchColumn());
+        $this->assertNull($this->db->query('SELECT gross FROM invoices')->fetchColumn());
+        try {$extract->saveOcr($id+1,1,'Wrong invoice');$this->fail('binding');}catch(ValidationError) {}
+        $this->db->exec("UPDATE invoices SET status='cancelled'");
+        $this->expectException(ValidationError::class);$extract->saveOcr($id,1,'Late OCR');
     }
-    public function test_blocked_document_has_no_ocr_suggestions_and_cannot_be_reviewed():void
+    public function test_ocr_never_overwrites_xml_or_accepts_unbounded_text():void
     {
-        $dir=$this->scratchDir().'/documents';$id=(new Import($this->db,$dir))->upload($this->tmpFile(InvoicesTest::xml()),'x.xml',1);
-        $repo=new InvoiceRepository($this->db);$doc=$repo->documents($id)[0];
-        (new Extraction($this->db,['documents'=>$dir],static fn():array=>['security'=>'blocked','extraction'=>['fields'=>['gross'=>'1.00']]]))->process((int)$doc['id']);
-        $this->assertSame([],$repo->documents($id)[0]['extraction']['fields']);
-        try {$repo->transition($id,2,'review','Geprüft',false,1);$this->fail('blocked');}catch(ValidationError $e) {$this->assertSame('intake.security.required',$e->errors['receipt']);}
+        $id=(new Import($this->db,$this->scratchDir().'/documents'))->upload($this->tmpFile(InvoicesTest::xml()),'x.xml',1);
+        $e=new Extraction($this->db,[]);
+        try {$e->saveOcr($id,1,'Text');$this->fail('XML OCR');}catch(ValidationError) {}
+        $this->expectException(ValidationError::class);$e->saveOcr($id,1,str_repeat('a',80001));
     }
     public function test_ocr_suggestions_are_exact_and_do_not_infer_payment_recipient():void
     {
@@ -72,23 +68,5 @@ final class IntakeTest extends TestCase
         $this->assertSame('1234.56',$r['fields']['gross']);$this->assertSame('2026-10-13',$r['fields']['invoice_date']);$this->assertSame('FEST-42',$r['fields']['number']);
         $this->assertArrayNotHasKey('iban',$r['fields']);$this->assertArrayNotHasKey('recipient',$r['fields']);
         $this->assertArrayNotHasKey('invoice_date',OcrSuggestions::extract('31.02.2026')['fields']);
-    }
-    public function test_mime_html_is_kept_as_text_but_archives_and_nested_messages_are_rejected():void
-    {
-        $parts=MimeParts::flatten((object)['type'=>0,'subtype'=>'HTML','encoding'=>4]);
-        $this->assertTrue($parts[0]['html']);$this->assertTrue($parts[0]['text']);
-        $this->assertSame('<script>',MimeParts::decode('=3Cscript=3E',4));
-        try {MimeParts::flatten((object)['type'=>3,'subtype'=>'ZIP','disposition'=>'ATTACHMENT']);$this->fail('zip');}catch(\DomainException) {}
-        $this->expectException(\DomainException::class);MimeParts::flatten((object)['type'=>2,'subtype'=>'RFC822','parts'=>[(object)['type'=>0,'subtype'=>'PLAIN']]]);
-    }
-    public function test_mailbox_secrets_are_private_and_unsafe_hosts_rejected():void
-    {
-        $settings=new MailboxSettings($this->scratchDir().'/config');
-        $settings->save(['host'=>'mail.example.org','username'=>'belege@example.org','folder'=>'INBOX','actor_id'=>'1','password'=>'secret','enabled'=>'1'],0);
-        $this->assertSame('secret',$settings->get()['config']['password']);
-        $this->assertSame(0600,fileperms($this->scratchDir().'/config/receipt-mailbox.json')&0777);
-        $settings->save(['host'=>'mail.example.org','username'=>'belege@example.org','folder'=>'INBOX','actor_id'=>'1','password'=>'','enabled'=>'1'],1);
-        $this->assertSame('secret',$settings->get()['config']['password']);
-        $this->expectException(ValidationError::class);$settings->save(['host'=>'host/novalidate-cert','folder'=>'INBOX'],2);
     }
 }

@@ -7,8 +7,11 @@
 <div class="row g-3"><div class="col-lg-6"><div class="card card-body">
 <h2>{{ t('invoices.documents') }}</h2>
 {% for document in documents %}
-<div class="mb-3 border-bottom pb-3">{% if document.security_status in ['clean','legacy'] %}<a href="/documents/{{ document.file_id }}">{{ document.original_name }}</a>{% else %}<span>{{ document.original_name }}</span>{% endif %}<p>{{ t('intake.security.' ~ document.security_status) }}</p><p>{{ t('invoices.extraction.' ~ document.extraction_status) }}</p>
+<div class="mb-3 border-bottom pb-3">{% if document.security_status in ['clean','validated','legacy'] %}<a href="/documents/{{ document.file_id }}">{{ document.original_name }}</a>{% else %}<span>{{ document.original_name }}</span>{% endif %}<p>{{ t('intake.security.' ~ document.security_status) }}</p><p>{{ t('invoices.extraction.' ~ document.extraction_status) }}</p>
 {% if document.extraction.warning %}<p class="text-secondary">{{ t(document.extraction.warning) }}</p>{% endif %}
+{% if can('invoices.write') and invoice.status=='draft' and document.mime in ['application/pdf','image/jpeg','image/png'] and document.security_status in ['validated','clean','legacy'] %}
+<button class="btn btn-outline-primary mb-2" type="button" data-ocr-document data-document-url="/documents/{{ document.file_id }}" data-save-url="/invoices/{{ invoice.id }}/ocr/{{ document.id }}">Text erkennen (OCR im Browser)</button><span class="d-block" role="status" aria-live="polite" data-ocr-status></span>
+{% endif %}
 {% if document.extraction.text is defined %}<details><summary>Erkannter Text (OCR)</summary><pre class="text-wrap">{{ document.extraction.text }}</pre></details>{% endif %}
 {% if document.extraction.fields %}<h3 class="h5">{{ t('invoices.suggestions') }}</h3><dl>{% for field,value in document.extraction.fields %}<dt>{{ t('invoices.field.' ~ field) }}</dt><dd>{{ field ends with '_date' ? value|date('d.m.Y') : (field in ['net','tax','gross'] and document.extraction.fields.currency == 'EUR' ? value|eur : value) }}</dd>{% endfor %}</dl>
 {% if can('invoices.write') and invoice.status=='draft' %}<button type="button" class="btn btn-outline-primary" data-invoice-suggestions="{{ document.extraction.fields|json_encode }}">{{ t('invoices.suggestions.apply') }}</button>{% endif %}{% endif %}</div>
@@ -35,4 +38,4 @@
 {% if invoice %}{% include 'intake/payment.twig' %}{% endif %}
 <a class="btn mt-3" href="/invoices">{{ t('common.back') }}</a>
 {% endblock %}
-{% block scripts %}<script src="{{ asset('invoices.js') }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ asset('vendor/ocr/tesseract.min.js') }}"></script><script src="{{ asset('invoice-ocr.js') }}"></script><script src="{{ asset('invoices.js') }}"></script>{% endblock %}
