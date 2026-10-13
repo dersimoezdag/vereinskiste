@@ -1,5 +1,6 @@
 {% extends 'layout.twig' %}
 {% import 'components/icons.twig' as icons %}
+{% import 'components/help.twig' as help %}
 
 {% block content %}
 <div class="container-xl">
@@ -35,7 +36,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="new-role-kind" class="form-label required">{{ t('clubroles.kind') }}</label>
+                            <label for="new-role-kind" class="form-label required">{{ t('clubroles.kind') }} {{ help.tip('Funktionen bezeichnen Ämter wie 1. Vorstand oder Kassenprüfer. Mitgliedsarten regeln z. B. Vollmitglied, Jugend oder Fördermitglied.') }}</label>
                             <select id="new-role-kind" name="kind" class="form-select">
                                 <option value="function">{{ t('clubroles.kind.function') }}</option>
                                 <option value="membership_type">{{ t('clubroles.kind.membership_type') }}</option>
@@ -45,7 +46,7 @@
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" id="new-single-holder" name="single_holder" value="1">
                             <label class="form-check-label" for="new-single-holder">
-                                {{ t('clubroles.single') }}
+                                {{ t('clubroles.single') }} {{ help.tip('Nur 1 Träger: Verhindert Mehrfachbesetzungen für Ämter, die laut Satzung nur einfach besetzt sein dürfen (z. B. 1. Vorsitzender).') }}
                             </label>
                         </div>
 

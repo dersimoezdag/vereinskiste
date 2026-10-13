@@ -1,4 +1,5 @@
 {% extends 'layout.twig' %}
+{% import 'components/help.twig' as help %}
 {% block title %}{{ t('bookings.detail') }} #{{ booking.id }}{% endblock %}
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
@@ -41,7 +42,7 @@
             <dt class="col-sm-4">{{ t('bookings.receipt_no') }}</dt>
             <dd class="col-sm-8">{{ booking.receipt_no ?? '–' }}</dd>
 
-            <dt class="col-sm-4">{{ t('bookings.kind') }}</dt>
+            <dt class="col-sm-4">{{ t('bookings.kind') }} {{ help.tip('Buchungsart: Reguläre Buchung, Geldtransit/Umbuchung zwischen Konten oder GoBD-Korrekturbuchung.') }}</dt>
             <dd class="col-sm-8">{{ t('bookings.kind.' ~ booking.kind) }}</dd>
 
             {% if original %}
@@ -63,7 +64,7 @@
             <dt class="col-sm-4">{{ t('bookings.created') }}</dt>
             <dd class="col-sm-8">{{ booking.created_at|date('d.m.Y H:i') }} · {{ booking.created_by_name }}</dd>
 
-            <dt class="col-sm-4">{{ t('bookings.version') }}</dt>
+            <dt class="col-sm-4">{{ t('bookings.version') }} {{ help.tip('Revisionsnummer zur Vermeidung von Konflikten bei gleichzeitiger Bearbeitung.') }}</dt>
             <dd class="col-sm-8">{{ booking.version }}</dd>
         </dl>
     </div>
@@ -72,7 +73,7 @@
 {% if can('bookings.write') %}
 {% set action = booking.status == 'active' ? 'cancel' : 'restore' %}
 <div class="card mb-4">
-    <div class="card-header"><h2 class="card-title">{{ t('bookings.' ~ action ~ '.title') }}</h2></div>
+    <div class="card-header"><h2 class="card-title">{{ t('bookings.' ~ action ~ '.title') }} {{ help.tip('GoBD-Storno: Buchungen werden nicht gelöscht, sondern revisionssicher als storniert markiert.') }}</h2></div>
     <div class="card-body">
         {% include 'bookings/_status_form.twig' with {action: action, version: booking.version, reason: '', errors: {}} %}
     </div>

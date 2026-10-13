@@ -222,3 +222,46 @@ document.addEventListener('click', function (event) {
         }
     }
 });
+
+// Bootstrap Tooltips (z.B. fuer Info-Buttons/Hilfetexte)
+(function () {
+    function initTooltips(root) {
+        var scope = root || document;
+        if (window.bootstrap && typeof window.bootstrap.Tooltip === 'function') {
+            scope.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+                if (!window.bootstrap.Tooltip.getInstance(el)) {
+                    new window.bootstrap.Tooltip(el, {
+                        delay: { show: 150, hide: 100 }
+                    });
+                }
+            });
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () { initTooltips(); });
+    } else {
+        initTooltips();
+    }
+
+    // Klick auf Hilfs-Tooltip fängt das Label-Event ab und toggelt den Tooltip auch bei Touch-Gesten
+    document.addEventListener('click', function (event) {
+        var tip = event.target.closest('.help-tooltip-btn');
+        if (tip) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (window.bootstrap && typeof window.bootstrap.Tooltip === 'function') {
+                var inst = window.bootstrap.Tooltip.getInstance(tip) || new window.bootstrap.Tooltip(tip);
+                if (inst) {
+                    if (tip.getAttribute('aria-describedby')) {
+                        inst.hide();
+                    } else {
+                        inst.show();
+                    }
+                }
+            }
+        }
+    });
+})();
+
+

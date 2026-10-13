@@ -1,5 +1,6 @@
 {% extends 'layout.twig' %}
 {% import 'components/icons.twig' as icons %}
+{% import 'components/help.twig' as help %}
 
 {% block content %}
 <div class="container-xl">
@@ -140,7 +141,7 @@
             <!-- Karte: Mitgliedschaft (Eintritt / Austritt) -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h3 class="card-title">{{ t('members.period.title') }}</h3>
+                    <h3 class="card-title">{{ t('members.period.title') }} {{ help.tip('Mitgliedszeiträume: Bildet die lückenlose Historie aller Beitritte und Austritte für die Vereinsstatistik und Stichtagsberichte.') }}</h3>
                 </div>
                 <div class="card-body">
                     {% if errors.date %}
@@ -210,7 +211,7 @@
             <!-- Karte: Vereinsrollen -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h3 class="card-title">{{ t('clubroles.assign.title') }}</h3>
+                    <h3 class="card-title">{{ t('clubroles.assign.title') }} {{ help.tip('Vereinsrollen weisen dem Mitglied Ämter (z. B. Vorstand) oder Beitragsstatus (z. B. Vollmitglied, Fördermitglied) zu.') }}</h3>
                 </div>
                 <div class="card-body">
                     {% if errors.role %}
@@ -288,7 +289,7 @@
             <!-- Karte: Benutzerzugang -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h3 class="card-title">{{ t('members.user.title') }}</h3>
+                    <h3 class="card-title">{{ t('members.user.title') }} {{ help.tip('Benutzerzugang: Verknüpft das Mitglied mit einem Login-Benutzerkonto im System mit den entsprechenden Rechten.') }}</h3>
                 </div>
                 <div class="card-body">
                     {% if errors.user %}

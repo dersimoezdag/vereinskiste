@@ -1,7 +1,8 @@
 {% extends 'layout.twig' %}
+{% import 'components/help.twig' as help %}
 {% block title %}{{ t('foundation.bank') }}{% endblock %}
 {% block content %}
-<h1>{{ account.name }} – {{ t('foundation.bank') }}</h1>
+<h1>{{ account.name }} – {{ t('foundation.bank') }} {{ help.tip('Hinterlegen Sie IBAN und BIC dieses Vereinskontos für automatische Abgleiche und SEPA-Zahlungsverkehr.') }}</h1>
 <form class="card card-body" method="post" action="/accounts/{{ account.id }}/bank">
     {{ csrf_field() }}
     <input type="hidden" name="version" value="{{ version }}">

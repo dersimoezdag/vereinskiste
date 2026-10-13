@@ -1,4 +1,5 @@
 {% extends 'layout.twig' %}
+{% import 'components/help.twig' as help %}
 {% block title %}{{ t('categories.title') }}{% endblock %}
 {% block content %}
 <h1 class="mb-4">{{ t('categories.title') }}</h1>
@@ -53,7 +54,7 @@
 
 {% if can('settings.manage') %}
 <div class="card">
-    <div class="card-header"><h2 class="card-title">{{ t('categories.new') }}</h2></div>
+    <div class="card-header"><h2 class="card-title">{{ t('categories.new') }} {{ help.tip('Kategorien gliedern Einnahmen und Ausgaben nach Verwendungszweck und steuerlichen Bereichen (z. B. Ideeller Bereich, Zweckbetrieb).') }}</h2></div>
     <div class="card-body">
         <form method="post" action="/categories" novalidate>
             {{ csrf_field() }}

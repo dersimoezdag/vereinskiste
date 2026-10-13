@@ -1,4 +1,5 @@
 {% extends 'layout.twig' %}
+{% import 'components/help.twig' as help %}
 {% block title %}{{ t('closing.title') }}{% endblock %}
 {% block content %}
 {% include 'components/settings_tabs.twig' %}
@@ -21,7 +22,7 @@
 </div>
 
 <div class="card mb-4">
-    <div class="card-header"><h2 class="card-title">{{ t('closing.close.title') }}</h2></div>
+    <div class="card-header"><h2 class="card-title">{{ t('closing.close.title') }} {{ help.tip('GoBD-Festschreibung: Nach dem Abschluss sind alle Buchungen bis zu diesem Datum unveränderbar geschützt und können nur per Korrekturbuchung berichtigt werden.') }}</h2></div>
     <div class="card-body">
         <form method="post" action="/settings/closing" novalidate>
             {{ csrf_field() }}
@@ -43,7 +44,7 @@
 
 {% if closed_until %}
 <div class="card">
-    <div class="card-header"><h2 class="card-title">{{ t('closing.reopen.title') }}</h2></div>
+    <div class="card-header"><h2 class="card-title">{{ t('closing.reopen.title') }} {{ help.tip('Revisionspflicht: Eine Wiedereröffnung erfordert zwingend eine Begründung und wird dauerhaft im Audit-Log vermerkt.') }}</h2></div>
     <div class="card-body">
         <p class="text-secondary">{{ t('closing.reopen.help') }}</p>
         <form method="post" action="/settings/closing" novalidate>

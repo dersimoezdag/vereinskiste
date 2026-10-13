@@ -1,5 +1,6 @@
 {% extends 'layout.twig' %}
 {% import 'components/icons.twig' as icons %}
+{% import 'components/help.twig' as help %}
 
 {% block content %}
 <div class="container-xl">
@@ -29,7 +30,7 @@
         <div class="col-lg-5 col-12">
             <div class="card mb-4">
                 <div class="card-header">
-                    <h3 class="card-title">{{ t('applications.invites.create') }}</h3>
+                    <h3 class="card-title">{{ t('applications.invites.create') }} {{ help.tip('Erzeugt einen geschützten Online-Aufnahmelink für Beitrittsinteressierte. Nach Einreichung des Antrags verfällt der Link automatisch.') }}</h3>
                 </div>
                 <div class="card-body">
                     <p class="text-muted small mb-3">
@@ -48,11 +49,11 @@
 
                         <div class="row g-2 mb-3">
                             <div class="col-6">
-                                <label for="invite-days" class="form-label">{{ t('applications.invites.validity_days') }}</label>
+                                <label for="invite-days" class="form-label">{{ t('applications.invites.validity_days') }} {{ help.tip('Gültigkeitsdauer: Nach Ablauf dieser Frist kann der Link nicht mehr geöffnet werden.') }}</label>
                                 <input type="number" id="invite-days" name="valid_days" value="14" min="1" max="365" class="form-control">
                             </div>
                             <div class="col-6">
-                                <label for="invite-pwd" class="form-label">{{ t('applications.invites.password') }}</label>
+                                <label for="invite-pwd" class="form-label">{{ t('applications.invites.password') }} {{ help.tip('Zusätzlicher Schutz: Der Antragsteller muss vor dem Ausfüllen diesen Code eingeben.') }}</label>
                                 <input type="text" id="invite-pwd" name="password" class="form-control"
                                        placeholder="{{ t('applications.invites.password_placeholder') }}" autocomplete="off">
                             </div>
@@ -62,7 +63,7 @@
                         <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" id="require-sepa" name="require_sepa" value="1">
                             <label class="form-check-label fw-semibold" for="require-sepa">
-                                {{ t('applications.invites.require_sepa') }}
+                                {{ t('applications.invites.require_sepa') }} {{ help.tip('Verpflichtendes SEPA-Lastschriftmandat: Der Antragsteller muss Bankverbindung (IBAN) und Mandatsermächtigung für den Beitragseinzug angeben.') }}
                             </label>
                             <div class="form-text text-muted">{{ t('applications.invites.require_sepa_hint') }}</div>
                         </div>

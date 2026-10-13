@@ -840,3 +840,36 @@ form:not(.is-stepper) .stepper { display: none; }
 [data-bs-theme="dark"] .navbar-brand-autodark .navbar-brand-image {
     filter: none !important;
 }
+
+/* Hilfs-Tooltip Buttons / Info-Icons */
+.help-tooltip-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--vk-text-muted);
+    cursor: pointer;
+    vertical-align: middle;
+    margin-left: 0.35rem;
+    opacity: 0.75;
+    transition: opacity 0.15s ease, color 0.15s ease, transform 0.15s ease;
+    border-radius: 50%;
+    line-height: 1;
+}
+
+.help-tooltip-btn:hover,
+.help-tooltip-btn:focus-visible {
+    opacity: 1;
+    color: var(--tblr-primary);
+    transform: scale(1.1);
+}
+
+.help-tooltip-btn:focus-visible {
+    outline: 2px solid var(--tblr-primary);
+    outline-offset: 2px;
+}
+
+.help-tooltip-btn .icon {
+    width: 1.05rem;
+    height: 1.05rem;
+}
+

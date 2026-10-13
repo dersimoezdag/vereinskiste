@@ -1,7 +1,8 @@
 {% extends 'layout.twig' %}
+{% import 'components/help.twig' as help %}
 {% block title %}{{ t('bookings.correction.title') }}{% endblock %}
 {% block content %}
-<h1 class="mb-4">{{ t('bookings.correction.title') }}</h1>
+<h1 class="mb-4">{{ t('bookings.correction.title') }} {{ help.tip('GoBD-Korrekturbuchung: Die ursprüngliche Buchung bleibt unverändert in den Büchern erhalten. Durch die Korrekturbuchung wird der Saldo transparent angepasst.') }}</h1>
 
 <div class="card">
     <div class="card-body">

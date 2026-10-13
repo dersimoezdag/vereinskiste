@@ -1,3 +1,4 @@
+{% import 'components/help.twig' as help %}
             <div class="row g-3">
                 <div class="col-12">
                     <label class="form-label" for="b-contact">{{ t('foundation.contacts') }}</label>
@@ -10,7 +11,7 @@
                     {% if errors.finance_contact_id is defined %}<p role="alert">{{ t(errors.finance_contact_id) }}</p>{% endif %}
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="b-account">{{ t('bookings.account') }}</label>
+                    <label class="form-label" for="b-account">{{ t('bookings.account') }} {{ help.tip('Das zugehörige Vereinskonto, z. B. Girokonto oder Barkasse.') }}</label>
                     <select id="b-account" name="account_id" required
                             class="form-select{% if errors.account_id is defined %} is-invalid{% endif %}">
                         <option value="">{{ t('bookings.choose') }}</option>
@@ -21,7 +22,7 @@
                     {% if errors.account_id is defined %}<div class="invalid-feedback">{{ t(errors.account_id) }}</div>{% endif %}
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="b-category">{{ t('bookings.category') }}</label>
+                    <label class="form-label" for="b-category">{{ t('bookings.category') }} {{ help.tip('Ordnet die Buchung einer Auswertungskategorie bzw. einem steuerlichen Bereich (z. B. Ideeller Bereich, Zweckbetrieb) zu.') }}</label>
                     <select id="b-category" name="category_id"
                             class="form-select{% if errors.category_id is defined %} is-invalid{% endif %}">
                         <option value="">{{ t('bookings.no_category') }}</option>
@@ -34,8 +35,8 @@
                 <div class="col-md-4">
                     <label class="form-label" for="b-date">{{ t('bookings.date') }}</label>
                     <input type="date" id="b-date" name="booking_date" required
-                           class="form-control{% if errors.booking_date is defined %} is-invalid{% endif %}"
-                           value="{{ input.booking_date }}">
+                            class="form-control{% if errors.booking_date is defined %} is-invalid{% endif %}"
+                            value="{{ input.booking_date }}">
                     {% if errors.booking_date is defined %}<div class="invalid-feedback">{{ t(errors.booking_date) }}</div>{% endif %}
                 </div>
                 <div class="col-md-4">
@@ -50,30 +51,30 @@
                 <div class="col-md-4">
                     <label class="form-label" for="b-amount">{{ t('bookings.amount_eur') }}</label>
                     <input type="text" inputmode="decimal" id="b-amount" name="amount" required
-                           class="form-control{% if errors.amount is defined %} is-invalid{% endif %}"
-                           value="{{ input.amount }}">
+                            class="form-control{% if errors.amount is defined %} is-invalid{% endif %}"
+                            value="{{ input.amount }}">
                     {% if errors.amount is defined %}<div class="invalid-feedback">{{ t(errors.amount) }}</div>{% endif %}
                 </div>
                 <div class="col-12">
                     <label class="form-label" for="b-description">{{ t('bookings.description') }}</label>
                     <input type="text" id="b-description" name="description" maxlength="500"{% if not (description_optional ?? false) %} required{% endif %}
-                           class="form-control{% if errors.description is defined %} is-invalid{% endif %}"
-                           value="{{ input.description }}">
+                            class="form-control{% if errors.description is defined %} is-invalid{% endif %}"
+                            value="{{ input.description }}">
                     {% if errors.description is defined %}<div class="invalid-feedback">{{ t(errors.description) }}</div>{% endif %}
                     {% if description_optional ?? false %}<div class="form-hint">{{ t('bookings.correction.description_help') }}</div>{% endif %}
                 </div>
                 <div class="col-md-6">
                     <label class="form-label" for="b-counterparty">{{ t('bookings.counterparty') }}</label>
                     <input type="text" id="b-counterparty" name="counterparty" maxlength="200"
-                           class="form-control{% if errors.counterparty is defined %} is-invalid{% endif %}"
-                           value="{{ input.counterparty }}">
+                            class="form-control{% if errors.counterparty is defined %} is-invalid{% endif %}"
+                            value="{{ input.counterparty }}">
                     {% if errors.counterparty is defined %}<div class="invalid-feedback">{{ t(errors.counterparty) }}</div>{% endif %}
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="b-receipt-no">{{ t('bookings.receipt_no') }}</label>
+                    <label class="form-label" for="b-receipt-no">{{ t('bookings.receipt_no') }} {{ help.tip('GoBD-Grundsatz: Keine Buchung ohne Beleg. Eindeutige Nummer zur schnellen Zuordnung zum physischen oder digitalen Belegordner.') }}</label>
                     <input type="text" id="b-receipt-no" name="receipt_no" maxlength="100"
-                           class="form-control{% if errors.receipt_no is defined %} is-invalid{% endif %}"
-                           value="{{ input.receipt_no }}">
+                            class="form-control{% if errors.receipt_no is defined %} is-invalid{% endif %}"
+                            value="{{ input.receipt_no }}">
                     {% if errors.receipt_no is defined %}<div class="invalid-feedback">{{ t(errors.receipt_no) }}</div>{% endif %}
                 </div>
             </div>

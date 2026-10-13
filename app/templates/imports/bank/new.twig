@@ -1,4 +1,5 @@
 {% extends 'layout.twig' %}
+{% import 'components/help.twig' as help %}
 {% block title %}Kontoauszug hochladen{% endblock %}
 {% block content %}
 <h1>Kontoauszug hochladen</h1>
@@ -8,7 +9,7 @@ CAMT, MT940 und PDF-Umsatzimport folgen nach Prüfung geeigneter Bankbeispiele.<
 {% if not accounts %}<p class="alert alert-info">Bitte zuerst ein aktives Bankkonto in der Kontenverwaltung anlegen lassen.</p>{% endif %}
 <form method="post" action="/imports/bank/new" enctype="multipart/form-data" class="card card-body">
 {{ csrf_field() }}
-<label for="bank-account" class="form-label">Zielkonto</label>
+<label for="bank-account" class="form-label">Zielkonto {{ help.tip('Bereits importierte Buchungen werden anhand von Datum, Betrag und Verwendungszweck automatisch erkannt und als Dubletten markiert.') }}</label>
 <select id="bank-account" name="account_id" class="form-select mb-3" required><option value="">Bitte auswählen</option>
 {% for account in accounts %}<option value="{{ account.id }}">{{ account.name }}{% if account.iban %} · {{ account.iban }}{% endif %}</option>{% endfor %}</select>
 <label for="bank-file" class="form-label">CSV-Datei</label><input id="bank-file" name="receipt" type="file" accept=".csv,text/csv" class="form-control mb-3" required>
