@@ -42,10 +42,12 @@ final class InvoicesTest extends TestCase
         $this->assertSame(hash_file('sha256',$file),$this->db->query('SELECT sha256 FROM stored_files')->fetchColumn());
         $this->expectException(ValidationError::class);$repo->save($id,$this->data(),(int)$repo->find($id)['version'],1,'Überschreiben');
     }
-    public function test_pdf_is_ready_for_manual_review_without_a_cron_extraction_job():void
+    public function test_pdf_is_format_checked_and_ready_for_explicit_browser_ocr():void
     {
         $repo=new InvoiceRepository($this->db);
         $id=(new Import($this->db,$this->scratchDir().'/documents'))->upload($this->tmpFile($this->pdfBytes()),'rechnung.pdf',1);
+        $this->assertSame('manual',$repo->documents($id)[0]['extraction_status']);
+        (new Extraction($this->db,['documents'=>$this->scratchDir().'/documents']))->process((int)$repo->documents($id)[0]['id']);
         $this->assertSame('manual',$repo->documents($id)[0]['extraction_status']);
         $this->assertSame(0,(int)$this->db->query("SELECT count(*) FROM jobs WHERE kind='invoice_extract'")->fetchColumn());
         $repo->save($id,$this->data(),2,1,'Manuell geprüft');$repo->transition($id,3,'review','Bestätigt',false,1);

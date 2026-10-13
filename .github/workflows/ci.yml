@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php: ['8.4', '8.5']
+        php: ['8.5']
     services:
       postgres:
         image: postgres:15
@@ -45,7 +45,7 @@ jobs:
       - run: sh scripts/build-release.sh ci
       - run: cd app && vendor/bin/phpunit
       - uses: actions/upload-artifact@v4
-        if: matrix.php == '8.4'
+        if: matrix.php == '8.5'
         with:
           name: vereinskiste-release
           path: dist/vereinskiste-ci.zip
