@@ -3,14 +3,14 @@
 <nav class="mui-tabs" aria-label="{{ t('nav.settings') }}">
     {% for tab in [
         {'url': '/settings', 'label': 'settings.version_updates', 'active': settings_path in ['/settings', '/update', '/settings/update']},
-        {'url': '/settings/privacy', 'label': 'privacy.title', 'active': settings_path == '/settings/privacy'},
+        {'url': '/settings/club', 'label': 'foundation.club', 'active': settings_path == '/settings/club'},
+        {'url': '/users', 'label': 'settings.users', 'active': settings_path starts with '/users', 'right': 'users.manage'},
+        {'url': '/audit-log', 'label': 'nav.audit', 'active': settings_path == '/audit-log'},
         {'url': '/settings/payments', 'label': 'intake.payment.settings', 'active': settings_path == '/settings/payments', 'right': 'settings.manage'},
         {'url': '/settings/email', 'label': 'mail.settings.title', 'active': settings_path == '/settings/email'},
-        {'url': '/settings/club', 'label': 'foundation.club', 'active': settings_path == '/settings/club'},
+        {'url': '/settings/privacy', 'label': 'privacy.title', 'active': settings_path == '/settings/privacy'},
         {'url': '/settings/club-roles', 'label': 'nav.club_roles', 'active': settings_path == '/settings/club-roles', 'right': 'settings.manage'},
-        {'url': '/settings/closing', 'label': 'nav.closing', 'active': settings_path == '/settings/closing'},
-        {'url': '/audit-log', 'label': 'nav.audit', 'active': settings_path == '/audit-log'},
-        {'url': '/users', 'label': 'settings.users', 'active': settings_path starts with '/users', 'right': 'users.manage'}
+        {'url': '/settings/closing', 'label': 'nav.closing', 'active': settings_path == '/settings/closing'}
     ] %}
     {% if tab.right is not defined or can(tab.right) %}
     <a class="mui-tab{% if tab.active %} active{% endif %}" href="{{ tab.url }}"{% if tab.active %} aria-current="page"{% endif %}>{{ t(tab.label) }}</a>
