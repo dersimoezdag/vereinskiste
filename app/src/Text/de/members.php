@@ -4,6 +4,7 @@ declare(strict_types=1);
 return [
     'nav.members' => 'Mitglieder',
     'members.title' => 'Mitglieder',
+    'members.export.csv' => 'Mitglieder als CSV exportieren',
     'members.new' => 'Mitglied anlegen',
     'members.search' => 'Name oder Mitgliedsnummer',
     'members.no' => 'Nr.',

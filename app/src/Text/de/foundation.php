@@ -2,6 +2,15 @@
 declare(strict_types=1);
 
 return [
+    'foundation.field.salutation' => 'Anrede',
+    'foundation.field.title' => 'Titel',
+    'foundation.field.first_name' => 'Vorname',
+    'foundation.field.last_name' => 'Nachname',
+    'foundation.field.birth_date' => 'Geburtsdatum',
+    'foundation.field.account_holder' => 'Kontoinhaber',
+    'foundation.field.mandate_reference' => 'Mandatsreferenz',
+    'foundation.field.mandate_date' => 'Mandatsdatum',
+
     'foundation.jobs' => 'Hintergrundaufgaben', 'foundation.job.pending' => 'Wartend',
     'foundation.job.running' => 'In Bearbeitung', 'foundation.job.done' => 'Erledigt', 'foundation.job.failed' => 'Fehlgeschlagen',
     'foundation.duplicates' => 'Es gibt bereits ähnliche Finanzkontakte. Bitte vor dem Anlegen prüfen.',

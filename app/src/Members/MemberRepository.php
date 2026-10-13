@@ -22,6 +22,26 @@ final class MemberRepository
     /** @return list<array<string,mixed>> */
     public function list(string $search = '', string $state = 'current', int $page = 1): array
     {
+        return array_map(self::hydrate(...), $this->matching($search, $state,
+            " ORDER BY lower(COALESCE(m.data->>'last_name', m.name)), lower(COALESCE(m.data->>'first_name', '')), m.id LIMIT 50 OFFSET ?",
+            [(max(1, min($page, 100000)) - 1) * 50])->fetchAll());
+    }
+
+    /** All matching members, in bounded keyset batches independent of UI pagination. */
+    public function forExport(string $search = '', string $state = 'all'): \Generator
+    {
+        $after = 0;
+        do {
+            $rows = $this->matching($search, $state, ' AND m.id > ? ORDER BY m.id LIMIT 500', [$after])->fetchAll();
+            foreach ($rows as $row) {
+                $after = (int) $row['id'];
+                yield self::hydrate($row);
+            }
+        } while (count($rows) === 500);
+    }
+
+    private function matching(string $search, string $state, string $suffix, array $params): \PDOStatement
+    {
         $search = mb_substr(trim($search), 0, 200);
         $number = ctype_digit($search) && strlen($search) <= 9 ? (int) $search : null;
         $stmt = $this->pdo->prepare(
@@ -32,13 +52,12 @@ final class MemberRepository
                 AND (?::text = 'all'
                      OR (?::text = 'current' AND EXISTS (SELECT 1 FROM membership_periods p WHERE p.member_id = m.id AND p.end_date IS NULL))
                      OR (?::text = 'left' AND EXISTS (SELECT 1 FROM membership_periods p WHERE p.member_id = m.id)
-                         AND NOT EXISTS (SELECT 1 FROM membership_periods p WHERE p.member_id = m.id AND p.end_date IS NULL)))
-              ORDER BY lower(COALESCE(m.data->>'last_name', m.name)), lower(COALESCE(m.data->>'first_name', '')), m.id LIMIT 50 OFFSET ?"
+                         AND NOT EXISTS (SELECT 1 FROM membership_periods p WHERE p.member_id = m.id AND p.end_date IS NULL)))" . $suffix
         );
         $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search) . '%';
         $state = in_array($state, ['current', 'left', 'all'], true) ? $state : 'current';
-        $stmt->execute([$like, $number, $state, $state, $state, (max(1, min($page, 100000)) - 1) * 50]);
-        return array_map(self::hydrate(...), $stmt->fetchAll());
+        $stmt->execute(array_merge([$like, $number, $state, $state, $state], $params));
+        return $stmt;
     }
 
     public function find(int $id, bool $lock = false): ?array

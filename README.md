@@ -117,3 +117,24 @@ Die ausführliche Hosting-, SMTP- und Wiederherstellungsprüfung steht in [docs/
 
 Ab 0.1.5 werden stabile Releases signiert. Einrichtung, Schlüsselverwaltung und
 automatische Installation beschreibt [docs/automatic-updates.md](docs/automatic-updates.md).
+
+### System-E-Mails und Eingabeformate
+
+Unter **Einstellungen → E-Mail-Konten** können Administratoren und Vorstand das
+Systemkonto für Passwort-Reset-E-Mails aktivieren und SMTP-Host, Port,
+TLS-Verfahren, Absenderadresse und Zugangsdaten ändern. Die No-Reply-Adresse ist
+frei wählbar. Ein leeres Passwortfeld behält das bisherige Passwort bei;
+„Gespeichertes Passwort entfernen“ löscht es ausdrücklich. Bestehende SMTP-Daten
+aus der Installation werden verwendet, bis eigene Kontoeinstellungen gespeichert
+werden. Webanwendung und Cron-Worker verwenden dieselbe, nach Versandzweck
+organisierte Konfiguration. Weitere Konten (z. B. Newsletter) können später unter
+einem eigenen Versandzweck ergänzt werden. Die Zugangsdaten bleiben in
+`app/config/mail-accounts.json` außerhalb des Webroots (Dateirechte `0600`);
+dieses Verzeichnis muss für den PHP-Prozess schreibbar sein und gesichert werden.
+
+Die Mitgliederliste bietet einen CSV-Export sämtlicher Treffer der aktuellen
+Suche und Statusauswahl. Er verwendet UTF-8 mit BOM, Semikolon und deutsche
+Geburtsdaten. Eingabemasken zeigen Datumsfelder als `TT.MM.JJJJ`, Beträge als
+`1.234,56` und IBANs in Vierergruppen. Die bisherigen serverseitigen
+Speicherformate bleiben erhalten. Telefonnummern und internationale
+Postleitzahlen werden nicht auf ein deutsches Zahlenformat beschränkt.

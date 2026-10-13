@@ -2,7 +2,7 @@
 <div class="mb-3">
     <label class="form-label" for="field-{{ field }}">{{ t('foundation.field.' ~ field) }}</label>
     <input class="form-control{% if errors[field] is defined %} is-invalid{% endif %}" id="field-{{ field }}"
-           name="{{ field }}" type="{{ field == 'email' ? 'email' : (field ends with '_url' ? 'url' : 'text') }}"
+           name="{{ field }}" type="{{ field == 'email' ? 'email' : (field == 'phone' ? 'tel' : (field ends with '_url' ? 'url' : 'text')) }}"
            maxlength="{{ limit }}" value="{{ input[field]|default('') }}"{% if field == 'name' %} required{% endif %}>
     {% if errors[field] is defined %}<div class="invalid-feedback">{{ t(errors[field]) }}</div>{% endif %}
 </div>
