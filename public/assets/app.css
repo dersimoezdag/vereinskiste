@@ -1,4 +1,5 @@
 /* Eigene Styles der Vereinskiste (ergaenzen Tabler). */
+.material-symbol { fill: currentColor; stroke: none; flex-shrink: 0; }
 
 :focus-visible {
     outline: 3px solid #005fcc;

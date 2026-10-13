@@ -12,6 +12,7 @@ foreach (['app/vendor/autoload.php', 'app/bootstrap.php', 'app/VERSION', 'app/mi
     'app/src/Text/de/updates.php', 'app/src/Install/GitHubTransport.php', 'app/src/Install/UpdateCheckFailure.php',
     'app/cron.php', 'docs/hosting.md', 'docs/plans/ausbau/10-csv-import.md', 'app/config/', 'app/storage/',
     'public/index.php', 'public/.htaccess', 'public/assets/app.css', 'public/assets/user-card.css', 'public/assets/bank-import.js',
+    'public/assets/vendor/material-symbols/symbols.svg', 'public/assets/vendor/material-symbols/LICENSE',
     'public/assets/vendor/tabler/tabler.min.css', 'public/assets/vendor/tabler/tabler.min.js', 'LICENSE', 'README.md'] as $name) {
     if ($zip->locateName($name) === false) { throw new RuntimeException('Release-Datei fehlt: ' . $name); }
 }

@@ -38,7 +38,7 @@
 .user-card-name { font-size: 14px; font-weight: 600; line-height: 1.4; }
 .user-card-role { margin-top: 3px; font-size: 12px; line-height: 1.4; color: #bdc8dd; }
 .user-card-chevron { flex: 0 0 18px; color: #bdc8dd; transition: transform 160ms ease; }
-.user-card-chevron .icon { width: 18px; height: 18px; stroke-width: 2; }
+.user-card-chevron .icon { width: 18px; height: 18px; }
 .user-card-trigger.show .user-card-chevron { transform: rotate(180deg); }
 .navbar-vertical .navbar-collapse .user-card .user-card-actions {
     --tblr-dropdown-bg: #f4f6fc;
@@ -81,7 +81,7 @@
     white-space: normal;
 }
 .user-card-actions .dropdown-item:hover, .user-card-actions .dropdown-item:focus-visible { background: #e3e9f8; color: #172b50; }
-.user-card-actions .dropdown-item .icon { flex-shrink: 0; width: 20px; height: 20px; stroke-width: 1.8; }
+.user-card-actions .dropdown-item .icon { flex-shrink: 0; width: 20px; height: 20px; }
 @media (prefers-reduced-motion: reduce) {
     .user-card-trigger, .user-card-chevron { transition: none; }
 }
