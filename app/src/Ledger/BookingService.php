@@ -67,6 +67,10 @@ final class BookingService
     {
         return Transaction::run($this->pdo, function () use ($id, $fields, $reason, $expectedVersion, $userId): array {
             $current = $this->lockForChange($id);
+            $allocated=$this->pdo->prepare('SELECT 1 FROM invoice_payment_allocations WHERE booking_id=?');
+            $allocated->execute([$id]);
+            if($allocated->fetchColumn()!==false) {throw new ValidationError(['booking'=>'intake.payment.booking_locked']);}
+
             $this->closing->assertOpen((string) $current['booking_date']);
             if ($current['status'] === 'cancelled') {
                 throw new BookingLocked($id, 'bookings.locked.cancelled');

@@ -1,0 +1,43 @@
+ALTER TABLE invoice_documents ADD COLUMN security_status text NOT NULL DEFAULT 'legacy'
+    CHECK(security_status IN ('legacy','pending','clean','validated','blocked','error'));
+ALTER TABLE invoice_documents ADD COLUMN security_checked_at timestamptz;
+ALTER TABLE invoice_documents ALTER COLUMN security_status SET DEFAULT 'pending';
+CREATE TABLE invoice_payment_requests (
+    invoice_id bigint PRIMARY KEY REFERENCES invoices(id),
+    kind text NOT NULL CHECK(kind IN ('supplier','reimbursement')),
+    member_id bigint REFERENCES members(id),
+    recipient text NOT NULL, iban text NOT NULL, purpose text NOT NULL,
+    status text NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','approved','rejected')),
+    version integer NOT NULL DEFAULT 1,
+    created_by bigint NOT NULL REFERENCES users(id),
+    approved_by bigint REFERENCES users(id), approved_at timestamptz,
+    CHECK(kind<>'reimbursement' OR member_id IS NOT NULL)
+);
+CREATE TABLE invoice_payment_allocations (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    invoice_id bigint NOT NULL REFERENCES invoice_payment_requests(invoice_id),
+    booking_id bigint NOT NULL UNIQUE REFERENCES bookings(id),
+    amount numeric(12,2) NOT NULL CHECK(amount>0),
+    actor_id bigint NOT NULL REFERENCES users(id), at timestamptz NOT NULL DEFAULT now(),
+    reason text NOT NULL
+);
+CREATE INDEX invoice_payment_allocations_invoice_idx ON invoice_payment_allocations(invoice_id);
+CREATE TABLE invoice_payment_changes (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    invoice_id bigint NOT NULL REFERENCES invoices(id),
+    actor_id bigint NOT NULL REFERENCES users(id), at timestamptz NOT NULL DEFAULT now(),
+    reason text NOT NULL, before_data jsonb NOT NULL, after_data jsonb NOT NULL
+);
+CREATE TRIGGER invoice_payment_changes_immutable BEFORE UPDATE OR DELETE ON invoice_payment_changes
+    FOR EACH ROW EXECUTE FUNCTION vk_reject_modification();
+CREATE TRIGGER invoice_payment_changes_no_truncate BEFORE TRUNCATE ON invoice_payment_changes
+    FOR EACH STATEMENT EXECUTE FUNCTION vk_reject_modification();
+CREATE TABLE finance_payment_settings (
+    id smallint PRIMARY KEY CHECK(id=1),
+    four_eyes boolean NOT NULL DEFAULT false,
+    version integer NOT NULL DEFAULT 1
+);
+INSERT INTO finance_payment_settings(id) VALUES(1);
+ALTER TABLE foundation_changes DROP CONSTRAINT foundation_changes_subject_check;
+ALTER TABLE foundation_changes ADD CONSTRAINT foundation_changes_subject_check
+    CHECK(subject IN ('club','contact','account_bank','member','club_role','payment_policy'));

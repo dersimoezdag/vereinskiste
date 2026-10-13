@@ -67,35 +67,46 @@ document.querySelectorAll('form[data-stepper]').forEach(function (form) {
     show(form.hasAttribute('data-start-last') ? panels.length - 1 : 0);
 });
 
-// Dark-Mode Umschaltung & Synchronisation
+// Explizite Darstellungsauswahl; System folgt auch späteren Betriebssystemänderungen.
 (function () {
-    function updateThemeUI(theme) {
-        document.querySelectorAll('.theme-toggle').forEach(function (btn) {
-            var label = theme === 'dark' ? 'Zum hellen Modus wechseln' : 'Zum dunklen Modus wechseln';
-            btn.setAttribute('aria-label', label);
-            btn.setAttribute('title', label);
+    var media = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    var preference = 'system';
+    function read() {
+        var value;
+        try { value = localStorage.getItem('vk-theme'); } catch (e) {}
+        return value === 'light' || value === 'dark' ? value : 'system';
+    }
+    function apply() {
+        document.documentElement.setAttribute('data-bs-theme', preference === 'system'
+            ? (media && media.matches ? 'dark' : 'light') : preference);
+        document.querySelectorAll('[data-theme-picker]').forEach(function (picker) {
+            picker.querySelectorAll('[data-theme-choice]').forEach(function (input) { input.checked = input.value === preference; });
+            picker.querySelectorAll('[data-theme-icon]').forEach(function (icon) { icon.hidden = icon.dataset.themeIcon !== preference; });
+            var labels = { light: 'Hell', dark: 'Dunkel', system: 'System' };
+            var trigger = picker.querySelector('summary');
+            trigger.setAttribute('aria-label', 'Darstellung wählen: ' + labels[preference]);
+            trigger.title = 'Darstellung: ' + labels[preference];
         });
     }
-
-    function getPreferredTheme() {
-        var stored = null;
-        try { stored = localStorage.getItem('vk-theme'); } catch (e) {}
-        if (stored === 'dark' || stored === 'light') { return stored; }
-        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-
-    var activeTheme = getPreferredTheme();
-    document.documentElement.setAttribute('data-bs-theme', activeTheme);
-    updateThemeUI(activeTheme);
-
-    document.addEventListener('click', function (event) {
-        var toggle = event.target.closest('.theme-toggle');
-        if (!toggle) { return; }
-        var current = document.documentElement.getAttribute('data-bs-theme') || 'light';
-        var next = current === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-bs-theme', next);
-        try { localStorage.setItem('vk-theme', next); } catch (e) {}
-        updateThemeUI(next);
+    preference = read();
+    apply();
+    document.querySelectorAll('[data-theme-picker]').forEach(function (picker) {
+        picker.addEventListener('change', function (event) {
+            if (!event.target.matches('[data-theme-choice]')) { return; }
+            preference = ['light', 'dark'].indexOf(event.target.value) !== -1 ? event.target.value : 'system';
+            try { localStorage.setItem('vk-theme', preference); } catch (e) {}
+            apply();
+            picker.open = false;
+            picker.querySelector('summary').focus();
+        });
+        picker.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') { picker.open = false; picker.querySelector('summary').focus(); }
+        });
+        document.addEventListener('click', function (event) { if (!picker.contains(event.target)) { picker.open = false; } });
+    });
+    if (media && media.addEventListener) { media.addEventListener('change', apply); }
+    window.addEventListener('storage', function (event) {
+        if (event.key === 'vk-theme' || event.key === null) { preference = read(); apply(); }
     });
 })();
 

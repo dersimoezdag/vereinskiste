@@ -132,7 +132,7 @@ final class Kernel
                     return 0;
                 }
                 try {
-                    return (new \Vereinskiste\Members\ApplicationRepository($pdoProvider))->countPending();
+                    return (new \Vereinskiste\Members\ApplicationRepository($pdoProvider()))->countPending();
                 } catch (\Throwable) {
                     return 0;
                 }
@@ -192,7 +192,10 @@ final class Kernel
         $app->post('/update', [$updater, 'update'])->add(Auth::requires('settings.manage'));
 
         $auth = new AuthController();
-        $app->get('/', [$auth, 'home'])->add(Auth::authenticated());
+        $home = new \Vereinskiste\Web\HomeDashboardController($pdoProvider);
+        $app->get('/', [$home, 'index'])->add(Auth::authenticated());
+        $app->get('/dashboard/preferences', [$home, 'preferences'])->add(Auth::authenticated());
+        $app->post('/dashboard/preferences', [$home, 'save'])->add(Auth::authenticated());
         $app->get('/login', [$auth, 'showLogin']);
         $app->post('/login', [$auth, 'login']);
         $app->post('/logout', [$auth, 'logout']);
@@ -297,6 +300,13 @@ final class Kernel
         $app->post('/members/{id:[0-9]+}/consents', [$privacy, 'consent'])->add(Auth::requires('settings.manage'));
         $app->get('/members/{id:[0-9]+}/disclosure.json', [$privacy, 'disclosure'])->add(Auth::requires('settings.manage'));
         $app->post('/members/{id:[0-9]+}/anonymize', [$privacy, 'anonymize'])->add(Auth::requires('settings.manage'));
+        $intake = new \Vereinskiste\Web\IntakeController($pdoProvider,
+            $config['documents_dir'] ?? $appDir . '/storage/documents');
+        $app->get('/settings/payments', [$intake, 'paymentSettings'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/payments', [$intake, 'savePaymentSettings'])->add(Auth::requires('settings.manage'));
+        $app->get('/receipt-inbox', [$intake, 'index'])->add(Auth::requires('invoices.read'));
+        $app->post('/invoices/{id:[0-9]+}/ocr/{document:[0-9]+}', [$intake, 'ocr'])->add(Auth::requires('invoices.write'));
+        $app->post('/invoices/{id:[0-9]+}/payment', [$intake, 'payment'])->add(Auth::requires('invoices.write'));
         $invoices = new \Vereinskiste\Web\InvoiceController($pdoProvider, $config['documents_dir'] ?? $appDir . '/storage/documents');
         $app->get('/invoices', [$invoices, 'index'])->add(Auth::requires('invoices.read'));
         $app->get('/invoices/new', [$invoices, 'create'])->add(Auth::requires('invoices.write'));

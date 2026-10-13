@@ -9,3 +9,6 @@ dist/
 .release-secrets/
 
 /tests/node_modules/
+
+# Generated from pinned npm OCR dependencies during package build
+public/assets/vendor/ocr/

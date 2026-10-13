@@ -1,0 +1,14 @@
+{% extends 'layout.twig' %}
+{% block title %}Zahlungsfreigabe{% endblock %}
+{% block content %}
+{% include 'components/settings_tabs.twig' %}
+<h2>Zahlungsfreigabe</h2>
+{% for error in errors %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endfor %}
+<form class="card card-body" method="post" action="/settings/payments">{{ csrf_field() }}<input type="hidden" name="version" value="{{ policy.version }}">
+<label class="form-check mb-3"><input class="form-check-input" type="checkbox" name="four_eyes" value="1"{% if policy.four_eyes %} checked{% endif %}><span class="form-check-label">Vier-Augen-Prinzip für Zahlungsfreigaben verpflichtend machen</span></label>
+<p>Ausgeschaltet: Personen mit Freigaberecht, insbesondere der Kassenwart, können Belege und Zahlungen selbst bearbeiten und freigeben. Eingeschaltet: Wer einen Beleg angelegt oder den Zahlungsvorschlag zuletzt bearbeitet hat, benötigt eine andere freigebende Person.</p>
+<p>Erstattungen an das eigene verknüpfte Mitglied benötigen in beiden Modi eine andere freigebende Person. Alle Entscheidungen werden protokolliert.</p>
+<label class="form-label" for="policy-reason">Begründung der Änderung</label><input class="form-control mb-3" id="policy-reason" name="reason" maxlength="500" required><button class="btn btn-primary">Speichern</button>
+</form>
+{% for row in history %}<p class="mt-3">{{ row.at|date('d.m.Y H:i') }} · {{ row.actor }} · {{ row.reason }}</p>{% endfor %}
+{% endblock %}

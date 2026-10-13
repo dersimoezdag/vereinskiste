@@ -16,11 +16,20 @@ final class InvoiceRepository
     public function __construct(private PDO $pdo) {}
     public function list(string $state='all',string $search='',int $page=1):array
     {
-        $state=in_array($state,['draft','reviewed','cancelled','overdue','all'],true)?$state:'all';
-        $stmt=$this->pdo->prepare("SELECT * FROM invoices WHERE (number ILIKE ? OR supplier_name ILIKE ?) AND (?='all' OR status=? OR (?='overdue' AND status='reviewed' AND kind='invoice' AND due_date<CURRENT_DATE)) ORDER BY id DESC LIMIT 50 OFFSET ?");
+        $state=in_array($state,['draft','reviewed','cancelled','overdue','unpaid','partially_paid','paid','all'],true)?$state:'all';
+        $stmt=$this->pdo->prepare("SELECT i.*,p.status AS payment_status,COALESCE(t.paid,0)::numeric(12,2)::text AS paid_total,
+            GREATEST(COALESCE(i.gross,0)-COALESCE(t.paid,0),0)::numeric(12,2)::text AS remaining
+            FROM invoices i LEFT JOIN invoice_payment_requests p ON p.invoice_id=i.id
+            LEFT JOIN LATERAL (SELECT SUM(a.amount) AS paid FROM invoice_payment_allocations a JOIN bookings b ON b.id=a.booking_id WHERE a.invoice_id=i.id AND b.status='active') t ON true
+            WHERE (i.number ILIKE ? OR i.supplier_name ILIKE ?) AND (?='all' OR i.status=?
+                OR (?='overdue' AND i.status='reviewed' AND i.kind='invoice' AND i.due_date<CURRENT_DATE AND COALESCE(t.paid,0)<i.gross)
+                OR (?='unpaid' AND i.status='reviewed' AND i.kind='invoice' AND COALESCE(t.paid,0)=0)
+                OR (?='partially_paid' AND i.status='reviewed' AND i.kind='invoice' AND t.paid>0 AND t.paid<i.gross)
+                OR (?='paid' AND i.status='reviewed' AND i.kind='invoice' AND t.paid>=i.gross)) ORDER BY i.id DESC LIMIT 50 OFFSET ?");
         $q='%'.str_replace(['\\','%','_'],['\\\\','\\%','\\_'],mb_substr($search,0,100)).'%';
-        $stmt->execute([$q,$q,$state,$state,$state,(max(1,min(100000,$page))-1)*50]);return $stmt->fetchAll();
+        $stmt->execute([$q,$q,$state,$state,$state,$state,$state,$state,(max(1,min(100000,$page))-1)*50]);return $stmt->fetchAll();
     }
+
     public function find(int $id,bool $lock=false):?array
     {
         $stmt=$this->pdo->prepare('SELECT * FROM invoices WHERE id=?'.($lock?' FOR UPDATE':''));$stmt->execute([$id]);return $stmt->fetch()?:null;
@@ -65,7 +74,7 @@ final class InvoiceRepository
                 if($before['net']===null||$before['tax']===null||$before['gross']===null||Money::toCents((string)$before['net'],true)+Money::toCents((string)$before['tax'],true)!==Money::toCents((string)$before['gross'])) {$errors['gross']='invoices.error.sum';}
                 if(!$duplicateConfirmed&&$this->duplicates($before,$id)!==[]) {$errors['duplicate_confirmed']='invoices.error.duplicate';}
                 $docs=$this->documents($id);if($docs===[]) {$errors['receipt']='invoices.error.document';}
-                foreach($docs as $doc) {if($doc['extraction_status']==='pending') {$errors['receipt']='invoices.error.processing';}}
+                foreach($docs as $doc) {if(!in_array($doc['security_status'],['clean','validated','legacy'],true)) {$errors['receipt']='intake.security.required';} if($doc['extraction_status']==='pending') {$errors['receipt']='invoices.error.processing';}}
                 if($errors!==[]) {throw new ValidationError($errors);}
                 $this->pdo->prepare("UPDATE invoices SET status='reviewed',reviewed_by=?,reviewed_at=now(),version=version+1 WHERE id=?")->execute([$actor,$id]);
             } elseif($action==='cancel'&&$before['status']!=='cancelled') {

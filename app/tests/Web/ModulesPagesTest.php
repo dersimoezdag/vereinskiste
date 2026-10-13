@@ -35,6 +35,7 @@ final class ModulesPagesTest extends TestCase
         $res=$this->app->handle($req);$this->assertSame(200,$res->getStatusCode(),(string)$res->getBody());
         $this->assertSame(200,$this->get('/documents/1')->getStatusCode());
         (new Extraction($this->pdo,['documents'=>$this->scratchDir().'/documents']))->process(1);
+        $this->assertSame(200,$this->get('/documents/1')->getStatusCode());
         $html=(string)$this->get('/invoices/1')->getBody();$this->assertStringContainsString('INV-2026-01',$html);$this->assertStringContainsString('invoice_date',$html);
         $this->assertSame(302,$this->postForm('/invoices/1',['version'=>'2','kind'=>'invoice','currency'=>'EUR','supplier_name'=>'Muster GmbH','number'=>'1','invoice_date'=>'2026-10-13','net'=>'100','tax'=>'19','gross'=>'119','reason'=>'Prüfung'])->getStatusCode());
         $this->pdo->exec("UPDATE user_roles SET role='kassenpruefer'");$this->assertSame(200,$this->get('/invoices/1')->getStatusCode());$this->assertSame(403,$this->postForm('/invoices/1',['version'=>'3'])->getStatusCode());
