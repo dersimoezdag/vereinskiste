@@ -35,8 +35,8 @@ try {
     if ((new Vereinskiste\Install\Updater($pdo, __DIR__ . '/migrations'))->needsUpdate()) {
         throw new RuntimeException('Bitte zuerst Datenbank aktualisieren.');
     }
-    $smtp = $config['smtp'] ?? [];
-    $smtp['from_name'] = (new Vereinskiste\Club\Profile($pdo))->name();
+    $smtp = (new Vereinskiste\Mail\MailAccounts($instance . '/config', $config['smtp'] ?? []))->configuration();
+    if (($smtp['from_name'] ?? '') === '') { $smtp['from_name'] = (new Vereinskiste\Club\Profile($pdo))->name(); }
     $service = new Vereinskiste\Auth\PasswordResetService(
         static fn (): PDO => $pdo, new Vereinskiste\Mail\Mailer($smtp),
         $config['base_url'] ?? '', require __DIR__ . '/src/Text/de.php'

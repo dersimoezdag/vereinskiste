@@ -44,6 +44,20 @@ final class MemberController extends AdminController
         ]);
     }
 
+    public function csv(Request $req, Response $res): Response
+    {
+        $query = $req->getQueryParams();
+        $search = $this->str($query, 'q');
+        if (!mb_check_encoding($search, 'UTF-8')) { $search = ''; }
+        $stream = (new \Vereinskiste\Members\MemberExport(($this->pdo)()))->csv(
+            $search, $this->str($query, 'state') ?: 'all'
+        );
+        return $res->withBody(new \Slim\Psr7\Stream($stream))
+            ->withHeader('Content-Type', 'text/csv; charset=utf-8')
+            ->withHeader('Content-Disposition', 'attachment; filename="mitglieder.csv"')
+            ->withHeader('Cache-Control', 'no-store');
+    }
+
     public function create(Request $req, Response $res): Response
     {
         return $this->renderDetail($req, $res);

@@ -1,0 +1,43 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('mail.settings.title') }}{% endblock %}
+{% block content %}
+{% include 'components/settings_tabs.twig' %}
+<div class="card">
+    <div class="card-header"><h2 class="card-title">{{ t('mail.system.title') }}</h2></div>
+    <div class="card-body">
+        <p>{{ t('mail.system.description') }}</p>
+        <form method="post" action="/settings/email">
+            {{ csrf_field() }}
+            <input type="hidden" name="version" value="{{ version }}">
+            {% if errors.version %}<p class="alert alert-warning" role="alert">{{ t(errors.version) }}</p>{% endif %}
+            <label class="form-check mb-3"><input class="form-check-input" type="checkbox" name="enabled" value="1"{% if input.enabled == '1' %} checked{% endif %}><span class="form-check-label">{{ t('mail.enabled') }}</span></label>
+            {% for field in ['host', 'port', 'from', 'from_name', 'username'] %}
+            <div class="mb-3">
+                <label class="form-label" for="mail-{{ field }}">{{ t('mail.field.' ~ field) }}</label>
+                <input class="form-control{% if errors[field] %} is-invalid{% endif %}" id="mail-{{ field }}" name="{{ field }}"
+                    type="{{ field == 'port' ? 'number' : (field == 'from' ? 'email' : 'text') }}"
+                    {% if field == 'port' %}min="1" max="65535"{% endif %}
+                    value="{{ input[field]|default('') }}" autocomplete="off">
+                {% if errors[field] %}<div class="invalid-feedback">{{ t(errors[field]) }}</div>{% endif %}
+            </div>
+            {% endfor %}
+            <div class="mb-3">
+                <label class="form-label" for="mail-encryption">{{ t('mail.field.encryption') }}</label>
+                <select class="form-select" name="encryption" id="mail-encryption">
+                    <option value="tls"{% if input.encryption == 'tls' %} selected{% endif %}>STARTTLS</option>
+                    <option value="ssl"{% if input.encryption == 'ssl' %} selected{% endif %}>TLS</option>
+                </select>
+                {% if errors.encryption %}<p role="alert">{{ t(errors.encryption) }}</p>{% endif %}
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="mail-password">{{ t('mail.field.password') }}</label>
+                <input class="form-control" type="password" name="password" id="mail-password" autocomplete="new-password" maxlength="1000" aria-describedby="mail-password-help">
+                <p class="form-hint" id="mail-password-help">{{ t(has_password ? 'mail.password.keep' : 'mail.password.empty') }}</p>
+                {% if errors.password %}<p role="alert">{{ t(errors.password) }}</p>{% endif %}
+                {% if has_password %}<label class="form-check"><input class="form-check-input" type="checkbox" name="clear_password" value="1"><span class="form-check-label">{{ t('mail.password.clear') }}</span></label>{% endif %}
+            </div>
+            <button class="btn btn-primary" type="submit">{{ t('common.save') }}</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -76,7 +76,8 @@ final class Kernel
         $migrationDir = $config['migration_dir'] ?? $appDir . '/migrations';
         $texts = $config['texts'] ?? require dirname(__DIR__) . '/Text/de.php';
         $templates = $config['templates'] ?? dirname(__DIR__, 2) . '/templates';
-        $mailer = $config['mailer'] ?? new Mailer($config['smtp'] ?? []);
+        $mailAccounts = new \Vereinskiste\Mail\MailAccounts($appDir . '/config', $config['smtp'] ?? []);
+        $mailer = $config['mailer'] ?? new Mailer($mailAccounts->configuration());
         $resetService = new PasswordResetService($pdoProvider, $mailer, rtrim($config['base_url'] ?? '', '/'), $texts, $limiter);
 
         $state = new RequestState();
@@ -236,6 +237,10 @@ final class Kernel
         $app->get('/reports/bookings.csv', [$reports, 'csv'])->add(Auth::requires('reports.read'));
         $app->get('/reports/summary.pdf', [$reports, 'pdf'])->add(Auth::requires('reports.read'));
 
+        $mailSettings = new \Vereinskiste\Web\MailSettingsController($mailAccounts);
+        $app->get('/settings/email', [$mailSettings, 'show'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/email', [$mailSettings, 'save'])->add(Auth::requires('settings.manage'));
+
         $settings = new SettingsController($pdoProvider);
         $club = new \Vereinskiste\Web\ClubController($pdoProvider);
         $documents = new \Vereinskiste\Web\DocumentController($pdoProvider,
@@ -267,6 +272,7 @@ final class Kernel
 
         $members = new \Vereinskiste\Web\MemberController($pdoProvider);
         $app->get('/members', [$members, 'index'])->add(Auth::requires('members.read'));
+        $app->get('/members.csv', [$members, 'csv'])->add(Auth::requires('members.read'));
         $app->get('/members/applications', [$members, 'applications'])->add(Auth::requires('members.read'));
         $app->post('/members/invites/new', [$members, 'createInvite'])->add(Auth::requires('members.write'));
         $app->post('/members/applications/{id:[0-9]+}/approve', [$members, 'approveApplication'])->add(Auth::requires('members.write'));

@@ -27,6 +27,8 @@
     {% set crumbs = [{'label': t('nav.reports'), 'url': '/reports/summary'}, {'label': path == '/reports/dashboard' ? t('reports.tab.dashboard') : t('reports.tab.summary')}] %}
 {% elseif path == '/settings' %}
     {% set crumbs = [{'label': t('nav.settings')}] %}
+{% elseif path == '/settings/email' %}
+    {% set crumbs = [settings, {'label': t('mail.settings.title')}] %}
 {% elseif path == '/settings/club' %}
     {% set crumbs = [settings, {'label': t('foundation.club')}] %}
 {% elseif path starts with '/settings/closing' %}

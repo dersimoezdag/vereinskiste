@@ -31,7 +31,7 @@
                             </div>
                             <div class="col-md-6 col-12">
                                 <label for="member-phone" class="form-label">{{ t('members.field.phone') }}</label>
-                                <input type="text" id="member-phone" name="phone" value="{{ input.phone|default('') }}"
+                                <input type="tel" id="member-phone" name="phone" value="{{ input.phone|default('') }}"
                                        class="form-control{% if errors.phone %} is-invalid{% endif %}" maxlength="50">
                                 {% if errors.phone %}
                                 <div class="invalid-feedback">{{ t(errors.phone) }}</div>

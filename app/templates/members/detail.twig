@@ -52,7 +52,7 @@
                             </div>
                             <div class="col-md-6 col-12">
                                 <label for="detail-phone" class="form-label">{{ t('members.field.phone') }}</label>
-                                <input type="text" id="detail-phone" name="phone" value="{{ input.phone|default(member.data.phone) }}"
+                                <input type="tel" id="detail-phone" name="phone" value="{{ input.phone|default(member.data.phone) }}"
                                        class="form-control{% if errors.phone %} is-invalid{% endif %}" maxlength="50"
                                        {% if not can('members.write') %}disabled{% endif %}>
                                 {% if errors.phone %}

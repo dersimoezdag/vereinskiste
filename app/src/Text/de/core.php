@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 /** Zentrale deutsche Oberflaechentexte (Schluessel => Text). */
 return [
+    'validation.email.invalid' => 'Bitte eine gültige E-Mail-Adresse eingeben.',
+    'validation.iban.invalid' => 'Bitte eine gültige IBAN eingeben.',
+    'common.save' => 'Speichern',
+    'common.search' => 'Suchen',
     'settings.github.source' => 'Updatequelle:',
     'settings.github.check' => 'Auf Updates prüfen',
     'settings.github.available' => 'Neue Version verfügbar:',

@@ -34,6 +34,11 @@ jobs:
           extensions: pdo_pgsql, mbstring, fileinfo, gd, openssl, zip, sodium, curl
           tools: composer:v2
           coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix tests --ignore-scripts
+      - run: npm test --prefix tests
       - run: composer validate --strict --working-dir=app
       - run: composer install --working-dir=app --prefer-dist --no-interaction
       - run: composer audit --locked --working-dir=app

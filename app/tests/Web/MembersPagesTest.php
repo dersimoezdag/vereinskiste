@@ -55,6 +55,46 @@ final class MembersPagesTest extends TestCase
         $this->assertSame(1, (int) $this->pdo->query('SELECT member_id FROM users WHERE id = 1')->fetchColumn());
     }
 
+    public function test_csv_exports_every_matching_member_with_safe_cells_and_read_permission(): void
+    {
+        $this->assertSame(302, $this->get('/members.csv')->getStatusCode());
+        $this->loginAs(['schriftfuehrer']);
+        $stmt = $this->pdo->prepare('INSERT INTO members(name,data) VALUES (?, ?::jsonb) RETURNING id');
+        for ($i = 0; $i < 505; ++$i) {
+            $stmt->execute(['Müller ' . $i, json_encode(['first_name' => 'Erika', 'last_name' => 'Müller',
+                'phone' => '+49 30 123', 'notes' => '=1+1;"Test"' . "\n" . 'zweite Zeile'], JSON_THROW_ON_ERROR)]);
+            $id = (int) $stmt->fetchColumn();
+            $this->pdo->prepare('INSERT INTO membership_periods(member_id,start_date) VALUES (?, ?)')
+                ->execute([$id, '2026-01-01']);
+        }
+        $stmt->execute(['Andere Person', '{}']);
+        $res = $this->get('/members.csv?q=M%C3%BCller&state=current&page=2');
+        $this->assertSame(200, $res->getStatusCode());
+        $this->assertSame('text/csv; charset=utf-8', $res->getHeaderLine('Content-Type'));
+        $this->assertSame('no-store', $res->getHeaderLine('Cache-Control'));
+        $stream = fopen('php://memory', 'w+');
+        $csv = (string) $res->getBody();
+        $this->assertStringStartsWith("\xEF\xBB\xBF", $csv);
+        fwrite($stream, substr($csv, 3));
+        rewind($stream);
+        $header = fgetcsv($stream, null, ';', '"', '');
+        $this->assertCount(15, $header);
+        $rows = [];
+        while (($row = fgetcsv($stream, null, ';', '"', '')) !== false) { $rows[] = $row; }
+        fclose($stream);
+        $this->assertCount(505, $rows);
+        $this->assertCount(505, array_unique(array_column($rows, 0)));
+        $this->assertSame("'+49 30 123", $rows[0][11]);
+        $this->assertSame("'=1+1;\"Test\"\nzweite Zeile", $rows[0][13]);
+        $this->assertSame('Ja', $rows[0][14]);
+        $this->assertStringNotContainsString('Andere Person', $csv);
+        $this->assertStringContainsString('Mitglieder als CSV exportieren', (string) $this->get('/members')->getBody());
+        $this->pdo->exec("UPDATE user_roles SET role='kassenwart'");
+        $this->assertSame(200, $this->get('/members.csv?state=left')->getStatusCode());
+        $this->pdo->exec('DELETE FROM user_roles');
+        $this->assertSame(403, $this->get('/members.csv')->getStatusCode());
+    }
+
     public function test_member_menu_entry_depends_on_permission(): void
     {
         $this->loginAs(['schriftfuehrer']);
