@@ -43,7 +43,19 @@ jobs:
       - run: composer install --working-dir=app --prefer-dist --no-interaction
       - run: composer audit --locked --working-dir=app
       - run: sh scripts/build-release.sh ci
+      - name: Install local document processing tools
+        if: matrix.php == '8.4'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bubblewrap clamav poppler-utils tesseract-ocr tesseract-ocr-deu tesseract-ocr-eng
+          # Isolated CI fixture: no production signature state or credentials.
+          printf '%s\n' '44d88612fea8a8f36de82e1278abb02f:68:VK.Test.Eicar' | sudo tee /var/lib/clamav/vk-test.hdb > /dev/null
+          if [ -f /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
       - run: cd app && vendor/bin/phpunit
+        env:
+          VK_INTAKE_PROCESSING_TEST: ${{ matrix.php == '8.4' && '1' || '0' }}
       - uses: actions/upload-artifact@v4
         if: matrix.php == '8.4'
         with:
