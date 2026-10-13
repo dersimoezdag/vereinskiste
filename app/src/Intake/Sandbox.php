@@ -29,20 +29,20 @@ final class Sandbox
             ['PATH' => '/usr/bin:/bin', 'OMP_THREAD_LIMIT' => '1', 'LANG' => 'C.UTF-8']);
         if (!is_resource($process)) { throw new \RuntimeException('Local processing unavailable'); }
         fclose($pipes[0]); stream_set_blocking($pipes[1], false); stream_set_blocking($pipes[2], false);
-        $output = ''; $bytes = 0; $deadline = microtime(true) + $seconds + 3; $exit = -1;
+        $output = ''; $error = ''; $bytes = 0; $deadline = microtime(true) + $seconds + 3; $exit = -1;
         try {
             do {
                 foreach ([1,2] as $i) {
                     $part = stream_get_contents($pipes[$i]); $bytes += strlen($part);
-                    if ($i === 1) { $output .= $part; }
+                    if ($i === 1) { $output .= $part; } else { $error .= $part; }
                 }
                 if ($bytes > 2097152 || microtime(true) > $deadline) { proc_terminate($process, 9); throw new \RuntimeException('Processing limit exceeded'); }
                 $state = proc_get_status($process);
                 if (!$state['running']) { $exit = $state['exitcode']; break; }
                 usleep(20000);
             } while (true);
-            $output .= stream_get_contents($pipes[1]);
+            $output .= stream_get_contents($pipes[1]);$error .= stream_get_contents($pipes[2]);
         } finally { fclose($pipes[1]); fclose($pipes[2]); proc_close($process); }
-        return ['code' => $exit, 'output' => $output];
+        return ['code' => $exit, 'output' => $output, 'error' => $error];
     }
 }

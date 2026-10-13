@@ -19,7 +19,8 @@ final class LocalProcessingTest extends TestCase
     public function test_real_scanner_accepts_xml_and_rejects_eicar():void
     {
         $processor=new DocumentProcessor();
-        $this->assertSame('clean',$processor->process($this->tmpFile(InvoicesTest::xml()),'application/xml')['security']);
+        $result=$processor->process($this->tmpFile(InvoicesTest::xml()),'application/xml');
+        $this->assertSame('clean',$result['security'],json_encode($result));
         $eicar='X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*';
         $this->assertSame('blocked',$processor->process($this->tmpFile($eicar),'application/xml')['security']);
     }
@@ -29,7 +30,7 @@ final class LocalProcessingTest extends TestCase
         imagestring($image,5,30,50,'Gesamtbetrag: 12,50 EUR',imagecolorallocate($image,0,0,0));
         $path=$this->scratchDir().'/ocr.png';imagepng($image,$path);imagedestroy($image);
         $result=(new DocumentProcessor())->process($path,'image/png');
-        $this->assertSame('clean',$result['security']);$this->assertArrayHasKey('extraction',$result);
+        $this->assertSame('clean',$result['security'],json_encode($result));$this->assertArrayHasKey('extraction',$result);
         $this->assertNotSame('',trim($result['extraction']['text']));
     }
 }

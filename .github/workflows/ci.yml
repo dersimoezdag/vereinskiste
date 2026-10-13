@@ -53,9 +53,12 @@ jobs:
           if [ -f /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
             sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           fi
-      - run: cd app && vendor/bin/phpunit
+      - name: Real sandboxed scanner and OCR tests
+        if: matrix.php == '8.4'
+        run: cd app && vendor/bin/phpunit tests/Intake/LocalProcessingTest.php
         env:
-          VK_INTAKE_PROCESSING_TEST: ${{ matrix.php == '8.4' && '1' || '0' }}
+          VK_INTAKE_PROCESSING_TEST: '1'
+      - run: cd app && vendor/bin/phpunit
       - uses: actions/upload-artifact@v4
         if: matrix.php == '8.4'
         with:

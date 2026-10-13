@@ -16,7 +16,7 @@ final class DocumentProcessor
             if (!copy($path, $dir . '/input.' . $ext)) { throw new \RuntimeException('Processing unavailable'); }
             $input = '/work/input.' . $ext;
             $scan = $this->sandbox->run(['/usr/bin/clamscan','--database=/signatures','--no-summary','--alert-encrypted=yes','--alert-exceeds-max=yes','--max-scansize=32M','--max-filesize=10M','--max-files=100','--max-recursion=10','--fail-if-cvd-older-than=7',$input], $dir);
-            if ($scan['code'] !== 0) { return ['security' => $scan['code'] === 1 ? 'blocked' : 'error']; }
+            if ($scan['code'] !== 0) { return ['security' => $scan['code'] === 1 ? 'blocked' : 'error', 'diagnostic' => ['code'=>$scan['code'],'error'=>substr($scan['error'],0,1000)]]; }
             if ($mime === 'application/xml') { return ['security' => 'clean']; }
             $images = [$input];
             if ($mime === 'application/pdf') {
