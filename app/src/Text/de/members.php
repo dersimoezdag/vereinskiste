@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 return [
+    'members.list' => 'Mitgliederverzeichnis',
     'nav.members' => 'Mitglieder',
     'members.title' => 'Mitglieder',
     'members.export.csv' => 'Mitglieder als CSV exportieren',

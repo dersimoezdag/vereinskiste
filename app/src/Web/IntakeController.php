@@ -12,7 +12,7 @@ use Vereinskiste\Ledger\ValidationError;
 
 final class IntakeController extends AdminController
 {
-    public function __construct(private Closure $pdo,private string $directory) {}
+    public function __construct(private Closure $pdo) {}
     public function index(Request $req,Response $res): Response
     {
         $pdo=($this->pdo)();

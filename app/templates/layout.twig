@@ -49,9 +49,9 @@
                             {% endif %}
                         </a>
                         <div class="dropdown-menu{% if membersActive %} show{% endif %}" id="members-menu">
-                            <a class="dropdown-item{% if path == '/members' or (path starts with '/members/' and not (path starts with '/members/applications')) %} active{% endif %}" href="/members">{{ t('members.list')|default('Mitgliederverzeichnis') }}</a>
+                            <a class="dropdown-item{% if path == '/members' or (path starts with '/members/' and not (path starts with '/members/applications')) %} active{% endif %}" href="/members">{{ t('members.list') }}</a>
                             <a class="dropdown-item d-flex align-items-center justify-content-between{% if path starts with '/members/applications' %} active{% endif %}" href="/members/applications">
-                                <span>{{ t('applications.tab_applications')|default('Mitgliedsanträge') }}</span>
+                                <span>{{ t('applications.tab_applications') }}</span>
                                 {% if pendingApps > 0 %}
                                 <span class="badge bg-primary-subtle text-primary">{{ pendingApps }}</span>
                                 {% endif %}

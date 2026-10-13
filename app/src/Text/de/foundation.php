@@ -36,6 +36,12 @@ return [
     'foundation.field.kind' => 'Art', 'foundation.field.active' => 'Aktiv',
     'foundation.field.iban' => 'IBAN', 'foundation.field.bic' => 'BIC',
     'foundation.field.notes' => 'Notizen', 'foundation.field.logo_id' => 'Logo',
-    'audit.action.foundation_updated' => 'Vereins-/Kontaktstammdaten geändert',
+    'audit.action.foundation_updated' => 'Stammdaten oder Einstellungen geändert',
+    'audit.subject.club' => 'Vereinsprofil',
+    'audit.subject.contact' => 'Kontakt',
+    'audit.subject.account_bank' => 'Bankdaten des Vereinskontos',
+    'audit.subject.member' => 'Mitglied',
+    'audit.subject.club_role' => 'Vereinsfunktion',
+    'audit.subject.payment_policy' => 'Zahlungsfreigabe',
     'audit.detail.subject' => 'Bereich',
 ];

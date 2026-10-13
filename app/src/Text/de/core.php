@@ -3,6 +3,12 @@ declare(strict_types=1);
 
 /** Zentrale deutsche Oberflaechentexte (Schluessel => Text). */
 return [
+    'theme.choose' => 'Darstellung wählen',
+    'theme.current' => 'Darstellung',
+    'theme.light' => 'Hell',
+    'theme.dark' => 'Dunkel',
+    'theme.system' => 'System',
+    'common.hint' => 'Hinweis',
     'common.next' => 'Weiter',
     'common.previous' => 'Zurück',
     'validation.email.invalid' => 'Bitte eine gültige E-Mail-Adresse eingeben.',

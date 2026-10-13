@@ -43,7 +43,7 @@
 {% elseif path starts with '/reports' %}
     {% set crumbs = [{'label': t('nav.reports'), 'url': '/reports/summary'}, {'label': path == '/reports/dashboard' ? t('reports.tab.dashboard') : t('reports.tab.summary')}] %}
 {% elseif path == '/members' %}
-    {% set crumbs = [members_group, {'label': t('members.list')|default('Mitgliederverzeichnis')}] %}
+    {% set crumbs = [members_group, {'label': t('members.list')}] %}
 {% elseif path == '/members/applications' %}
     {% set crumbs = [members_group, {'label': t('applications.tab_applications')}] %}
 {% elseif path starts with '/members' %}

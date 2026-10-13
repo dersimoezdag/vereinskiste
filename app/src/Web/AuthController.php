@@ -44,11 +44,6 @@ final class AuthController
         return $this->redirect($res, '/login');
     }
 
-    public function home(Request $req, Response $res): Response
-    {
-        return $req->getAttribute('view')->render($res, 'home.twig');
-    }
-
     private function redirect(Response $res, string $to): Response
     {
         return $res->withStatus(302)->withHeader('Location', $to);

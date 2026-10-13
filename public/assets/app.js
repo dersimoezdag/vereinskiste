@@ -82,10 +82,11 @@ document.querySelectorAll('form[data-stepper]').forEach(function (form) {
         document.querySelectorAll('[data-theme-picker]').forEach(function (picker) {
             picker.querySelectorAll('[data-theme-choice]').forEach(function (input) { input.checked = input.value === preference; });
             picker.querySelectorAll('[data-theme-icon]').forEach(function (icon) { icon.hidden = icon.dataset.themeIcon !== preference; });
-            var labels = { light: 'Hell', dark: 'Dunkel', system: 'System' };
+            var selected = picker.querySelector('[data-theme-choice][value="' + preference + '"]');
+            var label = selected ? selected.parentNode.textContent.trim() : preference;
             var trigger = picker.querySelector('summary');
-            trigger.setAttribute('aria-label', 'Darstellung wählen: ' + labels[preference]);
-            trigger.title = 'Darstellung: ' + labels[preference];
+            trigger.setAttribute('aria-label', (picker.dataset.labelChoose || '') + ': ' + label);
+            trigger.title = (picker.dataset.labelCurrent || '') + ': ' + label;
         });
     }
     preference = read();
