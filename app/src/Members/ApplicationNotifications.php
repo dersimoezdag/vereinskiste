@@ -13,7 +13,7 @@ final class ApplicationNotifications
     {
         $texts=require dirname(__DIR__).'/Text/de.php';
         $club=(new \Vereinskiste\Club\Profile($this->pdo))->name();
-        return ['subject'=>$club.' – '.$texts['applications.mail.'.$event.'.subject'],
+        return ['subject'=>str_replace(["\r","\n"], ' ', $club).' – '.$texts['applications.mail.'.$event.'.subject'],
             'message'=>$texts['applications.mail.'.$event.'.body']."\n\n".$club];
     }
     public function queue(int $id,string $event,?array $custom=null):void

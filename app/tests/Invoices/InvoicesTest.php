@@ -42,6 +42,15 @@ final class InvoicesTest extends TestCase
         $this->assertSame(hash_file('sha256',$file),$this->db->query('SELECT sha256 FROM stored_files')->fetchColumn());
         $this->expectException(ValidationError::class);$repo->save($id,$this->data(),(int)$repo->find($id)['version'],1,'Überschreiben');
     }
+    public function test_pdf_is_ready_for_manual_review_without_a_cron_extraction_job():void
+    {
+        $repo=new InvoiceRepository($this->db);
+        $id=(new Import($this->db,$this->scratchDir().'/documents'))->upload($this->tmpFile($this->pdfBytes()),'rechnung.pdf',1);
+        $this->assertSame('manual',$repo->documents($id)[0]['extraction_status']);
+        $this->assertSame(0,(int)$this->db->query("SELECT count(*) FROM jobs WHERE kind='invoice_extract'")->fetchColumn());
+        $repo->save($id,$this->data(),2,1,'Manuell geprüft');$repo->transition($id,3,'review','Bestätigt',false,1);
+        $this->assertSame('reviewed',$repo->find($id)['status']);
+    }
     public function test_duplicate_file_is_rejected_without_orphan_files_and_draft_data_is_versioned():void
     {
         $directory=$this->scratchDir().'/documents';$path=$this->tmpFile(self::xml());$import=new Import($this->db,$directory);$id=$import->upload($path,'a.xml',1);

@@ -9,7 +9,7 @@
 {% for document in documents %}
 <div class="mb-3 border-bottom pb-3"><a href="/documents/{{ document.file_id }}">{{ document.original_name }}</a><p>{{ t('invoices.extraction.' ~ document.extraction_status) }}</p>
 {% if document.extraction.warning %}<p class="text-secondary">{{ t(document.extraction.warning) }}</p>{% endif %}
-{% if document.extraction.fields %}<h3 class="h5">{{ t('invoices.suggestions') }}</h3><dl>{% for field,value in document.extraction.fields %}<dt>{{ t('invoices.field.' ~ field) }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>
+{% if document.extraction.fields %}<h3 class="h5">{{ t('invoices.suggestions') }}</h3><dl>{% for field,value in document.extraction.fields %}<dt>{{ t('invoices.field.' ~ field) }}</dt><dd>{{ field ends with '_date' ? value|date('d.m.Y') : (field in ['net','tax','gross'] and document.extraction.fields.currency == 'EUR' ? value|eur : value) }}</dd>{% endfor %}</dl>
 {% if can('invoices.write') and invoice.status=='draft' %}<button type="button" class="btn btn-outline-primary" data-invoice-suggestions="{{ document.extraction.fields|json_encode }}">{{ t('invoices.suggestions.apply') }}</button>{% endif %}{% endif %}</div>
 {% else %}<p>{{ t('invoices.error.document') }}</p>{% endfor %}
 {% if invoice and invoice.status=='draft' and can('invoices.write') %}<form method="post" action="/invoices/{{ invoice.id }}/documents" enctype="multipart/form-data">{{ csrf_field() }}<label class="form-label" for="invoice-supplement">{{ t('invoices.documents.add') }}</label><input class="form-control mb-3" type="file" id="invoice-supplement" name="receipt" accept=".pdf,.jpg,.jpeg,.png,.xml" required><button class="btn">{{ t('invoices.documents.add') }}</button></form>{% endif %}

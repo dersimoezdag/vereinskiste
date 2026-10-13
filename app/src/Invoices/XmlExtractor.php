@@ -46,11 +46,19 @@ final class XmlExtractor
                     if($nodes->item(0)->getAttribute('format')!=='102'||!preg_match('/^[0-9]{8}\z/',$value)) {continue;}
                     $value=substr($value,0,4).'-'.substr($value,4,2).'-'.substr($value,6,2);
                 }
+                if(in_array($field,['net','tax','gross'],true)) {
+                    if(!preg_match('/^[0-9]+(?:\.[0-9]{1,2})?\z/',$value)) {continue;}
+                    try {$value=$field==='gross'?\Vereinskiste\Ledger\Money::parse($value):\Vereinskiste\Ledger\Money::parseSigned($value);}catch(\Vereinskiste\Ledger\InvalidAmount) {continue;}
+                }
+                if(in_array($field,['invoice_date','due_date'],true)) {
+                    $date=\DateTimeImmutable::createFromFormat('!Y-m-d',$value);if(!$date||$date->format('Y-m-d')!==$value) {continue;}
+                }
+                if($field==='currency'&&!preg_match('/^[A-Z]{3}\z/',$value)) {continue;}
                 if($value!==''&&mb_strlen($value)<=InvoiceRepository::FIELDS[$field]) {$fields[$field]=$value;$sources[$field]=$expr;}
             }
             if(!$cii&&empty($fields['supplier_name'])) {
                 $value=trim($x->evaluate('string(/*/cac:AccountingSupplierParty/cac:Party/cac:PartyLegalEntity/cbc:RegistrationName)'));
-                if($value!==''&&mb_strlen($value)<=200) {$fields['supplier_name']=$value;}
+                if($value!==''&&mb_strlen($value)<=200) {$fields['supplier_name']=$value;$sources['supplier_name']='/*/cac:AccountingSupplierParty/cac:Party/cac:PartyLegalEntity/cbc:RegistrationName';}
             }
             $kind=$root->localName==='CreditNote'?'credit_note':'invoice';
             if($cii) {
