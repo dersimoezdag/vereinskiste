@@ -62,7 +62,7 @@ final class Profile
     {
         $values = Fields::read($input, self::FIELDS, ['name']);
         $errors = [];
-        if (!in_array($values['locale'], ['de', 'en'], true)) { $errors['locale'] = 'foundation.invalid'; }
+        if ($values['locale'] !== 'de') { $errors['locale'] = 'foundation.invalid'; }
         if (!preg_match('/^([0-9]{2})-([0-9]{2})\z/', $values['year_start'], $date)
             || !checkdate((int) $date[1], (int) $date[2], 2025)) { $errors['year_start'] = 'foundation.invalid'; }
         if ($values['color'] !== '' && !preg_match('/^#[a-fA-F0-9]{6}\z/', $values['color'])) {

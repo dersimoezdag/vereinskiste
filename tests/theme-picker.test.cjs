@@ -9,7 +9,7 @@ function setup(stored) {
     const media = {matches:false, addEventListener(type, fn) {onChange = fn;}};
     dom.window.matchMedia = () => media;
     if(stored) dom.window.localStorage.setItem('vk-theme',stored);
-    dom.window.eval(script);
+    require('./browser-texts.cjs')(dom.window); dom.window.eval(script);
     return {window:dom.window,document:dom.window.document,media,systemChange() {onChange();}};
 }
 test('explicit selection persists and changes current icon; Escape restores focus', () => {

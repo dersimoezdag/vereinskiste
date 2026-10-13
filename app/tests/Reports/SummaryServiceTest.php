@@ -34,6 +34,8 @@ final class SummaryServiceTest extends TestCase
         $this->assertSame('100.10', $s['income']);
         $this->assertSame('40.05', $s['expense']);
         $this->assertSame('60.05', $s['balance']);
+        $totals=(new \Vereinskiste\Reports\BookingAggregation($this->pdo))->totals('2026-01-01','2026-12-31');
+        foreach(['income','expense','balance'] as $key) {$this->assertSame($s[$key],$totals[$key]);}
         $this->assertNull($s['accountBalanceAtEnd']);
         $this->assertSame(
             [['category_id' => $fees, 'name' => 'Beiträge', 'income' => '100.10', 'expense' => '0.00'],

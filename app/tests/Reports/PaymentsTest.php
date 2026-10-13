@@ -59,6 +59,13 @@ final class PaymentsTest extends TestCase
         $a=$this->account();$b=$this->booking($a,$this->author,'2026-10-13','out','60.00');
         $p->allocate($this->invoice,$b,2,'Teilzahlung',$this->reviewer);
         $this->assertSame('59.00',$p->overview($this->invoice)['remaining']);
+        $list=(new InvoiceRepository($this->pdo))->list('partially_paid')[0];
+        $this->assertSame($p->overview($this->invoice)['paid'],$list['paid_total']);
+        $this->assertSame($p->overview($this->invoice)['remaining'],$list['remaining']);
+        $linked=new \Vereinskiste\Invoices\LinkedDocuments($this->pdo);
+        $this->assertCount(1,$linked->forBooking($b));
+        $this->assertSame(1,(int)$this->pdo->query('SELECT count(*) FROM stored_files')->fetchColumn());
+        $this->assertSame(0,(int)$this->pdo->query('SELECT count(*) FROM receipts')->fetchColumn());
         $this->assertCount(1,(new InvoiceRepository($this->pdo))->list('partially_paid'));
         $this->assertCount(0,(new InvoiceRepository($this->pdo))->list('paid'));
         $this->assertSame('60.00',$p->overview($this->invoice)['paid']);
@@ -70,6 +77,9 @@ final class PaymentsTest extends TestCase
         $this->assertSame('60.00',$p->overview($this->invoice)['remaining']);
         $p->unlink($this->invoice,$b,4,'Falsche Zuordnung',$this->reviewer);
         $this->assertCount(1,$p->overview($this->invoice)['allocations']);
+        $this->assertSame([],$linked->forBooking($b));
+        $list=(new InvoiceRepository($this->pdo))->list('partially_paid')[0];
+        $this->assertSame($p->overview($this->invoice)['remaining'],$list['remaining']);
     }
     public function test_transfer_overpayment_duplicate_and_stale_version_cannot_allocate():void
     {

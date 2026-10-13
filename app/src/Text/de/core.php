@@ -3,6 +3,20 @@ declare(strict_types=1);
 
 /** Zentrale deutsche Oberflaechentexte (Schluessel => Text). */
 return [
+    'finance.master_data' => 'Konten und Stammdaten',
+    'finance.bank_imports' => 'Kontoauszüge importieren',
+    'finance.documents' => 'Belege und Rechnungen',
+    'finance.document_upload' => 'Beleg hochladen',
+    'finance.document_manual' => 'Rechnung manuell erfassen',
+    'receipts.from_invoice' => 'Rechnungsbeleg',
+    'receipts.open_invoice' => 'Rechnung öffnen',
+    'language.de' => 'Deutsch',
+    'theme.choose' => 'Darstellung wählen',
+    'theme.current' => 'Darstellung',
+    'theme.light' => 'Hell',
+    'theme.dark' => 'Dunkel',
+    'theme.system' => 'System',
+    'common.hint' => 'Hinweis',
     'common.next' => 'Weiter',
     'common.previous' => 'Zurück',
     'validation.email.invalid' => 'Bitte eine gültige E-Mail-Adresse eingeben.',
@@ -120,6 +134,10 @@ return [
     'auth.login.error' => 'E-Mail-Adresse oder Passwort ist falsch.',
 
     'home.title' => 'Übersicht',
+    'home.customize' => 'Übersicht anpassen',
+    'home.tagline' => 'Dein Verein auf einen Blick.',
+    'home.empty.cards' => 'Hier erscheinen deine ausgewählten Karten. Wähle sie unter „Übersicht anpassen“ aus.',
+    'home.empty.shortcuts' => 'Du kannst deine Schnellaktionen unter „Übersicht anpassen“ auswählen.',
     'home.welcome' => 'Willkommen bei der Vereinskiste.',
 
     'accounts.title' => 'Konten',

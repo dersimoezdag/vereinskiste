@@ -1,9 +1,13 @@
 {% for field, limit in fields %}
 <div class="mb-3">
     <label class="form-label" for="field-{{ field }}">{{ t('foundation.field.' ~ field) }}</label>
+    {% if field == 'locale' %}
+    <select class="form-select" id="field-locale" name="locale"><option value="de">{{ t('language.de') }}</option></select>
+    {% else %}
     <input class="form-control{% if errors[field] is defined %} is-invalid{% endif %}" id="field-{{ field }}"
            name="{{ field }}" type="{{ field == 'email' ? 'email' : (field == 'phone' ? 'tel' : (field ends with '_url' ? 'url' : 'text')) }}"
            maxlength="{{ limit }}" value="{{ input[field]|default('') }}"{% if field == 'name' %} required{% endif %}>
+    {% endif %}
     {% if errors[field] is defined %}<div class="invalid-feedback">{{ t(errors[field]) }}</div>{% endif %}
 </div>
 {% endfor %}

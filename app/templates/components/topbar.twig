@@ -7,19 +7,19 @@
 {% if path == '/' %}
     {% set crumbs = [{'label': t('nav.home')}] %}
 {% elseif path == '/dashboard/preferences' %}
-    {% set crumbs = [{'label': 'Dashboard anpassen'}] %}
+    {% set crumbs = [{'label': t('home.customize')}] %}
 {% elseif path == '/bookings' %}
     {% set crumbs = [cash, {'label': t('nav.bookings')}] %}
 {% elseif path == '/bookings/new' %}
-    {% set crumbs = [cash, {'label': t('nav.bookings'), 'url': '/bookings'}, {'label': 'Neu'}] %}
+    {% set crumbs = [cash, {'label': t('nav.bookings'), 'url': '/bookings'}, {'label': t('ui.breadcrumb_neu')}] %}
 {% elseif path matches '#^/bookings/\\d+/edit$#' %}
-    {% set crumbs = [cash, {'label': t('nav.bookings'), 'url': '/bookings'}, {'label': 'Buchung', 'url': '/bookings/' ~ segs[2]}, {'label': 'Bearbeiten'}] %}
+    {% set crumbs = [cash, {'label': t('nav.bookings'), 'url': '/bookings'}, {'label': t('ui.breadcrumb_buchung'), 'url': '/bookings/' ~ segs[2]}, {'label': t('ui.breadcrumb_bearbeiten')}] %}
 {% elseif path starts with '/bookings' %}
-    {% set crumbs = [cash, {'label': t('nav.bookings'), 'url': '/bookings'}, {'label': 'Buchung'}] %}
+    {% set crumbs = [cash, {'label': t('nav.bookings'), 'url': '/bookings'}, {'label': t('ui.breadcrumb_buchung')}] %}
 {% elseif path starts with '/transfers' %}
-    {% set crumbs = [cash, {'label': t('nav.bookings'), 'url': '/bookings'}, {'label': 'Umbuchung'}] %}
+    {% set crumbs = [cash, {'label': t('nav.bookings'), 'url': '/bookings'}, {'label': t('ui.breadcrumb_umbuchung')}] %}
 {% elseif path starts with '/corrections' %}
-    {% set crumbs = [cash, {'label': t('nav.bookings'), 'url': '/bookings'}, {'label': 'Korrektur'}] %}
+    {% set crumbs = [cash, {'label': t('nav.bookings'), 'url': '/bookings'}, {'label': t('ui.breadcrumb_korrektur')}] %}
 {% elseif path == '/accounts' %}
     {% set crumbs = [cash, {'label': t('nav.accounts')}] %}
 {% elseif path starts with '/accounts' %}
@@ -27,27 +27,27 @@
 {% elseif path starts with '/categories' %}
     {% set crumbs = [cash, {'label': t('nav.categories')}] %}
 {% elseif path == '/imports/bank' %}
-    {% set crumbs = [cash, {'label': 'Kontoauszug-Import'}] %}
+    {% set crumbs = [cash, {'label': t('ui.breadcrumb_kontoauszug_import')}] %}
 {% elseif path starts with '/imports' %}
-    {% set crumbs = [cash, {'label': 'Kontoauszug-Import', 'url': '/imports/bank'}, {'label': path ends with '/new' ? 'Neuer Import' : 'Import'}] %}
+    {% set crumbs = [cash, {'label': t('ui.breadcrumb_kontoauszug_import'), 'url': '/imports/bank'}, {'label': path ends with '/new' ? t('ui.breadcrumb_neuer_import') : t('ui.breadcrumb_import')}] %}
 {% elseif path == '/invoices' %}
-    {% set crumbs = [cash, {'label': t('invoices.title')}] %}
+    {% set crumbs = [cash, {'label': t('finance.documents')}] %}
 {% elseif path starts with '/invoices' %}
-    {% set crumbs = [cash, {'label': t('invoices.title'), 'url': '/invoices'}, {'label': path == '/invoices/import' ? 'Import' : 'Rechnung'}] %}
+    {% set crumbs = [cash, {'label': t('finance.documents'), 'url': '/invoices'}, {'label': path == '/invoices/import' ? t('ui.breadcrumb_import') : t('ui.breadcrumb_rechnung')}] %}
 {% elseif path == '/contacts' %}
     {% set crumbs = [cash, {'label': t('foundation.contacts')}] %}
 {% elseif path starts with '/contacts' %}
-    {% set crumbs = [cash, {'label': t('foundation.contacts'), 'url': '/contacts'}, {'label': path == '/contacts/new' ? 'Neu' : 'Kontakt'}] %}
+    {% set crumbs = [cash, {'label': t('foundation.contacts'), 'url': '/contacts'}, {'label': path == '/contacts/new' ? t('ui.breadcrumb_neu') : t('ui.breadcrumb_kontakt')}] %}
 {% elseif path starts with '/settings/closing' %}
-    {% set crumbs = [cash, {'label': t('nav.closing')}] %}
+    {% set crumbs = [settings, {'label': t('nav.closing')}] %}
 {% elseif path starts with '/reports' %}
     {% set crumbs = [{'label': t('nav.reports'), 'url': '/reports/summary'}, {'label': path == '/reports/dashboard' ? t('reports.tab.dashboard') : t('reports.tab.summary')}] %}
 {% elseif path == '/members' %}
-    {% set crumbs = [members_group, {'label': t('members.list')|default('Mitgliederverzeichnis')}] %}
+    {% set crumbs = [members_group, {'label': t('members.list')}] %}
 {% elseif path == '/members/applications' %}
     {% set crumbs = [members_group, {'label': t('applications.tab_applications')}] %}
 {% elseif path starts with '/members' %}
-    {% set crumbs = [members_group, {'label': path == '/members/new' ? 'Neu' : 'Mitglied'}] %}
+    {% set crumbs = [members_group, {'label': path == '/members/new' ? t('ui.breadcrumb_neu') : t('ui.breadcrumb_mitglied')}] %}
 {% elseif path == '/settings/club-roles' %}
     {% set crumbs = [members_group, {'label': t('nav.club_roles')}] %}
 {% elseif path == '/settings' %}
@@ -59,11 +59,11 @@
 {% elseif path == '/audit-log' %}
     {% set crumbs = [settings, {'label': t('nav.audit')}] %}
 {% elseif path == '/update' %}
-    {% set crumbs = [settings, {'label': 'Aktualisierung'}] %}
+    {% set crumbs = [settings, {'label': t('ui.breadcrumb_aktualisierung')}] %}
 {% elseif path == '/users' %}
     {% set crumbs = [settings, {'label': t('settings.users')}] %}
 {% elseif path starts with '/users' %}
-    {% set crumbs = [settings, {'label': t('settings.users'), 'url': '/users'}, {'label': path ends with '/new' ? 'Neu' : 'Bearbeiten'}] %}
+    {% set crumbs = [settings, {'label': t('settings.users'), 'url': '/users'}, {'label': path ends with '/new' ? t('ui.breadcrumb_neu') : t('ui.breadcrumb_bearbeiten')}] %}
 {% elseif path starts with '/settings' %}
     {% set crumbs = [{'label': t('nav.settings')}] %}
 {% elseif path starts with '/account/password' %}
@@ -71,7 +71,7 @@
 {% endif %}
 <header class="topbar">
     <div class="container-xl topbar-inner">
-        <nav class="topbar-crumbs" aria-label="Brotkrumen">
+        <nav class="topbar-crumbs" aria-label="{{ t('ui.brotkrumen') }}">
             <ol class="breadcrumb">
                 {% if path != '/' %}
                 <li class="breadcrumb-item"><a href="/" aria-label="{{ t('nav.home') }}" title="{{ t('nav.home') }}">{{ icons.icon('home') }}</a></li>

@@ -2,6 +2,7 @@
 {% import 'components/help.twig' as help %}
 {% block title %}{{ t('accounts.title') }}{% endblock %}
 {% block content %}
+{% include 'components/finance_master_tabs.twig' %}
 <h1 class="mb-4">{{ t('accounts.title') }}</h1>
 
 <div class="card mb-4">
@@ -73,7 +74,7 @@
                     {% if edit_id is null and errors.name is defined %}<div class="invalid-feedback">{{ t(errors.name) }}</div>{% endif %}
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="account-type">{{ t('accounts.type') }} {{ help.tip('Kontoart: Girokonten unterstützen Kontoauszugs-Importe und IBAN-Zuordnung. Barkassen dienen der manuellen Bargeldführung.') }}</label>
+                    <label class="form-label" for="account-type">{{ t('accounts.type') }} {{ help.tip(t('ui.kontoart_girokonten_unterstuetzen_kontoauszugs_importe_und_iban_z')) }}</label>
                     <select id="account-type" name="type" class="form-select{% if errors.type is defined %} is-invalid{% endif %}">
                         <option value="cash"{% if input.type == 'cash' %} selected{% endif %}>{{ t('accounts.type.cash') }}</option>
                         <option value="bank"{% if input.type == 'bank' %} selected{% endif %}>{{ t('accounts.type.bank') }}</option>
@@ -81,7 +82,7 @@
                     {% if errors.type is defined %}<div class="invalid-feedback">{{ t(errors.type) }}</div>{% endif %}
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="account-opening-balance">{{ t('accounts.opening_balance') }} {{ help.tip('Saldovortrag zum Eröffnungsdatum. Bildet den Startwert des Kontos für alle Kassenbuch- und Vermögensaufstellungen.') }}</label>
+                    <label class="form-label" for="account-opening-balance">{{ t('accounts.opening_balance') }} {{ help.tip(t('ui.saldovortrag_zum_eroeffnungsdatum_bildet_den_startwert_des_kontos')) }}</label>
                     <input type="text" inputmode="decimal" id="account-opening-balance" name="opening_balance" required
                            class="form-control{% if errors.opening_balance is defined %} is-invalid{% endif %}"
                            value="{{ input.opening_balance }}">

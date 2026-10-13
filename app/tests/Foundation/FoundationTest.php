@@ -49,6 +49,15 @@ final class FoundationTest extends TestCase
         $this->expectException(Conflict::class); $profile->save($input, 1, 1, 'Veraltet');
     }
 
+    public function test_unsupported_locale_cannot_be_saved():void
+    {
+        $profile=new Profile($this->db);$input=$profile->get()['data'];$input['locale']='en';
+        try {$profile->save($input,1,1,'Sprache');$this->fail('Unsupported locale');}
+        catch(ValidationError $e) {$this->assertArrayHasKey('locale',$e->errors);}
+        $this->assertSame('de',$profile->get()['data']['locale']);
+        $this->assertSame(1,$profile->get()['version']);
+    }
+
     public function test_contact_snapshot_and_history_survive_rename_archive_and_booking_update(): void
     {
         $repo = new ContactRepository($this->db);

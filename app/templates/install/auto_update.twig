@@ -10,7 +10,7 @@
         </span>
         <h1 class="h2 mb-1">{{ t('auto_update.title') }}</h1>
         {% if operation.version is defined %}
-        <p class="text-secondary">{{ t('auto_update.target') }} <strong class="badge bg-primary-subtle text-primary fs-6">v{{ operation.version }}</strong></p>
+        <p class="text-secondary">{{ t('auto_update.target') }} <strong class="badge bg-primary-subtle text-primary fs-6">{{ t('ui.v') }}{{ operation.version }}</strong></p>
         {% endif %}
     </div>
 
@@ -62,7 +62,7 @@
             <div class="status-box mb-3">
                 <h2 id="automatic-status" role="status" class="h3 mb-2">{{ t('auto_update.phase.' ~ operation.phase) }}</h2>
                 <p id="automatic-detail" class="text-secondary font-monospace small mb-0">
-                    {% if operation.downloaded is defined %}{{ operation.downloaded }} / {{ operation.size }} Bytes{% endif %}
+                    {% if operation.downloaded is defined %}{{ operation.downloaded }} / {{ operation.size }} {{ t('ui.bytes') }}{% endif %}
                 </p>
             </div>
 

@@ -11,7 +11,7 @@
                     {% if errors.finance_contact_id is defined %}<p role="alert">{{ t(errors.finance_contact_id) }}</p>{% endif %}
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="b-account">{{ t('bookings.account') }} {{ help.tip('Das zugehörige Vereinskonto, z. B. Girokonto oder Kasse.') }}</label>
+                    <label class="form-label" for="b-account">{{ t('bookings.account') }} {{ help.tip(t('ui.das_zugehoerige_vereinskonto_z_b_girokonto_oder_kasse')) }}</label>
                     <select id="b-account" name="account_id" required
                             class="form-select{% if errors.account_id is defined %} is-invalid{% endif %}">
                         <option value="">{{ t('bookings.choose') }}</option>
@@ -22,7 +22,7 @@
                     {% if errors.account_id is defined %}<div class="invalid-feedback">{{ t(errors.account_id) }}</div>{% endif %}
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="b-category">{{ t('bookings.category') }} {{ help.tip('Ordnet die Buchung einer Auswertungskategorie bzw. einem steuerlichen Bereich (z. B. Ideeller Bereich, Zweckbetrieb) zu.') }}</label>
+                    <label class="form-label" for="b-category">{{ t('bookings.category') }} {{ help.tip(t('ui.ordnet_die_buchung_einer_auswertungskategorie_bzw_einem_steuerlic')) }}</label>
                     <select id="b-category" name="category_id"
                             class="form-select{% if errors.category_id is defined %} is-invalid{% endif %}">
                         <option value="">{{ t('bookings.no_category') }}</option>
@@ -71,7 +71,7 @@
                     {% if errors.counterparty is defined %}<div class="invalid-feedback">{{ t(errors.counterparty) }}</div>{% endif %}
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="b-receipt-no">{{ t('bookings.receipt_no') }} {{ help.tip('GoBD-Grundsatz: Keine Buchung ohne Beleg. Eindeutige Nummer zur schnellen Zuordnung zum physischen oder digitalen Belegordner.') }}</label>
+                    <label class="form-label" for="b-receipt-no">{{ t('bookings.receipt_no') }} {{ help.tip(t('ui.gobd_grundsatz_keine_buchung_ohne_beleg_eindeutige_nummer_zur_sch')) }}</label>
                     <input type="text" id="b-receipt-no" name="receipt_no" maxlength="100"
                             class="form-control{% if errors.receipt_no is defined %} is-invalid{% endif %}"
                             value="{{ input.receipt_no }}">

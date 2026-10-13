@@ -1,33 +1,32 @@
 {% extends 'layout.twig' %}
-{% block title %}Kontoauszug #{{ import.id }}{% endblock %}
+{% block title %}{{ t('ui.kontoauszug') }}{{ import.id }}{% endblock %}
 {% block content %}
-<h1>Kontoauszug #{{ import.id }}</h1>
-<p>{{ import.account_name }} · {{ t('bank.status.' ~ import.status) }} · {{ import.parsed_rows }} / {{ import.total_rows }} Zeilen</p>
-<p><a href="/imports/bank">Alle Importe</a> · <a href="/documents/{{ import.file_id }}">Originaldatei herunterladen</a></p>
+<h1>{{ t('ui.kontoauszug') }}{{ import.id }}</h1>
+<p>{{ import.account_name }} · {{ t('bank.status.' ~ import.status) }} · {{ import.parsed_rows }} / {{ import.total_rows }} {{ t('ui.zeilen') }}</p>
+<p><a href="/imports/bank">{{ t('ui.alle_importe') }}</a> · <a href="/documents/{{ import.file_id }}">{{ t('ui.originaldatei_herunterladen') }}</a></p>
 {% for error in errors %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endfor %}
 {% if import.error_code %}<p class="alert alert-danger">{{ t(import.error_code) }}</p>{% endif %}
 {% if import.status == 'uploaded' %}{% include 'imports/bank/_mapping.twig' %}{% else %}
-<p>Übernommen: {{ summary.adopted }} · Dubletten: {{ summary.duplicates }} · Ausgeschlossen: {{ summary.excluded }} · Fehlerhafte Zeilen: {{ summary.errors }}
-· Summe der vorgesehenen neuen Umsätze: {{ summary.amount }} EUR</p>
-<p>Die Übernahme speichert Bankumsätze für den späteren Buchungsabgleich. Sie erstellt keine Buchungen und verändert keine Kontosalden.
-CSV-Salden werden nicht geprüft.</p>
-{% if summary.adopted > 0 and import.status != 'confirmed' %}<p class="alert alert-info">Ein Teil wurde bereits übernommen. Setzen Sie denselben Import fort; übernommene Zeilen werden nicht erneut angelegt.</p>{% endif %}
-{% if import.status == 'parsing' %}<p id="bank-progress" role="status" data-status-url="/imports/bank/{{ import.id }}/status">Die Vorprüfung läuft über den Cronjob. Sie können den nächsten Abschnitt auch hier verarbeiten.</p>
-{% if can('imports.write') %}<form method="post" action="/imports/bank/{{ import.id }}/parse">{{ csrf_field() }}<button class="btn btn-primary" type="submit">Nächste 250 Zeilen vorprüfen</button></form>{% endif %}
+<p>{{ t('ui.uebernommen_5d02fb') }} {{ summary.adopted }} {{ t('ui.dubletten') }} {{ summary.duplicates }} {{ t('ui.ausgeschlossen') }} {{ summary.excluded }} {{ t('ui.fehlerhafte_zeilen') }} {{ summary.errors }}
+{{ t('ui.summe_der_vorgesehenen_neuen_umsaetze') }} {{ summary.amount }} {{ t('ui.eur_d06e07') }}</p>
+<p>{{ t('ui.die_uebernahme_speichert_bankumsaetze_fuer_den_spaeteren_buchungs') }}</p>
+{% if summary.adopted > 0 and import.status != 'confirmed' %}<p class="alert alert-info">{{ t('ui.ein_teil_wurde_bereits_uebernommen_setzen_sie_denselben_import_fo') }}</p>{% endif %}
+{% if import.status == 'parsing' %}<p id="bank-progress" role="status" data-status-url="/imports/bank/{{ import.id }}/status">{{ t('ui.die_vorpruefung_laeuft_ueber_den_cronjob_sie_koennen_den_naechste') }}</p>
+{% if can('imports.write') %}<form method="post" action="/imports/bank/{{ import.id }}/parse">{{ csrf_field() }}<button class="btn btn-primary" type="submit">{{ t('ui.naechste_250_zeilen_vorpruefen') }}</button></form>{% endif %}
 {% endif %}
 {% include 'imports/bank/_rows.twig' %}
 {% if import.status in ['review','confirming'] and can('imports.write') %}
 <form method="post" action="/imports/bank/{{ import.id }}/confirm" class="card card-body mt-3">
 {{ csrf_field() }}<input type="hidden" name="version" value="{{ import.version }}">
-<label class="form-check mb-3"><input type="checkbox" class="form-check-input" name="checked" value="1" required>Alle Vorschläge, Fehler und Dubletten geprüft. Nächsten Abschnitt mit bis zu 250 Umsätzen übernehmen.</label>
-<button class="btn btn-primary" type="submit">Geprüfte Bankumsätze übernehmen</button></form>{% endif %}
+<label class="form-check mb-3"><input type="checkbox" class="form-check-input" name="checked" value="1" required>{{ t('ui.alle_vorschlaege_fehler_und_dubletten_geprueft_naechsten_abschnit') }}</label>
+<button class="btn btn-primary" type="submit">{{ t('ui.gepruefte_bankumsaetze_uebernehmen') }}</button></form>{% endif %}
 {% endif %}
 {% if import.status in ['review','failed','cancelled'] and summary.adopted == 0 and can('imports.write') %}
 <form method="post" action="/imports/bank/{{ import.id }}/reset" class="card card-body mt-3">{{ csrf_field() }}
-<input type="hidden" name="version" value="{{ import.version }}"><label for="reset-reason">Begründung für die Änderung (optional)</label>
+<input type="hidden" name="version" value="{{ import.version }}"><label for="reset-reason">{{ t('ui.begruendung_fuer_die_aenderung_optional') }}</label>
 <input id="reset-reason" name="reason" class="form-control mb-2" maxlength="500">
-<button type="submit" class="btn btn-outline-secondary">Spalten neu zuordnen</button></form>{% endif %}
+<button type="submit" class="btn btn-outline-secondary">{{ t('ui.spalten_neu_zuordnen') }}</button></form>{% endif %}
 {% if import.status in ['uploaded','parsing','review','failed'] and summary.adopted == 0 and can('imports.write') %}
-<form method="post" action="/imports/bank/{{ import.id }}/cancel" class="mt-3">{{ csrf_field() }}<input type="hidden" name="version" value="{{ import.version }}"><button type="submit" class="btn btn-outline-danger">Import abbrechen</button></form>{% endif %}
+<form method="post" action="/imports/bank/{{ import.id }}/cancel" class="mt-3">{{ csrf_field() }}<input type="hidden" name="version" value="{{ import.version }}"><button type="submit" class="btn btn-outline-danger">{{ t('ui.import_abbrechen') }}</button></form>{% endif %}
 {% endblock %}
 {% block scripts %}{% if import.status == 'parsing' %}<script src="{{ asset('bank-import.js') }}"></script>{% endif %}{% endblock %}

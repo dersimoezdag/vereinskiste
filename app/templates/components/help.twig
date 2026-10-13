@@ -1,9 +1,9 @@
 {# Reusable Info-Button Tooltip Macro.
    Verwendung:
    {% import 'components/help.twig' as help %}
-   {{ help.tip('Erklärungstext hier') }}
+   {{ help.tip(t('common.hint')) }}
 #}
 {% macro tip(text, placement = 'top') %}
 {% import 'components/icons.twig' as icons %}
-<span class="help-tooltip-btn" data-bs-toggle="tooltip" data-bs-placement="{{ placement }}" data-bs-html="true" data-bs-title="{{ text|e('html_attr') }}" role="button" tabindex="0" aria-label="Hinweis: {{ text|e('html_attr') }}">{{ icons.icon('info') }}</span>
+<span class="help-tooltip-btn" data-bs-toggle="tooltip" data-bs-placement="{{ placement }}" data-bs-html="true" data-bs-title="{{ text|e('html_attr') }}" role="button" tabindex="0" aria-label="{{ t('common.hint') }}: {{ text|e('html_attr') }}">{{ icons.icon('info') }}</span>
 {% endmacro %}

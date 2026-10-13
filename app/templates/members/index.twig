@@ -78,16 +78,16 @@
                         <th class="w-1">{{ t('members.no') }}</th>
                         <th>{{ t('members.field.name') }}</th>
                         <th>{{ t('members.field.email') }}</th>
-                        <th>Status</th>
-                        <th class="w-1 text-center" title="Benutzerzugang">{{ icons.icon('users') }}</th>
-                        <th class="w-1 text-end">Aktion</th>
+                        <th>{{ t('privacy.field.status') }}</th>
+                        <th class="w-1 text-center" title="{{ t('members.user.title') }}">{{ icons.icon('users') }}</th>
+                        <th class="w-1 text-end">{{ t('audit.action') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                 {% if members is empty %}
                     <tr>
                         <td colspan="6" class="text-center text-muted py-4">
-                            Keine Mitglieder gefunden.
+                            {{ t('ui.keine_mitglieder_gefunden') }}
                         </td>
                     </tr>
                 {% else %}
@@ -106,21 +106,21 @@
                         </td>
                         <td data-label="Status">
                             {% if m.current %}
-                                <span class="badge bg-success-subtle text-success border border-success-subtle">Aktiv</span>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">{{ t('bookings.status.active') }}</span>
                             {% else %}
-                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Ausgetreten</span>
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">{{ t('ui.ausgetreten') }}</span>
                             {% endif %}
                         </td>
                         <td data-label="Benutzerzugang" class="text-center">
                             {% if m.user_id %}
-                                <span class="text-primary" title="Benutzerzugang vorhanden">{{ icons.icon('users') }}</span>
+                                <span class="text-primary" title="{{ t('ui.benutzerzugang_vorhanden') }}">{{ icons.icon('users') }}</span>
                             {% else %}
                                 <span class="text-muted opacity-25">–</span>
                             {% endif %}
                         </td>
                         <td data-label="Aktion" class="text-end">
                             <a href="/members/{{ m.id }}" class="btn btn-sm btn-outline-secondary">
-                                Details
+                                {{ t('audit.detail') }}
                             </a>
                         </td>
                     </tr>

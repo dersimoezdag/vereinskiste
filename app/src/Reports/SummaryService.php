@@ -65,28 +65,16 @@ final class SummaryService
             $params['account_id'] = $accountId;
         }
 
-        // ROLLUP liefert die Gesamtsumme als letzte Zeile (GROUPING = 3) aus demselben Snapshot.
-        $stmt = $this->pdo->prepare(
-            "SELECT c.id AS category_id, c.name AS name,
-                    GROUPING(c.id, c.name) AS is_total,
-                    COALESCE(SUM(b.amount) FILTER (WHERE b.direction = 'in'), 0)::numeric(14,2)::text AS income,
-                    COALESCE(SUM(b.amount) FILTER (WHERE b.direction = 'out'), 0)::numeric(14,2)::text AS expense
-               FROM bookings b
-               LEFT JOIN categories c ON c.id = b.category_id
-              WHERE b.status = 'active' AND b.kind <> 'transfer'
-                AND b.booking_date >= CAST(:from AS date) AND b.booking_date <= CAST(:to AS date)$accountCond
-              GROUP BY ROLLUP ((c.id, c.name))
-              ORDER BY GROUPING(c.id, c.name), c.name NULLS LAST, c.id"
-        );
-        $stmt->execute($params);
-
+        $rows=(new BookingAggregation($this->pdo))->categories($params,$accountCond);
         $income = '0.00';
         $expense = '0.00';
+        $balance = '0.00';
         $byCategory = [];
-        foreach ($stmt->fetchAll() as $row) {
+        foreach ($rows as $row) {
             if ((int) $row['is_total'] === 3) {
                 $income = $row['income'];
                 $expense = $row['expense'];
+                $balance = $row['balance'];
                 continue;
             }
             $byCategory[] = [
@@ -97,9 +85,6 @@ final class SummaryService
             ];
         }
 
-        $balance = $this->pdo->prepare('SELECT (CAST(:income AS numeric) - CAST(:expense AS numeric))::numeric(14,2)::text');
-        $balance->execute(['income' => $income, 'expense' => $expense]);
-
         return [
             'from' => $from,
             'to' => $to,
@@ -107,7 +92,7 @@ final class SummaryService
             'account_name' => $accountName,
             'income' => $income,
             'expense' => $expense,
-            'balance' => (string) $balance->fetchColumn(),
+            'balance' => $balance,
             'accountBalanceAtEnd' => $accountId === null ? null : (new AccountRepository($this->pdo))->balance($accountId, $to),
             'byCategory' => $byCategory,
             'corrections' => $this->corrections($params, $accountCond),

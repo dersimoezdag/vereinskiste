@@ -44,16 +44,16 @@
     if (!root.document) { return; }
     var document = root.document;
     var specs = {
-        date: {hint: 'Datum im Format TT.MM.JJJJ', error: 'Bitte ein gültiges Datum im Format TT.MM.JJJJ eingeben.'},
-        iban: {hint: 'IBAN, z. B. DE89 3704 0044 0532 0130 00', error: 'Bitte eine gültige IBAN eingeben.'},
-        bic: {hint: 'BIC: 8 oder 11 Zeichen', error: 'Bitte einen gültigen BIC eingeben.'},
-        net: {hint: 'Nettobetrag, z. B. 1.000,00', error: 'Bitte einen Betrag ab 0 mit höchstens 2 Nachkommastellen eingeben.'},
-        tax: {hint: 'Steuerbetrag, z. B. 190,00', error: 'Bitte einen Betrag ab 0 mit höchstens 2 Nachkommastellen eingeben.'},
-        gross: {hint: 'Bruttobetrag, z. B. 1.190,00', error: 'Bitte einen Betrag größer als 0 mit höchstens 2 Nachkommastellen eingeben.'},
-        amount: {hint: 'Betrag, z. B. 1.234,56', error: 'Bitte einen Betrag größer als 0 mit höchstens 2 Nachkommastellen eingeben (max. 9.999.999,99).'},
-        opening_balance: {hint: 'Betrag, z. B. -123,45', error: 'Bitte einen Betrag mit höchstens 2 Nachkommastellen eingeben (max. 9.999.999,99).'},
-        phone: {hint: 'Telefonnummer mit Vorwahl, z. B. +49 30 123456'},
-        email: {hint: 'E-Mail, z. B. name@example.org'}
+        date: {hint: window.vkText('js.datum_im_format_tt_mm_jjjj'), error: window.vkText('js.bitte_ein_gultiges_datum_im_format_tt_mm_jjjj_eingeben')},
+        iban: {hint: window.vkText('js.iban_z_b_de89_3704_0044_0532_0130_00'), error: window.vkText('js.bitte_eine_gultige_iban_eingeben')},
+        bic: {hint: window.vkText('js.bic_8_oder_11_zeichen'), error: window.vkText('js.bitte_einen_gultigen_bic_eingeben')},
+        net: {hint: window.vkText('js.nettobetrag_z_b_1_000_00'), error: window.vkText('js.bitte_einen_betrag_ab_0_mit_hochstens_2_nachkommastellen_eingeben')},
+        tax: {hint: window.vkText('js.steuerbetrag_z_b_190_00'), error: window.vkText('js.bitte_einen_betrag_ab_0_mit_hochstens_2_nachkommastellen_eingeben')},
+        gross: {hint: window.vkText('js.bruttobetrag_z_b_1_190_00'), error: window.vkText('js.bitte_einen_betrag_groer_als_0_mit_hochstens_2_nachkommastellen_eingeben')},
+        amount: {hint: window.vkText('js.betrag_z_b_1_234_56'), error: window.vkText('js.bitte_einen_betrag_groer_als_0_mit_hochstens_2_nachkommastellen_eingeben_ma')},
+        opening_balance: {hint: window.vkText('js.betrag_z_b_123_45'), error: window.vkText('js.bitte_einen_betrag_mit_hochstens_2_nachkommastellen_eingeben_max_9_999_999_')},
+        phone: {hint: window.vkText('js.telefonnummer_mit_vorwahl_z_b_49_30_123456')},
+        email: {hint: window.vkText('js.e_mail_z_b_name_example_org')}
     };
     function kind(field) { return field.dataset.mask || (field.type === 'date' ? 'date' : '') || (specs[field.name] ? field.name : ''); }
     function update(field, format) {
@@ -64,7 +64,7 @@
                 var iso = isoDate(value);
                 error = iso === null ? specs.date.error : '';
                 if (iso && ((field.dataset.dateMin && iso < field.dataset.dateMin) || (field.dataset.dateMax && iso > field.dataset.dateMax))) {
-                    error = 'Das Datum liegt außerhalb des erlaubten Zeitraums.';
+                    error = window.vkText('js.das_datum_liegt_auerhalb_des_erlaubten_zeitraums');
                 }
                 if (iso) { formatted = germanDate(iso); }
             } else if (type === 'iban') {
@@ -120,12 +120,12 @@
                 picker.min = field.dataset.dateMin; picker.max = field.dataset.dateMax;
                 picker.disabled = field.disabled; picker.readOnly = field.readOnly;
                 picker.tabIndex = -1; picker.className = 'visually-hidden';
-                picker.setAttribute('aria-label', 'Datum auswählen');
+                picker.setAttribute('aria-label', window.vkText('js.datum_auswahlen'));
                 field.insertAdjacentElement('afterend', picker);
                 if (!field.disabled && !field.readOnly && typeof picker.showPicker === 'function') {
                     var button = document.createElement('button');
                     button.type = 'button'; button.className = 'btn btn-sm btn-outline-secondary mt-1';
-                    button.textContent = 'Datum auswählen';
+                    button.textContent = window.vkText('js.datum_auswahlen');
                     field.insertAdjacentElement('afterend', button);
                     button.addEventListener('click', function () { picker.value = canonical.value; picker.showPicker(); });
                 }

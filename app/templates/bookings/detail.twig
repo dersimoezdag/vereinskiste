@@ -42,7 +42,7 @@
             <dt class="col-sm-4">{{ t('bookings.receipt_no') }}</dt>
             <dd class="col-sm-8">{{ booking.receipt_no ?? '–' }}</dd>
 
-            <dt class="col-sm-4">{{ t('bookings.kind') }} {{ help.tip('Buchungsart: Reguläre Buchung, Geldtransit/Umbuchung zwischen Konten oder GoBD-Korrekturbuchung.') }}</dt>
+            <dt class="col-sm-4">{{ t('bookings.kind') }} {{ help.tip(t('ui.buchungsart_regulaere_buchung_geldtransit_umbuchung_zwischen_kont')) }}</dt>
             <dd class="col-sm-8">{{ t('bookings.kind.' ~ booking.kind) }}</dd>
 
             {% if original %}
@@ -64,7 +64,7 @@
             <dt class="col-sm-4">{{ t('bookings.created') }}</dt>
             <dd class="col-sm-8">{{ booking.created_at|date('d.m.Y H:i') }} · {{ booking.created_by_name }}</dd>
 
-            <dt class="col-sm-4">{{ t('bookings.version') }} {{ help.tip('Revisionsnummer zur Vermeidung von Konflikten bei gleichzeitiger Bearbeitung.') }}</dt>
+            <dt class="col-sm-4">{{ t('bookings.version') }} {{ help.tip(t('ui.revisionsnummer_zur_vermeidung_von_konflikten_bei_gleichzeitiger_')) }}</dt>
             <dd class="col-sm-8">{{ booking.version }}</dd>
         </dl>
     </div>
@@ -73,7 +73,7 @@
 {% if can('bookings.write') %}
 {% set action = booking.status == 'active' ? 'cancel' : 'restore' %}
 <div class="card mb-4">
-    <div class="card-header"><h2 class="card-title">{{ t('bookings.' ~ action ~ '.title') }} {{ help.tip('GoBD-Storno: Buchungen werden nicht gelöscht, sondern revisionssicher als storniert markiert.') }}</h2></div>
+    <div class="card-header"><h2 class="card-title">{{ t('bookings.' ~ action ~ '.title') }} {{ help.tip(t('ui.gobd_storno_buchungen_werden_nicht_geloescht_sondern_revisionssic')) }}</h2></div>
     <div class="card-body">
         {% include 'bookings/_status_form.twig' with {action: action, version: booking.version, reason: '', errors: {}} %}
     </div>

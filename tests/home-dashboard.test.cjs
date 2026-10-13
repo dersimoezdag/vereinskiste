@@ -6,7 +6,7 @@ function setup(auto=false) {
     const items=['a','b','c'].map(id=>`<div data-dashboard-item id="${id}"><input name="cards[]" value="${id}"><input data-position value="1"><button type="button" data-drag-handle>Griff</button><button type="button" data-move="up">Hoch</button><button type="button" data-move="down">Runter</button></div>`).join('');
     const dom=new JSDOM(`<form action="/dashboard/preferences" data-dashboard-form ${auto?'data-autosave':''}><input name="version" value="0"><div data-dashboard-list>${items}</div><span data-dashboard-status></span></form>`,{url:'https://verein.example.org',runScripts:'outside-only'});
     const {window}=dom;
-    window.eval(fs.readFileSync(__dirname+'/../public/assets/home-dashboard.js','utf8'));
+    require('./browser-texts.cjs')(window); window.eval(fs.readFileSync(__dirname+'/../public/assets/home-dashboard.js','utf8'));
     const order=()=>Array.from(window.document.querySelector('[data-dashboard-list]').children).map(item=>item.id);
     const pointer=(target,type,props={})=>{const e=new window.Event(type,{bubbles:true,cancelable:true});Object.assign(e,{pointerId:1,button:0,clientX:0,clientY:0},props);target.dispatchEvent(e);};
     return {window,document:window.document,order,pointer};

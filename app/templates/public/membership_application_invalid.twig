@@ -9,7 +9,7 @@
                 <div class="mb-3">
                     {% include 'components/logo.twig' with {size: 56, alt: 'Vereinskiste Logo'} %}
                 </div>
-                <h1 class="h3 fw-bold mb-2">Mitgliedsantrag</h1>
+                <h1 class="h3 fw-bold mb-2">{{ t('ui.mitgliedsantrag') }}</h1>
                 <div class="alert alert-warning my-3">
                     {% if reason == 'expired' %}
                         {{ t('applications.link_expired') }}
@@ -20,7 +20,7 @@
                     {% endif %}
                 </div>
                 <p class="text-muted small">
-                    Bitte wende dich an den Vereinsvorstand, um einen neuen Antrags-Link zu erhalten.
+                    {{ t('ui.bitte_wende_dich_an_den_vereinsvorstand_um_einen_neuen_antrags_li') }}
                 </p>
                 <div class="mt-3">
                     <a href="/" class="btn btn-outline-secondary">{{ t('applications.back_home') }}</a>

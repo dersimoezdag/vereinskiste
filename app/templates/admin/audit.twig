@@ -41,7 +41,7 @@
                             <li>
                                 {% set detail_label = t('audit.detail.' ~ d.key) %}
                                 <strong>{{ detail_label starts with 'audit.detail.' ? d.key : detail_label }}:</strong>
-                                {% if d.value is null or d.value == '' %}–{% elseif d.key in ['roles', 'roles_added', 'roles_removed'] %}{% for r in d.value|split(', ') %}{{ t('users.role.' ~ r) }}{% if not loop.last %}, {% endif %}{% endfor %}{% elseif d.key == 'fields' %}{% for f in d.value|split(', ') %}{{ t('users.field.' ~ f) }}{% if not loop.last %}, {% endif %}{% endfor %}{% elseif d.is_date %}{{ d.value|date('d.m.Y') }}{% else %}{{ d.value }}{% endif %}
+                                {% if d.value is null or d.value == '' %}–{% elseif d.key in ['roles', 'roles_added', 'roles_removed'] %}{% for r in d.value|split(', ') %}{{ t('users.role.' ~ r) }}{% if not loop.last %}, {% endif %}{% endfor %}{% elseif d.key == 'fields' %}{% for f in d.value|split(', ') %}{{ t('users.field.' ~ f) }}{% if not loop.last %}, {% endif %}{% endfor %}{% elseif d.key == 'subject' %}{% set subject_label = t('audit.subject.' ~ d.value) %}{{ subject_label starts with 'audit.subject.' ? d.value : subject_label }}{% elseif d.is_date %}{{ d.value|date('d.m.Y') }}{% else %}{{ d.value }}{% endif %}
                             </li>
                             {% endfor %}
                         </ul>

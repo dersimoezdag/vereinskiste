@@ -1,14 +1,15 @@
 {% extends 'layout.twig' %}
-{% block title %}Kontoauszug-Import{% endblock %}
+{% block title %}{{ t('ui.kontoauszug_import') }}{% endblock %}
 {% block content %}
-<h1>Kontoauszug-Import</h1>
-<p>Bankumsätze prüfen und übernehmen. Die Übernahme verändert keine Buchungen oder Kontosalden.</p>
-{% if can('imports.write') %}<a class="btn btn-primary mb-3" href="/imports/bank/new">CSV hochladen</a>{% endif %}
-<div class="card"><table class="table table-cards"><thead><tr><th>Import</th><th>Konto</th><th>Status</th><th>Zeilen</th></tr></thead><tbody>
+{% include 'components/finance_tabs.twig' %}
+<h1>{{ t('ui.kontoauszug_import') }}</h1>
+<p>{{ t('ui.bankumsaetze_pruefen_und_uebernehmen_die_uebernahme_veraendert_ke') }}</p>
+{% if can('imports.write') %}<a class="btn btn-primary mb-3" href="/imports/bank/new">{{ t('ui.csv_hochladen') }}</a>{% endif %}
+<div class="card"><table class="table table-cards"><thead><tr><th>{{ t('ui.import') }}</th><th>{{ t('bookings.account') }}</th><th>{{ t('privacy.field.status') }}</th><th>{{ t('ui.zeilen') }}</th></tr></thead><tbody>
 {% for import in imports %}<tr><td data-label="Import"><a href="/imports/bank/{{ import.id }}">#{{ import.id }} · {{ import.created_at|date('d.m.Y H:i') }}</a></td>
 <td data-label="Konto">{{ import.account_name }}</td><td data-label="Status">{{ t('bank.status.' ~ import.status) }}</td><td data-label="Zeilen">{{ import.total_rows }}</td></tr>
-{% else %}<tr><td colspan="4">Noch keine Importe vorhanden.</td></tr>{% endfor %}
+{% else %}<tr><td colspan="4">{{ t('ui.noch_keine_importe_vorhanden') }}</td></tr>{% endfor %}
 </tbody></table></div>
-<div class="d-flex gap-2 mt-3">{% if page > 1 %}<a href="?page={{ page - 1 }}">← Zurück</a>{% endif %}
-{% if imports|length == 50 %}<a href="?page={{ page + 1 }}">Weiter →</a>{% endif %}</div>
+<div class="d-flex gap-2 mt-3">{% if page > 1 %}<a href="?page={{ page - 1 }}">{{ t('ui.zurueck') }}</a>{% endif %}
+{% if imports|length == 50 %}<a href="?page={{ page + 1 }}">{{ t('ui.weiter') }}</a>{% endif %}</div>
 {% endblock %}

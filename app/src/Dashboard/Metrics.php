@@ -14,12 +14,12 @@ final class Metrics
     public function forCard(string $id): array
     {
         return match ($id) {
-            'members' => ['value' => $this->count('SELECT count(*) FROM members WHERE anonymized_at IS NULL'), 'description' => 'Mitglieder insgesamt, ohne anonymisierte Datensätze'],
-            'applications' => ['value' => $this->count("SELECT count(*) FROM membership_applications WHERE status='pending'"), 'description' => 'Anträge warten auf eine Entscheidung'],
+            'members' => ['value' => $this->count('SELECT count(*) FROM members WHERE anonymized_at IS NULL'), 'description' => \Vereinskiste\Text\Catalogue::get('home.metric.mitglieder_insgesamt_ohne_anonymisierte_datensaetze')],
+            'applications' => ['value' => $this->count("SELECT count(*) FROM membership_applications WHERE status='pending'"), 'description' => \Vereinskiste\Text\Catalogue::get('home.metric.antraege_warten_auf_eine_entscheidung')],
             'finance' => $this->finance(),
-            'invoices' => ['value' => $this->count("SELECT count(*) FROM invoices WHERE status='draft'"), 'description' => 'Entwürfe warten auf Prüfung'],
-            'contacts' => ['value' => $this->count('SELECT count(*) FROM finance_contacts WHERE active'), 'description' => 'Aktive Personen und Unternehmen'],
-            'operations' => ['value' => $this->count("SELECT count(*) FROM mail_outbox WHERE status IN ('failed','uncertain')"), 'description' => 'Fehlgeschlagene oder unklare Zustellungen'],
+            'invoices' => ['value' => $this->count("SELECT count(*) FROM invoices WHERE status='draft'"), 'description' => \Vereinskiste\Text\Catalogue::get('home.metric.entwuerfe_warten_auf_pruefung')],
+            'contacts' => ['value' => $this->count('SELECT count(*) FROM finance_contacts WHERE active'), 'description' => \Vereinskiste\Text\Catalogue::get('home.metric.aktive_personen_und_unternehmen')],
+            'operations' => ['value' => $this->count("SELECT count(*) FROM mail_outbox WHERE status IN ('failed','uncertain')"), 'description' => \Vereinskiste\Text\Catalogue::get('home.metric.fehlgeschlagene_oder_unklare_zustellungen')],
             default => throw new \InvalidArgumentException('Unknown dashboard card'),
         };
     }
@@ -33,15 +33,9 @@ final class Metrics
     {
         $today = new \DateTimeImmutable('today', new \DateTimeZone('Europe/Berlin'));
         $from = (new Profile($this->pdo))->period($today)['from'];
-        $stmt = $this->pdo->prepare("SELECT
-            COALESCE(SUM(amount) FILTER(WHERE direction='in'),0)::text AS income,
-            COALESCE(SUM(amount) FILTER(WHERE direction='out'),0)::text AS expense,
-            COALESCE(SUM(CASE WHEN direction='in' THEN amount ELSE -amount END),0)::text AS balance
-            FROM bookings WHERE status='active' AND kind<>'transfer' AND booking_date BETWEEN ? AND ?");
-        $stmt->execute([$from, $today->format('Y-m-d')]);
-        $row = $stmt->fetch();
+        $row=(new \Vereinskiste\Reports\BookingAggregation($this->pdo))->totals($from,$today->format('Y-m-d'));
         return ['value' => MoneyFormat::eur($row['balance']),
-            'description' => 'Saldo im Geschäftsjahr bis heute · ' . (new \DateTimeImmutable($from))->format('d.m.Y') . ' – ' . $today->format('d.m.Y'),
-            'details' => ['Einnahmen' => MoneyFormat::eur($row['income']), 'Ausgaben' => MoneyFormat::eur($row['expense'])]];
+            'description' => \Vereinskiste\Text\Catalogue::get('home.metric.saldo_im_geschaeftsjahr_bis_heute_from_to',['{from}'=>(new \DateTimeImmutable($from))->format('d.m.Y'),'{to}'=>$today->format('d.m.Y')]),
+            'details' => [\Vereinskiste\Text\Catalogue::get('reports.income') => MoneyFormat::eur($row['income']), \Vereinskiste\Text\Catalogue::get('reports.expense') => MoneyFormat::eur($row['expense'])]];
     }
 }

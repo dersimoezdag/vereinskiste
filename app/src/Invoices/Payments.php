@@ -20,14 +20,13 @@ final class Payments
     public function overview(int $invoice): array
     {
         $s=$this->pdo->prepare("SELECT a.*,b.booking_date,b.description,b.status FROM invoice_payment_allocations a JOIN bookings b ON b.id=a.booking_id WHERE invoice_id=? ORDER BY a.id");$s->execute([$invoice]);$allocations=$s->fetchAll();
-        $paid=0;foreach($allocations as $a) {if($a['status']==='active') {$paid+=Money::toCents($a['amount']);}}
-        $row=(new InvoiceRepository($this->pdo))->find($invoice);
-        $remaining=max(0,($row['gross']!==null?Money::toCents($row['gross']):0)-$paid);
+        $amounts=(new PaymentAmounts($this->pdo))->forInvoice($invoice);
+        $remaining=$amounts['remaining'];
         $c=$this->pdo->prepare("SELECT id,booking_date,amount,description,counterparty FROM bookings WHERE status='active' AND direction='out' AND kind<>'transfer'
             AND amount<=?::numeric AND NOT EXISTS(SELECT 1 FROM invoice_payment_allocations WHERE booking_id=bookings.id)
-            ORDER BY booking_date DESC,id DESC LIMIT 50");$c->execute([Money::fromCents($remaining)]);
+            ORDER BY booking_date DESC,id DESC LIMIT 50");$c->execute([$remaining]);
         $h=$this->pdo->prepare('SELECT c.*,u.name AS actor FROM invoice_payment_changes c JOIN users u ON u.id=c.actor_id WHERE invoice_id=? ORDER BY c.id DESC LIMIT 50');$h->execute([$invoice]);
-        return ['request'=>$this->get($invoice),'paid'=>Money::fromCents($paid),'remaining'=>Money::fromCents($remaining),'allocations'=>$allocations,'candidates'=>$c->fetchAll(),'history'=>$h->fetchAll()];
+        return ['request'=>$this->get($invoice),'paid'=>$amounts['paid_total'],'remaining'=>$remaining,'allocations'=>$allocations,'candidates'=>$c->fetchAll(),'history'=>$h->fetchAll()];
     }
     public function save(int $invoice,array $input,int $version,int $actor): void
     {

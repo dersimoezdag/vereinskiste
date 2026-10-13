@@ -113,6 +113,7 @@ final class BookingController extends LedgerController
         return $req->getAttribute('view')->render($res, 'bookings/detail.twig', [
             'booking' => $booking,
             'history' => (new ChangeLog($pdo))->forBooking($booking['id']),
+            'invoice_documents' => (new \Vereinskiste\Invoices\LinkedDocuments($pdo))->forBooking($booking['id']),
             'receipts' => (new ReceiptStore($pdo, $this->receiptsDir))->forBooking($booking['id']),
             'account_names' => array_column((new AccountRepository($pdo))->all(), 'name', 'id'),
             'category_names' => array_column((new CategoryRepository($pdo))->all(), 'name', 'id'),

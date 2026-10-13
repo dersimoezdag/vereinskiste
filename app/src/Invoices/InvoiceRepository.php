@@ -17,10 +17,8 @@ final class InvoiceRepository
     public function list(string $state='all',string $search='',int $page=1):array
     {
         $state=in_array($state,['draft','reviewed','cancelled','overdue','unpaid','partially_paid','paid','all'],true)?$state:'all';
-        $stmt=$this->pdo->prepare("SELECT i.*,p.status AS payment_status,COALESCE(t.paid,0)::numeric(12,2)::text AS paid_total,
-            GREATEST(COALESCE(i.gross,0)-COALESCE(t.paid,0),0)::numeric(12,2)::text AS remaining
-            FROM invoices i LEFT JOIN invoice_payment_requests p ON p.invoice_id=i.id
-            LEFT JOIN LATERAL (SELECT SUM(a.amount) AS paid FROM invoice_payment_allocations a JOIN bookings b ON b.id=a.booking_id WHERE a.invoice_id=i.id AND b.status='active') t ON true
+        $stmt=$this->pdo->prepare("SELECT i.*,p.status AS payment_status,".PaymentAmounts::COLUMNS."
+            FROM invoices i LEFT JOIN invoice_payment_requests p ON p.invoice_id=i.id ".PaymentAmounts::JOIN."
             WHERE (i.number ILIKE ? OR i.supplier_name ILIKE ?) AND (?='all' OR i.status=?
                 OR (?='overdue' AND i.status='reviewed' AND i.kind='invoice' AND i.due_date<CURRENT_DATE AND COALESCE(t.paid,0)<i.gross)
                 OR (?='unpaid' AND i.status='reviewed' AND i.kind='invoice' AND COALESCE(t.paid,0)=0)

@@ -43,10 +43,10 @@ final class HomeDashboardController extends AdminController
             $version = (new Preferences(($this->pdo)()))->save($this->userId($req), Fields::version($body['version'] ?? null), $body, $data['cards'], $data['shortcuts']);
         } catch (Conflict) {
             $status = 409;
-            $error = 'Die Übersicht wurde in einem anderen Fenster geändert. Bitte neu laden, bevor du erneut speicherst.';
+            $error = \Vereinskiste\Text\Catalogue::get('home.error.die_uebersicht_wurde_in_einem_anderen_fenster_geaendert');
         } catch (ValidationError) {
             $status = 422;
-            $error = 'Die Auswahl ist ungültig oder nicht mehr verfügbar. Bitte lade die Seite neu.';
+            $error = \Vereinskiste\Text\Catalogue::get('home.error.die_auswahl_ist_ungueltig_oder_nicht_mehr_verfuegbar_bi');
         }
         if (str_contains($req->getHeaderLine('Accept'), 'application/json')) {
             $res->getBody()->write(json_encode($error === null ? ['version' => $version] : ['error' => $error], JSON_THROW_ON_ERROR));

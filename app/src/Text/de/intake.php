@@ -15,6 +15,7 @@ return [
 'intake.security.error'=>'Sicherheitsprüfung nicht verfügbar oder fehlgeschlagen – Datei gesperrt.',
 'intake.security.clean'=>'Sicherheitsprüfung erfolgreich.',
 'intake.security.legacy'=>'Bestandsbeleg aus einer früheren Version; noch nicht durch den neuen Scanner geprüft.',
+'intake.payment.recipient_verified'=>'Empfänger, Anspruch auf Erstattung und Bankverbindung unabhängig vom eingereichten Beleg geprüft.',
 'intake.payment.title'=>'Zahlung / Auslagenerstattung',
 'intake.payment.verify'=>'Empfänger und Bankverbindung müssen unabhängig geprüft und bestätigt werden.',
 'intake.payment.locked'=>'Dieser Zahlungsvorschlag kann nicht mehr geändert werden.',
@@ -25,9 +26,4 @@ return [
 'intake.payment.draft'=>'Vorschlag – Freigabe ausstehend',
 'intake.payment.approved'=>'Freigegeben',
 'intake.payment.rejected'=>'Abgelehnt',
-'intake.mail.received'=>'Eingegangen',
-'intake.mail.imported'=>'Als Entwurf übernommen',
-'intake.mail.rejected'=>'Nicht übernommen',
-'intake.mail.message_rejected'=>'Nachricht überschreitet Grenzen oder enthält nicht zugelassene Anhänge.',
-'intake.mail.invalid_or_duplicate_attachment'=>'Ungültiger oder bereits vorhandener Beleg. Original bitte prüfen.',
 ];
