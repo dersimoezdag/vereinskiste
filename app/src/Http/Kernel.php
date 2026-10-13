@@ -179,7 +179,10 @@ final class Kernel
         $app->post('/update', [$updater, 'update'])->add(Auth::requires('settings.manage'));
 
         $auth = new AuthController();
-        $app->get('/', [$auth, 'home'])->add(Auth::authenticated());
+        $home = new \Vereinskiste\Web\HomeDashboardController($pdoProvider);
+        $app->get('/', [$home, 'index'])->add(Auth::authenticated());
+        $app->get('/dashboard/preferences', [$home, 'preferences'])->add(Auth::authenticated());
+        $app->post('/dashboard/preferences', [$home, 'save'])->add(Auth::authenticated());
         $app->get('/login', [$auth, 'showLogin']);
         $app->post('/login', [$auth, 'login']);
         $app->post('/logout', [$auth, 'logout']);

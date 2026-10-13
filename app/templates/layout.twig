@@ -33,7 +33,7 @@
             </h1>
             <div class="collapse navbar-collapse" id="sidebar-menu">
                 <ul class="navbar-nav pt-lg-3">
-                    <li class="nav-item{% if path == '/' %} active{% endif %}">
+                    <li class="nav-item{% if path == '/' or path starts with '/dashboard/preferences' %} active{% endif %}">
                         <a class="nav-link" href="/"><span class="nav-link-icon">{{ icons.icon('home') }}</span><span class="nav-link-title">{{ t('nav.home') }}</span></a>
                     </li>
                     {% if can('members.read') %}
@@ -94,11 +94,7 @@
             <div class="{% if user %}container-xl{% elseif path starts with '/install' and authorized|default(false) %}container-md py-4{% else %}container-tight py-4{% endif %}">
                 {% if not user %}
                 <div class="d-flex justify-content-end mb-2">
-                    <button type="button" class="btn btn-icon theme-toggle" id="auth-theme-toggle"
-                            aria-label="Farbschema wechseln" title="Farbschema wechseln">
-                        <span class="theme-icon-light">{{ icons.icon('light-mode') }}</span>
-                        <span class="theme-icon-dark">{{ icons.icon('dark-mode') }}</span>
-                    </button>
+                    {% include 'components/theme-picker.twig' %}
                 </div>
                 <div class="text-center mb-4">
                     <a href="/" class="navbar-brand navbar-brand-autodark d-inline-flex align-items-center gap-2 text-decoration-none">

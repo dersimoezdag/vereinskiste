@@ -1,6 +1,44 @@
 {% extends 'layout.twig' %}
 {% block title %}{{ t('home.title') }}{% endblock %}
 {% block content %}
-<h1>{{ t('home.title') }}</h1>
-<p>{{ t('home.welcome') }}</p>
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div><h1 class="mb-1">{{ t('home.title') }}</h1><p class="text-muted mb-0">Dein Verein auf einen Blick.</p></div>
+    <a href="/dashboard/preferences" class="btn">{{ icons.icon('settings') }} Dashboard anpassen</a>
+</div>
+<form method="post" action="/dashboard/preferences" data-dashboard-form data-autosave>
+    {{ csrf_field() }}
+    <input type="hidden" name="version" value="{{ preferences.version }}">
+    <div class="dashboard-grid" data-dashboard-list>
+    {% for id in preferences.cards %}
+        {% set card = cards[id] %}{% set metric = metrics[id] %}
+        <section class="card dashboard-card" data-dashboard-item>
+            <input type="hidden" name="cards[]" value="{{ id }}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <h2 class="card-title"><a href="{{ card.url }}">{{ icons.icon(card.icon) }} {{ card.label }}</a></h2>
+                    {% include 'dashboard/controls.twig' with {label: card.label} %}
+                </div>
+                <div class="dashboard-value">{{ metric.value }}</div>
+                <p class="text-muted mb-0">{{ metric.description }}</p>
+                {% if metric.details is defined %}<dl class="dashboard-details">{% for label, value in metric.details %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl>{% endif %}
+            </div>
+        </section>
+    {% else %}
+        <p class="text-muted">Hier erscheinen deine ausgewählten Karten. Wähle sie unter „Dashboard anpassen“ aus.</p>
+    {% endfor %}
+    </div>
+    <h2 class="mt-4 mb-3">Schnellaktionen</h2>
+    <div class="dashboard-shortcuts" data-dashboard-list>
+    {% for id in preferences.shortcuts %}
+        {% set shortcut = shortcuts[id] %}
+        <div class="dashboard-shortcut" data-dashboard-item>
+            <input type="hidden" name="shortcuts[]" value="{{ id }}">
+            <a class="btn" href="{{ shortcut.url }}">{{ icons.icon(shortcut.icon) }} {{ shortcut.label }}</a>
+            {% include 'dashboard/controls.twig' with {label: shortcut.label} %}
+        </div>
+    {% else %}<p class="text-muted">Du kannst deine Schnellaktionen unter „Dashboard anpassen“ auswählen.</p>{% endfor %}
+    </div>
+    <div class="mt-3 d-flex align-items-center gap-3"><button class="btn btn-primary" data-layout-save>Reihenfolge speichern</button><span role="status" aria-live="polite" data-dashboard-status></span></div>
+</form>
 {% endblock %}
+{% block scripts %}<script src="{{ asset('home-dashboard.js') }}"></script>{% endblock %}

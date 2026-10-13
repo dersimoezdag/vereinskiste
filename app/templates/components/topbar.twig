@@ -5,6 +5,8 @@
 {% set crumbs = [] %}
 {% if path == '/' %}
     {% set crumbs = [{'label': t('nav.home')}] %}
+{% elseif path == '/dashboard/preferences' %}
+    {% set crumbs = [{'label': 'Dashboard anpassen'}] %}
 {% elseif path == '/bookings' %}
     {% set crumbs = [cash, {'label': t('nav.bookings')}] %}
 {% elseif path == '/bookings/new' %}
@@ -80,10 +82,6 @@
                 {% endfor %}
             </ol>
         </nav>
-        <button type="button" class="btn btn-icon theme-toggle" id="theme-toggle"
-                aria-label="Farbschema wechseln" title="Farbschema wechseln">
-            <span class="theme-icon-light">{{ icons.icon('light-mode') }}</span>
-            <span class="theme-icon-dark">{{ icons.icon('dark-mode') }}</span>
-        </button>
+        {% include 'components/theme-picker.twig' %}
     </div>
 </header>
