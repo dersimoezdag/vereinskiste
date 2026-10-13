@@ -19,7 +19,7 @@ final class AuditLog
         'user_password_reset', 'password_changed', 'password_reset_completed',
         'account_created', 'account_renamed', 'account_activated', 'account_deactivated',
         'category_created', 'category_renamed', 'category_activated', 'category_deactivated',
-        'foundation_updated',
+        'foundation_updated', 'privacy_settings_updated', 'member_anonymized', 'application_anonymized', 'application_mail_retried', 'invoice_updated',
         'bank_import_uploaded', 'bank_import_reviewed', 'bank_import_confirmed', 'bank_import_cancelled', 'bank_import_reset',
         'auto_update_started', 'auto_update_completed', 'auto_update_rolled_back',
         'member_user_linked', 'member_user_unlinked',

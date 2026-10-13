@@ -180,6 +180,7 @@
                             </div>
                         </div>
 
+                        {% if a.status == 'rejected' and can('settings.manage') %}<a class="btn btn-sm mb-2" href="/members/applications/{{ a.id }}/privacy">{{ t('privacy.title') }}</a>{% endif %}
                         <!-- Anschrift -->
                         {% if a.data.address or a.data.city %}
                         <div class="text-muted small mb-2">
@@ -211,16 +212,8 @@
 
                             {% if a.status == 'pending' and can('members.write') %}
                             <div class="d-flex gap-2">
-                                <form method="post" action="/members/applications/{{ a.id }}/approve" class="m-0">
-                                    {{ csrf_field() }}
-                                    <button type="submit" class="btn btn-sm btn-success">
-                                        {{ t('applications.approve') }}
-                                    </button>
-                                </form>
-                                <button type="button" class="btn btn-sm btn-outline-danger"
-                                        data-toggle-target="reject-form-{{ a.id }}" aria-controls="reject-form-{{ a.id }}">
-                                    {{ t('applications.reject') }}
-                                </button>
+                                <a class="btn btn-sm btn-success" href="/members/applications/{{ a.id }}/decision?decision=approved">{{ t('applications.approve') }}</a>
+                                <a class="btn btn-sm btn-outline-danger" href="/members/applications/{{ a.id }}/decision?decision=rejected">{{ t('applications.reject') }}</a>
                             </div>
                             {% elseif a.status == 'approved' and a.member_id %}
                             <a href="/members/{{ a.member_id }}" class="btn btn-sm btn-outline-primary">
@@ -231,17 +224,6 @@
                             {% endif %}
                         </div>
 
-                        <!-- Ausklappbares Ablehnen-Formular -->
-                        <div id="reject-form-{{ a.id }}" class="d-none mt-3 p-3 border rounded bg-light-subtle">
-                            <form method="post" action="/members/applications/{{ a.id }}/reject">
-                                {{ csrf_field() }}
-                                <label for="reject-reason-{{ a.id }}" class="form-label small">{{ t('applications.reject_reason') }}</label>
-                                <div class="input-group input-group-sm mb-2">
-                                    <input type="text" id="reject-reason-{{ a.id }}" name="reason" class="form-control" placeholder="z. B. Aufnahmestopp">
-                                    <button type="submit" class="btn btn-danger">{{ t('applications.reject') }}</button>
-                                </div>
-                            </form>
-                        </div>
                     </div>
                     {% endfor %}
                 </div>
@@ -250,4 +232,9 @@
         </div>
     </div>
 </div>
+<div class="card card-body mt-3"><h2>{{ t('applications.outbox') }}</h2><p>{{ t('applications.outbox.explanation') }}</p>
+{% if not system_mail_available() %}<p class="alert alert-warning">{{ t('applications.mail.disabled') }}</p>{% endif %}
+<div class="table-responsive"><table class="table"><thead><tr><th>{{ t('applications.mail.subject') }}</th><th>E-Mail</th><th>{{ t('privacy.field.status') }}</th><th></th></tr></thead><tbody>
+{% for mail in outbox %}<tr><td>{{ mail.subject }} · #{{ mail.application_id }}</td><td>{{ mail.recipient }}</td><td>{{ t('applications.outbox.' ~ mail.status) }}</td><td>{% if mail.status in ['failed','uncertain'] and can('members.write') %}<form method="post" action="/members/application-mails/{{ mail.id }}/retry">{{ csrf_field() }}<input type="hidden" name="version" value="{{ mail.version }}"><button class="btn btn-sm">{{ t('applications.outbox.retry') }}</button></form>{% endif %}</td></tr>{% endfor %}
+</tbody></table></div></div>
 {% endblock %}

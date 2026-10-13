@@ -18,6 +18,8 @@ final class RateLimiter
         $limits = match ($operation) {
             'login' => [5, 60, 120],
             'reset' => [1, 5, 10],
+            'application' => [10, 30, 120],
+            'application_unlock' => [5, 30, 120],
             'setup' => [5, 10, 30],
             default => throw new \InvalidArgumentException('Unbekanntes Versuchsbudget.'),
         };

@@ -70,7 +70,7 @@ final class MembershipPeriods
 
     private function lockMember(int $memberId): void
     {
-        $stmt = $this->pdo->prepare('SELECT 1 FROM members WHERE id = ? FOR UPDATE');
+        $stmt = $this->pdo->prepare('SELECT 1 FROM members WHERE id = ? AND anonymized_at IS NULL FOR UPDATE');
         $stmt->execute([$memberId]);
         if ($stmt->fetchColumn() === false) {
             throw new ValidationError(['date' => 'foundation.invalid']);

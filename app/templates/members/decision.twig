@@ -1,0 +1,23 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<h1>{{ t('applications.decision.title') }} · {{ application.applicant_name }}</h1>
+<p>{{ application.email }}</p>
+{% for error in errors %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endfor %}
+{% if not system_mail_available() %}<p class="alert alert-warning">{{ t('applications.mail.disabled') }}</p>{% endif %}
+{% if application.status == 'pending' %}
+<form action="/members/applications/{{ application.id }}/decision" method="post" class="card card-body">
+{{ csrf_field() }}
+{% if preview %}
+<h2>{{ t('applications.decision.preview') }}</h2><p>{{ t('applications.status.' ~ input.decision) }}</p><h3>{{ input.subject }}</h3><pre class="text-wrap">{{ input.message }}</pre><p>{{ input.reason }}</p>
+{% for key in ['decision','subject','message','reason'] %}<input type="hidden" name="{{ key }}" value="{{ input[key] }}">{% endfor %}
+<button class="btn btn-primary mb-2" name="stage" value="confirm">{{ t('applications.decision.confirm') }}</button><button class="btn" name="stage" value="edit">{{ t('applications.decision.edit') }}</button>
+{% else %}
+<label class="form-label" for="decision">{{ t('applications.decision.title') }}</label><select id="decision" class="form-select mb-3" name="decision"><option value="approved"{% if input.decision=='approved' %} selected{% endif %}>{{ t('applications.approve') }}</option><option value="rejected"{% if input.decision=='rejected' %} selected{% endif %}>{{ t('applications.reject') }}</option></select>
+<label class="form-label" for="decision-subject">{{ t('applications.mail.subject') }}</label><input class="form-control mb-3" id="decision-subject" name="subject" value="{{ input.subject }}" maxlength="200" required>
+<label class="form-label" for="decision-message">{{ t('applications.mail.message') }}</label><textarea class="form-control mb-3" id="decision-message" name="message" rows="8" maxlength="10000" required>{{ input.message }}</textarea>
+<label class="form-label" for="decision-reason">{{ t('applications.reject_reason') }}</label><input class="form-control mb-3" id="decision-reason" name="reason" value="{{ input.reason }}" maxlength="500">
+<button class="btn btn-primary" name="stage" value="preview">{{ t('applications.decision.preview') }}</button>
+{% endif %}
+</form>{% endif %}
+<a class="btn mt-3" href="/members/applications">{{ t('common.back') }}</a>
+{% endblock %}

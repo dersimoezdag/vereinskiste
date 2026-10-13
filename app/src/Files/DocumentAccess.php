@@ -14,6 +14,11 @@ final class DocumentAccess
     public function canRead(int $id, AuthService $auth): bool
     {
         if ($auth->currentUser() === null) { return false; }
+        if ($auth->can('invoices.read')) {
+            $stmt = $this->pdo->prepare('SELECT 1 FROM invoice_documents WHERE file_id = ?');
+            $stmt->execute([$id]);
+            if ($stmt->fetchColumn() !== false) { return true; }
+        }
         if ($auth->can('imports.read')) {
             $stmt = $this->pdo->prepare('SELECT 1 FROM bank_imports WHERE file_id = ?');
             $stmt->execute([$id]);

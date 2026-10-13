@@ -31,6 +31,9 @@
 
                     <form method="post" action="/antrag/{{ token }}" novalidate>
                         {{ csrf_field() }}
+                        <input type="hidden" name="document_fingerprint" value="{{ document_fingerprint }}">
+                        {% if errors.document_fingerprint %}<p class="alert alert-danger" role="alert">{{ t(errors.document_fingerprint) }}</p>{% endif %}
+                        {% if not system_mail_available() %}<p class="alert alert-info">{{ t('applications.mail.disabled') }}</p>{% endif %}
 
                         <!-- Honeypot gegen Spam-Bots (fuer Menschen unsichtbar) -->
                         <div style="display:none;" aria-hidden="true">
@@ -142,7 +145,7 @@
                             <input class="form-check-input{% if errors.consent_statute %} is-invalid{% endif %}" type="checkbox"
                                    id="consent-statute" name="consent_statute" value="1" {% if input.consent_statute %}checked{% endif %} required>
                             <label class="form-check-label" for="consent-statute">
-                                {{ t('applications.consent_statute') }}
+                                {{ t('applications.consent_statute') }}{% if consent_documents.statute.url %} <a href="{{ consent_documents.statute.url }}" target="_blank" rel="noopener noreferrer">{{ t('privacy.consent.statute') }}</a>{% endif %}
                             </label>
                         </div>
 
@@ -150,7 +153,7 @@
                             <input class="form-check-input{% if errors.consent_privacy %} is-invalid{% endif %}" type="checkbox"
                                    id="consent-privacy" name="consent_privacy" value="1" {% if input.consent_privacy %}checked{% endif %} required>
                             <label class="form-check-label" for="consent-privacy">
-                                {{ t('applications.consent_privacy') }}
+                                {{ t('applications.consent_privacy') }}{% if consent_documents.privacy.url %} <a href="{{ consent_documents.privacy.url }}" target="_blank" rel="noopener noreferrer">{{ t('privacy.consent.privacy') }}</a>{% endif %}
                             </label>
                         </div>
 

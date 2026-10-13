@@ -1,0 +1,18 @@
+{% extends 'layout.twig' %}
+{% block content %}
+{% include 'components/settings_tabs.twig' %}
+<div class="card card-body">
+<h2>{{ t('privacy.settings.title') }}</h2>
+<p>{{ t('privacy.settings.explanation') }}</p>
+<form method="post" action="/settings/privacy">
+{{ csrf_field() }}<input type="hidden" name="version" value="{{ version }}">
+{% for field,limit in fields %}
+<div class="mb-3"><label for="privacy-{{ field }}" class="form-label">{{ t('privacy.field.' ~ field) }}</label>
+{% if field == 'retention_note' %}<textarea class="form-control" id="privacy-{{ field }}" name="{{ field }}" maxlength="{{ limit }}" rows="3">{{ input[field] }}</textarea>
+{% else %}<input class="form-control" id="privacy-{{ field }}" name="{{ field }}" value="{{ input[field] }}" maxlength="{{ limit }}" type="{{ field == 'application_mail_to' ? 'email' : 'text' }}">{% endif %}
+{% if errors[field] %}<p class="text-danger" role="alert">{{ t(errors[field]) }}</p>{% endif %}</div>
+{% endfor %}
+{% if errors.version %}<p role="alert">{{ t(errors.version) }}</p>{% endif %}
+<button class="btn btn-primary">{{ t('common.save') }}</button>
+</form></div>
+{% endblock %}

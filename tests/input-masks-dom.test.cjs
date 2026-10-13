@@ -38,3 +38,21 @@ test('German date fields retain canonical form values, block invalid submit and 
         assert.equal(document.querySelectorAll('input[type="hidden"][name="date"]').length, 1);
     } finally { w.close(); }
 });
+
+test('invoice suggestions populate German masks, keep zero tax valid and retain ISO submission', () => {
+    const dom = new JSDOM('<form id="invoice-form"><input id="invoice-invoice_date" type="date" name="invoice_date"><input id="invoice-net" name="net"><input id="invoice-tax" name="tax"><input id="invoice-gross" name="gross"><button type="button" id="apply"></button></form>', {runScripts: 'outside-only'});
+    const w=dom.window, document=w.document;
+    try {
+        w.eval(readFileSync(require.resolve('../public/assets/input-masks.js'),'utf8'));
+        w.eval(readFileSync(require.resolve('../public/assets/invoices.js'),'utf8'));
+        const button=document.querySelector('#apply');
+        button.dataset.invoiceSuggestions=JSON.stringify({invoice_date:'2026-10-13',net:'100.00',tax:'0',gross:'100.00'});
+        button.click();
+        assert.equal(document.querySelector('#invoice-invoice_date').value,'13.10.2026');
+        assert.equal(new w.FormData(document.querySelector('form')).get('invoice_date'),'2026-10-13');
+        assert.equal(document.querySelector('#invoice-tax').value,'0,00');
+        assert.equal(document.querySelector('#invoice-tax').validity.valid,true);
+        document.querySelector('#invoice-tax').value='-1';document.querySelector('#invoice-tax').dispatchEvent(new w.Event('input'));
+        assert.equal(document.querySelector('#invoice-tax').validity.valid,false);
+    } finally {w.close();}
+});

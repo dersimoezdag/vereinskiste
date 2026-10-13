@@ -47,6 +47,9 @@
         date: {hint: 'Datum im Format TT.MM.JJJJ', error: 'Bitte ein gültiges Datum im Format TT.MM.JJJJ eingeben.'},
         iban: {hint: 'IBAN, z. B. DE89 3704 0044 0532 0130 00', error: 'Bitte eine gültige IBAN eingeben.'},
         bic: {hint: 'BIC: 8 oder 11 Zeichen', error: 'Bitte einen gültigen BIC eingeben.'},
+        net: {hint: 'Nettobetrag, z. B. 1.000,00', error: 'Bitte einen Betrag ab 0 mit höchstens 2 Nachkommastellen eingeben.'},
+        tax: {hint: 'Steuerbetrag, z. B. 190,00', error: 'Bitte einen Betrag ab 0 mit höchstens 2 Nachkommastellen eingeben.'},
+        gross: {hint: 'Bruttobetrag, z. B. 1.190,00', error: 'Bitte einen Betrag größer als 0 mit höchstens 2 Nachkommastellen eingeben.'},
         amount: {hint: 'Betrag, z. B. 1.234,56', error: 'Bitte einen Betrag größer als 0 mit höchstens 2 Nachkommastellen eingeben (max. 9.999.999,99).'},
         opening_balance: {hint: 'Betrag, z. B. -123,45', error: 'Bitte einen Betrag mit höchstens 2 Nachkommastellen eingeben (max. 9.999.999,99).'},
         phone: {hint: 'Telefonnummer mit Vorwahl, z. B. +49 30 123456'},
@@ -70,9 +73,9 @@
             } else if (type === 'bic') {
                 formatted = compact(value);
                 error = /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(formatted) ? '' : specs[type].error;
-            } else if (type === 'amount' || type === 'opening_balance') {
-                var result = money(value, type === 'opening_balance');
-                error = result === null ? specs[type].error : '';
+            } else if (['amount', 'opening_balance', 'net', 'tax', 'gross'].includes(type)) {
+                var result = money(value, ['opening_balance', 'net', 'tax'].includes(type));
+                error = result === null || (['net', 'tax'].includes(type) && result[0] === '-') ? specs[type].error : '';
                 if (result !== null) { formatted = result; }
             } else {
                 formatted = value.trim();
@@ -93,7 +96,7 @@
     var sequence = 0;
     function enhance(scope) {
         scope.querySelectorAll('input').forEach(function (field) {
-            if (field.dataset.maskReady || ((field.disabled || field.readOnly) && field.type !== 'date') || field.type === 'hidden') { return; }
+            if (field.dataset.maskReady || field.type === 'hidden') { return; }
             var type = kind(field), spec = specs[type];
             if (!spec) { return; }
             field.dataset.maskReady = '1';
@@ -133,7 +136,7 @@
             }
             if (type === 'phone') { field.type = 'tel'; field.autocomplete = 'tel'; }
             if (type === 'email') { field.type = 'email'; }
-            if (type === 'amount' || type === 'opening_balance') { field.inputMode = 'decimal'; }
+            if (['amount', 'opening_balance', 'net', 'tax', 'gross'].includes(type)) { field.inputMode = 'decimal'; }
             if (type === 'iban') { field.maxLength = 42; field.spellcheck = false; }
             if (type === 'bic') { field.maxLength = 11; field.spellcheck = false; }
             if (!field.placeholder) { field.placeholder = spec.hint; }
@@ -148,6 +151,7 @@
             field.addEventListener('compositionstart', function () { field.composing = true; });
             field.addEventListener('compositionend', function () { field.composing = false; update(field, false); });
             field.addEventListener('blur', function () { update(field, true); });
+            if (field.disabled || field.readOnly) { update(field, true); }
         });
     }
     enhance(document);

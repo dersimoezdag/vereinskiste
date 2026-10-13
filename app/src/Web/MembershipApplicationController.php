@@ -13,7 +13,7 @@ use Vereinskiste\Members\ApplicationRepository;
 
 final class MembershipApplicationController
 {
-    public function __construct(private Closure $pdo) {}
+    public function __construct(private Closure $pdo, private ?\Vereinskiste\Auth\RateLimiter $limiter = null) {}
 
     public function show(Request $req, Response $res, array $args): Response
     {
@@ -62,6 +62,7 @@ final class MembershipApplicationController
             return (new SlimResponse())->withStatus(302)->withHeader('Location', '/antrag/' . $token);
         }
 
+        if (!$this->budget($req, 'application_unlock', $token)) { return $res->withStatus(429)->withHeader('Retry-After', '60'); }
         $body = (array) $req->getParsedBody();
         $password = (string) ($body['password'] ?? '');
 
@@ -91,6 +92,7 @@ final class MembershipApplicationController
             return (new SlimResponse())->withStatus(302)->withHeader('Location', '/antrag/' . $token);
         }
 
+        if (!$this->budget($req, 'application', $token)) { return $res->withStatus(429)->withHeader('Retry-After', '60'); }
         $body = (array) $req->getParsedBody();
 
         // Honeypot check: Bots fuellen oft versteckte Felder aus
@@ -130,7 +132,15 @@ final class MembershipApplicationController
             'token' => $invite['token'],
             'input' => $safe,
             'errors' => $errors,
+            'document_fingerprint' => (new \Vereinskiste\Privacy\Consents(($this->pdo)()))->fingerprint(),
+            'consent_documents' => ['statute' => (new \Vereinskiste\Privacy\Consents(($this->pdo)()))->snapshot('statute'), 'privacy' => (new \Vereinskiste\Privacy\Consents(($this->pdo)()))->snapshot('privacy')],
         ]);
+    }
+
+    private function budget(Request $req, string $operation, string $token): bool
+    {
+        $address = $req->getServerParams()['REMOTE_ADDR'] ?? '';
+        return $this->limiter === null || $this->limiter->take($operation, $token, is_string($address) ? $address : '');
     }
 
     private function isUnlocked(Request $req, string $token): bool

@@ -1,0 +1,36 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<h1>{{ invoice ? t('invoices.title') ~ ' #' ~ invoice.id : t('invoices.new') }}</h1>
+<p>{{ t('invoices.no_payment') }}</p>
+{% if invoice %}<p>{{ t('invoices.status.' ~ invoice.status) }}</p>{% endif %}
+{% for error in errors %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endfor %}
+<div class="row g-3"><div class="col-lg-6"><div class="card card-body">
+<h2>{{ t('invoices.documents') }}</h2>
+{% for document in documents %}
+<div class="mb-3 border-bottom pb-3"><a href="/documents/{{ document.file_id }}">{{ document.original_name }}</a><p>{{ t('invoices.extraction.' ~ document.extraction_status) }}</p>
+{% if document.extraction.warning %}<p class="text-secondary">{{ t(document.extraction.warning) }}</p>{% endif %}
+{% if document.extraction.fields %}<h3 class="h5">{{ t('invoices.suggestions') }}</h3><dl>{% for field,value in document.extraction.fields %}<dt>{{ t('invoices.field.' ~ field) }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>
+{% if can('invoices.write') and invoice.status=='draft' %}<button type="button" class="btn btn-outline-primary" data-invoice-suggestions="{{ document.extraction.fields|json_encode }}">{{ t('invoices.suggestions.apply') }}</button>{% endif %}{% endif %}</div>
+{% else %}<p>{{ t('invoices.error.document') }}</p>{% endfor %}
+{% if invoice and invoice.status=='draft' and can('invoices.write') %}<form method="post" action="/invoices/{{ invoice.id }}/documents" enctype="multipart/form-data">{{ csrf_field() }}<label class="form-label" for="invoice-supplement">{{ t('invoices.documents.add') }}</label><input class="form-control mb-3" type="file" id="invoice-supplement" name="receipt" accept=".pdf,.jpg,.jpeg,.png,.xml" required><button class="btn">{{ t('invoices.documents.add') }}</button></form>{% endif %}
+</div></div><div class="col-lg-6"><form class="card card-body" method="post" action="{{ invoice ? '/invoices/' ~ invoice.id : '/invoices/new' }}" id="invoice-form">{{ csrf_field() }}<input type="hidden" name="version" value="{{ input.version|default(0) }}">
+{% set editable=can('invoices.write') and (not invoice or invoice.status=='draft') %}
+<label class="form-label" for="invoice-supplier-id">{{ t('invoices.field.supplier_id') }}</label><select class="form-select mb-3" name="supplier_id" id="invoice-supplier-id"{% if not editable %} disabled{% endif %}><option value="">{{ t('invoices.supplier.manual') }}</option>{% for contact in contacts %}<option value="{{ contact.id }}"{% if input.supplier_id==contact.id %} selected{% endif %}>{{ contact.name }}</option>{% endfor %}</select>
+{% for field,limit in fields %}
+<div class="mb-3"><label class="form-label" for="invoice-{{ field }}">{{ t('invoices.field.' ~ field) }}</label>
+{% if field=='kind' %}<select class="form-select" id="invoice-kind" name="kind"{% if not editable %} disabled{% endif %}><option value="invoice"{% if input.kind=='invoice' %} selected{% endif %}>{{ t('invoices.kind.invoice') }}</option><option value="credit_note"{% if input.kind=='credit_note' %} selected{% endif %}>{{ t('invoices.kind.credit_note') }}</option></select>
+{% elseif field=='notes' %}<textarea class="form-control" id="invoice-notes" name="notes" rows="3" maxlength="{{ limit }}"{% if not editable %} disabled{% endif %}>{{ input.notes }}</textarea>
+{% else %}<input class="form-control" id="invoice-{{ field }}" name="{{ field }}" type="{{ field ends with '_date' ? 'date' : 'text' }}" value="{{ input[field]|default('') }}" maxlength="{{ limit }}"{% if not editable %} disabled{% endif %}>{% endif %}
+</div>{% endfor %}
+{% if editable %}{% if invoice %}<label for="invoice-reason" class="form-label">{{ t('bookings.reason') }}</label><input class="form-control mb-3" id="invoice-reason" name="reason" maxlength="500" required>{% endif %}<button class="btn btn-primary">{{ t('common.save') }}</button>{% endif %}
+</form></div></div>
+{% if duplicates %}<div class="alert alert-warning mt-3">{{ t('invoices.error.duplicate') }}{% for duplicate in duplicates %} <a href="/invoices/{{ duplicate.id }}">#{{ duplicate.id }}</a>{% endfor %}</div>{% endif %}
+{% if invoice and can('invoices.write') and invoice.status!='cancelled' %}
+<form class="card card-body mt-3" method="post" action="/invoices/{{ invoice.id }}/status">{{ csrf_field() }}<input type="hidden" name="version" value="{{ invoice.version }}">
+<label class="form-label" for="invoice-status-reason">{{ t('bookings.reason') }}</label><input id="invoice-status-reason" class="form-control mb-3" name="reason" maxlength="500" required>
+{% if invoice.status=='draft' %}<label class="form-check mb-3"><input class="form-check-input" type="checkbox" name="duplicate_confirmed" value="1"><span class="form-check-label">{{ t('invoices.duplicate.confirm') }}</span></label><button class="btn btn-primary mb-2" name="action" value="review">{{ t('invoices.review.confirm') }}</button>{% endif %}
+<button class="btn btn-outline-danger" name="action" value="cancel">{{ t('invoices.cancel') }}</button></form>{% endif %}
+{% if history %}<div class="card card-body mt-3"><h2>{{ t('foundation.history') }}</h2>{% for entry in history %}<p>{{ entry.at|date('d.m.Y H:i') }} · {{ entry.actor }} · {{ entry.reason }}</p><details><summary>{{ t('invoices.history.details') }}</summary><pre class="text-wrap">{{ entry.before_data }}</pre><pre class="text-wrap">{{ entry.after_data }}</pre></details>{% endfor %}</div>{% endif %}
+<a class="btn mt-3" href="/invoices">{{ t('common.back') }}</a>
+{% endblock %}
+{% block scripts %}<script src="{{ asset('invoices.js') }}"></script>{% endblock %}

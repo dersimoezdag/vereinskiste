@@ -1,6 +1,6 @@
 # Umsetzungsstand
 
-## Implementierte Grundlagen – lokal, noch nicht veröffentlicht
+## Implementierte Grundlagen
 
 - Vereinsprofil unter Einstellungen → Verein: Stammdaten, Logo, HTTPS-Dokumentlinks,
   Sprache als Voreinstellung, Geschäftsjahresbeginn und Farbe als gespeicherte Einstellung.
@@ -47,3 +47,14 @@ Der CSV-Teil von Paket 2 ist inzwischen ebenfalls implementiert:
 [Umfang und Bedienung](10-csv-import.md). CAMT/MT940 folgen mit geprüften Bankbeispielen.
 Rechnungsimport einschließlich PDF/Bild und E-Rechnungen folgt in Paket 3;
 optionale OCR benötigt die im Plan vorgesehene Anbieterentscheidung.
+
+
+## Anträge, Datenschutz und Eingangsrechnungen
+
+Die Module wurden um SMTP-Outbox und Entscheidungsvorschau, versionierte
+Bestätigungen, Datenschutz-Einzelauskunft und bestätigte Anonymisierung sowie
+Eingangsrechnungsimport mit manueller Prüfung und UBL/CII-Feldvorschlägen erweitert.
+Der genaue Umfang und die Grenzen stehen in [Paketübersicht](11-antraege-datenschutz-rechnungen.md).
+Die früheren Hinweise „Rechnungsimport folgt“ beziehen sich auf die noch offenen
+PDF-/OCR-/ZUGFeRD-Auslesung und den Zahlungsabgleich, nicht auf die neue manuelle
+Rechnungsverwaltung.

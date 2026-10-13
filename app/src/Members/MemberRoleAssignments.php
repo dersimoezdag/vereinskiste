@@ -55,7 +55,7 @@ final class MemberRoleAssignments
             self::checkDate($start);
         }
         return Transaction::run($this->pdo, function () use ($memberId, $roleId, $scope, $start, $actor): int {
-            $member = $this->pdo->prepare('SELECT 1 FROM members WHERE id = ? FOR UPDATE');
+            $member = $this->pdo->prepare('SELECT 1 FROM members WHERE id = ? AND anonymized_at IS NULL FOR UPDATE');
             $member->execute([$memberId]);
             $role = $this->pdo->prepare('SELECT name, active, kind, single_holder FROM club_roles WHERE id = ? FOR UPDATE');
             $role->execute([$roleId]);

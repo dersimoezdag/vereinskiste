@@ -1,0 +1,32 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<h1>{{ member.name }} · {{ t('privacy.title') }}</h1>
+<div class="mb-3 d-flex gap-2"><a class="btn" href="/members/{{ member.id }}">{{ t('common.back') }}</a><a class="btn btn-primary" href="/members/{{ member.id }}/disclosure.json">{{ t('privacy.disclosure') }}</a></div>
+{% for error in errors %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endfor %}
+<div class="card card-body mb-3"><h2>{{ t('privacy.consents') }}</h2>
+{% if not member.anonymized_at %}
+<form action="/members/{{ member.id }}/consents" method="post" class="row g-2 mb-3">
+{{ csrf_field() }}
+<div class="col-md-3"><label class="form-label" for="consent-kind">{{ t('privacy.field.kind') }}</label><select id="consent-kind" name="kind" class="form-select">{% for kind in kinds %}<option value="{{ kind }}">{{ t('privacy.consent.' ~ kind) }}</option>{% endfor %}</select></div>
+<div class="col-md-3"><label class="form-label" for="consent-granted">{{ t('privacy.field.status') }}</label><select id="consent-granted" name="granted" class="form-select"><option value="1">{{ t('privacy.granted') }}</option><option value="0">{{ t('privacy.withdrawn') }}</option></select></div>
+<div class="col-md-3"><label class="form-label" for="consent-version">{{ t('privacy.field.document_version') }}</label><input id="consent-version" class="form-control" name="document_version" maxlength="100"></div>
+<div class="col-md-3"><label class="form-label" for="consent-reason">{{ t('bookings.reason') }}</label><input id="consent-reason" class="form-control" name="reason" maxlength="500" required></div>
+<div class="col-12"><button class="btn btn-primary">{{ t('common.save') }}</button></div></form>
+{% endif %}
+<p class="text-secondary">{{ t('privacy.consent.explanation') }}</p>
+<div class="table-responsive"><table class="table"><thead><tr><th>{{ t('privacy.field.kind') }}</th><th>{{ t('privacy.field.status') }}</th><th>{{ t('privacy.field.document_version') }}</th><th>{{ t('privacy.field.recorded_at') }}</th></tr></thead><tbody>
+{% for consent in consents %}<tr><td>{{ t('privacy.consent.' ~ consent.kind) }}</td><td>{{ t(consent.granted ? 'privacy.granted' : 'privacy.withdrawn') }}</td><td>{{ consent.document_version }}<details><summary>{{ t('privacy.snapshot') }}</summary><p>{{ consent.snapshot.text|default('') }}</p><p>{{ consent.snapshot.url|default('') }}</p><code>{{ consent.snapshot_hash }}</code></details></td><td>{{ consent.recorded_at|date('d.m.Y H:i') }} · {{ t('privacy.source.' ~ consent.source) }}</td></tr>{% else %}<tr><td colspan="4">{{ t('privacy.no_consents') }}</td></tr>{% endfor %}
+</tbody></table></div></div>
+<div class="card card-body"><h2>{{ t('privacy.anonymize') }}</h2>
+<p>{{ t('privacy.anonymize.explanation') }}</p>
+<ul>{% for key,count in preview.counts %}<li>{{ t('privacy.count.' ~ key) }}: {{ count }}</li>{% endfor %}</ul>
+<p>{{ t('privacy.anonymize.retained') }}</p>
+{% if preview.eligible %}<p>{{ t('privacy.eligible') }}: {{ preview.eligible|date('d.m.Y') }}</p>{% endif %}
+{% for block in preview.blocked %}<p class="alert alert-warning">{{ t(block) }}</p>{% endfor %}
+{% if preview.blocked is empty %}
+<form method="post" action="/members/{{ member.id }}/anonymize">{{ csrf_field() }}<input type="hidden" name="version" value="{{ member.version }}"><input type="hidden" name="fingerprint" value="{{ preview.fingerprint }}">
+<label class="form-label" for="anonymize-reason">{{ t('privacy.anonymize.reason') }}</label><input class="form-control mb-3" id="anonymize-reason" name="reason" required maxlength="500">
+<label class="form-check mb-3"><input type="checkbox" class="form-check-input" name="confirmed" value="1" required><span class="form-check-label">{{ t('privacy.anonymize.confirm') }}</span></label>
+<button class="btn btn-danger">{{ t('privacy.anonymize') }}</button></form>{% endif %}
+</div>
+{% endblock %}
