@@ -216,6 +216,7 @@ final class MemberController extends AdminController
             'invites' => $invites,
             'filter' => $filter,
             'pending_count' => $pendingCount,
+            'outbox' => (new \Vereinskiste\Mail\Outbox($pdo))->list(),
         ]);
     }
 

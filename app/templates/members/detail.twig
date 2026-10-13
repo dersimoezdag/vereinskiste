@@ -17,6 +17,7 @@
                 </h1>
             </div>
             <div class="col-auto ms-auto d-print-none">
+                {% if can('settings.manage') %}<a class="btn btn-outline-secondary" href="/members/{{ member.id }}/privacy">{{ t('privacy.title') }}</a>{% endif %}
                 <a href="/members" class="btn btn-outline-secondary">{{ t('common.back') }}</a>
             </div>
         </div>
@@ -38,14 +39,14 @@
                         <div class="alert alert-danger mb-3">{{ t(errors.version) }}</div>
                         {% endif %}
 
-                        {% include 'members/_name_fields.twig' with {id_prefix: 'detail', values: ((input.first_name is defined or input.last_name is defined) ? input : member.data), errors: errors, disabled: not can('members.write')} %}
+                        {% include 'members/_name_fields.twig' with {id_prefix: 'detail', values: ((input.first_name is defined or input.last_name is defined) ? input : member.data), errors: errors, disabled: not (can('members.write') and not member.anonymized_at)} %}
 
                         <div class="row g-3 mb-3">
                             <div class="col-md-6 col-12">
                                 <label for="detail-email" class="form-label">{{ t('members.field.email') }}</label>
                                 <input type="email" id="detail-email" name="email" value="{{ input.email|default(member.data.email) }}"
                                        class="form-control{% if errors.email %} is-invalid{% endif %}" maxlength="254"
-                                       {% if not can('members.write') %}disabled{% endif %}>
+                                       {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>
                                 {% if errors.email %}
                                 <div class="invalid-feedback">{{ t(errors.email) }}</div>
                                 {% endif %}
@@ -54,7 +55,7 @@
                                 <label for="detail-phone" class="form-label">{{ t('members.field.phone') }}</label>
                                 <input type="tel" id="detail-phone" name="phone" value="{{ input.phone|default(member.data.phone) }}"
                                        class="form-control{% if errors.phone %} is-invalid{% endif %}" maxlength="50"
-                                       {% if not can('members.write') %}disabled{% endif %}>
+                                       {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>
                                 {% if errors.phone %}
                                 <div class="invalid-feedback">{{ t(errors.phone) }}</div>
                                 {% endif %}
@@ -65,7 +66,7 @@
                             <label for="detail-address" class="form-label">{{ t('members.field.address') }}</label>
                             <input type="text" id="detail-address" name="address" value="{{ input.address|default(member.data.address) }}"
                                    class="form-control{% if errors.address %} is-invalid{% endif %}" maxlength="200"
-                                   {% if not can('members.write') %}disabled{% endif %}>
+                                   {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>
                             {% if errors.address %}
                             <div class="invalid-feedback">{{ t(errors.address) }}</div>
                             {% endif %}
@@ -76,7 +77,7 @@
                                 <label for="detail-zip" class="form-label">{{ t('members.field.zip') }}</label>
                                 <input type="text" id="detail-zip" name="zip" value="{{ input.zip|default(member.data.zip) }}"
                                        class="form-control{% if errors.zip %} is-invalid{% endif %}" maxlength="20"
-                                       {% if not can('members.write') %}disabled{% endif %}>
+                                       {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>
                                 {% if errors.zip %}
                                 <div class="invalid-feedback">{{ t(errors.zip) }}</div>
                                 {% endif %}
@@ -85,7 +86,7 @@
                                 <label for="detail-city" class="form-label">{{ t('members.field.city') }}</label>
                                 <input type="text" id="detail-city" name="city" value="{{ input.city|default(member.data.city) }}"
                                        class="form-control{% if errors.city %} is-invalid{% endif %}" maxlength="100"
-                                       {% if not can('members.write') %}disabled{% endif %}>
+                                       {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>
                                 {% if errors.city %}
                                 <div class="invalid-feedback">{{ t(errors.city) }}</div>
                                 {% endif %}
@@ -94,7 +95,7 @@
                                 <label for="detail-country" class="form-label">{{ t('members.field.country') }}</label>
                                 <input type="text" id="detail-country" name="country" value="{{ input.country|default(member.data.country) }}"
                                        class="form-control{% if errors.country %} is-invalid{% endif %}" maxlength="100"
-                                       {% if not can('members.write') %}disabled{% endif %}>
+                                       {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>
                                 {% if errors.country %}
                                 <div class="invalid-feedback">{{ t(errors.country) }}</div>
                                 {% endif %}
@@ -105,7 +106,7 @@
                             <label for="detail-birth-date" class="form-label">{{ t('members.field.birth_date') }}</label>
                             <input type="date" id="detail-birth-date" name="birth_date" value="{{ input.birth_date|default(member.data.birth_date) }}"
                                    class="form-control{% if errors.birth_date %} is-invalid{% endif %}"
-                                   {% if not can('members.write') %}disabled{% endif %}>
+                                   {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>
                             {% if errors.birth_date %}
                             <div class="invalid-feedback">{{ t(errors.birth_date) }}</div>
                             {% endif %}
@@ -115,13 +116,13 @@
                             <label for="detail-notes" class="form-label">{{ t('members.field.notes') }}</label>
                             <textarea id="detail-notes" name="notes" rows="3"
                                       class="form-control{% if errors.notes %} is-invalid{% endif %}" maxlength="1000"
-                                      {% if not can('members.write') %}disabled{% endif %}>{{ input.notes|default(member.data.notes) }}</textarea>
+                                      {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>{{ input.notes|default(member.data.notes) }}</textarea>
                             {% if errors.notes %}
                             <div class="invalid-feedback">{{ t(errors.notes) }}</div>
                             {% endif %}
                         </div>
 
-                        {% if can('members.write') %}
+                        {% if (can('members.write') and not member.anonymized_at) %}
                         <div class="text-end">
                             <button type="submit" class="btn btn-primary">{{ t('common.save') }}</button>
                         </div>
@@ -150,7 +151,7 @@
                         <p class="text-success fw-semibold mb-3">
                             Das Mitglied hat eine aktive Mitgliedschaft.
                         </p>
-                        {% if can('members.write') %}
+                        {% if (can('members.write') and not member.anonymized_at) %}
                         <form method="post" action="/members/{{ member.id }}/leave" class="border rounded p-3 bg-light-subtle mb-3">
                             {{ csrf_field() }}
                             <h4 class="h5 mb-2">{{ t('members.period.leave') }}</h4>
@@ -169,7 +170,7 @@
                         <p class="text-muted mb-3">
                             Aktuell keine laufende Mitgliedschaft.
                         </p>
-                        {% if can('members.write') %}
+                        {% if (can('members.write') and not member.anonymized_at) %}
                         <form method="post" action="/members/{{ member.id }}/join" class="border rounded p-3 bg-light-subtle mb-3">
                             {{ csrf_field() }}
                             <h4 class="h5 mb-2">{{ t('members.period.join') }}</h4>
@@ -239,7 +240,7 @@
                                         {% if a.end_date %} · {{ t('clubroles.assign.ended') }} {{ a.end_date|date('d.m.Y') }}{% endif %}
                                     </div>
                                 </div>
-                                {% if not a.end_date and can('members.write') %}
+                                {% if not a.end_date and (can('members.write') and not member.anonymized_at) %}
                                 <form method="post" action="/members/{{ member.id }}/club-roles/{{ a.id }}/end" class="d-inline">
                                     {{ csrf_field() }}
                                     <input type="hidden" name="date" value="{{ today }}">
@@ -255,7 +256,7 @@
                     </div>
 
                     <!-- Vereinsrolle zuweisen (Formular) -->
-                    {% if can('members.write') %}
+                    {% if (can('members.write') and not member.anonymized_at) %}
                     <form method="post" action="/members/{{ member.id }}/club-roles" class="border rounded p-3 bg-light-subtle">
                         {{ csrf_field() }}
                         <h4 class="h5 mb-2">{{ t('clubroles.assign.add') }}</h4>

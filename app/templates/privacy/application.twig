@@ -1,0 +1,13 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<h1>{{ t('privacy.application.title') }} #{{ preview.application.id }}</h1>
+<p>{{ preview.application.applicant_name }} · {{ preview.application.email }}</p>
+<p>{{ t('privacy.anonymize.explanation') }}</p><p>{{ t('privacy.anonymize.retained') }}</p>
+<p>{{ t('privacy.eligible') }}: {{ preview.eligible|date('d.m.Y') }}</p>
+{% for error in errors %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endfor %}
+{% for block in preview.blocked %}<p class="alert alert-warning">{{ t(block) }}</p>{% endfor %}
+{% if preview.blocked is empty %}<form class="card card-body" method="post" action="/members/applications/{{ preview.application.id }}/anonymize">{{ csrf_field() }}<input type="hidden" name="version" value="{{ preview.application.version }}"><input type="hidden" name="fingerprint" value="{{ preview.fingerprint }}">
+<label class="form-label" for="app-privacy-reason">{{ t('privacy.anonymize.reason') }}</label><input class="form-control mb-3" id="app-privacy-reason" name="reason" required maxlength="500">
+<label class="form-check mb-3"><input class="form-check-input" type="checkbox" name="confirmed" value="1" required><span class="form-check-label">{{ t('privacy.anonymize.confirm') }}</span></label><button class="btn btn-danger">{{ t('privacy.application.title') }}</button></form>{% endif %}
+<a class="btn mt-3" href="/members/applications">{{ t('common.back') }}</a>
+{% endblock %}

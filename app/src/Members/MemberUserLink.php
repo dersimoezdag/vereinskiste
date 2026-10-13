@@ -17,7 +17,7 @@ final class MemberUserLink
     public function link(int $memberId, int $userId, int $actor): void
     {
         Transaction::run($this->pdo, function () use ($memberId, $userId, $actor): void {
-            $member = $this->pdo->prepare('SELECT 1 FROM members WHERE id = ? FOR UPDATE');
+            $member = $this->pdo->prepare('SELECT 1 FROM members WHERE id = ? AND anonymized_at IS NULL FOR UPDATE');
             $member->execute([$memberId]);
             $user = $this->pdo->prepare('SELECT member_id FROM users WHERE id = ? FOR UPDATE');
             $user->execute([$userId]);

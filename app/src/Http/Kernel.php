@@ -116,6 +116,7 @@ final class Kernel
         $env->addFilter(new TwigFilter('eur', [MoneyFormat::class, 'eur']));
         $runtime = new \Vereinskiste\Update\Runtime($appDir);
         $env->addFunction(new TwigFunction('asset', static fn (string $path): string => $runtime->asset($path)));
+        $env->addFunction(new TwigFunction('system_mail_available', static fn (): bool => $mailer->isConfigured()));
         $env->addFunction(new TwigFunction(
             'password_reset_available',
             static fn (): bool => $resetService->isConfigured()
@@ -264,16 +265,39 @@ final class Kernel
         $app->get('/contacts/{id:[0-9]+}', [$contacts, 'show'])->add(Auth::requires('contacts.read'));
         $app->post('/contacts/{id:[0-9]+}', [$contacts, 'save'])->add(Auth::requires('contacts.write'));
 
-        $onlineApp = new \Vereinskiste\Web\MembershipApplicationController($pdoProvider);
+        $onlineApp = new \Vereinskiste\Web\MembershipApplicationController($pdoProvider, $limiter);
         $app->get('/antrag/danke', [$onlineApp, 'thankYou']);
         $app->get('/antrag/{token}', [$onlineApp, 'show']);
         $app->post('/antrag/{token}/unlock', [$onlineApp, 'unlock']);
         $app->post('/antrag/{token}', [$onlineApp, 'submit']);
 
+        $decisions = new \Vereinskiste\Web\ApplicationDecisionController($pdoProvider);
+        $app->get('/members/applications/{id:[0-9]+}/decision', [$decisions, 'show'])->add(Auth::requires('members.write'));
+        $app->post('/members/applications/{id:[0-9]+}/decision', [$decisions, 'save'])->add(Auth::requires('members.write'));
+        $app->post('/members/application-mails/{id:[0-9]+}/retry', [$decisions, 'retry'])->add(Auth::requires('members.write'));
+        $privacy = new \Vereinskiste\Web\PrivacyController($pdoProvider);
+        $app->get('/members/applications/{id:[0-9]+}/privacy', [$privacy, 'application'])->add(Auth::requires('settings.manage'));
+        $app->post('/members/applications/{id:[0-9]+}/anonymize', [$privacy, 'anonymizeApplication'])->add(Auth::requires('settings.manage'));
+        $app->get('/settings/privacy', [$privacy, 'settings'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/privacy', [$privacy, 'saveSettings'])->add(Auth::requires('settings.manage'));
+        $app->get('/members/{id:[0-9]+}/privacy', [$privacy, 'member'])->add(Auth::requires('settings.manage'));
+        $app->post('/members/{id:[0-9]+}/consents', [$privacy, 'consent'])->add(Auth::requires('settings.manage'));
+        $app->get('/members/{id:[0-9]+}/disclosure.json', [$privacy, 'disclosure'])->add(Auth::requires('settings.manage'));
+        $app->post('/members/{id:[0-9]+}/anonymize', [$privacy, 'anonymize'])->add(Auth::requires('settings.manage'));
+        $invoices = new \Vereinskiste\Web\InvoiceController($pdoProvider, $config['documents_dir'] ?? $appDir . '/storage/documents');
+        $app->get('/invoices', [$invoices, 'index'])->add(Auth::requires('invoices.read'));
+        $app->get('/invoices/new', [$invoices, 'create'])->add(Auth::requires('invoices.write'));
+        $app->post('/invoices/new', [$invoices, 'save'])->add(Auth::requires('invoices.write'));
+        $app->get('/invoices/import', [$invoices, 'import'])->add(Auth::requires('invoices.write'));
+        $app->post('/invoices/import', [$invoices, 'upload'])->add(Auth::requires('invoices.write'));
+        $app->get('/invoices/{id:[0-9]+}', [$invoices, 'show'])->add(Auth::requires('invoices.read'));
+        $app->post('/invoices/{id:[0-9]+}', [$invoices, 'save'])->add(Auth::requires('invoices.write'));
+        $app->post('/invoices/{id:[0-9]+}/documents', [$invoices, 'upload'])->add(Auth::requires('invoices.write'));
+        $app->post('/invoices/{id:[0-9]+}/status', [$invoices, 'transition'])->add(Auth::requires('invoices.write'));
         $members = new \Vereinskiste\Web\MemberController($pdoProvider);
         $app->get('/members', [$members, 'index'])->add(Auth::requires('members.read'));
         $app->get('/members.csv', [$members, 'csv'])->add(Auth::requires('members.read'));
-        $app->get('/members/applications', [$members, 'applications'])->add(Auth::requires('members.read'));
+        $app->get('/members/applications', [$members, 'applications'])->add(Auth::requires('members.write'));
         $app->post('/members/invites/new', [$members, 'createInvite'])->add(Auth::requires('members.write'));
         $app->post('/members/applications/{id:[0-9]+}/approve', [$members, 'approveApplication'])->add(Auth::requires('members.write'));
         $app->post('/members/applications/{id:[0-9]+}/reject', [$members, 'rejectApplication'])->add(Auth::requires('members.write'));

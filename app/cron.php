@@ -46,9 +46,17 @@ try {
     for ($mailSlot = 0; $mailSlot < 10; $mailSlot++) {
         $queue->enqueue('password_reset_mail', [], $slot . ':' . $mailSlot, 100);
     }
+    $queue->enqueue('application_mail', [], $slot, 90);
     $queue->enqueue('receipt_registration', [], $slot, 10);
     $queue->enqueue('upload_cleanup', [], (string) intdiv(time(), 86400), -10);
     (new Vereinskiste\Jobs\Runner($queue, [
+        'application_mail' => static function () use ($pdo, $smtp): void {
+            $outbox = new Vereinskiste\Mail\Outbox($pdo); $mailer = new Vereinskiste\Mail\Mailer($smtp); $deadline = microtime(true) + 8;
+            for ($i = 0; $i < 5 && microtime(true) < $deadline; ++$i) { if (!$outbox->process($mailer)) { break; } }
+        },
+        'invoice_extract' => static function (array $payload) use ($pdo, $config, $instance): void {
+            (new Vereinskiste\Invoices\Extraction($pdo, ['documents' => $config['documents_dir'] ?? $instance . '/storage/documents']))->process((int) $payload['document_id']);
+        },
         'password_reset_mail' => static function () use ($service): void { $service->processQueue(1); },
         'receipt_registration' => static function () use ($pdo): void {
             (new Vereinskiste\Files\StoredFileRepository($pdo))->registerReceipts(50);

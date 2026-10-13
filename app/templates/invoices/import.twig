@@ -1,0 +1,9 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<h1>{{ t('invoices.import') }}</h1><p>{{ t('invoices.import.explanation') }}</p>
+{% for error in errors %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endfor %}
+<form class="card card-body" method="post" action="/invoices/import" enctype="multipart/form-data">{{ csrf_field() }}
+<label class="form-label" for="invoice-upload">{{ t('invoices.documents') }}</label><input id="invoice-upload" class="form-control mb-3" type="file" name="receipts[]" accept=".pdf,.jpg,.jpeg,.png,.xml" multiple required><button class="btn btn-primary">{{ t('invoices.import') }}</button></form>
+<ul class="mt-3">{% for result in results %}<li>{{ result.name }}: {% if result.id %}<a href="/invoices/{{ result.id }}">{{ t('invoices.review') }} #{{ result.id }}</a>{% else %}<span class="text-danger">{{ t(result.error) }}</span>{% endif %}</li>{% endfor %}</ul>
+<a class="btn" href="/invoices">{{ t('common.back') }}</a>
+{% endblock %}

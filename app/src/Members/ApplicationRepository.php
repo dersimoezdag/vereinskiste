@@ -24,7 +24,7 @@ final class ApplicationRepository
         'birth_date' => 10,
         'notes' => 1000,
         'account_holder' => 200,
-        'iban' => 34,
+        'iban' => 50,
         'bic' => 11,
     ];
 
@@ -117,6 +117,15 @@ final class ApplicationRepository
                 throw new ValidationError(['token' => 'applications.link_used']);
             }
 
+            // Validate bounded text before accessing public values.
+            Fields::read($input, self::FIELDS);
+            (new \Vereinskiste\Privacy\Settings($this->pdo))->get(true);
+            (new \Vereinskiste\Club\Profile($this->pdo))->get(true);
+            $consents = new \Vereinskiste\Privacy\Consents($this->pdo);
+            if (isset($input['document_fingerprint']) && (!is_string($input['document_fingerprint'])
+                || !hash_equals($consents->fingerprint(), $input['document_fingerprint']))) {
+                throw new ValidationError(['document_fingerprint' => 'privacy.documents.changed']);
+            }
             // Validierung
             $errors = [];
             $names = ['salutation' => '', 'title' => '', 'first_name' => '', 'last_name' => ''];
@@ -132,12 +141,12 @@ final class ApplicationRepository
                 $errors['email'] = 'validation.email.invalid';
             }
 
-            $consentStatute = !empty($input['consent_statute']);
+            $consentStatute = ($input['consent_statute'] ?? '') === '1';
             if (!$consentStatute) {
                 $errors['consent_statute'] = 'foundation.required';
             }
 
-            $consentPrivacy = !empty($input['consent_privacy']);
+            $consentPrivacy = ($input['consent_privacy'] ?? '') === '1';
             if (!$consentPrivacy) {
                 $errors['consent_privacy'] = 'foundation.required';
             }
@@ -167,12 +176,12 @@ final class ApplicationRepository
                 if (TextInput::isBlank($accountHolder)) {
                     $errors['account_holder'] = 'foundation.required';
                 }
-                $iban = strtoupper(str_replace(' ', '', (string) ($input['iban'] ?? '')));
-                if (strlen($iban) < 15 || strlen($iban) > 34) {
-                    $errors['iban'] = 'validation.iban.invalid';
-                }
-                $bic = strtoupper(str_replace(' ', '', (string) ($input['bic'] ?? '')));
-                $sepaConsent = !empty($input['sepa_mandate_consent']);
+                try {
+                    $bank = \Vereinskiste\Finance\BankDetails::read((string) ($input['iban'] ?? ''), (string) ($input['bic'] ?? ''));
+                    $iban = $bank['iban']; $bic = $bank['bic'];
+                    if ($iban === '') { $errors['iban'] = 'foundation.required'; }
+                } catch (ValidationError $e) { $errors += $e->errors; }
+                $sepaConsent = ($input['sepa_mandate_consent'] ?? '') === '1';
                 if (!$sepaConsent) {
                     $errors['sepa_mandate_consent'] = 'foundation.required';
                 }
@@ -211,6 +220,8 @@ final class ApplicationRepository
             $this->pdo->prepare('UPDATE membership_application_invites SET used_count = used_count + 1 WHERE id = ?')
                 ->execute([$invite['id']]);
 
+            $consents->fromApplication($appId, $data);
+            (new ApplicationNotifications($this->pdo))->queue($appId, 'submitted');
             return $appId;
         });
     }
@@ -256,9 +267,9 @@ final class ApplicationRepository
     /**
      * Nimmt einen Antrag an: legt das Mitglied an, startet die Mitgliedschaft ab heute, weist die aktive Mitgliedsart zu.
      */
-    public function approve(int $id, int $actor): int
+    public function approve(int $id, int $actor, ?array $mail = null): int
     {
-        return Transaction::run($this->pdo, function () use ($id, $actor): int {
+        return Transaction::run($this->pdo, function () use ($id, $actor, $mail): int {
             $stmt = $this->pdo->prepare('SELECT * FROM membership_applications WHERE id = ? FOR UPDATE');
             $stmt->execute([$id]);
             $row = $stmt->fetch();
@@ -294,7 +305,7 @@ final class ApplicationRepository
             // Antrag aktualisieren
             $this->pdo->prepare(
                 "UPDATE membership_applications
-                    SET status = 'approved', member_id = ?, reviewed_by = ?, reviewed_at = now()
+                    SET status = 'approved', member_id = ?, reviewed_by = ?, reviewed_at = now(), version = version + 1
                   WHERE id = ?"
             )->execute([$memberId, $actor, $id]);
 
@@ -303,6 +314,8 @@ final class ApplicationRepository
                 'member_id' => $memberId,
             ]);
 
+            $this->pdo->prepare('UPDATE member_consents SET member_id=? WHERE application_id=?')->execute([$memberId,$id]);
+            (new ApplicationNotifications($this->pdo))->queue($id, 'approved', $mail);
             return $memberId;
         });
     }
@@ -310,9 +323,9 @@ final class ApplicationRepository
     /**
      * Lehnt einen Antrag ab mit optionaler Begründung.
      */
-    public function reject(int $id, string $reason, int $actor): void
+    public function reject(int $id, string $reason, int $actor, ?array $mail = null): void
     {
-        Transaction::run($this->pdo, function () use ($id, $reason, $actor): void {
+        Transaction::run($this->pdo, function () use ($id, $reason, $actor, $mail): void {
             $stmt = $this->pdo->prepare('SELECT status FROM membership_applications WHERE id = ? FOR UPDATE');
             $stmt->execute([$id]);
             $status = $stmt->fetchColumn();
@@ -322,10 +335,11 @@ final class ApplicationRepository
             $reason = mb_substr(trim($reason), 0, 500);
             $this->pdo->prepare(
                 "UPDATE membership_applications
-                    SET status = 'rejected', rejection_reason = ?, reviewed_by = ?, reviewed_at = now()
+                    SET status = 'rejected', rejection_reason = ?, reviewed_by = ?, reviewed_at = now(), version = version + 1
                   WHERE id = ?"
             )->execute([$reason === '' ? null : $reason, $actor, $id]);
 
+            (new ApplicationNotifications($this->pdo))->queue($id, 'rejected', $mail);
             (new AuditLog($this->pdo))->record('membership_application_rejected', $actor, [
                 'application_id' => $id,
             ]);
@@ -363,6 +377,8 @@ final class ApplicationRepository
             'id' => (int) $row['id'],
             'invite_id' => $row['invite_id'] === null ? null : (int) $row['invite_id'],
             'status' => $row['status'],
+            'anonymized_at' => $row['anonymized_at'] ?? null,
+            'version' => (int) ($row['version'] ?? 1),
             'applicant_name' => $row['applicant_name'],
             'email' => $row['email'],
             'data' => json_decode($row['data'], true, 512, JSON_THROW_ON_ERROR),

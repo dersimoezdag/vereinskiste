@@ -103,6 +103,7 @@ final class MemberRepository
         $display = PersonName::display($data);
         return Transaction::run($this->pdo, function () use ($id, $data, $display, $version, $actor, $reason): int {
             $before = $id === null ? null : $this->find($id, true);
+            if ($before !== null && $before['anonymized_at'] !== null) { throw new ValidationError(['member' => 'privacy.block.already']); }
             if ($id !== null && ($before === null || $before['version'] !== $version)) {
                 throw new Conflict();
             }
