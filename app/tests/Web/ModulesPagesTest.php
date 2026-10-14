@@ -45,7 +45,7 @@ final class ModulesPagesTest extends TestCase
     {
         $actor=$this->loginAs(['schriftfuehrer']);$id=(new MemberRepository($this->pdo))->save(null,['name'=>'Erika Muster','email'=>'erika@example.org'],0,$actor);
         $this->assertSame(403,$this->get('/members/'.$id.'/privacy')->getStatusCode());$this->assertSame(403,$this->get('/settings/privacy')->getStatusCode());
-        $this->pdo->exec("UPDATE user_roles SET role='vorstand'");$this->assertSame(200,$this->get('/settings/privacy')->getStatusCode());
+        $this->pdo->exec("UPDATE user_roles SET role='admin'");$this->assertSame(200,$this->get('/settings/privacy')->getStatusCode());
         $html=(string)$this->get('/members/'.$id.'/privacy')->getBody();$this->assertStringContainsString('Aufbewahrungsdauer',$html);
         $res=$this->get('/members/'.$id.'/disclosure.json');$this->assertSame('no-store',$res->getHeaderLine('Cache-Control'));$this->assertStringContainsString('Erika',(string)$res->getBody());
         $this->assertSame(422,$this->postForm('/members/'.$id.'/anonymize',['version'=>'1'])->getStatusCode());

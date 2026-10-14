@@ -198,7 +198,7 @@ final class NameUniquenessTest extends TestCase
         $this->user($real);
         $real->exec("INSERT INTO accounts (name, type, opening_date) VALUES ('Barkasse', 'cash', '2026-01-01')");
         $real->exec("INSERT INTO categories (name) VALUES ('Porto'), ('Spenden')");
-        $real->exec("INSERT INTO user_roles (user_id, role) VALUES (1, 'vorstand')");
+        $real->exec("INSERT INTO user_roles (user_id, role) VALUES (1, 'admin')");
         $real->exec("UPDATE users SET password_hash = '" . password_hash('richtig-richtig', PASSWORD_DEFAULT) . "'");
 
         $blind = new class (

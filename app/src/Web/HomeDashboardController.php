@@ -21,7 +21,7 @@ final class HomeDashboardController extends AdminController
         $data = $this->data($req);
         $metrics = new Metrics(($this->pdo)());
         $data['metrics'] = [];
-        foreach ($data['preferences']['cards'] as $id) { $data['metrics'][$id] = $metrics->forCard($id); }
+        foreach (array_keys($data['cards']) as $id) { $data['metrics'][$id] = $metrics->forCard($id); }
         return $req->getAttribute('view')->render($res, 'home.twig', $data);
     }
 

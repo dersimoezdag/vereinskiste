@@ -24,6 +24,7 @@ final class AuditLog
         'auto_update_started', 'auto_update_completed', 'auto_update_rolled_back',
         'member_user_linked', 'member_user_unlinked',
         'membership_application_approved', 'membership_application_rejected',
+        'backup_created', 'backup_restored', 'data_exported',
     ];
 
     /** Aktionen, deren Details nie angezeigt werden (keine Personendaten im Protokoll-Bildschirm). */

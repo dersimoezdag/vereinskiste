@@ -1,44 +1,36 @@
 {% extends 'layout.twig' %}
 {% block title %}{{ t('home.title') }}{% endblock %}
 {% block content %}
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-    <div><h1 class="mb-1">{{ t('home.title') }}</h1><p class="text-muted mb-0">{{ t('home.tagline') }}</p></div>
-    <a href="/dashboard/preferences" class="btn">{{ icons.icon('settings') }} {{ t('home.customize') }}</a>
-</div>
-<form method="post" action="/dashboard/preferences" data-dashboard-form data-autosave>
+{% import 'components/icons.twig' as icons %}
+<form method="post" action="/dashboard/preferences" data-dashboard-form data-dashboard-editable>
     {{ csrf_field() }}
     <input type="hidden" name="version" value="{{ preferences.version }}">
-    <div class="dashboard-grid" data-dashboard-list>
-    {% for id in preferences.cards %}
-        {% set card = cards[id] %}{% set metric = metrics[id] %}
-        <section class="card dashboard-card" data-dashboard-item>
-            <input type="hidden" name="cards[]" value="{{ id }}">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start gap-2">
-                    <h2 class="card-title"><a href="{{ card.url }}">{{ icons.icon(card.icon) }} {{ t(card.label) }}</a></h2>
-                    {% include 'dashboard/controls.twig' with {label: t(card.label)} %}
-                </div>
-                <div class="dashboard-value">{{ metric.value }}</div>
-                <p class="text-muted mb-0">{{ metric.description }}</p>
-                {% if metric.details is defined %}<dl class="dashboard-details">{% for label, value in metric.details %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl>{% endif %}
-            </div>
-        </section>
-    {% else %}
-        <p class="text-muted">{{ t('home.empty.cards') }}</p>
-    {% endfor %}
-    </div>
-    <h2 class="mt-4 mb-3">{{ t('ui.schnellaktionen') }}</h2>
-    <div class="dashboard-shortcuts" data-dashboard-list>
-    {% for id in preferences.shortcuts %}
-        {% set shortcut = shortcuts[id] %}
-        <div class="dashboard-shortcut" data-dashboard-item>
-            <input type="hidden" name="shortcuts[]" value="{{ id }}">
-            <a class="btn" href="{{ shortcut.url }}">{{ icons.icon(shortcut.icon) }} {{ t(shortcut.label) }}</a>
-            {% include 'dashboard/controls.twig' with {label: t(shortcut.label)} %}
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div><h1 class="mb-1">{{ t('home.title') }}</h1><p class="text-muted mb-0">{{ t('home.tagline') }}</p></div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn dashboard-edit-button" data-dashboard-edit aria-pressed="false">{{ icons.icon('settings') }} {{ t('home.edit') }}</button>
+            <button class="btn btn-primary dashboard-edit-only" data-layout-save>{{ t('common.save') }}</button>
         </div>
-    {% else %}<p class="text-muted">{{ t('home.empty.shortcuts') }}</p>{% endfor %}
+        <noscript><a href="/dashboard/preferences" class="btn">{{ t('home.customize') }}</a></noscript>
     </div>
-    <div class="mt-3 d-flex align-items-center gap-3"><button class="btn btn-primary" data-layout-save>{{ t('ui.reihenfolge_speichern') }}</button><span role="status" aria-live="polite" data-dashboard-status></span></div>
+    {% for key, catalog in {'cards': cards, 'shortcuts': shortcuts} %}
+        {% if key == 'shortcuts' %}<h2 class="mt-4 mb-3">{{ t('ui.schnellaktionen') }}</h2>{% endif %}
+        <div class="{{ key == 'cards' ? 'dashboard-grid' : 'dashboard-shortcuts' }}" data-dashboard-list data-dashboard-group="{{ key }}">
+            {% for id in preferences[key] %}
+                {% include 'dashboard/tile.twig' with {item: catalog[id], metric: key == 'cards' ? metrics[id] : {}} %}
+            {% endfor %}
+        </div>
+        <p class="text-muted mt-2" data-dashboard-empty="{{ key }}" {% if preferences[key]|length %}hidden{% endif %}>{{ t('home.empty.' ~ key) }}</p>
+        <div class="dashboard-edit-only mt-3 d-flex flex-wrap gap-2" data-dashboard-additions="{{ key }}" aria-label="{{ t('home.add') }}">
+            {% for id, item in catalog %}
+                <button type="button" class="btn btn-sm" data-dashboard-add="{{ id }}" data-dashboard-group="{{ key }}" {% if id in preferences[key] %}hidden{% endif %}>+ {{ t(item.label) }}</button>
+                <template data-dashboard-template="{{ key }}:{{ id }}">
+                    {% include 'dashboard/tile.twig' with {metric: key == 'cards' ? metrics[id] : {}} %}
+                </template>
+            {% endfor %}
+        </div>
+    {% endfor %}
+    <div class="mt-3" role="status" aria-live="polite" data-dashboard-status></div>
 </form>
 {% endblock %}
 {% block scripts %}<script src="{{ asset('home-dashboard.js') }}"></script>{% endblock %}

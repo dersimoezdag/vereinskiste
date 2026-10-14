@@ -36,7 +36,18 @@
                 {% if errors.password %}<p role="alert">{{ t(errors.password) }}</p>{% endif %}
                 {% if has_password %}<label class="form-check"><input class="form-check-input" type="checkbox" name="clear_password" value="1"><span class="form-check-label">{{ t('mail.password.clear') }}</span></label>{% endif %}
             </div>
+            <div class="mb-3">
+                <label class="form-label" for="mail-test-to">{{ t('mail.test.recipient') }}</label>
+                <input class="form-control" type="email" name="test_to" id="mail-test-to" value="{{ input.test_to|default('') }}" autocomplete="off" aria-describedby="mail-test-help">
+                <p class="form-hint" id="mail-test-help">{{ t('mail.test.hint') }}</p>
+            </div>
+            {% if test_result %}
+            <p class="alert {{ test_result.ok ? 'alert-success' : 'alert-danger' }}" role="{{ test_result.ok ? 'status' : 'alert' }}">
+                {{ t(test_result.message)|replace({'{to}': test_result.to}) }}{% if test_result.detail is defined and test_result.detail %} ({{ test_result.detail }}){% endif %}
+            </p>
+            {% endif %}
             <button class="btn btn-primary" type="submit">{{ t('common.save') }}</button>
+            <button class="btn btn-outline-secondary" type="submit" formaction="/settings/email/test" formnovalidate>{{ t('mail.test.button') }}</button>
         </form>
     </div>
 </div>

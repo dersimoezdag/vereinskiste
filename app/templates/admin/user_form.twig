@@ -47,7 +47,7 @@
                 </div>
                 {% endif %}
                 <div class="col-12">
-                    <fieldset>
+                    <fieldset data-user-roles>
                         <legend class="form-label">{{ t('users.roles') }}</legend>
                         <div class="d-flex flex-column gap-2{% if errors.roles is defined %} is-invalid{% endif %}">
                             {% for role in roles %}
@@ -121,3 +121,5 @@
 </div>
 {% endif %}
 {% endblock %}
+
+{% block scripts %}<script src="{{ asset('user-roles.js') }}"></script>{% endblock %}

@@ -232,7 +232,7 @@ final class InstallTest extends TestCase
         $store->set('credential_hash', hash('sha256', 'hash'));
         $this->assertSame(403, $app->handle($factory->createServerRequest('GET', '/update'))->getStatusCode());
         $this->assertSame(403, $app->handle($factory->createServerRequest('GET', '/settings'))->getStatusCode());
-        $this->pdo->exec("UPDATE user_roles SET role = 'vorstand'");
+        $this->pdo->exec("UPDATE user_roles SET role = 'admin'");
         $this->assertSame(200, $app->handle($factory->createServerRequest('GET', '/update'))->getStatusCode());
         $settings = $app->handle($factory->createServerRequest('GET', '/settings'));
         $this->assertSame(200, $settings->getStatusCode());

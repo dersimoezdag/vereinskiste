@@ -33,7 +33,7 @@ final class ReportPagesTest extends TestCase
     private function loginAs(array $roles): int
     {
         $id = $this->user();
-        foreach ($roles as $role) {
+        foreach (\Vereinskiste\Auth\Permissions::onAssignment($roles) as $role) {
             $this->pdo->prepare('INSERT INTO user_roles (user_id, role) VALUES (?, ?)')->execute([$id, $role]);
         }
         $html = (string) $this->get('/login')->getBody();

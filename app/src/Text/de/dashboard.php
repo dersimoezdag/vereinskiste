@@ -2,6 +2,9 @@
 declare(strict_types=1);
 
 return [
+    'home.edit' => 'Bearbeiten',
+    'home.add' => 'Kacheln hinzufügen',
+    'home.remove' => '{label} entfernen',
     'reports.tab.summary' => 'Übersicht',
     'reports.tab.dashboard' => 'Dashboard',
     'reports.tabs' => 'Ansichten der Auswertung',

@@ -35,9 +35,17 @@ final class PermissionsTest extends TestCase
         $this->assertSame([], Permissions::for(['unbekannt']));
     }
 
-    public function test_vorstand_has_every_permission(): void
+    public function test_vorstand_without_admin_has_no_implicit_permissions(): void
     {
-        $this->assertEqualsCanonicalizing(Permissions::ALL, Permissions::for(['vorstand']));
+        $this->assertSame([], Permissions::for(['vorstand']));
+    }
+
+    public function test_admin_is_added_only_when_board_is_newly_assigned(): void
+    {
+        $this->assertSame(['admin', 'vorstand'], Permissions::onAssignment(['vorstand']));
+        $this->assertSame(['vorstand'], Permissions::onAssignment(['vorstand'], ['admin', 'vorstand']));
+        $this->assertSame(['admin'], Permissions::onAssignment(['admin'], ['admin', 'vorstand']));
+        $this->assertSame([], Permissions::onAssignment([], ['admin', 'vorstand']));
     }
 
     public function test_admin_is_a_supported_role_with_every_permission(): void

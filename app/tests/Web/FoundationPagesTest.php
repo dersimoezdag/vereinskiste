@@ -40,7 +40,7 @@ final class FoundationPagesTest extends TestCase
         $this->assertSame(409, $this->postForm('/settings/club', $values)->getStatusCode());
         $values['version'] = '2'; $values['website_url'] = 'javascript:alert(1)';
         $this->assertSame(422, $this->postForm('/settings/club', $values)->getStatusCode());
-        $this->pdo->exec("UPDATE user_roles SET role='kassenwart'");
+        $this->pdo->exec("DELETE FROM user_roles WHERE role='vorstand'; UPDATE user_roles SET role='kassenwart'");
         $this->assertSame(403, $this->get('/settings/club')->getStatusCode());
         $this->assertSame(200, $this->get('/contacts')->getStatusCode());
     }
@@ -55,7 +55,7 @@ final class FoundationPagesTest extends TestCase
         $this->assertSame('/contacts/1', $this->postForm('/contacts/1', $values + ['version' => '1'])->getHeaderLine('Location'));
         $this->assertStringNotContainsString('href="/contacts/1"', (string) $this->get('/contacts')->getBody());
         $this->assertStringContainsString("'=Lieferant", (string) $this->get('/contacts.csv')->getBody());
-        $this->pdo->exec("UPDATE user_roles SET role='kassenpruefer'");
+        $this->pdo->exec("DELETE FROM user_roles WHERE role='vorstand'; UPDATE user_roles SET role='kassenpruefer'");
         $this->assertSame(403, $this->postForm('/contacts/new', $values)->getStatusCode());
         $this->assertStringNotContainsString('action="/contacts/2"', (string) $this->get('/contacts/2')->getBody());
     }
@@ -70,7 +70,7 @@ final class FoundationPagesTest extends TestCase
         $this->assertSame('/settings/club', $this->app->handle($request)->getHeaderLine('Location'));
         $this->assertSame(200, $this->get('/documents/1')->getStatusCode());
         $this->assertSame(404, $this->get('/documents/999')->getStatusCode());
-        $this->pdo->exec("UPDATE user_roles SET role='kassenpruefer'");
+        $this->pdo->exec("DELETE FROM user_roles WHERE role='vorstand'; UPDATE user_roles SET role='kassenpruefer'");
         $this->assertSame(404, $this->get('/documents/1')->getStatusCode());
     }
 }

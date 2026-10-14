@@ -255,8 +255,9 @@ final class Kernel
         $app->get('/reports/bookings.csv', [$reports, 'csv'])->add(Auth::requires('reports.read'));
         $app->get('/reports/summary.pdf', [$reports, 'pdf'])->add(Auth::requires('reports.read'));
 
-        $mailSettings = new \Vereinskiste\Web\MailSettingsController($mailAccounts);
+        $mailSettings = new \Vereinskiste\Web\MailSettingsController($mailAccounts, $config['mail_test_factory'] ?? null);
         $app->get('/settings/email', [$mailSettings, 'show'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/email/test', [$mailSettings, 'test'])->add(Auth::requires('settings.manage'));
         $app->post('/settings/email', [$mailSettings, 'save'])->add(Auth::requires('settings.manage'));
 
         $settings = new SettingsController($pdoProvider);
@@ -343,6 +344,28 @@ final class Kernel
         $app->get('/settings/closing', [$settings, 'closing'])->add(Auth::requires('settings.manage'));
         $app->post('/settings/closing', [$settings, 'saveClosing'])->add(Auth::requires('settings.manage'));
         $app->get('/audit-log', [$settings, 'auditLog'])->add(Auth::requires('settings.manage'));
+
+        $backupService = new \Vereinskiste\Backup\BackupService(
+            $pdoProvider,
+            $appDir,
+            $receiptsDir,
+            $config['documents_dir'] ?? $appDir . '/storage/documents',
+            $config['config_dir'] ?? $appDir . '/config',
+            $version,
+            $texts
+        );
+        $backup = new \Vereinskiste\Web\BackupController($pdoProvider, $backupService);
+        $app->get('/settings/backup', [$backup, 'index'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/backup/full', [$backup, 'downloadFull'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/backup/database', [$backup, 'downloadDatabase'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/backup/csv-all', [$backup, 'downloadCsvPackage'])->add(Auth::requires('settings.manage'));
+        $app->get('/settings/backup/accounts.csv', [$backup, 'downloadAccountsCsv'])->add(Auth::requires('settings.manage'));
+        $app->get('/settings/backup/categories.csv', [$backup, 'downloadCategoriesCsv'])->add(Auth::requires('settings.manage'));
+        $app->get('/settings/backup/invoices.csv', [$backup, 'downloadInvoicesCsv'])->add(Auth::requires('settings.manage'));
+        $app->get('/settings/backup/invoices.zip', [$backup, 'downloadInvoicesPackage'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/backup/invoices-package', [$backup, 'downloadInvoicesPackage'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/backup/verify', [$backup, 'verify'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/backup/restore', [$backup, 'restore'])->add(Auth::requires('settings.manage'));
 
         $users = new UserController($pdoProvider);
         $app->get('/users', [$users, 'index'])->add(Auth::requires('users.manage'));

@@ -13,13 +13,10 @@ final class UserRepository
 {
     /**
      * Advisory-Sperre (transaktionsgebunden), die alle Aenderungen an Rollen/Aktiv-Status serialisiert.
-     * So sieht jede Pruefung "letzter aktiver Vorstand" den committed Stand der vorherigen Aenderung;
-     * zwei Vorstaende koennen sich nicht gleichzeitig gegenseitig entmachten. Nur diese Klasse nutzt sie.
+     * So sieht jede Pruefung "letzter aktiver Administrator" den committed Stand der vorherigen Aenderung;
+     * zwei Administratoren koennen sich nicht gleichzeitig gegenseitig entmachten. Nur diese Klasse nutzt sie.
      */
     public const LOCK_KEY = 7340163;
-
-    /** Rollen mit vollen Rechten; mindestens ein aktiver Benutzer mit einer dieser Rollen muss bleiben. */
-    private const MANAGING_ROLES = ['admin', 'vorstand'];
 
     private ?PDO $pdo = null;
 
@@ -101,7 +98,7 @@ final class UserRepository
      */
     public function create(string $name, string $email, string $passwordHash, array $roles, ?int $actorId): int
     {
-        $roles = $this->checkedRoles($roles);
+        $roles = Permissions::onAssignment(RoleSelection::read($roles));
         $email = self::normalizeEmail($email);
 
         return $this->transactional(function () use ($name, $email, $passwordHash, $roles, $actorId): int {
@@ -125,7 +122,7 @@ final class UserRepository
      * Rollen-Diff, keine Werte) und bei Aenderung des Aktiv-Status `user_deactivated`/`user_activated`.
      * Ohne Aenderung wird nichts geschrieben.
      *
-     * Regeln (unter der Advisory-Sperre geprueft): Der letzte aktive Vorstand kann weder deaktiviert werden
+     * Regeln (unter der Advisory-Sperre geprueft): Der letzte aktive Administrator kann weder deaktiviert werden
      * noch die Rolle verlieren; niemand deaktiviert sich selbst.
      *
      * @param string[] $roles
@@ -135,7 +132,7 @@ final class UserRepository
      */
     public function update(int $id, string $name, string $email, array $roles, bool $active, int $actorId): array
     {
-        $roles = $this->checkedRoles($roles);
+        $roles = RoleSelection::read($roles);
         $email = self::normalizeEmail($email);
 
         return $this->transactional(function () use ($id, $name, $email, $roles, $active, $actorId): array {
@@ -151,15 +148,16 @@ final class UserRepository
             }
             $wasActive = (bool) $row['active'];
             $before = $this->rolesOf($id);
+            $roles = Permissions::onAssignment($roles, $before);
 
             if ($actorId === $id && $wasActive && !$active) {
                 throw new ValidationError(['active' => 'validation.user.self_deactivate']);
             }
 
-            $wasVorstand = $wasActive && array_intersect(self::MANAGING_ROLES, $before) !== [];
-            $staysVorstand = $active && array_intersect(self::MANAGING_ROLES, $roles) !== [];
-            if ($wasVorstand && !$staysVorstand && $this->otherActiveVorstaende($id) === 0) {
-                throw new ValidationError([($active ? 'roles' : 'active') => 'validation.user.last_vorstand']);
+            $wasAdmin = $wasActive && in_array('admin', $before, true);
+            $staysAdmin = $active && in_array('admin', $roles, true);
+            if ($wasAdmin && !$staysAdmin && $this->otherActiveAdmins($id) === 0) {
+                throw new ValidationError([($active ? 'roles' : 'active') => 'validation.user.last_admin']);
             }
 
             $added = array_values(array_diff($roles, $before));
@@ -258,35 +256,14 @@ final class UserRepository
         return array_map('strval', $stmt->fetchAll(PDO::FETCH_COLUMN));
     }
 
-    private function otherActiveVorstaende(int $excludeId): int
+    private function otherActiveAdmins(int $excludeId): int
     {
         $stmt = $this->db()->prepare(
             "SELECT count(*) FROM users u JOIN user_roles r ON r.user_id = u.id
-              WHERE r.role IN ('admin', 'vorstand') AND u.active AND u.id <> ?"
+              WHERE r.role = 'admin' AND u.active AND u.id <> ?"
         );
         $stmt->execute([$excludeId]);
         return (int) $stmt->fetchColumn();
-    }
-
-    /**
-     * Rollen gegen die Whitelist pruefen, Duplikate entfernen, sortieren.
-     *
-     * @param array<mixed> $roles
-     * @return string[]
-     */
-    private function checkedRoles(array $roles): array
-    {
-        $roles = array_values(array_unique($roles));
-        if ($roles === []) {
-            throw new ValidationError(['roles' => 'validation.user.roles.required']);
-        }
-        foreach ($roles as $role) {
-            if (!is_string($role) || !in_array($role, Permissions::ROLES, true)) {
-                throw new ValidationError(['roles' => 'validation.user.roles.unknown']);
-            }
-        }
-        sort($roles, SORT_STRING);
-        return $roles;
     }
 
     /** Eindeutigkeitsverletzung (23505) = Adresse vergeben (auch beim Wettlauf); alles andere unveraendert. */

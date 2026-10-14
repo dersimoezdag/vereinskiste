@@ -67,47 +67,40 @@ document.querySelectorAll('form[data-stepper]').forEach(function (form) {
     show(form.hasAttribute('data-start-last') ? panels.length - 1 : 0);
 });
 
-// Explizite Darstellungsauswahl; System folgt auch späteren Betriebssystemänderungen.
+// Hell/Dunkel-Umschalter; ohne gespeicherte Wahl folgt die Seite dem Betriebssystem.
 (function () {
     var media = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-    var preference = 'system';
-    function read() {
+    function stored() {
         var value;
         try { value = localStorage.getItem('vk-theme'); } catch (e) {}
-        return value === 'light' || value === 'dark' ? value : 'system';
+        return value === 'light' || value === 'dark' ? value : null;
     }
+    function effective() { return stored() || (media && media.matches ? 'dark' : 'light'); }
     function apply() {
-        document.documentElement.setAttribute('data-bs-theme', preference === 'system'
-            ? (media && media.matches ? 'dark' : 'light') : preference);
-        document.querySelectorAll('[data-theme-picker]').forEach(function (picker) {
-            picker.querySelectorAll('[data-theme-choice]').forEach(function (input) { input.checked = input.value === preference; });
-            picker.querySelectorAll('[data-theme-icon]').forEach(function (icon) { icon.hidden = icon.dataset.themeIcon !== preference; });
-            var selected = picker.querySelector('[data-theme-choice][value="' + preference + '"]');
-            var label = selected ? selected.parentNode.textContent.trim() : preference;
-            var trigger = picker.querySelector('summary');
-            trigger.setAttribute('aria-label', (picker.dataset.labelChoose || '') + ': ' + label);
-            trigger.title = (picker.dataset.labelCurrent || '') + ': ' + label;
+        var theme = effective();
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
+            var label = theme === 'dark' ? button.dataset.labelToLight : button.dataset.labelToDark;
+            button.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+            if (label) { button.setAttribute('aria-label', label); button.title = label; }
         });
     }
-    preference = read();
     apply();
-    document.querySelectorAll('[data-theme-picker]').forEach(function (picker) {
-        picker.addEventListener('change', function (event) {
-            if (!event.target.matches('[data-theme-choice]')) { return; }
-            preference = ['light', 'dark'].indexOf(event.target.value) !== -1 ? event.target.value : 'system';
-            try { localStorage.setItem('vk-theme', preference); } catch (e) {}
-            apply();
-            picker.open = false;
-            picker.querySelector('summary').focus();
+    document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var next = effective() === 'dark' ? 'light' : 'dark';
+            try { localStorage.setItem('vk-theme', next); } catch (e) {}
+            document.documentElement.setAttribute('data-bs-theme', next);
+            document.querySelectorAll('[data-theme-toggle]').forEach(function (b) {
+                var label = next === 'dark' ? b.dataset.labelToLight : b.dataset.labelToDark;
+                b.setAttribute('aria-pressed', next === 'dark' ? 'true' : 'false');
+                if (label) { b.setAttribute('aria-label', label); b.title = label; }
+            });
         });
-        picker.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape') { picker.open = false; picker.querySelector('summary').focus(); }
-        });
-        document.addEventListener('click', function (event) { if (!picker.contains(event.target)) { picker.open = false; } });
     });
     if (media && media.addEventListener) { media.addEventListener('change', apply); }
     window.addEventListener('storage', function (event) {
-        if (event.key === 'vk-theme' || event.key === null) { preference = read(); apply(); }
+        if (event.key === 'vk-theme' || event.key === null) { apply(); }
     });
 })();
 

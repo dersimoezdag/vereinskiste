@@ -30,7 +30,7 @@ final class AutoUpdatePagesTest extends TestCase
         $this->loginAs(['kassenwart']);
         foreach (['/settings/auto-update','/settings/auto-update/status'] as $path) { $this->assertSame(403,$this->get($path)->getStatusCode()); }
         foreach (['start','step','cancel'] as $action) { $this->assertSame(403,$this->postForm('/settings/auto-update/' . $action,[])->getStatusCode()); }
-        $this->pdo->exec("UPDATE user_roles SET role='vorstand'");
+        $this->pdo->exec("UPDATE user_roles SET role='admin'");
         $this->assertSame(200,$this->get('/settings/auto-update')->getStatusCode());
         $this->assertSame(['phase'=>'idle'],json_decode((string)$this->get('/settings/auto-update/status')->getBody(),true));
         $request=(new ServerRequestFactory())->createServerRequest('POST','/settings/auto-update/step')->withParsedBody([]);

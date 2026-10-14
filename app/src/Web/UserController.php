@@ -185,7 +185,7 @@ final class UserController extends AdminController
         $this->flash($req, 'users.flash.updated');
         // Hat sich jemand selbst die Verwaltungsrechte genommen, ist /users fuer ihn nicht mehr erreichbar.
         $lostAccess = $id === $this->actorId($req) && in_array('roles', $changed, true)
-            && !in_array('users.manage', Permissions::for($input['roles']), true);
+            && !in_array('users.manage', Permissions::for($repo->findById($id)['roles']), true);
         return $this->redirect($lostAccess ? '/' : '/users');
     }
 
@@ -305,16 +305,11 @@ final class UserController extends AdminController
         if (!is_array($given)) {
             return [[], 'validation.user.roles.unknown'];
         }
-        $roles = [];
-        foreach ($given as $role) {
-            if (!is_string($role) || !in_array($role, Permissions::ROLES, true)) {
-                return [[], 'validation.user.roles.unknown'];
-            }
-            $roles[$role] = true;
+        try {
+            return [\Vereinskiste\Auth\RoleSelection::read($given), null];
+        } catch (ValidationError $e) {
+            return [[], $e->errors['roles']];
         }
-        $roles = array_keys($roles);
-        sort($roles, SORT_STRING);
-        return [$roles, $roles === [] ? 'validation.user.roles.required' : null];
     }
 
     /** Passwort-Eingaben werden nie getrimmt. */

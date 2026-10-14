@@ -56,6 +56,8 @@
     {% set crumbs = [settings, {'label': t('mail.settings.title')}] %}
 {% elseif path == '/settings/club' %}
     {% set crumbs = [settings, {'label': t('foundation.club')}] %}
+{% elseif path starts with '/settings/backup' %}
+    {% set crumbs = [settings, {'label': t('settings.backup')}] %}
 {% elseif path == '/audit-log' %}
     {% set crumbs = [settings, {'label': t('nav.audit')}] %}
 {% elseif path == '/update' %}

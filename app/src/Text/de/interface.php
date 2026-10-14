@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 return [
+    'js.roles_remove_admin' => 'Auch Admin entfernen?',
+    'js.dashboard_saving' => 'Übersicht wird gespeichert …',
+    'js.dashboard_saved' => 'Übersicht gespeichert.',
+    'js.dashboard_changed' => 'Übersicht geändert. Bitte speichern.',
     'home.label.mitglieder' => 'Mitglieder',
     'home.label.offene_mitgliedsantraege' => 'Offene Mitgliedsanträge',
     'home.label.finanzen' => 'Finanzen',

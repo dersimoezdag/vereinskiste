@@ -4,7 +4,26 @@
     document.querySelectorAll('[data-dashboard-form]').forEach(function (form) {
         form.classList.add('dashboard-ready');
         var status = form.querySelector('[data-dashboard-status]');
-        var saving = false, dirty = false, blocked = false, drag = null;
+        var editable = form.hasAttribute('data-dashboard-editable');
+        var editing = !editable, saving = false, drag = null;
+        function setEditing(value) {
+            editing = value;
+            form.classList.toggle('dashboard-editing', value);
+            var button = form.querySelector('[data-dashboard-edit]');
+            if (button) { button.setAttribute('aria-pressed', String(value)); button.disabled = value; }
+        }
+        setEditing(editing);
+        function sync(list) {
+            positions(list);
+            var group = list.dataset.dashboardGroup;
+            if (!group) { return; }
+            var ids = Array.from(list.children).map(function (item) { return item.dataset.dashboardId; });
+            var empty = form.querySelector('[data-dashboard-empty="' + group + '"]');
+            if (empty) { empty.hidden = ids.length > 0; }
+            form.querySelectorAll('[data-dashboard-add][data-dashboard-group="' + group + '"]').forEach(function (button) {
+                button.hidden = ids.includes(button.dataset.dashboardAdd);
+            });
+        }
         function message(text) { if (status) { status.textContent = text; } }
         function positions(list) {
             Array.from(list.children).forEach(function (item, index) {
@@ -17,33 +36,56 @@
             });
         }
         async function save() {
-            if (!form.hasAttribute('data-autosave') || blocked || saving || drag || !dirty) { return; }
+            if (!editing || saving || drag) { return; }
             saving = true;
-            dirty = false;
-            message(window.vkText('js.reihenfolge_wird_gespeichert'));
+            form.classList.add('dashboard-saving');
+            form.querySelector('[data-layout-save]').disabled = true;
+            message(window.vkText('js.dashboard_saving'));
             try {
                 var response = await fetch(form.action, { method: 'POST', body: new FormData(form), credentials: 'same-origin', headers: { Accept: 'application/json' } });
+                if (response.redirected) { throw new Error(window.vkText('js.speichern_fehlgeschlagen_bitte_neu_laden')); }
                 var result = await response.json();
                 if (!response.ok || !Number.isInteger(result.version)) { throw new Error(result.error || window.vkText('js.speichern_fehlgeschlagen_bitte_neu_laden_und_erneut_versuchen')); }
                 form.querySelector('[name="version"]').value = result.version;
-                message(dirty ? window.vkText('js.reihenfolge_wird_gespeichert') : window.vkText('js.reihenfolge_gespeichert'));
+                setEditing(false);
+                message(window.vkText('js.dashboard_saved'));
+                form.querySelector('[data-dashboard-edit]').focus();
             } catch (error) {
-                blocked = true;
                 message(error.message || window.vkText('js.speichern_fehlgeschlagen_bitte_neu_laden'));
             } finally {
                 saving = false;
-                if (dirty && !blocked) { save(); }
+                form.classList.remove('dashboard-saving');
+                form.querySelector('[data-layout-save]').disabled = false;
             }
         }
         function changed(list) {
-            positions(list);
-            if (blocked) { return; }
-            message(window.vkText('js.reihenfolge_geandert'));
-            dirty = true;
-            save();
+            sync(list);
+            message(window.vkText('js.dashboard_changed'));
         }
-        form.querySelectorAll('[data-dashboard-list]').forEach(positions);
+        form.querySelectorAll('[data-dashboard-list]').forEach(sync);
         form.addEventListener('click', function (event) {
+            if (event.target.closest('[data-dashboard-edit]') && !saving) { setEditing(true); return; }
+            if (!editing || saving || drag) { return; }
+            var add = event.target.closest('[data-dashboard-add]');
+            if (add) {
+                var group = add.dataset.dashboardGroup;
+                var list = form.querySelector('[data-dashboard-list][data-dashboard-group="' + group + '"]');
+                var template = form.querySelector('[data-dashboard-template="' + group + ':' + add.dataset.dashboardAdd + '"]');
+                if (!list || !template || Array.from(list.children).some(function (item) { return item.dataset.dashboardId === add.dataset.dashboardAdd; })) { return; }
+                list.appendChild(template.content.cloneNode(true));
+                changed(list);
+                list.lastElementChild.querySelector('[data-drag-handle]').focus();
+                return;
+            }
+            var remove = event.target.closest('[data-dashboard-remove]');
+            if (remove) {
+                var item = remove.closest('[data-dashboard-item]'), list = item.parentNode;
+                var id = item.dataset.dashboardId;
+                item.remove();
+                changed(list);
+                form.querySelector('[data-dashboard-add="' + id + '"][data-dashboard-group="' + list.dataset.dashboardGroup + '"]').focus();
+                return;
+            }
             var button = event.target.closest('[data-move]');
             if (!button) { return; }
             var item = button.closest('[data-dashboard-item]'), list = item.parentNode;
@@ -66,7 +108,7 @@
         }
         form.addEventListener('pointerdown', function (event) {
             var handle = event.target.closest('[data-drag-handle]');
-            if (!handle || drag || event.button !== 0) { return; }
+            if (!editing || saving || !handle || drag || event.button !== 0) { return; }
             var item = handle.closest('[data-dashboard-item]');
             drag = { item: item, handle: handle, list: item.parentNode, order: Array.from(item.parentNode.children), pointerId: event.pointerId };
             item.classList.add('dashboard-dragging');
@@ -93,11 +135,9 @@
         form.addEventListener('pointercancel', function (event) { if (drag && event.pointerId === drag.pointerId) { finish(true); } });
         form.addEventListener('lostpointercapture', function () { finish(true); });
         form.addEventListener('keydown', function (event) { if (event.key === 'Escape' && drag) { event.preventDefault(); finish(true); } });
-        if (form.hasAttribute('data-autosave')) {
+        if (editable) {
             form.addEventListener('submit', function (event) {
                 event.preventDefault();
-                if (blocked) { message(window.vkText('js.bitte_lade_die_seite_neu_bevor_du_erneut_speicherst')); return; }
-                dirty = true;
                 save();
             });
         }

@@ -28,6 +28,7 @@ final class Maintenance implements MiddlewareInterface
             return $request->getAttribute('view')->render((new Response())->withStatus(503)->withHeader('Retry-After','10'), 'install/maintenance.twig');
         }
         if (in_array($path, ['/login', '/logout', '/update', '/settings', '/settings/update', '/settings/check-updates', '/health'], true)
+            || str_starts_with($path, '/settings/backup')
             || !(new Updater(($this->pdo)(), $this->migrationDir))->needsUpdate()) {
             return $handler->handle($request);
         }

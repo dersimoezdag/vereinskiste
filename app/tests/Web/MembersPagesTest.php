@@ -50,7 +50,7 @@ final class MembersPagesTest extends TestCase
         $body = (string) $this->get('/members/1')->getBody();
         $this->assertStringContainsString('Kein Benutzerzugang', $body);
         $this->assertSame(403, $this->postForm('/members/1/user', ['user_id' => '1'])->getStatusCode());
-        $this->pdo->exec("UPDATE user_roles SET role='vorstand'");
+        $this->pdo->exec("UPDATE user_roles SET role='admin'");
         $this->assertSame('/members/1', $this->postForm('/members/1/user', ['user_id' => '1'])->getHeaderLine('Location'));
         $this->assertSame(1, (int) $this->pdo->query('SELECT member_id FROM users WHERE id = 1')->fetchColumn());
     }

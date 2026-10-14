@@ -8,7 +8,7 @@ use Vereinskiste\Ledger\Transaction;
 /** All schema/data restoration is one transaction; no partial restore becomes visible. */
 final class DatabaseRestore
 {
-    public function __construct(private PDO $db, private string $directory) {}
+    public function __construct(private PDO $db, private string $directory, private int $timeout = 60) {}
     public function run(): void
     {
         $complete=Files::read($this->directory . '/complete.json');
@@ -17,9 +17,9 @@ final class DatabaseRestore
             if (!preg_match('/^(schema\.json|\d+\.jsonl)\z/',$file)
                 || !hash_equals($hash,hash_file('sha256',$this->directory . '/' . $file))) { throw new Failure('backup'); }
         }
-        $schema=Files::read($this->directory . '/schema.json'); $deadline=microtime(true)+14;
+        $schema=Files::read($this->directory . '/schema.json'); $deadline=microtime(true)+$this->timeout;
         Transaction::run($this->db,function() use($schema,$deadline): void {
-            $this->db->exec("SET LOCAL lock_timeout='1000ms'; SET LOCAL statement_timeout='5000ms'");
+            $this->db->exec("SET LOCAL lock_timeout='5000ms'; SET LOCAL statement_timeout='{$this->timeout}s'");
             foreach ((new DatabaseSchema($this->db))->tables() as $table) { $this->db->exec('DROP TABLE public.' . DatabaseSchema::quote($table) . ' CASCADE'); }
             foreach ($this->db->query("SELECT sequencename FROM pg_sequences WHERE schemaname='public'")->fetchAll(PDO::FETCH_COLUMN) as $sequence) {
                 $this->db->exec('DROP SEQUENCE public.' . DatabaseSchema::quote($sequence) . ' CASCADE');

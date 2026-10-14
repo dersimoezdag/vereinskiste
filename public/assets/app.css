@@ -171,17 +171,14 @@ main, .table-cards td {
 }
 
 /* Symbol öffnet eine explizite Auswahl statt blind zwischen Modi zu wechseln. */
-.theme-picker { position: relative; flex-shrink: 0; }
-.theme-picker-trigger { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; cursor: pointer; list-style: none; border: 1px solid var(--vk-border); border-radius: 12px; background: var(--tblr-bg-surface); color: var(--vk-text-muted); }
-.theme-picker-trigger::-webkit-details-marker { display: none; }
-.theme-picker-trigger:hover, .theme-picker[open] .theme-picker-trigger { color: var(--tblr-primary); background: rgba(var(--tblr-primary-rgb), .1); border-color: var(--tblr-primary); }
-.theme-picker-trigger:focus-visible { outline: 3px solid var(--tblr-primary); outline-offset: 2px; }
-.theme-picker-trigger [hidden] { display: none; }
-.theme-picker-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 1050; width: 180px; padding: 12px; margin: 0; border: 1px solid var(--vk-border); border-radius: 14px; background: var(--tblr-bg-surface); box-shadow: 0 8px 30px rgba(0,0,0,.15); }
-.theme-picker-menu legend { float: none; width: auto; font-size: .8rem; font-weight: 600; margin-bottom: 6px; }
-.theme-picker-option { display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 0; padding: 8px; border-radius: 8px; cursor: pointer; }
-.theme-picker-option:has(input:checked) { color: var(--tblr-primary); background: rgba(var(--tblr-primary-rgb), .1); font-weight: 600; }
-.theme-picker-option input { accent-color: var(--tblr-primary); }
+.theme-toggle { position: relative; display: inline-flex; align-items: center; flex-shrink: 0; width: 56px; height: 30px; padding: 0; cursor: pointer; border: 1px solid var(--vk-border); border-radius: 999px; background: var(--tblr-bg-surface); color: var(--vk-text-muted); }
+.theme-toggle::before { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--tblr-primary); transition: transform .2s ease; }
+.theme-toggle[aria-pressed="true"]::before { transform: translateX(26px); }
+.theme-toggle-icon { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; }
+.theme-toggle-icon .icon { width: 15px; height: 15px; }
+.theme-toggle[aria-pressed="false"] .theme-toggle-sun, .theme-toggle[aria-pressed="true"] .theme-toggle-moon { color: #fff; }
+.theme-toggle:focus-visible { outline: 3px solid var(--tblr-primary); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .theme-toggle::before { transition: none; } }
 
 /* Logo & Branding */
 .navbar-brand-image {
@@ -855,7 +852,13 @@ form:not(.is-stepper) .stepper { display: none; }
 .dashboard-shortcut { display: flex; align-items: center; border: 1px solid var(--vk-border); border-radius: 10px; padding: .25rem; background: var(--tblr-bg-surface); }
 .dashboard-shortcut > .btn { border: 0; background: transparent; min-height: 44px; }
 .dashboard-controls { display: none; align-items: center; flex-shrink: 0; gap: 2px; }
-.dashboard-ready .dashboard-controls { display: flex; }
+.dashboard-ready.dashboard-editing .dashboard-controls { display: flex; }
+[data-dashboard-editable] .dashboard-edit-only, .dashboard-edit-button { display: none !important; }
+.dashboard-ready .dashboard-edit-button { display: inline-flex !important; }
+.dashboard-ready.dashboard-editing .dashboard-edit-only { display: flex !important; }
+.dashboard-ready.dashboard-editing .dashboard-edit-button { display: none !important; }
+[data-dashboard-add][hidden], [data-dashboard-empty][hidden] { display: none !important; }
+.dashboard-saving .dashboard-controls, .dashboard-saving [data-dashboard-additions] { pointer-events: none; opacity: .5; }
 .dashboard-controls .btn { padding: 3px 6px; min-height: 32px; }
 .dashboard-grip { border: 0; color: var(--vk-text-muted); background: transparent; cursor: grab; touch-action: none; padding: 4px 8px; font-size: 24px; line-height: 1; min-height: 36px; }
 .dashboard-grip:focus-visible { outline: 3px solid var(--tblr-primary); border-radius: 6px; }

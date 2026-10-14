@@ -1,13 +1,4 @@
-<details class="theme-picker" data-theme-picker data-label-choose="{{ t('theme.choose') }}" data-label-current="{{ t('theme.current') }}">
-    <summary class="theme-picker-trigger" aria-label="{{ t('theme.choose') }}" title="{{ t('theme.choose') }}">
-        <span data-theme-icon="light" hidden><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></span>
-        <span data-theme-icon="dark" hidden>{{ icons.icon('dark-mode') }}</span>
-        <span data-theme-icon="system"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4"/></svg></span>
-    </summary>
-    <fieldset class="theme-picker-menu">
-        <legend>{{ t('theme.current') }}</legend>
-        {% for value, label in {'light': 'theme.light', 'dark': 'theme.dark', 'system': 'theme.system'} %}
-        <label class="theme-picker-option"><input type="radio" name="theme-choice" value="{{ value }}" data-theme-choice {% if value == 'system' %}checked{% endif %}><span>{{ t(label) }}</span></label>
-        {% endfor %}
-    </fieldset>
-</details>
+<button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="{{ t('theme.toggle') }}" title="{{ t('theme.toggle') }}" data-label-to-dark="{{ t('theme.to_dark') }}" data-label-to-light="{{ t('theme.to_light') }}">
+    <span class="theme-toggle-icon theme-toggle-sun" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></span>
+    <span class="theme-toggle-icon theme-toggle-moon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></span>
+</button>

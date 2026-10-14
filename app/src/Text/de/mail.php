@@ -16,4 +16,11 @@ return [
     'mail.password.keep' => 'Ein Passwort ist gespeichert. Lassen Sie das Feld leer, um es beizubehalten.',
     'mail.password.empty' => 'Noch kein Passwort gespeichert. Bei SMTP mit Anmeldung hier das Passwort eintragen.',
     'mail.password.clear' => 'Gespeichertes Passwort entfernen',
+    'mail.test.button' => 'Test-E-Mail senden',
+    'mail.test.recipient' => 'Test-Empfänger',
+    'mail.test.hint' => 'Der Test verwendet die oben eingetragenen Werte, ohne zu speichern. Leer lassen, um an die Absenderadresse zu senden.',
+    'mail.test.sent' => 'Test-E-Mail wurde an {to} gesendet.',
+    'mail.test.failed' => 'Test-E-Mail konnte nicht gesendet werden.',
+    'mail.test.invalid_recipient' => 'Bitte eine gültige Empfängeradresse angeben.',
+    'mail.test.not_configured' => 'SMTP-Host und Absenderadresse müssen für den Test ausgefüllt sein.',
 ];

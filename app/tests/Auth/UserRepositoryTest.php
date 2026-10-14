@@ -35,6 +35,45 @@ final class UserRepositoryTest extends TestCase
         return $this->repo->findById($id)['roles'];
     }
 
+    public function test_admin_is_granted_on_new_board_assignment_but_can_be_revoked_independently(): void
+    {
+        $actor = $this->user('admin@example.org', ['admin']);
+        $id = $this->user('board@example.org', ['vorstand']);
+        $this->assertSame(['admin', 'vorstand'], $this->roles($id));
+        $this->repo->update($id, 'Board', 'board@example.org', ['vorstand'], true, $actor);
+        $this->assertSame(['vorstand'], $this->roles($id));
+        $this->repo->update($id, 'Board renamed', 'board@example.org', ['vorstand'], true, $actor);
+        $this->assertSame(['vorstand'], $this->roles($id));
+        $this->assertSame([], \Vereinskiste\Auth\Permissions::for($this->roles($id)));
+        $this->repo->update($id, 'Board', 'board@example.org', ['kassenwart'], true, $actor);
+        $this->repo->update($id, 'Board', 'board@example.org', ['vorstand'], true, $actor);
+        $this->assertSame(['admin', 'vorstand'], $this->roles($id));
+        $this->repo->update($id, 'Board', 'board@example.org', ['admin'], true, $actor);
+        $this->assertSame(['admin'], $this->roles($id));
+        $this->repo->update($id, 'Board', 'board@example.org', ['kassenwart'], true, $actor);
+        $this->assertSame(['kassenwart'], $this->roles($id));
+    }
+
+    public function test_board_without_admin_does_not_satisfy_last_admin_protection(): void
+    {
+        $admin = $this->user('admin@example.org', ['admin']);
+        $board = $this->user('board@example.org', ['vorstand']);
+        $this->repo->update($board, 'Board', 'board@example.org', ['vorstand'], true, $admin);
+        $this->expectException(ValidationError::class);
+        $this->repo->update($admin, 'Admin', 'admin@example.org', ['kassenwart'], true, $admin);
+    }
+
+    public function test_migration_adds_explicit_admin_to_existing_board_accounts_without_duplicates(): void
+    {
+        $id = $this->user('board@example.org', ['vorstand']);
+        $this->pdo->prepare("DELETE FROM user_roles WHERE user_id=? AND role='admin'")->execute([$id]);
+        $sql = file_get_contents(dirname(__DIR__, 2) . '/migrations/0016_vorstand_admin_assignment.sql');
+        $this->pdo->exec($sql);
+        $this->pdo->exec($sql);
+        $this->assertSame(['admin', 'vorstand'], $this->roles($id));
+        $this->assertSame(2, (int) $this->pdo->query('SELECT count(*) FROM user_roles')->fetchColumn());
+    }
+
     public function test_unique_violation_on_create_maps_to_the_duplicate_email_validation_error(): void
     {
         $this->user('a@example.org', ['kassenwart']);
@@ -106,9 +145,9 @@ final class UserRepositoryTest extends TestCase
             $this->repo->update($a, 'Test a@example.org', 'a@example.org', ['kassenwart'], true, $b);
             $this->fail('ValidationError erwartet');
         } catch (ValidationError $e) {
-            $this->assertSame(['roles' => 'validation.user.last_vorstand'], $e->errors);
+            $this->assertSame(['roles' => 'validation.user.last_admin'], $e->errors);
         }
-        $this->assertSame(['vorstand'], $this->roles($a));
+        $this->assertSame(['admin', 'vorstand'], $this->roles($a));
         $this->assertSame(['kassenwart'], $this->roles($b));
     }
 
@@ -138,9 +177,9 @@ final class UserRepositoryTest extends TestCase
             $this->repo->update($b, 'Test b@example.org', 'b@example.org', ['kassenwart'], true, $b);
             $this->fail('ValidationError erwartet');
         } catch (ValidationError $e) {
-            $this->assertSame(['roles' => 'validation.user.last_vorstand'], $e->errors);
+            $this->assertSame(['roles' => 'validation.user.last_admin'], $e->errors);
         }
-        $this->assertSame(['vorstand'], $this->roles($b));
+        $this->assertSame(['admin', 'vorstand'], $this->roles($b));
         $this->assertSame(['kassenwart'], $this->roles($a));
     }
 
@@ -172,7 +211,7 @@ final class UserRepositoryTest extends TestCase
             $this->repo->update($a, 'Test a@example.org', 'a@example.org', ['kassenwart'], true, $a);
             $this->fail('ValidationError erwartet');
         } catch (ValidationError $e) {
-            $this->assertSame(['roles' => 'validation.user.last_vorstand'], $e->errors);
+            $this->assertSame(['roles' => 'validation.user.last_admin'], $e->errors);
         }
         $active = (int) $this->pdo->query(
             "SELECT count(*) FROM users u JOIN user_roles r ON r.user_id = u.id WHERE r.role = 'vorstand' AND u.active"
@@ -190,7 +229,7 @@ final class UserRepositoryTest extends TestCase
             $this->repo->update($a, 'Test a@example.org', 'a@example.org', ['vorstand'], false, $c);
             $this->fail('ValidationError erwartet');
         } catch (ValidationError $e) {
-            $this->assertSame(['active' => 'validation.user.last_vorstand'], $e->errors);
+            $this->assertSame(['active' => 'validation.user.last_admin'], $e->errors);
         }
         $this->assertTrue($this->repo->findById($a)['active']);
     }
@@ -203,12 +242,12 @@ final class UserRepositoryTest extends TestCase
             $this->repo->update($admin, 'Admin', 'admin@example.org', ['kassenwart'], true, $actor);
             $this->fail('Letzter Administrator darf nicht entmachtet werden');
         } catch (ValidationError $e) {
-            $this->assertSame(['roles' => 'validation.user.last_vorstand'], $e->errors);
+            $this->assertSame(['roles' => 'validation.user.last_admin'], $e->errors);
         }
         $this->assertSame(['admin'], $this->roles($admin));
         $vorstand = $this->user('vorstand@example.org', ['vorstand']);
         $this->repo->update($admin, 'Admin', 'admin@example.org', ['kassenwart'], true, $vorstand);
         $this->assertSame(['kassenwart'], $this->roles($admin));
-        $this->assertSame(['vorstand'], $this->roles($vorstand));
+        $this->assertSame(['admin', 'vorstand'], $this->roles($vorstand));
     }
 }

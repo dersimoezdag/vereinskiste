@@ -38,7 +38,7 @@ final class UpdatePagesTest extends TestCase
         $this->loginAs(['kassenpruefer']);
         $this->assertSame(403, $this->postForm('/settings/check-updates', [])->getStatusCode());
         $this->assertSame(0, $this->calls);
-        $this->pdo->exec("UPDATE user_roles SET role = 'vorstand'");
+        $this->pdo->exec("UPDATE user_roles SET role = 'admin'");
         $this->assertSame(200, $this->get('/settings')->getStatusCode());
         $this->assertSame(0, $this->calls);
         $this->assertSame('/settings', $this->postForm('/settings/check-updates', [])->getHeaderLine('Location'));

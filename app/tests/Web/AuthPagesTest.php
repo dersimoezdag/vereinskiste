@@ -54,7 +54,7 @@ final class AuthPagesTest extends TestCase
         );
         $stmt->execute([$email, 'Test Person', password_hash($password, PASSWORD_DEFAULT), $active ? 'true' : 'false']);
         $id = (int) $stmt->fetchColumn();
-        foreach ($roles as $role) {
+        foreach (\Vereinskiste\Auth\Permissions::onAssignment($roles) as $role) {
             $this->pdo->prepare('INSERT INTO user_roles (user_id, role) VALUES (?, ?)')->execute([$id, $role]);
         }
         return $id;

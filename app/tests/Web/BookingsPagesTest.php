@@ -58,7 +58,7 @@ final class BookingsPagesTest extends TestCase
         );
         $stmt->execute(['wer@example.org', 'Test Person', password_hash('richtig-richtig', PASSWORD_DEFAULT)]);
         $id = (int) $stmt->fetchColumn();
-        foreach ($roles as $role) {
+        foreach (\Vereinskiste\Auth\Permissions::onAssignment($roles) as $role) {
             $this->pdo->prepare('INSERT INTO user_roles (user_id, role) VALUES (?, ?)')->execute([$id, $role]);
         }
         $res = $this->post('/login', [

@@ -490,7 +490,7 @@ final class UsersPagesTest extends TestCase
         ]);
         $this->assertSame(422, $res->getStatusCode());
         $this->assertStringContainsString('Vorstand', $this->body($res));
-        $this->assertSame(['vorstand'], $this->rolesOf($me));
+        $this->assertSame(['admin', 'vorstand'], $this->rolesOf($me));
 
         // Deaktivieren
         $res = $this->postForm("/users/$me/edit", [
@@ -526,7 +526,7 @@ final class UsersPagesTest extends TestCase
         ]);
 
         $this->assertSame(422, $res->getStatusCode());
-        $this->assertSame(['vorstand'], $this->rolesOf($me));
+        $this->assertSame(['admin', 'vorstand'], $this->rolesOf($me));
     }
 
     public function test_deactivating_another_vorstand_is_allowed_but_then_the_remaining_one_is_protected(): void

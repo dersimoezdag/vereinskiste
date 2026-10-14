@@ -21,14 +21,14 @@ final class HomeDashboardPagesTest extends TestCase
     public function test_defaults_are_permission_filtered_and_symbol_picker_is_available(): void
     {
         $this->loginAs(['schriftfuehrer']);
-        $html = (string) $this->get('/')->getBody();
+        $html = $this->visibleHome();
         $this->assertStringContainsString('name="cards[]" value="members"', $html);
         $this->assertStringContainsString('name="cards[]" value="applications"', $html);
         $this->assertStringNotContainsString('name="cards[]" value="finance"', $html);
         $this->assertStringNotContainsString('name="cards[]" value="invoices"', $html);
         $this->assertStringNotContainsString('value="booking-add"', $html);
-        $this->assertStringContainsString('data-theme-choice', $html);
-        $this->assertStringContainsString('aria-label="Darstellung wählen"', $html);
+        $this->assertStringContainsString('data-theme-toggle', $html);
+        $this->assertStringContainsString('aria-label="Darstellung umschalten"', $html);
         $this->assertSame(200, $this->get('/dashboard/preferences')->getStatusCode());
     }
 
@@ -40,14 +40,14 @@ final class HomeDashboardPagesTest extends TestCase
         $this->assertSame('/', $res->getHeaderLine('Location'));
         $this->bootApp();
         $this->postForm('/login', ['email' => 'wer@example.org', 'password' => 'richtig-richtig']);
-        $html = (string) $this->get('/')->getBody();
+        $html = $this->visibleHome();
         $this->assertLessThan(strpos($html, 'value="members"'), strpos($html, 'value="invoices"'));
         $this->assertStringNotContainsString('value="finance"', $html);
         $this->assertStringContainsString('value="member-invite"', $html);
         $other = $this->webUser('other@example.org', ['admin']);
         $this->assertSame(0, (int) $this->pdo->query('SELECT count(*) FROM user_dashboard_preferences WHERE user_id=' . $other)->fetchColumn());
         $this->assertSame(302, $this->postForm('/dashboard/preferences', ['version' => '1'])->getStatusCode());
-        $this->assertStringNotContainsString('name="cards[]"', (string) $this->get('/')->getBody());
+        $this->assertStringNotContainsString('name="cards[]"', $this->visibleHome());
         $this->assertSame('[]', $this->pdo->query('SELECT cards FROM user_dashboard_preferences WHERE user_id=' . $id)->fetchColumn());
     }
 
@@ -61,7 +61,7 @@ final class HomeDashboardPagesTest extends TestCase
         $this->assertSame(409, $this->postForm('/dashboard/preferences', ['version' => '0'])->getStatusCode());
         $this->assertSame('["members"]', $this->pdo->query('SELECT cards FROM user_dashboard_preferences WHERE user_id=' . $id)->fetchColumn());
         $this->pdo->exec("UPDATE user_roles SET role='kassenpruefer' WHERE user_id=" . $id);
-        $html = (string) $this->get('/')->getBody();
+        $html = $this->visibleHome();
         $this->assertStringNotContainsString('value="applications"', $html);
         $this->assertStringNotContainsString('value="member-add"', $html);
     }
@@ -73,10 +73,30 @@ final class HomeDashboardPagesTest extends TestCase
             'cards_positions' => ['finance' => '3', 'members' => '1', 'operations' => '2']]);
         $this->assertSame('["members", "operations", "finance"]', $this->pdo->query('SELECT cards FROM user_dashboard_preferences WHERE user_id=' . $id)->fetchColumn());
         $this->pdo->exec("UPDATE user_roles SET role='schriftfuehrer' WHERE user_id=" . $id);
-        $html = (string) $this->get('/')->getBody();
+        $html = $this->visibleHome();
         $this->assertStringContainsString('value="members"', $html);
         $this->assertStringNotContainsString('value="finance"', $html);
         $this->assertStringNotContainsString('value="operations"', $html);
+    }
+
+    private function visibleHome(): string
+    {
+        return preg_replace('/<template\b[^>]*>.*?<\/template>/s', '', (string) $this->get('/')->getBody());
+    }
+
+    public function test_home_has_explicit_editor_and_available_tiles_stay_permission_filtered(): void
+    {
+        $this->loginAs(['schriftfuehrer']);
+        $this->postForm('/dashboard/preferences', ['version' => '0', 'cards' => [], 'shortcuts' => []]);
+        $html = (string) $this->get('/')->getBody();
+        $this->assertStringContainsString('data-dashboard-editable', $html);
+        $this->assertStringContainsString('data-dashboard-edit aria-pressed="false"', $html);
+        $this->assertStringContainsString('data-layout-save', $html);
+        $this->assertStringNotContainsString('data-autosave', $html);
+        $this->assertStringContainsString('data-dashboard-template="cards:members"', $html);
+        $this->assertStringContainsString('data-dashboard-add="members"', $html);
+        $this->assertStringNotContainsString('data-dashboard-template="cards:finance"', $html);
+        $this->assertStringNotContainsString('name="cards[]"', $this->visibleHome());
     }
 
     public function test_authentication_and_csrf_are_required(): void
