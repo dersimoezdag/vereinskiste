@@ -8,7 +8,7 @@
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
         <div><h1 class="mb-1">{{ t('home.title') }}</h1><p class="text-muted mb-0">{{ t('home.tagline') }}</p></div>
         <div class="d-flex gap-2">
-            <button type="button" class="btn dashboard-edit-button" data-dashboard-edit aria-pressed="false">{{ icons.icon('settings') }} {{ t('home.edit') }}</button>
+            <button type="button" class="btn btn-icon dashboard-edit-button" data-dashboard-edit aria-pressed="false" aria-label="{{ t('home.edit') }}" title="{{ t('home.edit') }}" data-bs-toggle="tooltip">{{ icons.icon('settings') }}</button>
             <button class="btn btn-primary dashboard-edit-only" data-layout-save>{{ t('common.save') }}</button>
         </div>
         <noscript><a href="/dashboard/preferences" class="btn">{{ t('home.customize') }}</a></noscript>

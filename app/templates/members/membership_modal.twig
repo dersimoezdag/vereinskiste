@@ -1,0 +1,47 @@
+<div class="modal modal-blur fade" id="membership-modal" tabindex="-1" aria-labelledby="membership-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h3" id="membership-modal-title">{{ t('members.period.title') }}</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('foundation.history.close') }}"></button>
+            </div>
+            <div class="modal-body">
+                    {% if errors.date %}
+                    <div class="alert alert-danger mb-3">{{ t(errors.date) }}</div>
+                    {% endif %}
+
+                    {% include 'members/membership_summary.twig' %}
+                    {% if member.current %}
+                        {% if (can('members.write') and not member.anonymized_at) %}
+                        <form method="post" action="/members/{{ member.id }}/leave" class="border rounded p-3 bg-light-subtle mb-3">
+                            {{ csrf_field() }}
+                            <h4 class="h5 mb-2">{{ t('members.period.leave') }}</h4>
+                            <div class="mb-2">
+                                <label for="leave-date" class="form-label">{{ t('members.period.end') }}</label>
+                                <input type="date" id="leave-date" name="date" value="{{ period_input.date|default(today) }}" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="leave-reason" class="form-label">{{ t('members.period.end_reason') }}</label>
+                                <input type="text" id="leave-reason" name="end_reason" value="{{ period_input.end_reason|default('') }}" class="form-control form-control-sm" maxlength="500">
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-outline-danger w-100">{{ t('members.period.leave') }} {{ t('ui.erfassen') }}</button>
+                        </form>
+                        {% endif %}
+                    {% else %}
+                        {% if (can('members.write') and not member.anonymized_at) %}
+                        <form method="post" action="/members/{{ member.id }}/join" class="border rounded p-3 bg-light-subtle mb-3">
+                            {{ csrf_field() }}
+                            <h4 class="h5 mb-2">{{ t('members.period.join') }}</h4>
+                            <div class="mb-3">
+                                <label for="join-date" class="form-label">{{ t('members.period.start') }}</label>
+                                <input type="date" id="join-date" name="date" value="{{ period_input.date|default(today) }}" class="form-control form-control-sm" required>
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-primary w-100">{{ t('members.period.join') }} {{ t('ui.erfassen') }}</button>
+                        </form>
+                        {% endif %}
+                    {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>

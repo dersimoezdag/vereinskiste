@@ -107,7 +107,7 @@ final class MemberController extends AdminController
         try {
             (new MembershipPeriods(($this->pdo)()))->join($id, $date, $this->userId($req));
         } catch (ValidationError $e) {
-            return $this->renderDetail($req, $res->withStatus(422), $member, null, $e->errors);
+            return $this->renderDetail($req, $res->withStatus(422), $member, null, $e->errors, $body);
         }
         $this->flash($req, 'foundation.saved');
         return $this->redirect('/members/' . $id);
@@ -126,7 +126,7 @@ final class MemberController extends AdminController
         try {
             (new MembershipPeriods(($this->pdo)()))->leave($id, $date, $reason, $this->userId($req));
         } catch (ValidationError $e) {
-            return $this->renderDetail($req, $res->withStatus(422), $member, null, $e->errors);
+            return $this->renderDetail($req, $res->withStatus(422), $member, null, $e->errors, $body);
         }
         $this->flash($req, 'foundation.saved');
         return $this->redirect('/members/' . $id);
@@ -269,7 +269,7 @@ final class MemberController extends AdminController
         return $this->redirect('/members/applications');
     }
 
-    private function renderDetail(Request $req, Response $res, ?array $member = null, ?array $input = null, array $errors = []): Response
+    private function renderDetail(Request $req, Response $res, ?array $member = null, ?array $input = null, array $errors = [], array $periodInput = []): Response
     {
         $pdo = ($this->pdo)();
         $auth = $req->getAttribute('auth');
@@ -303,6 +303,7 @@ final class MemberController extends AdminController
             'input' => $safe,
             'fields' => MemberRepository::FIELDS,
             'errors' => $errors,
+            'period_input' => array_intersect_key($periodInput, array_flip(['date', 'end_reason'])),
             'club_roles' => $clubRoles,
             'assignments' => $assignments,
             'has_open_membership_type' => $hasOpenMembershipType,

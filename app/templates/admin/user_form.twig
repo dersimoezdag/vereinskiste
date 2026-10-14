@@ -38,14 +38,8 @@
                     {% if errors.member_id is defined %}<div class="invalid-feedback">{{ t(errors.member_id) }}</div>{% endif %}
                     <div class="form-hint">{{ t('members.user.hint') }}</div>
                 </div>
-                {% if not editing %}
-                <div class="col-md-6">
-                    <label class="form-label" for="user-password">{{ t('users.password.initial') }}</label>
-                    <input type="password" id="user-password" name="password" required autocomplete="new-password"
-                           class="form-control{% if errors.password is defined %} is-invalid{% endif %}">
-                    <div class="form-hint">{{ t('users.password.help') }}</div>
-                    {% if errors.password is defined %}<div class="invalid-feedback">{{ t(errors.password) }}</div>{% endif %}
-                </div>
+                {% if not editing or user_id != me %}
+                    {% include 'admin/password_field.twig' %}
                 {% endif %}
                 <div class="col-12">
                     <fieldset data-user-roles>
@@ -98,30 +92,8 @@
         <a class="btn" href="/account/password">{{ t('account.password.title') }}</a>
     </div>
 </div>
-{% elseif editing %}
-<div class="card">
-    <div class="card-header"><h2 class="card-title">{{ t('users.password.reset.title') }}</h2></div>
-    <div class="card-body">
-        <p class="text-secondary">{{ t('users.password.reset.help') }}</p>
-        <form method="post" action="/users/{{ user_id }}/password" novalidate>
-            {{ csrf_field() }}
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label" for="user-new-password">{{ t('users.password.new') }}</label>
-                    <input type="password" id="user-new-password" name="password" required autocomplete="new-password"
-                           class="form-control{% if password_error is not null %} is-invalid{% endif %}">
-                    <div class="form-hint">{{ t('users.password.help') }}</div>
-                    {% if password_error is not null %}<div class="invalid-feedback">{{ t(password_error) }}</div>{% endif %}
-                </div>
-            </div>
-            <div class="mt-4">
-                <button type="submit" class="btn">{{ t('users.password.reset.submit') }}</button>
-            </div>
-        </form>
-    </div>
-</div>
 {% endif %}
 {{ role_help.dialog(roles, permissions, role_permissions) }}
 {% endblock %}
 
-{% block scripts %}<script src="{{ asset('user-roles.js') }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ asset('user-roles.js') }}"></script><script src="{{ asset('user-password.js') }}"></script>{% endblock %}

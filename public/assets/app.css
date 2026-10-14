@@ -1145,8 +1145,7 @@ form:not(.is-stepper) .stepper { display: none; }
 .dashboard-shortcut > .btn { border: 0; background: transparent; min-height: 44px; }
 .dashboard-controls { display: none; align-items: center; flex-shrink: 0; gap: 2px; }
 .dashboard-ready.dashboard-editing .dashboard-controls { display: flex; }
-[data-dashboard-editable] .dashboard-edit-only, .dashboard-edit-button { display: none !important; }
-.dashboard-ready .dashboard-edit-button { display: inline-flex !important; }
+[data-dashboard-editable] .dashboard-edit-only { display: none !important; }
 .dashboard-ready.dashboard-editing .dashboard-edit-only { display: flex !important; }
 .dashboard-ready.dashboard-editing .dashboard-edit-button { display: none !important; }
 [data-dashboard-add][hidden], [data-dashboard-empty][hidden] { display: none !important; }

@@ -151,67 +151,8 @@
                     <h3 class="card-title">{{ t('members.period.title') }} {{ help.tip(t('ui.mitgliedszeitraeume_bildet_die_lueckenlose_historie_aller_beitrit')) }}</h3>
                 </div>
                 <div class="card-body">
-                    {% if errors.date %}
-                    <div class="alert alert-danger mb-3">{{ t(errors.date) }}</div>
-                    {% endif %}
-
-                    {% if member.current %}
-                        <p class="text-success fw-semibold mb-3">
-                            {{ t('ui.das_mitglied_hat_eine_aktive_mitgliedschaft') }}
-                        </p>
-                        {% if (can('members.write') and not member.anonymized_at) %}
-                        <form method="post" action="/members/{{ member.id }}/leave" class="border rounded p-3 bg-light-subtle mb-3">
-                            {{ csrf_field() }}
-                            <h4 class="h5 mb-2">{{ t('members.period.leave') }}</h4>
-                            <div class="mb-2">
-                                <label for="leave-date" class="form-label">{{ t('members.period.end') }}</label>
-                                <input type="date" id="leave-date" name="date" value="{{ today }}" class="form-control form-control-sm" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="leave-reason" class="form-label">{{ t('members.period.end_reason') }}</label>
-                                <input type="text" id="leave-reason" name="end_reason" class="form-control form-control-sm" maxlength="500">
-                            </div>
-                            <button type="submit" class="btn btn-sm btn-outline-danger w-100">{{ t('members.period.leave') }} {{ t('ui.erfassen') }}</button>
-                        </form>
-                        {% endif %}
-                    {% else %}
-                        <p class="text-muted mb-3">
-                            {{ t('ui.aktuell_keine_laufende_mitgliedschaft') }}
-                        </p>
-                        {% if (can('members.write') and not member.anonymized_at) %}
-                        <form method="post" action="/members/{{ member.id }}/join" class="border rounded p-3 bg-light-subtle mb-3">
-                            {{ csrf_field() }}
-                            <h4 class="h5 mb-2">{{ t('members.period.join') }}</h4>
-                            <div class="mb-3">
-                                <label for="join-date" class="form-label">{{ t('members.period.start') }}</label>
-                                <input type="date" id="join-date" name="date" value="{{ today }}" class="form-control form-control-sm" required>
-                            </div>
-                            <button type="submit" class="btn btn-sm btn-primary w-100">{{ t('members.period.join') }} {{ t('ui.erfassen') }}</button>
-                        </form>
-                        {% endif %}
-                    {% endif %}
-
-                    <!-- Liste bisheriger Mitgliedszeiträume -->
-                    {% if member.periods is not empty %}
-                    <div class="mt-3">
-                        <div class="text-muted small fw-bold mb-2">{{ t('ui.zeitraeume') }}</div>
-                        <ul class="list-group list-group-flush small">
-                            {% for p in member.periods %}
-                            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                                <div>
-                                    <span class="fw-semibold">{{ p.start_date|date('d.m.Y') }}</span> {{ t('ui.bis') }}
-                                    {% if p.end_date %}
-                                        <span class="fw-semibold">{{ p.end_date|date('d.m.Y') }}</span>
-                                        {% if p.end_reason %}<div class="text-muted fst-italic">{{ t('ui.grund') }} {{ p.end_reason }}</div>{% endif %}
-                                    {% else %}
-                                        <span class="badge bg-success-subtle text-success">{{ t('ui.heute_offen') }}</span>
-                                    {% endif %}
-                                </div>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% endif %}
+                    {% include 'members/membership_summary.twig' %}
+                    <button type="button" class="btn btn-outline-primary mt-3" data-bs-toggle="modal" data-bs-target="#membership-modal"{% if period_input is not empty %} data-membership-reopen{% endif %}>{{ t('members.period.manage') }}</button>
                 </div>
             </div>
 
@@ -351,4 +292,9 @@
         </div>
     </div>
 </div>
+{% include 'members/membership_modal.twig' %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ asset('membership-modal.js') }}" defer></script>
 {% endblock %}

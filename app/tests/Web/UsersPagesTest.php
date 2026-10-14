@@ -346,7 +346,9 @@ final class UsersPagesTest extends TestCase
         $this->assertStringContainsString('value="Karl Kasse"', $html);
         $this->assertStringContainsString('value="karl@example.org"', $html);
         $this->assertMatchesRegularExpression('/value="kassenwart"[^>]*checked/', $html);
-        $this->assertStringContainsString('action="/users/' . $id . '/password"', $html);
+        $this->assertStringContainsString('id="user-new-password"', $html);
+        $this->assertStringContainsString('Leer lassen', $html);
+        $this->assertStringNotContainsString('action="/users/' . $id . '/password"', $html);
     }
 
     public function test_edit_unknown_user_is_404(): void

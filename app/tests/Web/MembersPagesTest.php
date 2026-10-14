@@ -43,6 +43,28 @@ final class MembersPagesTest extends TestCase
         $this->assertSame(403, $this->get('/members/new')->getStatusCode());
     }
 
+    public function test_membership_modal_preserves_invalid_exit_and_hides_write_forms_from_readers(): void
+    {
+        $this->loginAs(['schriftfuehrer']);
+        $this->postForm('/members/new', ['name' => 'Modal Mitglied', 'version' => '0']);
+        $this->postForm('/members/1/join', ['date' => '2026-01-01']);
+        $html = (string) $this->get('/members/1')->getBody();
+        $this->assertStringContainsString('data-bs-target="#membership-modal"', $html);
+        $modal = substr($html, strpos($html, 'id="membership-modal"'));
+        $this->assertStringContainsString('action="/members/1/leave"', $modal);
+        $this->assertStringContainsString('01.01.2026', $modal);
+        $response = $this->postForm('/members/1/leave', ['date' => '2025-12-31', 'end_reason' => 'Umzug <privat>']);
+        $this->assertSame(422, $response->getStatusCode());
+        $html = (string) $response->getBody();
+        $this->assertStringContainsString('data-membership-reopen', $html);
+        $this->assertStringContainsString('value="2025-12-31"', $html);
+        $this->assertStringContainsString('value="Umzug &lt;privat&gt;"', $html);
+        $this->pdo->exec("UPDATE user_roles SET role='kassenwart'");
+        $html = (string) $this->get('/members/1')->getBody();
+        $this->assertStringContainsString('id="membership-modal"', $html);
+        $this->assertStringNotContainsString('action="/members/1/leave"', $html);
+    }
+
     public function test_linking_needs_users_manage_and_shows_hint_without_user(): void
     {
         $this->loginAs(['schriftfuehrer']);

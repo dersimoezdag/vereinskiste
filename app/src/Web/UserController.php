@@ -150,10 +150,18 @@ final class UserController extends AdminController
             $errors['roles'] = $rolesError;
         }
 
+        $password = $this->raw($body, 'password');
+        if (isset($body['password']) && !is_string($body['password'])) {
+            $errors['password'] = 'validation.password.encoding';
+        } elseif ($password !== '') {
+            $passwordError = $this->adminPasswordError($req, $id, $password, $input['email'], $input['name']);
+            if ($passwordError !== null) { $errors['password'] = $passwordError; }
+        }
+
         $changed = [];
         if ($errors === []) {
             try {
-                \Vereinskiste\Ledger\Transaction::run(($this->pdo)(), function () use ($repo, $id, $input, $existing, $memberId, $req, &$changed): void {
+                \Vereinskiste\Ledger\Transaction::run(($this->pdo)(), function () use ($repo, $id, $input, $existing, $memberId, $req, $password, &$changed): void {
                     $changed = $repo->update(
                         $id, $input['name'], $input['email'], $input['roles'], $input['active'], $this->actorId($req)
                     );
@@ -166,6 +174,9 @@ final class UserController extends AdminController
                         if ($memberId !== null) {
                             $link->link($memberId, $id, $this->actorId($req));
                         }
+                    }
+                    if ($password !== '') {
+                        $repo->resetPassword($id, password_hash($password, PASSWORD_DEFAULT), $this->actorId($req));
                     }
                 });
             } catch (UserNotFound) {
@@ -201,9 +212,7 @@ final class UserController extends AdminController
 
         // Das eigene Passwort nur ueber /account/password: dort gilt die Pruefung des aktuellen Passworts.
         $password = $this->raw($this->body($req), 'password');
-        $error = $id === $this->actorId($req)
-            ? 'validation.password.self_reset'
-            : PasswordPolicy::check($password, $user['email'], $user['name']);
+        $error = $this->adminPasswordError($req, $id, $password, $user['email'], $user['name']);
         if ($error === null) {
             try {
                 $repo->resetPassword($id, password_hash($password, PASSWORD_DEFAULT), $this->actorId($req));
@@ -316,6 +325,11 @@ final class UserController extends AdminController
     private function raw(array $body, string $key): string
     {
         return is_string($body[$key] ?? null) ? $body[$key] : '';
+    }
+
+    private function adminPasswordError(Request $req, int $id, string $password, string $email, string $name): ?string
+    {
+        return $id === $this->actorId($req) ? 'validation.password.self_reset' : PasswordPolicy::check($password, $email, $name);
     }
 
     private function actorId(Request $req): int

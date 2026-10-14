@@ -30,6 +30,7 @@ return [
     'members.field.phone' => 'Telefon',
     'members.field.birth_date' => 'Geburtsdatum (JJJJ-MM-TT)',
     'members.field.notes' => 'Notiz',
+    'members.period.manage' => 'Eintritt, Austritt und Zeiträume',
     'members.period.title' => 'Mitgliedschaft',
     'members.period.join' => 'Eintritt',
     'members.period.leave' => 'Austritt',
