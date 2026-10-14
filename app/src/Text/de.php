@@ -1,4 +1,4 @@
 <?php
 declare(strict_types=1);
 
-return array_merge(require __DIR__ . '/de/core.php', require __DIR__ . '/de/roles.php', require __DIR__ . '/de/admin_password.php', require __DIR__ . '/de/foundation.php', require __DIR__ . '/de/bank_import.php', require __DIR__ . '/de/updates.php', require __DIR__ . '/de/auto_update.php', require __DIR__ . '/de/dashboard.php', require __DIR__ . '/de/members.php', require __DIR__ . '/de/mail.php', require __DIR__ . '/de/modules.php', require __DIR__ . '/de/intake.php', require __DIR__ . '/de/interface.php');
+return array_merge(require __DIR__ . '/de/documents.php', require __DIR__ . '/de/core.php', require __DIR__ . '/de/roles.php', require __DIR__ . '/de/admin_password.php', require __DIR__ . '/de/foundation.php', require __DIR__ . '/de/bank_import.php', require __DIR__ . '/de/updates.php', require __DIR__ . '/de/auto_update.php', require __DIR__ . '/de/dashboard.php', require __DIR__ . '/de/members.php', require __DIR__ . '/de/mail.php', require __DIR__ . '/de/modules.php', require __DIR__ . '/de/intake.php', require __DIR__ . '/de/interface.php');

@@ -35,9 +35,9 @@ final class PermissionsTest extends TestCase
         $this->assertSame([], Permissions::for(['unbekannt']));
     }
 
-    public function test_vorstand_without_admin_has_no_implicit_permissions(): void
+    public function test_board_has_minutes_rights_but_no_implicit_admin_rights(): void
     {
-        $this->assertSame([], Permissions::for(['vorstand']));
+        $this->assertEqualsCanonicalizing(['documents.read','documents.write','documents.confidential'], Permissions::for(['vorstand']));
     }
 
     public function test_admin_is_added_only_when_board_is_newly_assigned(): void
@@ -48,9 +48,9 @@ final class PermissionsTest extends TestCase
         $this->assertSame([], Permissions::onAssignment([], ['admin', 'vorstand']));
     }
 
-    public function test_admin_is_a_supported_role_with_every_permission(): void
+    public function test_admin_has_technical_rights_but_no_confidential_minutes_rights(): void
     {
         $this->assertContains('admin', Permissions::ROLES);
-        $this->assertEqualsCanonicalizing(Permissions::ALL, Permissions::for(['admin']));
+        $this->assertEqualsCanonicalizing(array_diff(Permissions::ALL,['documents.write','documents.confidential']), Permissions::for(['admin']));
     }
 }

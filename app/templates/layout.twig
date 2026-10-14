@@ -37,6 +37,15 @@
                     <li class="nav-item{% if path == '/' or path starts with '/dashboard/preferences' %} active{% endif %}">
                         <a class="nav-link" href="/"><span class="nav-link-icon">{{ icons.icon('home') }}</span><span class="nav-link-title">{{ t('nav.home') }}</span></a>
                     </li>
+                    {% set documentsActive = path starts with '/documents' %}
+                    <li class="nav-item dropdown{% if documentsActive %} active{% endif %}">
+                        <a class="nav-link dropdown-toggle{% if documentsActive %} show{% endif %}" href="#documents-menu" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="{{ documentsActive ? 'true' : 'false' }}" aria-controls="documents-menu">
+                            <span class="nav-link-icon">{{ icons.icon('audit') }}</span><span class="nav-link-title">{{ t('documents.title') }}</span>
+                        </a>
+                        <div class="dropdown-menu{% if documentsActive %} show{% endif %}" id="documents-menu">
+                            {% for kind in ['minutes','constitution','rules'] %}<a class="dropdown-item{% if path starts with '/documents/' ~ kind %} active{% endif %}" href="/documents/{{ kind }}">{{ t('documents.kind.' ~ kind) }}</a>{% endfor %}
+                        </div>
+                    </li>
                     {% if can('members.read') %}
                     {% set membersActive = path starts with '/members' or path == '/settings/club-roles' %}
                     {% set pendingApps = pending_applications_count() %}

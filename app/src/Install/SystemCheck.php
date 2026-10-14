@@ -13,7 +13,7 @@ final class SystemCheck
     public function run(): array
     {
         $checks = [['name' => 'PHP', 'ok' => version_compare(PHP_VERSION, '8.4.0', '>='), 'message' => PHP_VERSION]];
-        foreach (['pdo_pgsql', 'mbstring', 'fileinfo', 'gd', 'openssl'] as $extension) {
+        foreach (['pdo_pgsql', 'mbstring', 'fileinfo', 'dom', 'gd', 'openssl'] as $extension) {
             $checks[] = ['name' => $extension, 'ok' => extension_loaded($extension),
                 'message' => extension_loaded($extension) ? 'Verfügbar' : 'PHP-Erweiterung fehlt'];
         }

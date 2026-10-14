@@ -6,6 +6,7 @@ namespace Vereinskiste\Auth;
 final class Permissions
 {
     public const ALL = [
+        'documents.read', 'documents.write', 'documents.confidential',
         'bookings.read',
         'bookings.write',
         'members.read',
@@ -22,12 +23,12 @@ final class Permissions
 
     private const BY_ROLE = [
         'admin' => self::ALL,
-        'vorstand' => [],
-        'kassenwart' => ['bookings.read', 'bookings.write', 'members.read', 'reports.read',
+        'vorstand' => ['documents.read', 'documents.write', 'documents.confidential'],
+        'kassenwart' => ['documents.read', 'bookings.read', 'bookings.write', 'members.read', 'reports.read',
             'imports.read', 'imports.write', 'invoices.read', 'invoices.write', 'payments.approve',
             'contacts.read', 'contacts.write', 'contributions.read', 'contributions.write'],
-        'schriftfuehrer' => ['members.read', 'members.write', 'bookings.read'],
-        'kassenpruefer' => ['bookings.read', 'members.read', 'reports.read',
+        'schriftfuehrer' => ['documents.read', 'documents.write', 'documents.confidential', 'members.read', 'members.write', 'bookings.read'],
+        'kassenpruefer' => ['documents.read', 'bookings.read', 'members.read', 'reports.read',
             'imports.read', 'invoices.read', 'contacts.read', 'contributions.read'],
     ];
 
@@ -57,6 +58,7 @@ final class Permissions
         $rights = [];
         foreach ($roles as $role) {
             foreach (self::BY_ROLE[$role] ?? [] as $right) {
+                if ($role === 'admin' && in_array($right, ['documents.write', 'documents.confidential'], true)) { continue; }
                 $rights[$right] = true;
             }
         }

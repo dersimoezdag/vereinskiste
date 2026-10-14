@@ -25,3 +25,13 @@ Aktualisieren: offizielles npm-Paket herunterladen, dessen veröffentlichte Inte
 - Verwendung: nur das Finanz-Dashboard (`/reports/dashboard`, `public/assets/dashboard.js`). Kein Build, kein React; die Seite bleibt mit der Content-Security-Policy `script-src 'self'` vereinbar.
 
 Aktualisieren: neue Version von jsDelivr/npm laden, Prüfsumme hier eintragen, Dashboard auf allen Zeiträumen prüfen.
+
+## TinyMCE (`tinymce/`)
+
+- Editor: TinyMCE 8.10.0, GPL-2.0-or-later; hier freie Plugins mit `license_key: gpl`.
+- Deutsche Community-Übersetzung: tinymce-i18n 26.9.28, Lizenzhinweise unter `tinymce/langs/LICENSE`.
+- Beide Pakete sind in `tests/package-lock.json` exakt versioniert. `scripts/vendor-document-editor.cjs` liefert Laufzeitdateien, lesbare JavaScript-Dateien, Übersetzung und Lizenzhinweise aus.
+- Vollständiger zugehöriger TinyMCE-Quellcode: `tinymce-source/tinymce-8.10.0.tar.gz`, unverändert von https://github.com/tinymce/tinymce/archive/refs/tags/8.10.0.tar.gz. Der Quellcode wird im Release mitgeliefert.
+- Keine Tiny Cloud, keine Premium-Plugins. Der PDF-Export verwendet Dompdf (LGPL), die serverseitige HTML-Bereinigung HTML Purifier (LGPL); die Composer-Lizenzen bleiben im Release erhalten.
+
+SHA-256 TinyMCE-Quellarchiv: `d116ef7dccffe0f1a524ebaa029a08e3c1e055ecd82b700286e1f4b20bc4975d`.

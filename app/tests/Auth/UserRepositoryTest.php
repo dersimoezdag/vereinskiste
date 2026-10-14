@@ -44,7 +44,8 @@ final class UserRepositoryTest extends TestCase
         $this->assertSame(['vorstand'], $this->roles($id));
         $this->repo->update($id, 'Board renamed', 'board@example.org', ['vorstand'], true, $actor);
         $this->assertSame(['vorstand'], $this->roles($id));
-        $this->assertSame([], \Vereinskiste\Auth\Permissions::for($this->roles($id)));
+        $this->assertNotContains('users.manage', \Vereinskiste\Auth\Permissions::for($this->roles($id)));
+        $this->assertContains('documents.write', \Vereinskiste\Auth\Permissions::for($this->roles($id)));
         $this->repo->update($id, 'Board', 'board@example.org', ['kassenwart'], true, $actor);
         $this->repo->update($id, 'Board', 'board@example.org', ['vorstand'], true, $actor);
         $this->assertSame(['admin', 'vorstand'], $this->roles($id));

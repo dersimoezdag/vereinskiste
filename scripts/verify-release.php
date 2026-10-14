@@ -6,7 +6,7 @@ if ($argc !== 2 || $zip->open($argv[1]) !== true) {
     fwrite(STDERR, "Release-ZIP fehlt oder ist unlesbar.\n");
     exit(1);
 }
-foreach (['app/vendor/autoload.php', 'app/bootstrap.php', 'app/VERSION', 'app/migrations/0001_initial.sql',
+foreach (['app/migrations/0017_club_documents.sql', 'public/assets/vendor/tinymce/tinymce.min.js', 'public/assets/vendor/tinymce/license.md', 'public/assets/vendor/tinymce-source/tinymce-8.10.0.tar.gz', 'public/assets/vendor/tinymce/langs/de.js', 'app/vendor/dompdf/dompdf/src/Dompdf.php', 'app/vendor/ezyang/htmlpurifier/library/HTMLPurifier.php', 'app/vendor/autoload.php', 'app/bootstrap.php', 'app/VERSION', 'app/migrations/0001_initial.sql',
     'app/update-bootstrap.php','app/update-trust.json','app/src/Update/Coordinator.php','app/src/Text/de/auto_update.php','public/assets/auto-update.js',
     'app/migrations/0006_reset_request_queue.sql', 'app/migrations/0010_bank_import.sql',
     'app/src/Text/de/core.php', 'app/src/Text/de/foundation.php', 'app/src/Text/de/bank_import.php',

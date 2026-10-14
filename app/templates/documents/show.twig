@@ -1,0 +1,9 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ document.title }}{% endblock %}
+{% block content %}
+<h1>{{ document.title }}</h1>
+{% if historic %}<p>{{ t('documents.archive') }} · {{ t('documents.version') }} {{ document.version }}</p>{% endif %}
+<div class="card"><div class="card-body">{% include 'documents/content.twig' %}</div></div>
+<div class="d-flex gap-2 mt-3"><a class="btn" href="/documents/{{ kind }}">{{ t('common.back') }}</a>{% if can('documents.write') and not historic %}<a class="btn btn-primary" href="/documents/{{ kind }}/{{ document.document_id }}/edit">{{ t('documents.edit') }}</a>{% endif %}</div>
+{% if kind == 'minutes' and can('documents.confidential') and not historic %}<details class="mt-4"><summary>{{ t('documents.archive') }}</summary><ul>{% for number in 1..document.generation %}<li><a href="/documents/minutes/{{ document.document_id }}/versions/{{ number }}">{{ t('documents.version') }} {{ number }}</a></li>{% endfor %}</ul></details>{% endif %}
+{% endblock %}

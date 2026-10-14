@@ -1,0 +1,25 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('documents.kind.' ~ kind) }}{% endblock %}
+{% block content %}
+<h1>{{ t('documents.kind.' ~ kind) }}</h1>
+{% if errors %}<div class="alert alert-danger" role="alert"><ul class="mb-0">{% for error in errors %}<li>{{ t(error) }}</li>{% endfor %}</ul></div>{% endif %}
+<form method="post" action="/documents/{{ kind }}/{{ root ? root.id : 'new' }}" enctype="multipart/form-data" data-document-form>
+ {{ csrf_field() }}<input type="hidden" name="generation" value="{{ input.generation|default(0) }}">
+ <div class="card"><div class="card-body"><div class="row g-3">
+  <div class="col-md-8"><label class="form-label" for="document-title">{{ t('documents.field.title') }}</label><input id="document-title" name="title" class="form-control" value="{{ input.title|default('') }}" maxlength="200" required></div>
+  <div class="col-md-4"><label class="form-label" for="document-date">{{ t(kind == 'minutes' ? 'documents.field.document_date' : 'documents.valid_from') }}</label><input id="document-date" name="document_date" type="date" class="form-control" value="{{ input.document_date }}" required></div>
+  {% if kind != 'minutes' %}<div class="col-md-6"><label class="form-label" for="document-label">{{ t('documents.field.label') }}</label><input id="document-label" name="label" class="form-control" maxlength="100" value="{{ input.label|default('') }}" required></div>{% endif %}
+  {% if kind == 'minutes' %}
+  <div class="col-md-6"><label class="form-label" for="document-type">{{ t('documents.field.meeting_type') }}</label><select id="document-type" name="meeting_type" class="form-select">{% for type in ['board','assembly'] %}<option value="{{ type }}"{% if input.meeting_type == type %} selected{% endif %}>{{ t('documents.type.' ~ type) }}</option>{% endfor %}</select></div>
+  <div class="col-12"><label class="form-label" for="document-participants">{{ t('documents.field.participants') }}</label><textarea id="document-participants" name="participants" class="form-control" rows="2" maxlength="5000">{{ input.participants|default('') }}</textarea></div>
+  {% endif %}
+  <div class="col-md-6"><label class="form-label" for="document-status">{{ t('documents.field.status') }}</label><select id="document-status" name="status" class="form-select">{% for status in ['draft','published'] %}<option value="{{ status }}"{% if input.status == status %} selected{% endif %}>{{ t('documents.status.' ~ status) }}</option>{% endfor %}</select></div>
+  <div class="col-12"><label class="form-label" for="document-source">{{ t('documents.field.source') }}</label><select id="document-source" name="source" class="form-select" data-document-source>{% for source in ['editor','pdf'] %}<option value="{{ source }}"{% if input.source == source %} selected{% endif %}>{{ t('documents.source.' ~ source) }}</option>{% endfor %}</select></div>
+  <div class="col-12" data-document-editor><label class="form-label" for="document-content">{{ t('documents.field.content') }}</label><textarea id="document-content" name="content" class="form-control" rows="18" data-document-content>{{ input.content|default('') }}</textarea><p class="form-hint">{{ t('documents.editor_hint') }}</p></div>
+  <div class="col-12" data-document-pdf><label class="form-label" for="document-pdf">{{ t('documents.field.receipt') }}</label><input id="document-pdf" name="receipt" type="file" accept="application/pdf,.pdf" class="form-control"><p class="form-hint">{{ t('documents.pdf_hint') }}</p></div>
+ </div>{% if kind != 'minutes' %}<p class="text-muted mt-3">{{ t('documents.publish_hint') }}</p>{% endif %}
+ <button class="btn btn-primary mt-3" type="submit">{{ t('common.save') }}</button></div></div>
+</form>
+<a class="btn mt-3" href="/documents/{{ kind }}">{{ t('common.back') }}</a>
+{% endblock %}
+{% block scripts %}<script src="{{ asset('vendor/tinymce/tinymce.min.js') }}"></script><script src="{{ asset('document-editor.js') }}"></script>{% endblock %}

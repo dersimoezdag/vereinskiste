@@ -12,3 +12,6 @@ dist/
 
 # Generated from pinned npm OCR dependencies during package build
 public/assets/vendor/ocr/
+
+# Generated from pinned free TinyMCE packages
+public/assets/vendor/tinymce/

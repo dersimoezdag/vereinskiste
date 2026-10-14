@@ -249,6 +249,7 @@ final class Kernel
         $app->post('/receipts/{id:[0-9]+}/replace', [$receipts, 'replace'])->add(Auth::requires('bookings.write'));
         $app->get('/receipts/{id:[0-9]+}', [$receipts, 'download'])->add(Auth::requires('bookings.read'));
 
+        \Vereinskiste\ClubDocuments\Routes::register($app, $pdoProvider);
         $reports = new ReportController($pdoProvider, $texts);
         $app->get('/reports/summary', [$reports, 'summary'])->add(Auth::requires('reports.read'));
         $app->get('/reports/dashboard', [$reports, 'dashboard'])->add(Auth::requires('reports.read'));

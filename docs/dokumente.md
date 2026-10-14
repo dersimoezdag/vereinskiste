@@ -1,0 +1,11 @@
+# Dokumente
+
+Menü: Dokumente → Protokolle, Satzung, Geschäftsordnung. Protokolle werden nach Sitzungsdatum absteigend angezeigt. Satzung und Geschäftsordnung haben jeweils eine aktuelle freigegebene Fassung. Neue Entwürfe verdrängen sie nicht; bei Freigabe wird die vorherige Fassung im Archiv abrufbar. Freigabe ist unmittelbar wirksam; „Gültig ab“ dokumentiert den Beschluss und löst keine automatische zeitgesteuerte Freigabe aus.
+
+Vorstand und Schriftführer bearbeiten alle Dokumente und lesen vertrauliche Protokolle sowie Entwürfe. Andere angemeldete Benutzer sehen freigegebene Satzungen und Geschäftsordnungen einschließlich früherer freigegebener Fassungen sowie freigegebene Mitgliederversammlungsprotokolle. Admin allein erweitert diese Rechte nicht.
+
+Alle Inhalte liegen in PostgreSQL: Text, Metadaten und unveränderliche Versionsdatensätze; PDFs bis 10 MB werden binär in kleinen Datenbankblöcken gespeichert. Jeweils neue Originaldateien bleiben für frühere Fassungen erhalten. Metadatenänderungen können dieselbe unveränderliche Datei referenzieren. Datenbanksicherungen enthalten alle Dokumentinhalte. Konflikte bei gleichzeitigen Änderungen werden abgelehnt.
+
+TinyMCE 8.10.0 ist lokal mit freien Plugins und deutscher Community-Übersetzung eingebunden. HTML Purifier bereinigt Editor-Inhalte, Dompdf exportiert A4-PDFs ohne externe Ressourcen. PDF-Uploads bleiben Originale und werden nicht in Editor-Text umgewandelt. Bilder und eingebettete Frames werden nicht übernommen. PHP-DOM muss verfügbar sein. Auf dem Hosting sind weder Node noch ein zusätzlicher Dienst erforderlich.
+
+Lizenz: TinyMCE GPL-2.0-or-later (GPLv3 kompatibel mit AGPLv3). Vollständiger Quellcode und Lizenzhinweise sind enthalten: `/assets/vendor/tinymce-source/tinymce-8.10.0.tar.gz`. Migration: `0017_club_documents.sql`. Keine Kompatibilitätsschicht für frühere Installationen.

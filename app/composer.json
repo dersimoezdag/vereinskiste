@@ -6,6 +6,7 @@
     "require": {
         "php": ">=8.4",
         "ext-fileinfo": "*",
+        "ext-dom": "*",
         "ext-gd": "*",
         "ext-mbstring": "*",
         "ext-openssl": "*",

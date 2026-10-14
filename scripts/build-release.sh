@@ -4,6 +4,7 @@ version=${1:?Usage: build-release.sh VERSION}
 case "$version" in ''|*[!a-zA-Z0-9._-]*) echo 'Invalid version' >&2; exit 1;; esac
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 node "$root/scripts/vendor-browser-ocr.cjs"
+node "$root/scripts/vendor-document-editor.cjs"
 stage=$(mktemp -d)
 trap 'rm -rf -- "$stage"' EXIT HUP INT TERM
 mkdir -p "$stage/app/config" "$stage/app/storage" "$stage/public" "$root/dist"
@@ -14,6 +15,7 @@ cp -R "$root/app/src" "$root/app/templates" "$root/app/migrations" "$stage/app/"
 cp -R "$root/public/." "$stage/public/"
 cp "$root/LICENSE" "$root/README.md" "$stage/"
 mkdir -p "$stage/docs"
+cp "$root/docs/dokumente.md" "$stage/docs/"
 cp "$root/docs/hosting.md" "$stage/docs/"
 cp "$root/docs/automatic-updates.md" "$stage/docs/"
 mkdir -p "$stage/docs/plans/ausbau"

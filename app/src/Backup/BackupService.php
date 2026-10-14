@@ -62,6 +62,9 @@ final class BackupService
 
         $receipts = $this->dirStats($this->receiptsDir);
         $documents = $this->dirStats($this->documentsDir);
+        $databaseFiles = $this->pdo()->query('SELECT count(*) AS count, COALESCE(sum(size),0) AS bytes FROM document_files')->fetch();
+        $documents['count'] += (int) $databaseFiles['count'];
+        $documents['bytes'] += (int) $databaseFiles['bytes'];
         $totalFiles = $receipts['count'] + $documents['count'];
         $totalBytes = $receipts['bytes'] + $documents['bytes'];
 

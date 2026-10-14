@@ -37,9 +37,11 @@ final class DatabaseBackup
                 ftruncate($stream,$progress['bytes']); fseek($stream,$progress['bytes']);
                 foreach ($rows as $row) {
                     if (++$progress['rows'] > self::MAX_ROWS) { throw new Failure('backup_limit'); }
+                    foreach ($row as &$value) { if (is_resource($value)) { $value='\\x'.bin2hex(stream_get_contents($value)); } }
+                    unset($value);
                     $line = json_encode($row,JSON_THROW_ON_ERROR) . "\n";
                     $progress['total_bytes']+=strlen($line);
-                    if ($progress['total_bytes']>67108864) { throw new Failure('backup_limit'); }
+                    if ($progress['total_bytes']>536870912) { throw new Failure('backup_limit'); }
                     if (strlen($line)>1048576 || fwrite($stream,$line)!==strlen($line)) { throw new Failure('backup'); }
                     $progress['bytes']+=strlen($line);
                 }

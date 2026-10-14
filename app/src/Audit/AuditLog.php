@@ -14,7 +14,7 @@ final class AuditLog
 {
     /** Bekannte Aktionen (Filter-Whitelist); Beschriftung ueber `audit.action.<aktion>`. */
     public const ACTIONS = [
-        'login', 'login_failed', 'period_closed', 'period_reopened',
+        'document_saved', 'login', 'login_failed', 'period_closed', 'period_reopened',
         'user_created', 'user_updated', 'user_deactivated', 'user_activated',
         'user_password_reset', 'password_changed', 'password_reset_completed',
         'account_created', 'account_renamed', 'account_activated', 'account_deactivated',
