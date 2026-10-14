@@ -1,0 +1,34 @@
+{% macro button() %}
+{% import 'components/icons.twig' as icons %}
+<button type="button" class="btn btn-sm btn-ghost-secondary p-1" data-bs-toggle="modal" data-bs-target="#roles-help-modal" aria-haspopup="dialog" aria-controls="roles-help-modal" aria-label="{{ t('users.roles.compare') }}" title="{{ t('users.roles.compare') }}">{{ icons.icon('info') }}</button>
+{% endmacro %}
+
+{% macro dialog(roles, permissions, role_permissions) %}
+<div class="modal modal-blur fade" id="roles-help-modal" tabindex="-1" aria-labelledby="roles-help-title" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="roles-help-title">{{ t('users.roles.compare') }}</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('users.roles.close') }}"></button>
+            </div>
+            <div class="modal-body">
+                <p>{{ t('users.roles.combine') }}</p>
+                <div class="alert alert-info">{{ t('users.roles.board_hint') }}</div>
+                <div class="table-responsive">
+                    <table class="table table-vcenter table-bordered">
+                        <caption>{{ t('users.roles.table_hint') }}</caption>
+                        <thead><tr><th scope="col">{{ t('users.roles.permission') }}</th>{% for role in roles %}<th scope="col">{{ role == 'vorstand' ? t('users.roles.board_alone') : t('users.role.' ~ role) }}</th>{% endfor %}</tr></thead>
+                        <tbody>{% for permission in permissions %}
+                            <tr data-permission="{{ permission }}"><th scope="row">{{ t('users.permission.' ~ permission) }}</th>
+                                {% for role in roles %}<td class="text-center" data-role="{{ role }}">{{ permission in role_permissions[role] ? t('users.roles.allowed') : t('users.roles.denied') }}</td>{% endfor %}
+                            </tr>
+                        {% endfor %}</tbody>
+                    </table>
+                </div>
+                <p class="text-muted mb-0">{{ t('users.roles.contributions_hint') }}</p>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn" data-bs-dismiss="modal">{{ t('users.roles.close') }}</button></div>
+        </div>
+    </div>
+</div>
+{% endmacro %}

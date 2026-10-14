@@ -1,4 +1,5 @@
 {% extends 'layout.twig' %}
+{% import 'admin/roles_help.twig' as role_help %}
 {% block title %}{{ t('users.title') }}{% endblock %}
 {% block content %}
 {% include 'components/settings_tabs.twig' %}
@@ -15,7 +16,7 @@
                     <th>{{ t('users.name') }}</th>
                     <th>{{ t('users.email') }}</th>
                     <th>{{ t('members.user.field') }}</th>
-                    <th>{{ t('users.roles') }}</th>
+                    <th>{{ t('users.roles') }} {{ role_help.button() }}</th>
                     <th>{{ t('users.status') }}</th>
                     <th>{{ t('common.actions') }}</th>
                 </tr>
@@ -52,4 +53,5 @@
         </table>
     </div>
 </div>
+{{ role_help.dialog(roles, permissions, role_permissions) }}
 {% endblock %}

@@ -1,6 +1,6 @@
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
-const {money, compact, validIban, germanDate, isoDate} = require('../public/assets/input-masks.js');
+const {phone, money, compact, validIban, germanDate, isoDate} = require('../public/assets/input-masks.js');
 
 test('money accepts the same decimal/grouping syntax as the server without rounding', () => {
     for (const [input, expected] of [['12', '12,00'], ['12.5', '12,50'], ['1.234,56', '1.234,56'],
@@ -31,4 +31,11 @@ test('IBAN validates checksum and country length, accepts pasted whitespace and 
     for (const value of ['29.02.2026', '31.04.2026', '00.10.2026', '13.13.2026', '13.10.0000', '2026-10-13', '1.1.26']) {
         assert.equal(isoDate(value), null, value);
     }
+});
+
+test('phone input supports German national and international numbers and rejects implausible input',()=>{
+    assert.equal(phone('0151 12345678'), '+49 151 12345678');
+    assert.equal(phone('0049 (0)30 12345678'), '+49 3012345678');
+    assert.equal(phone('+43 664 1234567'), '+43 6641234567');
+    for (const value of ['12345', '+49 12', '+49+30 12345678', '+49 1234567890123456']) assert.equal(phone(value),null);
 });

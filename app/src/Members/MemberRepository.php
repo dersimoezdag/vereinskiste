@@ -14,7 +14,7 @@ use Vereinskiste\Ledger\ValidationError;
 final class MemberRepository
 {
     /** Namensfelder (Anrede, Titel, Vorname, Nachname) plus Anschrift und Kontakt; `members.name` ist der Anzeigename. */
-    public const FIELDS = PersonName::LIMITS + ['address' => 200, 'zip' => 20, 'city' => 100, 'country' => 100,
+    public const FIELDS = PersonName::LIMITS + ['address' => 200, 'house_number' => 20, 'zip' => 20, 'city' => 100, 'country' => 100,
         'email' => 254, 'phone' => 50, 'birth_date' => 10, 'notes' => 1000];
 
     public function __construct(private PDO $pdo) {}

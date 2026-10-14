@@ -16,6 +16,27 @@
         if (!signed && integer === '0' && fraction === '00') { return null; }
         return (integer === '0' && fraction === '00' ? '' : sign) + integer.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',' + fraction;
     }
+    // Telefon: 0 bzw. 00 wird zu +49 bzw. +, danach Ziffern in Gruppen; null bei unplausibler Laenge.
+    function phone(value) {
+        var raw = value.trim().replace(/\(0\)/g, '').replace(/[^\d+]/g, '');
+        if (raw.indexOf('+') > 0 || raw.lastIndexOf('+') > 0) { return null; }
+        var digits = raw.replace(/\+/g, '');
+        if (raw[0] === '+') {
+            digits = digits.replace(/^0+/, '');
+        } else if (digits.slice(0, 2) === '00') {
+            digits = digits.slice(2);
+        } else if (digits[0] === '0') {
+            digits = '49' + digits.slice(1);
+        } else {
+            return null;
+        }
+        if (digits.length < 8 || digits.length > 15) { return null; }
+        var country = digits.slice(0, 2) === '49' ? '49' : digits.slice(0, digits[0] === '1' || digits[0] === '7' ? 1 : 2);
+        var rest = digits.slice(country.length);
+        // Vorwahllaengen sind nicht ableitbar; nur deutsche Mobilnetze (15x-17x) haben feste 3 Stellen.
+        var mobile = country === '49' && /^1[5-7]/.test(rest);
+        return '+' + country + ' ' + (mobile ? rest.slice(0, 3) + ' ' + rest.slice(3) : rest);
+    }
     function compact(value) { return value.replace(/\s/g, '').toUpperCase(); }
     function validIban(value) {
         var iban = compact(value);
@@ -39,7 +60,7 @@
         var date = new Date(iso + 'T00:00:00Z');
         return !isNaN(date.getTime()) && date.toISOString().slice(0, 10) === iso ? iso : null;
     }
-    var api = {money: money, compact: compact, validIban: validIban, germanDate: germanDate, isoDate: isoDate};
+    var api = {phone: phone, money: money, compact: compact, validIban: validIban, germanDate: germanDate, isoDate: isoDate};
     if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
     if (!root.document) { return; }
     var document = root.document;
@@ -77,6 +98,10 @@
                 var result = money(value, ['opening_balance', 'net', 'tax'].includes(type));
                 error = result === null || (['net', 'tax'].includes(type) && result[0] === '-') ? specs[type].error : '';
                 if (result !== null) { formatted = result; }
+            } else if (type === 'phone') {
+                var number = phone(value);
+                error = number === null ? window.vkText('js.bitte_eine_gultige_telefonnummer_eingeben') : '';
+                if (number !== null) { formatted = number; }
             } else {
                 formatted = value.trim();
             }

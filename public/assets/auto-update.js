@@ -8,6 +8,7 @@
     const failedPhases = ['failed', 'cancelled', 'rollback', 'rolled_back', 'recovery_required'];
     const steps = Array.from(root.querySelectorAll('[data-step-label]'));
     const stalled = document.getElementById('automatic-stalled');
+    const number = new Intl.NumberFormat('de-DE');
     const maxRetries = 6;
     let failures = 0;
     let stopped = false;
@@ -76,7 +77,13 @@
             document.getElementById('automatic-status').textContent = message(`[data-phase="${state.phase}"]`) || state.phase;
             document.getElementById('automatic-detail').textContent = state.backup_rows !== undefined
                 ? `${message('[data-label="backup_rows"]') || ''} ${state.backup_rows}`.trim()
-                : state.downloaded !== undefined ? `${state.downloaded} / ${state.size} Bytes` : '';
+                : state.downloaded !== undefined ? `${number.format(state.downloaded)} / ${number.format(state.size)} Bytes` : '';
+            const download = document.getElementById('automatic-download');
+            if (download) {
+                const known = state.downloaded !== undefined && state.size > 0;
+                download.hidden = !known;
+                if (known) { download.max = state.size; download.value = state.downloaded; }
+            }
             paint(state);
             if (state.error) showError(state.error);
             if (terminal.includes(state.phase) || state.phase === 'recovery_required') { window.location.reload(); return; }

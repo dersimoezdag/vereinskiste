@@ -63,14 +63,21 @@
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="detail-address" class="form-label">{{ t('members.field.address') }}</label>
-                            <input type="text" id="detail-address" name="address" value="{{ input.address|default(member.data.address) }}"
-                                   class="form-control{% if errors.address %} is-invalid{% endif %}" maxlength="200"
-                                   {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>
-                            {% if errors.address %}
-                            <div class="invalid-feedback">{{ t(errors.address) }}</div>
-                            {% endif %}
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-9 col-12">
+                                <label for="detail-address" class="form-label">{{ t('members.field.address') }}</label>
+                                <input type="text" id="detail-address" name="address" value="{{ input.address|default(member.data.address) }}"
+                                       class="form-control{% if errors.address %} is-invalid{% endif %}" maxlength="200" autocomplete="address-line1"
+                                       {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>
+                                {% if errors.address %}<div class="invalid-feedback">{{ t(errors.address) }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-3 col-12">
+                                <label for="detail-house-number" class="form-label">{{ t('members.field.house_number') }}</label>
+                                <input type="text" id="detail-house-number" name="house_number" value="{{ input.house_number|default(member.data.house_number|default('')) }}"
+                                       class="form-control{% if errors.house_number %} is-invalid{% endif %}" maxlength="20"
+                                       {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>
+                                {% if errors.house_number %}<div class="invalid-feedback">{{ t(errors.house_number) }}</div>{% endif %}
+                            </div>
                         </div>
 
                         <div class="row g-3 mb-3">

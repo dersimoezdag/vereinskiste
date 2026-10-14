@@ -111,7 +111,7 @@
                 </div>
                 {% endif %}
                 {% set message = flash() %}
-                {% if message %}<div class="alert alert-success" role="status">{{ message }}</div>{% endif %}
+                {% if message %}<div class="snackbar" role="status" aria-live="polite" data-snackbar>{{ message }}</div>{% endif %}
                 {% block content %}{% endblock %}
             </div>
         </main>

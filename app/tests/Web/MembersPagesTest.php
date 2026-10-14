@@ -62,7 +62,7 @@ final class MembersPagesTest extends TestCase
         $stmt = $this->pdo->prepare('INSERT INTO members(name,data) VALUES (?, ?::jsonb) RETURNING id');
         for ($i = 0; $i < 505; ++$i) {
             $stmt->execute(['Müller ' . $i, json_encode(['first_name' => 'Erika', 'last_name' => 'Müller',
-                'phone' => '+49 30 123', 'notes' => '=1+1;"Test"' . "\n" . 'zweite Zeile'], JSON_THROW_ON_ERROR)]);
+                'house_number' => '12a', 'phone' => '+49 30 123', 'notes' => '=1+1;"Test"' . "\n" . 'zweite Zeile'], JSON_THROW_ON_ERROR)]);
             $id = (int) $stmt->fetchColumn();
             $this->pdo->prepare('INSERT INTO membership_periods(member_id,start_date) VALUES (?, ?)')
                 ->execute([$id, '2026-01-01']);
@@ -78,15 +78,17 @@ final class MembersPagesTest extends TestCase
         fwrite($stream, substr($csv, 3));
         rewind($stream);
         $header = fgetcsv($stream, null, ';', '"', '');
-        $this->assertCount(15, $header);
+        $this->assertCount(16, $header);
         $rows = [];
         while (($row = fgetcsv($stream, null, ';', '"', '')) !== false) { $rows[] = $row; }
         fclose($stream);
         $this->assertCount(505, $rows);
         $this->assertCount(505, array_unique(array_column($rows, 0)));
-        $this->assertSame("'+49 30 123", $rows[0][11]);
-        $this->assertSame("'=1+1;\"Test\"\nzweite Zeile", $rows[0][13]);
-        $this->assertSame('Ja', $rows[0][14]);
+        $first = array_combine($header, $rows[0]);
+        $this->assertSame('12a', $first['Hausnummer']);
+        $this->assertSame("'+49 30 123", $first['Telefon']);
+        $this->assertSame("'=1+1;\"Test\"\nzweite Zeile", $first['Notizen']);
+        $this->assertSame('Ja', $first['Aktuelle Mitgliedschaft']);
         $this->assertStringNotContainsString('Andere Person', $csv);
         $this->assertStringContainsString('Mitglieder als CSV exportieren', (string) $this->get('/members')->getBody());
         $this->pdo->exec("UPDATE user_roles SET role='kassenwart'");

@@ -18,7 +18,7 @@ final class MemberExport
         try {
             fwrite($stream, CsvExporter::BOM);
             fputcsv($stream, ['Mitgliedsnummer', 'Name', 'Anrede', 'Titel', 'Vorname', 'Nachname',
-                'Adresse', 'PLZ', 'Ort', 'Land', 'E-Mail', 'Telefon', 'Geburtsdatum', 'Notizen',
+                'Adresse', 'Hausnummer', 'PLZ', 'Ort', 'Land', 'E-Mail', 'Telefon', 'Geburtsdatum', 'Notizen',
                 'Aktuelle Mitgliedschaft'], ';', '"', '', "\r\n");
             foreach ((new MemberRepository($this->pdo))->forExport($search, $state) as $member) {
                 $cells = [(string) $member['member_no'], $member['name']];

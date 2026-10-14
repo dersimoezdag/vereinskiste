@@ -31,7 +31,7 @@ final class UserController extends AdminController
         return $req->getAttribute('view')->render($res, 'admin/users.twig', [
             'users' => $this->repo()->all(),
             'me' => $this->actorId($req),
-        ]);
+        ] + $this->roleHelp());
     }
 
     public function showNew(Request $req, Response $res): Response
@@ -335,14 +335,22 @@ final class UserController extends AdminController
                 array_unshift($members, ['id' => $m['id'], 'member_no' => $m['member_no'], 'name' => $m['name']]);
             }
         }
-        $context += [
+        $context += $this->roleHelp() + [
             'errors' => [],
             'password_error' => null,
             'me' => $this->actorId($req),
-            'roles' => Permissions::ROLES,
             'linkable_members' => $members,
         ];
         return $req->getAttribute('view')->render($res->withStatus($status), 'admin/user_form.twig', $context);
+    }
+
+    private function roleHelp(): array
+    {
+        $rights = [];
+        foreach (Permissions::ROLES as $role) {
+            $rights[$role] = Permissions::for([$role]);
+        }
+        return ['roles' => Permissions::ROLES, 'permissions' => Permissions::ALL, 'role_permissions' => $rights];
     }
 
     private function repo(): UserRepository

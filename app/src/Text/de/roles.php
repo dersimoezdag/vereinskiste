@@ -1,0 +1,31 @@
+<?php
+declare(strict_types=1);
+
+return [
+    'users.roles.compare' => 'Rollen und Berechtigungen vergleichen',
+    'users.roles.close' => 'Schließen',
+    'users.roles.permission' => 'Berechtigung',
+    'users.roles.allowed' => 'Ja',
+    'users.roles.denied' => 'Nein',
+    'users.roles.board_alone' => 'Vorstand ohne Admin',
+    'users.roles.combine' => 'Mehrere Rollen ergänzen sich: Ein Benutzer erhält alle Berechtigungen seiner zugewiesenen Rollen.',
+    'users.roles.board_hint' => 'Bei neuer Zuweisung von Vorstand wird Admin mit vergeben. Admin kann anschließend unabhängig entzogen werden. Vorstand allein verleiht keine Zugriffsrechte.',
+    'users.roles.table_hint' => 'Die Tabelle zeigt jede Rolle einzeln. Zusätzliche Regeln wie das Vier-Augen-Prinzip gelten weiterhin.',
+    'users.roles.contributions_hint' => 'Die Beitragsrechte sind vorbereitet; eine eigene Beitragsverwaltung ist derzeit noch nicht verfügbar.',
+    'users.permission.bookings.read' => 'Buchungen und Belege ansehen',
+    'users.permission.bookings.write' => 'Buchungen und Belege bearbeiten',
+    'users.permission.members.read' => 'Mitglieder ansehen und exportieren',
+    'users.permission.members.write' => 'Mitglieder und Mitgliedsanträge bearbeiten',
+    'users.permission.reports.read' => 'Auswertungen ansehen und exportieren',
+    'users.permission.users.manage' => 'Benutzer und Zugriffsrollen verwalten',
+    'users.permission.settings.manage' => 'Einstellungen, Updates und Datensicherungen verwalten',
+    'users.permission.imports.read' => 'Kontoauszug-Importe ansehen',
+    'users.permission.imports.write' => 'Kontoauszüge importieren und abgleichen',
+    'users.permission.invoices.read' => 'Rechnungen ansehen',
+    'users.permission.invoices.write' => 'Rechnungen und Zahlungsvorschläge bearbeiten',
+    'users.permission.payments.approve' => 'Zahlungen freigeben oder ablehnen',
+    'users.permission.contacts.read' => 'Finanzkontakte ansehen und exportieren',
+    'users.permission.contacts.write' => 'Finanzkontakte bearbeiten',
+    'users.permission.contributions.read' => 'Beiträge ansehen',
+    'users.permission.contributions.write' => 'Beiträge bearbeiten',
+];

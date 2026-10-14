@@ -276,6 +276,7 @@ return [
     'js.betrag_z_b_123_45' => 'Betrag, z. B. -123,45',
     'js.bitte_einen_betrag_mit_hochstens_2_nachkommastellen_eingeben_max_9_999_999_' => 'Bitte einen Betrag mit höchstens 2 Nachkommastellen eingeben (max. 9.999.999,99).',
     'js.telefonnummer_mit_vorwahl_z_b_49_30_123456' => 'Telefonnummer mit Vorwahl, z. B. +49 30 123456',
+    'js.bitte_eine_gultige_telefonnummer_eingeben' => 'Bitte eine gültige Telefonnummer mit Vorwahl eingeben, z. B. +49 151 23456789.',
     'js.e_mail_z_b_name_example_org' => 'E-Mail, z. B. name@example.org',
     'js.das_datum_liegt_auerhalb_des_erlaubten_zeitraums' => 'Das Datum liegt außerhalb des erlaubten Zeitraums.',
     'js.datum_auswahlen' => 'Datum auswählen',

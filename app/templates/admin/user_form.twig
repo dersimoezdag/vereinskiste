@@ -1,4 +1,5 @@
 {% extends 'layout.twig' %}
+{% import 'admin/roles_help.twig' as role_help %}
 {% block title %}{{ user_id is not null ? t('users.edit.title') : t('users.new') }}{% endblock %}
 {% block content %}
 {% include 'components/settings_tabs.twig' %}
@@ -48,7 +49,7 @@
                 {% endif %}
                 <div class="col-12">
                     <fieldset data-user-roles>
-                        <legend class="form-label">{{ t('users.roles') }}</legend>
+                        <legend class="form-label d-flex align-items-center gap-1">{{ t('users.roles') }} {{ role_help.button() }}</legend>
                         <div class="d-flex flex-column gap-2{% if errors.roles is defined %} is-invalid{% endif %}">
                             {% for role in roles %}
                             <label class="form-check mb-0">
@@ -120,6 +121,7 @@
     </div>
 </div>
 {% endif %}
+{{ role_help.dialog(roles, permissions, role_permissions) }}
 {% endblock %}
 
 {% block scripts %}<script src="{{ asset('user-roles.js') }}"></script>{% endblock %}

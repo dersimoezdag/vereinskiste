@@ -62,8 +62,9 @@
             <div class="status-box mb-3">
                 <h2 id="automatic-status" role="status" class="h3 mb-2">{{ t('auto_update.phase.' ~ operation.phase) }}</h2>
                 <p id="automatic-detail" class="text-secondary font-monospace small mb-0">
-                    {% if operation.downloaded is defined %}{{ operation.downloaded }} / {{ operation.size }} {{ t('ui.bytes') }}{% endif %}
+                    {% if operation.downloaded is defined %}{{ operation.downloaded|number_format(0, ',', '.') }} / {{ operation.size|number_format(0, ',', '.') }} {{ t('ui.bytes') }}{% endif %}
                 </p>
+                <progress id="automatic-download" class="progress progress-sm mt-2" max="{{ operation.size|default(0) }}" value="{{ operation.downloaded|default(0) }}" aria-label="{{ t('auto_update.step.download') }}"{% if operation.downloaded is not defined or not operation.size %} hidden{% endif %}></progress>
             </div>
 
             <!-- Error Box -->
