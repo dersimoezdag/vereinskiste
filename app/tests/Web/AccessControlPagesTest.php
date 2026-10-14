@@ -32,7 +32,11 @@ final class AccessControlPagesTest extends TestCase
   $this->assertSame(403,$this->postForm('/members/'.$member,['name'=>'Canonical Member','email'=>'takeover@example.org','version'=>'1'])->getStatusCode());
   $this->assertSame('member@example.org',(new UserRepository($this->pdo))->findById($target)['email']);
   $this->pdo->exec("UPDATE user_roles SET role='admin'");
-  $html=(string)$this->get('/users/'.$target.'/edit')->getBody();$this->assertMatchesRegularExpression('/data-linked-email[^>]*readonly/',$html);$this->assertStringContainsString('+49 30 123456',$html);
+  $html=(string)$this->get('/users/'.$target.'/edit')->getBody();
+  foreach (['name', 'email'] as $field) {
+   $this->assertMatchesRegularExpression('/data-linked-'.$field.'[^>]*disabled/',$html);
+  }
+  $this->assertStringContainsString('+49 30 123456',$html);
   $this->assertSame(302,$this->postForm('/members/'.$member,['name'=>'Canonical Member','email'=>'changed@example.org','version'=>'1'])->getStatusCode());
   $this->assertSame('changed@example.org',(new UserRepository($this->pdo))->findById($target)['email']);
  }
