@@ -5,5 +5,5 @@
 #}
 {% macro tip(text, placement = 'top') %}
 {% import 'components/icons.twig' as icons %}
-<span class="help-tooltip-btn" data-bs-toggle="tooltip" data-bs-placement="{{ placement }}" data-bs-html="true" data-bs-title="{{ text|e('html_attr') }}" role="button" tabindex="0" aria-label="{{ t('common.hint') }}: {{ text|e('html_attr') }}">{{ icons.icon('info') }}</span>
+<button type="button" class="help-tooltip-btn info-button" data-bs-toggle="tooltip" data-bs-placement="{{ placement }}" data-bs-html="true" data-bs-title="{{ text|e('html_attr') }}" role="button" tabindex="0" aria-label="{{ t('common.hint') }}: {{ text|e('html_attr') }}">{{ icons.icon('info') }}</button>
 {% endmacro %}

@@ -1,9 +1,10 @@
 {% macro button() %}
 {% import 'components/icons.twig' as icons %}
-<button type="button" class="btn btn-sm btn-ghost-secondary p-1" data-bs-toggle="modal" data-bs-target="#roles-help-modal" aria-haspopup="dialog" aria-controls="roles-help-modal" aria-label="{{ t('users.roles.compare') }}" title="{{ t('users.roles.compare') }}">{{ icons.icon('info') }}</button>
+<button type="button" class="info-button" data-bs-toggle="modal" data-bs-target="#roles-help-modal" aria-haspopup="dialog" aria-controls="roles-help-modal" aria-label="{{ t('users.roles.compare') }}" title="{{ t('users.roles.compare') }}">{{ icons.icon('info') }}</button>
 {% endmacro %}
 
 {% macro dialog(roles, permissions, role_permissions) %}
+{% set compared_roles = roles|filter(role => role != 'vorstand') %}
 <div class="modal modal-blur fade" id="roles-help-modal" tabindex="-1" aria-labelledby="roles-help-title" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
@@ -17,10 +18,10 @@
                 <div class="table-responsive">
                     <table class="table table-vcenter table-bordered">
                         <caption>{{ t('users.roles.table_hint') }}</caption>
-                        <thead><tr><th scope="col">{{ t('users.roles.permission') }}</th>{% for role in roles %}<th scope="col">{{ role == 'vorstand' ? t('users.roles.board_alone') : t('users.role.' ~ role) }}</th>{% endfor %}</tr></thead>
+                        <thead><tr><th scope="col">{{ t('users.roles.permission') }}</th>{% for role in compared_roles %}<th scope="col">{{ t('users.role.' ~ role) }}</th>{% endfor %}</tr></thead>
                         <tbody>{% for permission in permissions %}
                             <tr data-permission="{{ permission }}"><th scope="row">{{ t('users.permission.' ~ permission) }}</th>
-                                {% for role in roles %}<td class="text-center" data-role="{{ role }}">{{ permission in role_permissions[role] ? t('users.roles.allowed') : t('users.roles.denied') }}</td>{% endfor %}
+                                {% for role in compared_roles %}<td class="text-center" data-role="{{ role }}">{{ permission in role_permissions[role] ? t('users.roles.allowed') : t('users.roles.denied') }}</td>{% endfor %}
                             </tr>
                         {% endfor %}</tbody>
                     </table>

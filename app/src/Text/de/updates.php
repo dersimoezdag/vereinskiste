@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 return [
+    'update.maintenance.running_title' => 'Wir aktualisieren die Vereinskiste',
+    'update.maintenance.running_text' => 'Die Anwendung ist während der Aktualisierung kurzzeitig nicht verfügbar. Bitte versuche es in wenigen Minuten erneut.',
+    'update.maintenance.admin_login' => 'Anmeldung für Administratoren',
     'settings.github.error.transport_unavailable' => 'Das Hosting erlaubt keine HTTPS-Abfrage: bitte die PHP-Erweiterung cURL oder allow_url_fopen aktivieren.',
     'settings.github.error.connection' => 'GitHub ist vom Hosting aus nicht erreichbar. Bitte DNS und ausgehende HTTPS-Verbindungen prüfen lassen.',
     'settings.github.error.timeout' => 'Die Verbindung zu GitHub hat zu lange gedauert. Bitte später erneut prüfen.',

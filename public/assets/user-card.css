@@ -8,17 +8,17 @@
     width: 100%;
     min-height: 80px;
     padding: 14px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--vk-border);
     border-radius: 20px;
-    background: #232327;
-    color: #f4f4f6;
+    background: #f8fafc;
+    color: var(--vk-text);
     font: inherit;
     text-align: left;
     cursor: pointer;
     transition: background-color 160ms ease, box-shadow 160ms ease;
 }
-.user-card-trigger:hover, .user-card-trigger.show { background: #2c2c31; }
-.user-card-trigger:focus-visible { outline: 3px solid rgba(255, 255, 255, 0.35); outline-offset: 3px; }
+.user-card-trigger:hover, .user-card-trigger.show { background: #f1f5f9; }
+.user-card-trigger:focus-visible { outline: 3px solid var(--tblr-primary); outline-offset: 3px; }
 .user-card-avatar {
     display: inline-flex;
     align-items: center;
@@ -27,19 +27,35 @@
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: #3f3f46;
-    color: #ffffff;
+    background: rgba(25, 118, 210, 0.12);
+    color: #1976d2;
     font-size: 16px;
     font-weight: 600;
     letter-spacing: .02em;
 }
 .user-card-info { flex: 1; min-width: 0; }
 .user-card-name, .user-card-role { display: block; overflow-wrap: anywhere; }
-.user-card-name { font-size: 14px; font-weight: 600; line-height: 1.4; color: #ffffff; }
-.user-card-role { margin-top: 3px; font-size: 12px; line-height: 1.4; color: #b8b8c2; }
-.user-card-chevron { flex: 0 0 18px; color: #b8b8c2; transition: transform 160ms ease; }
+.user-card-name { font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--vk-text); }
+.user-card-role { margin-top: 3px; font-size: 12px; line-height: 1.4; color: var(--vk-text-muted); }
+.user-card-chevron { flex: 0 0 18px; color: var(--vk-text-muted); transition: transform 160ms ease; }
 .user-card-chevron .icon { width: 18px; height: 18px; }
 .user-card-trigger.show .user-card-chevron { transform: rotate(180deg); }
+
+[data-bs-theme="dark"] .user-card-trigger {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: #232327;
+    color: #f4f4f6;
+}
+[data-bs-theme="dark"] .user-card-trigger:hover,
+[data-bs-theme="dark"] .user-card-trigger.show { background: #2c2c31; }
+[data-bs-theme="dark"] .user-card-trigger:focus-visible { outline: 3px solid rgba(255, 255, 255, 0.35); }
+[data-bs-theme="dark"] .user-card-avatar {
+    background: #3f3f46;
+    color: #ffffff;
+}
+[data-bs-theme="dark"] .user-card-name { color: #ffffff; }
+[data-bs-theme="dark"] .user-card-role { color: #b8b8c2; }
+[data-bs-theme="dark"] .user-card-chevron { color: #b8b8c2; }
 .navbar-vertical .navbar-collapse .user-card .user-card-actions {
     --tblr-dropdown-bg: #ffffff;
     --tblr-dropdown-color: #18181b;

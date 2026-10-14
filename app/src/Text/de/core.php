@@ -84,7 +84,7 @@ return [
     'update.title' => 'Vereinskiste aktualisieren',
     'update.incompatible' => 'Der Datenbankstand passt nicht zu diesem Release. Lade das passende Release hoch oder stelle das zugehörige Backup gemeinsam mit dem bisherigen Release wieder her.',
     'update.maintenance.title' => 'Aktualisierung erforderlich',
-    'update.maintenance.text' => 'Die Anwendung wartet auf ein Datenbank-Update. Ein Vorstand kann die Aktualisierung nach der Anmeldung ausführen.',
+    'update.maintenance.text' => 'Die Anwendung wartet auf ein Datenbank-Update. Ein Administrator kann die Aktualisierung nach der Anmeldung ausführen.',
     'update.instructions' => 'Sichere vor der Aktualisierung die Datenbank, Konfiguration und Belege. Während des Updates steht das Kassenbuch nicht zur Verfügung.',
     'update.backup' => 'Ein aktuelles Backup von Datenbank, Konfiguration und Belegen liegt vor.',
     'update.backup_required' => 'Bitte bestätige zuerst das aktuelle Backup.',

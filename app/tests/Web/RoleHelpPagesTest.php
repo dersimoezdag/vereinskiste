@@ -32,8 +32,10 @@ final class RoleHelpPagesTest extends TestCase
             try { $document->loadHTML('<?xml encoding="UTF-8">' . $html); }
             finally { libxml_clear_errors(); libxml_use_internal_errors($previous); }
             $xpath = new DOMXPath($document);
+            $this->assertSame(0, $xpath->query('//div[@id="roles-help-modal"]//td[@data-role="vorstand"]')->length);
+            $this->assertStringNotContainsString('Vorstand ohne Admin', $html);
             foreach ([['bookings.write', 'admin', 'Ja'], ['bookings.write', 'kassenpruefer', 'Nein'],
-                ['users.manage', 'vorstand', 'Nein'], ['members.write', 'schriftfuehrer', 'Ja'],
+                ['members.write', 'schriftfuehrer', 'Ja'],
                 ['imports.write', 'kassenwart', 'Ja']] as [$permission, $role, $expected]) {
                 $nodes = $xpath->query('//div[@id="roles-help-modal"]//tr[@data-permission="' . $permission . '"]/td[@data-role="' . $role . '"]');
                 $this->assertSame(1, $nodes->length);

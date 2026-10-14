@@ -1,18 +1,23 @@
-{% extends 'layout.twig' %}
-{% import 'components/icons.twig' as icons %}
-{% block title %}{{ t('update.maintenance.title') }}{% endblock %}
-{% block content %}
-<div class="card card-md shadow-sm border-0">
-    <div class="card-body p-4 text-center">
-        <div class="avatar avatar-lg bg-warning-subtle text-warning rounded-circle mb-3 mx-auto">
-            {{ icons.icon('settings') }}
-        </div>
-        <h1 class="card-title h2 mb-2">{{ t('update.maintenance.title') }}</h1>
-        <p class="text-secondary mb-4">{{ t('update.maintenance.text') }}</p>
-        <a class="btn btn-primary d-inline-flex align-items-center gap-2" href="/update">
-            {{ icons.icon('rocket') }}
-            <span>{{ t('update.title') }}</span>
-        </a>
-    </div>
-</div>
-{% endblock %}
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>{{ updating ? t('update.maintenance.running_title') : t('update.maintenance.title') }} – {{ t('app.name') }}</title>
+    <style>
+        :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+        body { min-height: 100vh; margin: 0; display: grid; place-items: center; background: light-dark(#f8fafc, #0b0f19); color: light-dark(#0f172a, #f8fafc); }
+        main { max-width: 36rem; padding: 2rem; text-align: center; }
+        h1 { font-size: 1.75rem; } p { line-height: 1.6; } a { color: light-dark(#1565c0, #90caf9); }
+        a:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>{{ updating ? t('update.maintenance.running_title') : t('update.maintenance.title') }}</h1>
+        <p>{{ updating ? t('update.maintenance.running_text') : t('update.maintenance.text') }}</p>
+        <p><a href="/login">{{ t('update.maintenance.admin_login') }}</a></p>
+    </main>
+</body>
+</html>

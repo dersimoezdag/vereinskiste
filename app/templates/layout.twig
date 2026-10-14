@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{{ asset('vendor/tabler/tabler.min.css') }}">
     <link rel="stylesheet" href="{{ asset('app.css') }}">
     <link rel="stylesheet" href="{{ asset('user-card.css') }}">
+    <link rel="stylesheet" href="{{ asset('info-buttons.css') }}">
     <meta name="color-scheme" content="light dark">
     <script src="{{ asset('theme.js') }}"></script>
 </head>
@@ -19,7 +20,7 @@
 {% set path = current_path() %}
 <div class="page{% if not user %} page-center{% endif %}">
     {% if user %}
-    <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark" aria-label="{{ t('nav.main') }}">
+    <aside class="navbar navbar-vertical navbar-expand-lg" aria-label="{{ t('nav.main') }}">
         <div class="container-fluid">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu"
                     aria-controls="sidebar-menu" aria-expanded="false" aria-label="{{ t('nav.toggle') }}">
@@ -27,7 +28,7 @@
             </button>
             <h1 class="navbar-brand navbar-brand-autodark">
                 <a href="/" class="d-flex align-items-center gap-2 text-decoration-none">
-                    <img src="{{ asset('logo-dark.svg') }}" alt="" width="32" height="32" class="navbar-brand-image">
+                    {% include 'components/logo.twig' with {size: 32, class: 'navbar-brand-image'} %}
                     <span>{{ t('app.name') }}</span>
                 </a>
             </h1>
