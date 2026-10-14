@@ -67,43 +67,6 @@ document.querySelectorAll('form[data-stepper]').forEach(function (form) {
     show(form.hasAttribute('data-start-last') ? panels.length - 1 : 0);
 });
 
-// Hell/Dunkel-Umschalter; ohne gespeicherte Wahl folgt die Seite dem Betriebssystem.
-(function () {
-    var media = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-    function stored() {
-        var value;
-        try { value = localStorage.getItem('vk-theme'); } catch (e) {}
-        return value === 'light' || value === 'dark' ? value : null;
-    }
-    function effective() { return stored() || (media && media.matches ? 'dark' : 'light'); }
-    function apply() {
-        var theme = effective();
-        document.documentElement.setAttribute('data-bs-theme', theme);
-        document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
-            var label = theme === 'dark' ? button.dataset.labelToLight : button.dataset.labelToDark;
-            button.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
-            if (label) { button.setAttribute('aria-label', label); button.title = label; }
-        });
-    }
-    apply();
-    document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
-        button.addEventListener('click', function () {
-            var next = effective() === 'dark' ? 'light' : 'dark';
-            try { localStorage.setItem('vk-theme', next); } catch (e) {}
-            document.documentElement.setAttribute('data-bs-theme', next);
-            document.querySelectorAll('[data-theme-toggle]').forEach(function (b) {
-                var label = next === 'dark' ? b.dataset.labelToLight : b.dataset.labelToDark;
-                b.setAttribute('aria-pressed', next === 'dark' ? 'true' : 'false');
-                if (label) { b.setAttribute('aria-label', label); b.title = label; }
-            });
-        });
-    });
-    if (media && media.addEventListener) { media.addEventListener('change', apply); }
-    window.addEventListener('storage', function (event) {
-        if (event.key === 'vk-theme' || event.key === null) { apply(); }
-    });
-})();
-
 // Beleg-Dropzone: Dateien hineinziehen oder anklicken; alle gesammelten Dateien gehen mit dem Formular ab.
 document.querySelectorAll('[data-dropzone]').forEach(function (zone) {
     var input = zone.querySelector('input[type="file"]');
@@ -270,3 +233,11 @@ document.addEventListener('click', function (event) {
 })();
 
 
+
+// Snackbar: einmalige Meldung blendet sich nach einigen Sekunden aus.
+document.querySelectorAll('[data-snackbar]').forEach(function (bar) {
+    window.setTimeout(function () {
+        bar.classList.add('is-hiding');
+        window.setTimeout(function () { bar.remove(); }, 400);
+    }, 5000);
+});
