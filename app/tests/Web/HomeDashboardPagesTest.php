@@ -20,7 +20,7 @@ final class HomeDashboardPagesTest extends TestCase
 
     public function test_defaults_are_permission_filtered_and_symbol_picker_is_available(): void
     {
-        $this->loginAs(['schriftfuehrer']);
+        $this->loginAs(['secretary']);
         $html = $this->visibleHome();
         $this->assertStringContainsString('name="cards[]" value="members"', $html);
         $this->assertStringContainsString('name="cards[]" value="applications"', $html);
@@ -53,14 +53,14 @@ final class HomeDashboardPagesTest extends TestCase
 
     public function test_forged_permissions_duplicates_and_stale_versions_are_rejected(): void
     {
-        $id = $this->loginAs(['schriftfuehrer']);
+        $id = $this->loginAs(['secretary']);
         $this->assertSame(422, $this->postForm('/dashboard/preferences', ['version' => '0', 'cards' => ['finance']])->getStatusCode());
         $this->assertSame(422, $this->postForm('/dashboard/preferences', ['version' => '0', 'cards' => ['members', 'members']])->getStatusCode());
         $this->assertSame(422, $this->postForm('/dashboard/preferences', ['version' => 'bad'])->getStatusCode());
         $this->assertSame(302, $this->postForm('/dashboard/preferences', ['version' => '0', 'cards' => ['members'], 'user_id' => '999'])->getStatusCode());
         $this->assertSame(409, $this->postForm('/dashboard/preferences', ['version' => '0'])->getStatusCode());
         $this->assertSame('["members"]', $this->pdo->query('SELECT cards FROM user_dashboard_preferences WHERE user_id=' . $id)->fetchColumn());
-        $this->pdo->exec("UPDATE user_roles SET role='kassenpruefer' WHERE user_id=" . $id);
+        $this->pdo->exec("UPDATE user_roles SET role='auditor' WHERE user_id=" . $id);
         $html = $this->visibleHome();
         $this->assertStringNotContainsString('value="applications"', $html);
         $this->assertStringNotContainsString('value="member-add"', $html);
@@ -72,7 +72,7 @@ final class HomeDashboardPagesTest extends TestCase
         $this->postForm('/dashboard/preferences', ['version' => '0', 'cards' => ['finance', 'members', 'operations'],
             'cards_positions' => ['finance' => '3', 'members' => '1', 'operations' => '2']]);
         $this->assertSame('["members", "operations", "finance"]', $this->pdo->query('SELECT cards FROM user_dashboard_preferences WHERE user_id=' . $id)->fetchColumn());
-        $this->pdo->exec("UPDATE user_roles SET role='schriftfuehrer' WHERE user_id=" . $id);
+        $this->pdo->exec("UPDATE user_roles SET role='secretary' WHERE user_id=" . $id);
         $html = $this->visibleHome();
         $this->assertStringContainsString('value="members"', $html);
         $this->assertStringNotContainsString('value="finance"', $html);
@@ -86,7 +86,7 @@ final class HomeDashboardPagesTest extends TestCase
 
     public function test_home_has_explicit_editor_and_available_tiles_stay_permission_filtered(): void
     {
-        $this->loginAs(['schriftfuehrer']);
+        $this->loginAs(['secretary']);
         $this->postForm('/dashboard/preferences', ['version' => '0', 'cards' => [], 'shortcuts' => []]);
         $html = (string) $this->get('/')->getBody();
         $this->assertStringContainsString('data-dashboard-editable', $html);

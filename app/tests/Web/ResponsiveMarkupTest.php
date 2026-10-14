@@ -23,7 +23,7 @@ final class ResponsiveMarkupTest extends TestCase
         $this->pdo = $this->pdo();
         (new Migrator($this->pdo, dirname(__DIR__, 2) . '/migrations'))->migrate();
         $this->bootApp();
-        $user = $this->loginAs(['vorstand']);
+        $user = $this->loginAs(['admin']);
         $this->pdo->exec("INSERT INTO accounts (name, type, opening_date) VALUES ('Kasse', 'cash', '2026-01-01')");
         $this->pdo->exec("INSERT INTO categories (name) VALUES ('Spenden')");
         $booking = (new BookingService($this->pdo))->create(['account_id' => '1', 'booking_date' => '2026-10-01',

@@ -30,7 +30,7 @@ trait WebHarness
         $stmt = $this->pdo->prepare('INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?) RETURNING id');
         $stmt->execute([$email, $name, password_hash('richtig-richtig', PASSWORD_DEFAULT)]);
         $id = (int) $stmt->fetchColumn();
-        foreach (\Vereinskiste\Auth\Permissions::onAssignment($roles) as $role) {
+        foreach ($roles as $role) {
             $this->pdo->prepare('INSERT INTO user_roles (user_id, role) VALUES (?, ?)')->execute([$id, $role]);
         }
         return $id;

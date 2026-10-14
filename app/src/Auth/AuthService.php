@@ -143,9 +143,8 @@ final class AuthService
         return $this->current;
     }
 
-    public function can(string $permission): bool
+    public function can(string $permission, ?array $resource = null): bool
     {
-        $user = $this->currentUser();
-        return $user !== null && in_array($permission, $user['permissions'], true);
+        return AccessControl::can($this->currentUser(),$permission,$resource);
     }
 }

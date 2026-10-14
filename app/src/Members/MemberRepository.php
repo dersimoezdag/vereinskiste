@@ -113,8 +113,12 @@ final class MemberRepository
                 $stmt->execute([$display, $json]);
                 $id = (int) $stmt->fetchColumn();
             } else {
-                $this->pdo->prepare('UPDATE members SET name = ?, data = ?::jsonb, version = version + 1 WHERE id = ?')
-                    ->execute([$display, $json, $id]);
+                try { $this->pdo->prepare('UPDATE members SET name = ?, data = ?::jsonb, version = version + 1 WHERE id = ?')
+                    ->execute([$display, $json, $id]); } catch (\PDOException $e) {
+                    if ($e->getCode()==='23505') { throw new ValidationError(['email'=>'validation.user.email.duplicate']); }
+                    if ($e->getCode()==='23514' && str_contains($e->getMessage(),'Linked member')) { throw new ValidationError(['email'=>'validation.user.email.invalid']); }
+                    throw $e;
+                }
             }
             (new History($this->pdo))->record('member', $id, $before['data'] ?? [], $data, $actor, $reason);
             return $id;

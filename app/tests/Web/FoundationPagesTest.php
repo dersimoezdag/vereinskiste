@@ -32,7 +32,7 @@ final class FoundationPagesTest extends TestCase
 
     public function test_profile_form_permissions_validation_and_conflict(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
         $this->assertSame(200, $this->get('/settings/club')->getStatusCode());
         $values = (new Profile($this->pdo))->get()['data'];
         $values['name'] = 'Neuer Verein'; $values['version'] = '1'; $values['reason'] = 'Profil eingerichtet';
@@ -40,14 +40,14 @@ final class FoundationPagesTest extends TestCase
         $this->assertSame(409, $this->postForm('/settings/club', $values)->getStatusCode());
         $values['version'] = '2'; $values['website_url'] = 'javascript:alert(1)';
         $this->assertSame(422, $this->postForm('/settings/club', $values)->getStatusCode());
-        $this->pdo->exec("DELETE FROM user_roles WHERE role='vorstand'; UPDATE user_roles SET role='kassenwart'");
+        $this->pdo->exec("DELETE FROM user_roles WHERE role='board'; UPDATE user_roles SET role='treasurer'");
         $this->assertSame(403, $this->get('/settings/club')->getStatusCode());
         $this->assertSame(200, $this->get('/contacts')->getStatusCode());
     }
 
     public function test_contact_create_duplicate_warning_archive_readonly_and_csv(): void
     {
-        $this->loginAs(['kassenwart']);
+        $this->loginAs(['treasurer']);
         $values = ['name' => '=Lieferant', 'kind' => 'company', 'email' => 'firma@example.org', 'reason' => 'Neuer Kontakt'];
         $this->assertSame('/contacts/1', $this->postForm('/contacts/new', $values)->getHeaderLine('Location'));
         $this->assertSame(422, $this->postForm('/contacts/new', $values)->getStatusCode());
@@ -55,14 +55,14 @@ final class FoundationPagesTest extends TestCase
         $this->assertSame('/contacts/1', $this->postForm('/contacts/1', $values + ['version' => '1'])->getHeaderLine('Location'));
         $this->assertStringNotContainsString('href="/contacts/1"', (string) $this->get('/contacts')->getBody());
         $this->assertStringContainsString("'=Lieferant", (string) $this->get('/contacts.csv')->getBody());
-        $this->pdo->exec("DELETE FROM user_roles WHERE role='vorstand'; UPDATE user_roles SET role='kassenpruefer'");
+        $this->pdo->exec("DELETE FROM user_roles WHERE role='board'; UPDATE user_roles SET role='auditor'");
         $this->assertSame(403, $this->postForm('/contacts/new', $values)->getStatusCode());
         $this->assertStringNotContainsString('action="/contacts/2"', (string) $this->get('/contacts/2')->getBody());
     }
 
     public function test_logo_upload_and_file_reference_permission(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
         $path = $this->tmpFile($this->pngBytes(), 'logo.png');
         $request = (new ServerRequestFactory())->createServerRequest('POST', '/settings/club/logo')
             ->withParsedBody(['_csrf' => $this->csrf(), 'version' => '1', 'reason' => 'Vereinslogo'])
@@ -70,7 +70,7 @@ final class FoundationPagesTest extends TestCase
         $this->assertSame('/settings/club', $this->app->handle($request)->getHeaderLine('Location'));
         $this->assertSame(200, $this->get('/documents/1')->getStatusCode());
         $this->assertSame(404, $this->get('/documents/999')->getStatusCode());
-        $this->pdo->exec("DELETE FROM user_roles WHERE role='vorstand'; UPDATE user_roles SET role='kassenpruefer'");
+        $this->pdo->exec("DELETE FROM user_roles WHERE role='board'; UPDATE user_roles SET role='auditor'");
         $this->assertSame(404, $this->get('/documents/1')->getStatusCode());
     }
 }

@@ -27,7 +27,7 @@ final class AutoUpdatePagesTest extends TestCase
     protected function tearDown(): void { $this->cleanScratch(); }
     public function test_progress_status_and_installation_routes_require_settings_permission_and_csrf(): void
     {
-        $this->loginAs(['kassenwart']);
+        $this->loginAs(['treasurer']);
         foreach (['/settings/auto-update','/settings/auto-update/status'] as $path) { $this->assertSame(403,$this->get($path)->getStatusCode()); }
         foreach (['start','step','cancel'] as $action) { $this->assertSame(403,$this->postForm('/settings/auto-update/' . $action,[])->getStatusCode()); }
         $this->pdo->exec("UPDATE user_roles SET role='admin'");
@@ -39,7 +39,7 @@ final class AutoUpdatePagesTest extends TestCase
     }
     public function test_maintenance_blocks_mutations_and_normal_pages_but_keeps_recovery_available(): void
     {
-        $this->loginAs(['vorstand']); Files::mkdir($this->scratchDir() . '/storage/updates');
+        $this->loginAs(['admin']); Files::mkdir($this->scratchDir() . '/storage/updates');
         Files::json($this->scratchDir() . '/storage/updates/maintenance.json',[
             'id'=>str_repeat('a',32),'previous'=>null,'probe'=>str_repeat('b',64)]);
         $this->assertSame(302,$this->get('/')->getStatusCode());
@@ -55,7 +55,7 @@ final class AutoUpdatePagesTest extends TestCase
     }
     public function test_visitors_and_non_admins_see_static_maintenance_even_on_update_routes(): void
     {
-        $this->loginAs(['kassenwart']);
+        $this->loginAs(['treasurer']);
         $this->enableMaintenance();
         foreach (['/', '/members', '/settings/auto-update', '/settings/auto-update/status'] as $path) {
             $response=$this->get($path);

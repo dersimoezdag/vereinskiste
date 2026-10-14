@@ -27,12 +27,12 @@ final class MembershipApplicationPagesTest extends TestCase
             'require_https' => false,
             'security_dir' => $this->securityDir(),
         ]);
-        $this->webUser('admin@example.org', ['vorstand']);
+        $this->webUser('admin@example.org', ['admin']);
     }
 
     public function test_public_application_with_password_and_sepa(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         // 1. Create password-protected invite with SEPA
         $res = $this->postForm('/members/invites/new', [
@@ -138,7 +138,7 @@ final class MembershipApplicationPagesTest extends TestCase
             'consent_privacy' => '1',
         ]);
 
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
         $res = $this->postForm("/members/applications/{$appId}/reject", ['reason' => 'Leider voll']);
         $this->assertSame(302, $res->getStatusCode());
         $this->assertSame('/members/applications', $res->getHeaderLine('Location'));

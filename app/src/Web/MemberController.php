@@ -78,6 +78,11 @@ final class MemberController extends AdminController
             return $this->notFound($req);
         }
         $body = $this->body($req);
+        if ($member && $member['user_id'] !== null) {
+            $body += ['email'=>$member['data']['email'] ?? ''];
+            $emailChanged=\Vereinskiste\Auth\UserRepository::normalizeEmail($this->str($body,'email')) !== \Vereinskiste\Auth\UserRepository::normalizeEmail($member['data']['email'] ?? '');
+            if (!$req->getAttribute('auth')->can('members.write',['login_email_change'=>$emailChanged])) { return $res->withStatus(403); }
+        }
         try {
             $saved = $repo->save(
                 $id,
@@ -171,6 +176,8 @@ final class MemberController extends AdminController
         }
         $body = $this->body($req);
         $roleId = (int) ($body['role_id'] ?? 0);
+        $function=(new ClubRoleRepository(($this->pdo)()))->find($roleId);
+        if (!$req->getAttribute('auth')->can('members.write',$function)) { return $res->withStatus(403); }
         $scope = $this->str($body, 'scope');
         $start = $this->str($body, 'start_date') ?: null;
         try {
@@ -186,6 +193,10 @@ final class MemberController extends AdminController
     {
         $id = (int) $args['id'];
         $assignmentId = (int) $args['assignment'];
+        $access=($this->pdo)()->prepare('SELECT a.member_id,r.access_role FROM member_club_roles a JOIN club_roles r ON r.id=a.role_id WHERE a.id=?');
+        $access->execute([$assignmentId]);$function=$access->fetch();
+        if (!$function || (int)$function['member_id']!==$id) { return $this->notFound($req); }
+        if (!$req->getAttribute('auth')->can('members.write',$function)) { return $res->withStatus(403); }
         $member = (new MemberRepository(($this->pdo)()))->find($id);
         if ($member === null) {
             return $this->notFound($req);

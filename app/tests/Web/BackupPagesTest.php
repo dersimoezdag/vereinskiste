@@ -32,19 +32,19 @@ final class BackupPagesTest extends TestCase
         $this->assertSame('/login', $res->getHeaderLine('Location'));
 
         // Benutzer ohne settings.manage (z. B. nur kassenpruefer) -> 403
-        $this->loginAs(['kassenpruefer'], 'pruefer@example.org');
+        $this->loginAs(['auditor'], 'pruefer@example.org');
         $res = $this->get('/settings/backup');
         $this->assertSame(403, $res->getStatusCode());
 
         // Vorstand -> 200 OK
-        $this->loginAs(['vorstand'], 'vorstand@example.org');
+        $this->loginAs(['admin'], 'vorstand@example.org');
         $res = $this->get('/settings/backup');
         $this->assertSame(200, $res->getStatusCode());
     }
 
     public function test_backup_page_shows_stats_and_download_forms(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $html = (string) $this->get('/settings/backup')->getBody();
         $this->assertStringContainsString('Backup &amp; Datenexport', $html);
@@ -60,7 +60,7 @@ final class BackupPagesTest extends TestCase
 
     public function test_download_database_backup_delivers_valid_zip(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $res = $this->postForm('/settings/backup/database', []);
         $this->assertSame(200, $res->getStatusCode());
@@ -81,7 +81,7 @@ final class BackupPagesTest extends TestCase
 
     public function test_download_full_backup_delivers_zip(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $res = $this->postForm('/settings/backup/full', []);
         $this->assertSame(200, $res->getStatusCode());
@@ -91,7 +91,7 @@ final class BackupPagesTest extends TestCase
 
     public function test_download_csv_package_and_single_csvs(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $res = $this->postForm('/settings/backup/csv-all', []);
         $this->assertSame(200, $res->getStatusCode());
@@ -117,7 +117,7 @@ final class BackupPagesTest extends TestCase
 
     public function test_restore_without_confirmation_phrase_is_rejected(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $res = $this->postForm('/settings/backup/restore', [
             'confirm_overwrite' => '1',
@@ -132,7 +132,7 @@ final class BackupPagesTest extends TestCase
 
     public function test_verify_and_restore_with_uploaded_zip(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         // Zuerst ein echtes DB-Backup herunterladen
         $backupRes = $this->postForm('/settings/backup/database', []);

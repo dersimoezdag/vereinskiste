@@ -27,7 +27,7 @@ final class SchemaTest extends TestCase
 
     public function test_user_member_link_is_optional_and_one_to_one(): void
     {
-        $this->db->exec("INSERT INTO members(name) VALUES ('A')");
+        $this->db->exec("INSERT INTO members(name,data) VALUES ('A','{\"email\":\"member@example.org\"}')");
         $this->db->exec("INSERT INTO users(name,email,password_hash) VALUES ('U1','u1@example.org','x'), ('U2','u2@example.org','x')");
         $this->db->exec('UPDATE users SET member_id = 1 WHERE id = 1');
         $this->expectException(PDOException::class);
@@ -66,9 +66,9 @@ final class SchemaTest extends TestCase
     public function test_default_club_roles_are_installed_with_kind_and_single_holder(): void
     {
         $rows = $this->db->query('SELECT name, kind, single_holder, system_key FROM club_roles ORDER BY id')->fetchAll();
-        $this->assertSame(['active_member', 'passive_member', 'former_member', null, null, null, null], array_column($rows, 'system_key'));
+        $this->assertSame(['active_member', 'passive_member', 'former_member', null, 'finance_board_member', 'first_chairperson', 'second_chairperson'], array_column($rows, 'system_key'));
         $this->assertSame(['Aktives Mitglied', 'Passives Mitglied', 'Ehemaliges Mitglied', 'Ehrenmitglied',
-            'Finanzvorstand', '1. Sprecher', '2. Sprecher'], array_column($rows, 'name'));
+            'Finanzvorstand', '1. Vorsitzender', '2. Vorsitzender'], array_column($rows, 'name'));
         $this->assertSame(['membership_type', 'membership_type', 'membership_type', 'function', 'function', 'function', 'function'],
             array_column($rows, 'kind'));
         $this->assertSame([false, false, false, false, true, true, true], array_map(fn ($v) => (bool) $v, array_column($rows, 'single_holder')));

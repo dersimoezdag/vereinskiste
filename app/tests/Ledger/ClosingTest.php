@@ -487,7 +487,7 @@ final class ClosingTest extends TestCase
     public function test_only_vorstand_can_close(): void
     {
         $this->bootApp();
-        $this->loginAs(['kassenwart'], 'kw@example.org');
+        $this->loginAs(['treasurer'], 'kw@example.org');
 
         $this->assertSame(403, $this->get('/settings/closing')->getStatusCode());
         $res = $this->postForm('/settings/closing', ['action' => 'close', 'closed_until' => '2026-03-31']);
@@ -501,7 +501,7 @@ final class ClosingTest extends TestCase
         $booking = $this->booking('2026-03-10');
         $this->closing->close('2026-03-31', $this->userId);
         $this->bootApp();
-        $this->loginAs(['kassenwart'], 'kw@example.org');
+        $this->loginAs(['treasurer'], 'kw@example.org');
 
         $res = $this->postForm("/bookings/{$booking['id']}/edit", [
             'version' => (string) $booking['version'], 'reason' => 'Tippfehler', 'description' => 'Anders',
@@ -528,7 +528,7 @@ final class ClosingTest extends TestCase
         $this->closing->close('2026-03-31', $this->userId);
         $this->store = new ArraySessionStore();
         $this->app = Kernel::create(['require_https' => false, 'security_dir' => $this->securityDir(), 'pdo' => $this->pdo, 'session_store' => $this->store, 'receipts_dir' => $receiptsDir]);
-        $this->loginAs(['kassenwart'], 'kw@example.org');
+        $this->loginAs(['treasurer'], 'kw@example.org');
 
         $correction = $this->postForm('/corrections/new', $this->form(['booking_date' => '2026-03-31', 'reason' => 'Falsch']));
         $this->assertSame(409, $correction->getStatusCode());

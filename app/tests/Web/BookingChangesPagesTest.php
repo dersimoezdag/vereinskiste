@@ -71,7 +71,7 @@ final class BookingChangesPagesTest extends TestCase
         $stmt = $this->pdo->prepare('INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?) RETURNING id');
         $stmt->execute(['wer@example.org', 'Test Person', password_hash('richtig-richtig', PASSWORD_DEFAULT)]);
         $id = (int) $stmt->fetchColumn();
-        foreach (\Vereinskiste\Auth\Permissions::onAssignment($roles) as $role) {
+        foreach ($roles as $role) {
             $this->pdo->prepare('INSERT INTO user_roles (user_id, role) VALUES (?, ?)')->execute([$id, $role]);
         }
         $res = $this->post('/login', ['email' => 'wer@example.org', 'password' => 'richtig-richtig']);
@@ -104,7 +104,7 @@ final class BookingChangesPagesTest extends TestCase
 
     public function test_detail_page_shows_history_but_list_does_not(): void
     {
-        $uid = $this->loginAs(['kassenpruefer']);
+        $uid = $this->loginAs(['auditor']);
         $id = $this->booking($uid);
         (new BookingService($this->pdo))->update(
             $id,
@@ -136,7 +136,7 @@ final class BookingChangesPagesTest extends TestCase
 
     public function test_detail_page_without_changes_has_empty_history_anchor(): void
     {
-        $uid = $this->loginAs(['kassenwart']);
+        $uid = $this->loginAs(['treasurer']);
         $id = $this->booking($uid);
 
         $html = (string) $this->get('/bookings/' . $id)->getBody();
@@ -150,7 +150,7 @@ final class BookingChangesPagesTest extends TestCase
 
     public function test_edit_form_carries_version_and_saves_change(): void
     {
-        $uid = $this->loginAs(['kassenwart']);
+        $uid = $this->loginAs(['treasurer']);
         $id = $this->booking($uid);
 
         $form = (string) $this->get('/bookings/' . $id . '/edit')->getBody();
@@ -174,7 +174,7 @@ final class BookingChangesPagesTest extends TestCase
 
     public function test_edit_form_keeps_current_inactive_account_and_category_selected(): void
     {
-        $uid = $this->loginAs(['kassenwart']);
+        $uid = $this->loginAs(['treasurer']);
         $id = $this->booking($uid);
         $this->pdo->exec("UPDATE accounts SET active = false WHERE id = {$this->cash}");
         $this->pdo->exec("UPDATE categories SET active = false WHERE id = {$this->rent}");
@@ -194,7 +194,7 @@ final class BookingChangesPagesTest extends TestCase
 
     public function test_edit_without_reason_rerenders_422_with_submitted_version_and_input(): void
     {
-        $uid = $this->loginAs(['kassenwart']);
+        $uid = $this->loginAs(['treasurer']);
         $id = $this->booking($uid);
 
         $res = $this->post('/bookings/' . $id . '/edit', $this->form(['description' => 'Behalten <me>']) + [
@@ -211,7 +211,7 @@ final class BookingChangesPagesTest extends TestCase
 
     public function test_update_with_stale_version_is_409_and_changes_nothing(): void
     {
-        $uid = $this->loginAs(['kassenwart']);
+        $uid = $this->loginAs(['treasurer']);
         $id = $this->booking($uid);
         $first = $this->post('/bookings/' . $id . '/edit', $this->form(['amount' => '13']) + [
             'version' => '1', 'reason' => 'Erste Änderung',
@@ -240,7 +240,7 @@ final class BookingChangesPagesTest extends TestCase
 
     public function test_change_routes_require_write_permission(): void
     {
-        $uid = $this->loginAs(['kassenpruefer']);
+        $uid = $this->loginAs(['auditor']);
         $id = $this->booking($uid);
 
         $this->assertSame(403, $this->get('/bookings/' . $id . '/edit')->getStatusCode());
@@ -256,7 +256,7 @@ final class BookingChangesPagesTest extends TestCase
 
     public function test_unknown_booking_is_404_for_edit_cancel_and_correction(): void
     {
-        $this->loginAs(['kassenwart']);
+        $this->loginAs(['treasurer']);
 
         $this->assertSame(404, $this->get('/bookings/4711/edit')->getStatusCode());
         $this->assertSame(404, $this->post('/bookings/4711/edit', $this->form() + ['version' => '1', 'reason' => 'x'])->getStatusCode());
@@ -266,7 +266,7 @@ final class BookingChangesPagesTest extends TestCase
 
     public function test_cancel_and_restore_via_detail_page(): void
     {
-        $uid = $this->loginAs(['kassenwart']);
+        $uid = $this->loginAs(['treasurer']);
         $id = $this->booking($uid);
 
         $empty = $this->post('/bookings/' . $id . '/cancel', ['version' => '1', 'reason' => '']);
@@ -293,7 +293,7 @@ final class BookingChangesPagesTest extends TestCase
 
     public function test_transfer_page_creates_two_bookings_and_cancel_hits_both_legs(): void
     {
-        $this->loginAs(['kassenwart']);
+        $this->loginAs(['treasurer']);
 
         $form = (string) $this->get('/transfers/new')->getBody();
         $this->assertStringContainsString('name="from_account_id"', $form);
@@ -332,7 +332,7 @@ final class BookingChangesPagesTest extends TestCase
 
     public function test_correction_page_creates_correction_with_reference(): void
     {
-        $uid = $this->loginAs(['kassenwart']);
+        $uid = $this->loginAs(['treasurer']);
         $original = $this->booking($uid);
 
         $form = $this->get('/corrections/new', ['of' => (string) $original]);
@@ -367,7 +367,7 @@ final class BookingChangesPagesTest extends TestCase
 
     public function test_correction_reference_with_trailing_newline_is_ignored(): void
     {
-        $uid = $this->loginAs(['kassenwart']);
+        $uid = $this->loginAs(['treasurer']);
         $original = $this->booking($uid);
 
         $html = (string) $this->get('/corrections/new', ['of' => $original . "\n"])->getBody();
@@ -378,7 +378,7 @@ final class BookingChangesPagesTest extends TestCase
 
     public function test_correction_without_original_for_cash_difference(): void
     {
-        $this->loginAs(['kassenwart']);
+        $this->loginAs(['treasurer']);
 
         $html = (string) $this->get('/corrections/new')->getBody();
         $this->assertStringContainsString('name="correction_of_id" value=""', $html);
@@ -392,7 +392,7 @@ final class BookingChangesPagesTest extends TestCase
 
     public function test_list_offers_correction_and_transfer_entry_points_for_writers_only(): void
     {
-        $this->loginAs(['kassenwart']);
+        $this->loginAs(['treasurer']);
         $html = (string) $this->get('/bookings')->getBody();
         $this->assertStringContainsString('href="/corrections/new"', $html);
         $this->assertStringContainsString('href="/transfers/new"', $html);
@@ -400,7 +400,7 @@ final class BookingChangesPagesTest extends TestCase
 
     public function test_list_hides_correction_and_transfer_entry_points_for_readers(): void
     {
-        $this->loginAs(['kassenpruefer']);
+        $this->loginAs(['auditor']);
         $html = (string) $this->get('/bookings')->getBody();
         $this->assertStringNotContainsString('href="/corrections/new"', $html);
         $this->assertStringNotContainsString('href="/transfers/new"', $html);

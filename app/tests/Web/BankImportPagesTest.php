@@ -30,7 +30,7 @@ final class BankImportPagesTest extends TestCase
     protected function tearDown(): void { $this->cleanScratch(); }
     public function test_upload_preview_confirmation_permissions_and_private_original(): void
     {
-        $this->loginAs(['kassenwart']);
+        $this->loginAs(['treasurer']);
         $this->assertSame(200, $this->get('/imports/bank/new')->getStatusCode());
         $path = $this->tmpFile("Datum;Betrag;Name\n02.01.2026;-10,50;<script>alert(1)</script>\n");
         $req = (new ServerRequestFactory())->createServerRequest('POST', '/imports/bank/new')
@@ -50,16 +50,16 @@ final class BankImportPagesTest extends TestCase
         $this->assertSame(200, $this->get('/imports/bank/1')->getStatusCode());
         $version = (string) (new Repository($this->pdo))->find(1)['version'];
         $this->assertSame(422, $this->postForm('/imports/bank/1/confirm', ['version' => $version])->getStatusCode());
-        $this->pdo->exec("UPDATE user_roles SET role='kassenpruefer'");
+        $this->pdo->exec("UPDATE user_roles SET role='auditor'");
         $this->assertSame(200, $this->get('/imports/bank/1')->getStatusCode());
         $this->assertSame(403, $this->postForm('/imports/bank/1/confirm', ['version' => $version,'checked' => '1'])->getStatusCode());
-        $this->pdo->exec("UPDATE user_roles SET role='schriftfuehrer'");
+        $this->pdo->exec("UPDATE user_roles SET role='secretary'");
         $this->assertSame(403, $this->get('/imports/bank/1')->getStatusCode());
         $this->assertSame(404, $this->get('/documents/1')->getStatusCode());
     }
     public function test_missing_csrf_cannot_upload_or_confirm(): void
     {
-        $this->loginAs(['kassenwart']);
+        $this->loginAs(['treasurer']);
         $req = (new ServerRequestFactory())->createServerRequest('POST', '/imports/bank/new')->withParsedBody(['account_id' => '1']);
         $this->assertSame(403, $this->app->handle($req)->getStatusCode());
         $this->assertSame(0, (int) $this->pdo->query('SELECT count(*) FROM bank_imports')->fetchColumn());

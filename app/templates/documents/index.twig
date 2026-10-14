@@ -5,6 +5,7 @@
  <h1>{{ t('documents.kind.' ~ kind) }}</h1>
  {% if can('documents.write') %}<a class="btn btn-primary" href="/documents/{{ kind }}/new">{{ t(kind == 'minutes' ? 'documents.new' : 'documents.new_version') }}</a>{% endif %}
 </div>
+{% if not can('documents.write') %}<div class="alert alert-info" role="status">{{ t('documents.write_required') }}</div>{% endif %}
 {% if kind == 'minutes' %}
 <div class="card"><div class="table-responsive"><table class="table table-vcenter mb-0"><thead><tr><th>{{ t('documents.field.document_date') }}</th><th>{{ t('documents.field.title') }}</th><th>{{ t('documents.field.meeting_type') }}</th><th>{{ t('documents.field.status') }}</th></tr></thead><tbody>
  {% for row in rows %}<tr><td>{{ row.document_date|date('d.m.Y') }}</td><td><a href="/documents/minutes/{{ row.document_id }}">{{ row.title }}</a></td><td>{{ t('documents.type.' ~ row.meeting_type) }}</td><td>{{ t('documents.status.' ~ row.status) }}</td></tr>{% else %}<tr><td colspan="4">{{ t('documents.empty') }}</td></tr>{% endfor %}

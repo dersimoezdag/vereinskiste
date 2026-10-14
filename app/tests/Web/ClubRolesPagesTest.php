@@ -31,7 +31,7 @@ final class ClubRolesPagesTest extends TestCase
 
     public function test_vorstand_creates_and_manages_club_roles(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
         $this->assertSame(200, $this->get('/settings/club-roles')->getStatusCode());
 
         // Create new role
@@ -63,7 +63,7 @@ final class ClubRolesPagesTest extends TestCase
 
     public function test_schriftfuehrer_gets_forbidden_on_settings_but_can_assign_roles(): void
     {
-        $this->loginAs(['schriftfuehrer']);
+        $this->loginAs(['secretary']);
         $this->assertSame(403, $this->get('/settings/club-roles')->getStatusCode());
         $this->assertSame(403, $this->postForm('/settings/club-roles', ['name' => 'X'])->getStatusCode());
 
@@ -84,7 +84,7 @@ final class ClubRolesPagesTest extends TestCase
 
     public function test_single_holder_role_conflict_on_web(): void
     {
-        $this->loginAs(['schriftfuehrer']);
+        $this->loginAs(['admin']);
         $m1 = (new MemberRepository($this->pdo))->save(null, ['name' => 'Erster Träger'], 0, 1);
         $m2 = (new MemberRepository($this->pdo))->save(null, ['name' => 'Zweiter Träger'], 0, 1);
         $financeRole = (int) $this->pdo->query("SELECT id FROM club_roles WHERE name = 'Finanzvorstand'")->fetchColumn();
@@ -97,7 +97,7 @@ final class ClubRolesPagesTest extends TestCase
 
     public function test_settings_tabs_show_club_roles_only_with_permission(): void
     {
-        $this->loginAs(['schriftfuehrer']);
+        $this->loginAs(['secretary']);
         $this->assertStringNotContainsString('href="/settings/club-roles"', (string) $this->get('/settings/closing')->getBody());
 
         $this->pdo->exec("UPDATE user_roles SET role='admin'");

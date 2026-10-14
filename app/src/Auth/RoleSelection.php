@@ -11,11 +11,8 @@ final class RoleSelection
     /** @param array<mixed> $roles @return string[] */
     public static function read(array $roles): array
     {
-        if ($roles === []) {
-            throw new ValidationError(['roles' => 'validation.user.roles.required']);
-        }
         foreach ($roles as $role) {
-            if (!is_string($role) || !in_array($role, Permissions::ROLES, true)) {
+            if (!is_string($role) || !in_array($role, Permissions::MANUAL_ROLES, true)) {
                 throw new ValidationError(['roles' => 'validation.user.roles.unknown']);
             }
         }

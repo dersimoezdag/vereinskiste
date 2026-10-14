@@ -4,7 +4,7 @@
 {% endmacro %}
 
 {% macro dialog(roles, permissions, role_permissions) %}
-{% set compared_roles = roles|filter(role => role != 'vorstand') %}
+{% set compared_roles = roles %}
 <div class="modal modal-blur fade" id="roles-help-modal" tabindex="-1" aria-labelledby="roles-help-title" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">

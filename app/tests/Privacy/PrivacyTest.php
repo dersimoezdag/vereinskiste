@@ -39,6 +39,7 @@ final class PrivacyTest extends TestCase
         $this->assertContains('privacy.block.policy',$privacy->preview($id)['blocked']);
         (new Settings($this->db))->save(['member_retention_days'=>'0'],1,1);
         (new MembershipPeriods($this->db))->join($id,'2026-01-01',1);
+        $this->db->prepare("UPDATE members SET data=data || jsonb_build_object('email','linked-privacy@example.org') WHERE id=?")->execute([$id]);
         $this->db->exec("UPDATE users SET member_id=$id WHERE id=1");
         $blocked=$privacy->preview($id)['blocked'];$this->assertContains('privacy.block.active',$blocked);$this->assertContains('privacy.block.account',$blocked);
         $this->expectException(ValidationError::class);$preview=$privacy->preview($id);$privacy->anonymize($id,1,$preview['fingerprint'],'Prüfung',1);

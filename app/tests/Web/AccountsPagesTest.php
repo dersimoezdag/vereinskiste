@@ -35,7 +35,7 @@ final class AccountsPagesTest extends TestCase
         );
         $stmt->execute([$email, 'Test Person', password_hash('richtig-richtig', PASSWORD_DEFAULT)]);
         $id = (int) $stmt->fetchColumn();
-        foreach (\Vereinskiste\Auth\Permissions::onAssignment($roles) as $role) {
+        foreach ($roles as $role) {
             $this->pdo->prepare('INSERT INTO user_roles (user_id, role) VALUES (?, ?)')->execute([$id, $role]);
         }
         return $id;
@@ -107,7 +107,7 @@ final class AccountsPagesTest extends TestCase
 
     public function test_balance_includes_opening_balance_and_ignores_cancelled(): void
     {
-        $uid = $this->user('a@example.org', ['kassenwart']);
+        $uid = $this->user('a@example.org', ['treasurer']);
         $account = $this->account('Barkasse', '100.00');
         $this->booking($account, '2026-02-01', 'in', '50.25', $uid);
         $this->booking($account, '2026-02-02', 'out', '20.10', $uid);
@@ -128,7 +128,7 @@ final class AccountsPagesTest extends TestCase
 
     public function test_balance_as_of_is_inclusive_and_ignores_bookings_before_opening_date(): void
     {
-        $uid = $this->user('a@example.org', ['kassenwart']);
+        $uid = $this->user('a@example.org', ['treasurer']);
         $account = $this->account('Barkasse', '100.00', '2026-03-01');
         $this->booking($account, '2026-02-28', 'in', '1000.00', $uid); // vor Eroeffnung: zaehlt nicht
         $this->booking($account, '2026-03-01', 'in', '10.00', $uid);
@@ -145,7 +145,7 @@ final class AccountsPagesTest extends TestCase
 
     public function test_accounts_page_lists_balance_formatted_in_german(): void
     {
-        $this->loginAs(['kassenpruefer']);
+        $this->loginAs(['auditor']);
         $this->account('Barkasse', '1234.50');
 
         $res = $this->get('/accounts');
@@ -171,7 +171,7 @@ final class AccountsPagesTest extends TestCase
 
     public function test_writing_requires_settings_manage(): void
     {
-        $this->loginAs(['kassenwart']); // darf lesen, nicht verwalten
+        $this->loginAs(['treasurer']); // darf lesen, nicht verwalten
 
         $res = $this->postForm('/categories', ['name' => 'Spenden']);
         $this->assertSame(403, $res->getStatusCode());
@@ -187,7 +187,7 @@ final class AccountsPagesTest extends TestCase
 
     public function test_create_account_redirects_and_shows_flash(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $res = $this->postForm('/accounts', [
             'name' => '  Vereinskonto ', 'type' => 'bank', 'opening_balance' => '1.234,50', 'opening_date' => '2026-01-01',
@@ -208,7 +208,7 @@ final class AccountsPagesTest extends TestCase
 
     public function test_master_data_changes_appear_in_audit_log_with_german_labels(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
         $this->postForm('/accounts', [
             'name' => 'Vereinskonto', 'type' => 'bank', 'opening_balance' => '0', 'opening_date' => '2026-01-01',
         ]);
@@ -241,7 +241,7 @@ final class AccountsPagesTest extends TestCase
 
     public function test_invalid_account_rerenders_with_422_and_field_errors(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $res = $this->postForm('/accounts', [
             'name' => '', 'type' => 'kasse', 'opening_balance' => 'abc', 'opening_date' => '31.02.2026',
@@ -258,7 +258,7 @@ final class AccountsPagesTest extends TestCase
 
     public function test_account_with_year_zero_or_invalid_utf8_name_is_422_not_500(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $res = $this->postForm('/accounts', [
             'name' => "Kasse \xC3\x28", 'type' => 'cash', 'opening_balance' => '0', 'opening_date' => '0000-01-01',
@@ -277,7 +277,7 @@ final class AccountsPagesTest extends TestCase
 
     public function test_rename_and_toggle_account(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
         $id = $this->account('Alt', '0.00');
 
         $res = $this->postForm("/accounts/$id", ['name' => 'Neu']);
@@ -291,7 +291,7 @@ final class AccountsPagesTest extends TestCase
 
     public function test_unknown_account_id_is_404(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $this->assertSame(404, $this->postForm('/accounts/9999', ['name' => 'X'])->getStatusCode());
         $this->assertSame(404, $this->postForm('/accounts/9999/toggle', [])->getStatusCode());
@@ -300,7 +300,7 @@ final class AccountsPagesTest extends TestCase
 
     public function test_create_category_and_list_it(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $res = $this->postForm('/categories', ['name' => ' Mitgliedsbeiträge ']);
 
@@ -313,7 +313,7 @@ final class AccountsPagesTest extends TestCase
 
     public function test_duplicate_category_name_shows_field_error(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
         $this->postForm('/categories', ['name' => 'Spenden']);
 
         $res = $this->postForm('/categories', ['name' => 'spenden']);
@@ -327,7 +327,7 @@ final class AccountsPagesTest extends TestCase
 
     public function test_empty_category_name_is_rejected(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $res = $this->postForm('/categories', ['name' => '   ']);
 
@@ -337,7 +337,7 @@ final class AccountsPagesTest extends TestCase
 
     public function test_rename_category_to_existing_name_is_rejected_and_toggle_works(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
         $this->postForm('/categories', ['name' => 'Spenden']);
         $this->postForm('/categories', ['name' => 'Material']);
         $id = (int) $this->pdo->query("SELECT id FROM categories WHERE name = 'Material'")->fetchColumn();
@@ -357,7 +357,7 @@ final class AccountsPagesTest extends TestCase
 
     public function test_write_forms_carry_csrf_and_post_without_token_is_403(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $html = (string) $this->get('/categories')->getBody();
         $this->assertStringContainsString('action="/categories"', $html);
@@ -369,7 +369,7 @@ final class AccountsPagesTest extends TestCase
 
     public function test_navigation_hides_entries_without_permission(): void
     {
-        $this->loginAs(['kassenpruefer']);
+        $this->loginAs(['auditor']);
 
         $html = (string) $this->get('/')->getBody();
 
@@ -391,7 +391,7 @@ final class AccountsPagesTest extends TestCase
 
     public function test_navigation_shows_user_admin_for_vorstand(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $html = (string) $this->get('/')->getBody();
 
@@ -402,7 +402,7 @@ final class AccountsPagesTest extends TestCase
 
     public function test_layout_has_viewport_meta_and_mobile_nav_toggle(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $html = (string) $this->get('/')->getBody();
 

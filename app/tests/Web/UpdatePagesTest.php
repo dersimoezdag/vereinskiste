@@ -35,7 +35,7 @@ final class UpdatePagesTest extends TestCase
     public function test_check_requires_vorstand_and_csrf_and_runs_only_on_explicit_request(): void
     {
         $this->assertSame('/login', $this->get('/settings')->getHeaderLine('Location'));
-        $this->loginAs(['kassenpruefer']);
+        $this->loginAs(['auditor']);
         $this->assertSame(403, $this->postForm('/settings/check-updates', [])->getStatusCode());
         $this->assertSame(0, $this->calls);
         $this->pdo->exec("UPDATE user_roles SET role = 'admin'");
@@ -52,7 +52,7 @@ final class UpdatePagesTest extends TestCase
         $checker = new GitHubReleases(static fn (): array => ['status' => 429, 'body' => 'private-response-content']);
         $this->app = Kernel::create(['pdo' => $this->pdo,'session_store' => $this->store,'security_dir' => $this->securityDir(),
             'require_https' => false,'release_checker' => $checker]);
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
         $this->assertSame(302, $this->postForm('/settings/check-updates', [])->getStatusCode());
         $html = (string) $this->get('/settings')->getBody();
         $this->assertStringContainsString('Hosting-IP', $html);

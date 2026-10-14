@@ -13,7 +13,7 @@ if ($operation === 'seed') {
     (new Vereinskiste\Db\Migrator($pdo, dirname(__DIR__, 2) . '/migrations'))->migrate();
     mkdir($directory . '/source/receipts', 0700, true);
     $user = (new Vereinskiste\Auth\UserRepository($pdo))->create('Restore Test', 'restore@example.org',
-        password_hash('restore-test-only-123', PASSWORD_DEFAULT), ['vorstand'], null);
+        password_hash('restore-test-only-123', PASSWORD_DEFAULT), ['admin'], null);
     $pdo->exec("INSERT INTO accounts (name, type, opening_balance, opening_date) VALUES ('Kasse', 'cash', 25, '2026-01-01')");
     $pdo->exec("INSERT INTO accounts (name, type, opening_date) VALUES ('Bank', 'bank', '2026-01-01')");
     file_put_contents($directory . '/bank.csv', "Datum;Betrag\n02.01.2026;12,50\n");

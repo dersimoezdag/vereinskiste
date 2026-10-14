@@ -22,7 +22,7 @@ final class IntakePagesTest extends TestCase
     protected function tearDown():void {$this->cleanScratch();}
     public function test_reader_cannot_configure_payments_or_submit_ocr():void
     {
-        $this->loginAs(['kassenpruefer']);
+        $this->loginAs(['auditor']);
         $redirect=$this->get('/receipt-inbox');
         $this->assertSame(302,$redirect->getStatusCode());
         $this->assertSame('/invoices?state=draft',$redirect->getHeaderLine('Location'));
@@ -47,7 +47,7 @@ final class IntakePagesTest extends TestCase
     }
     public function test_booking_reader_can_download_only_assigned_invoice_originals():void
     {
-        $actor=$this->loginAs(['schriftfuehrer']);
+        $actor=$this->loginAs(['secretary']);
         $directory=$this->scratchDir().'/documents';
         $invoice=(new \Vereinskiste\Invoices\Import($this->pdo,$directory))->upload($this->tmpFile(\Vereinskiste\Tests\Invoices\InvoicesTest::xml()),'original.xml',$actor);
         $file=(new \Vereinskiste\Invoices\InvoiceRepository($this->pdo))->documents($invoice)[0]['file_id'];

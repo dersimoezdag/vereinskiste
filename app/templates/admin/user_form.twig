@@ -13,16 +13,16 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label" for="user-name">{{ t('users.name') }}</label>
-                    <input type="text" id="user-name" name="name" maxlength="100" required autocomplete="off"
+                    <input type="text" id="user-name" name="name" data-linked-name maxlength="200" required autocomplete="off"
                            class="form-control{% if errors.name is defined %} is-invalid{% endif %}"
-                           value="{{ input.name }}">
+                           value="{{ input.name }}"{% if input.member_id %} readonly{% endif %}>
                     {% if errors.name is defined %}<div class="invalid-feedback">{{ t(errors.name) }}</div>{% endif %}
                 </div>
                 <div class="col-md-6">
                     <label class="form-label" for="user-email">{{ t('users.email') }}</label>
-                    <input type="email" id="user-email" name="email" maxlength="254" required autocomplete="off"
+                    <input type="email" id="user-email" name="email" data-linked-email maxlength="254" required autocomplete="off"
                            class="form-control{% if errors.email is defined %} is-invalid{% endif %}"
-                           value="{{ input.email }}">
+                           value="{{ input.email }}"{% if input.member_id %} readonly{% endif %}>
                     {% if errors.email is defined %}<div class="invalid-feedback">{{ t(errors.email) }}</div>{% endif %}
                 </div>
                 <div class="col-md-6">
@@ -30,18 +30,21 @@
                     <select id="user-member-id" name="member_id" class="form-select{% if errors.member_id is defined %} is-invalid{% endif %}">
                         <option value="">{{ t('members.user.field.none') }}</option>
                         {% for m in linkable_members %}
-                        <option value="{{ m.id }}"{% if input.member_id == m.id %} selected{% endif %}>
+                        <option value="{{ m.id }}"{% if input.member_id == m.id %} selected{% endif %} data-member-name="{{ m.name }}" data-member-email="{{ m.email|default('') }}">
                             #{{ m.member_no }} {{ m.name }}
                         </option>
                         {% endfor %}
                     </select>
                     {% if errors.member_id is defined %}<div class="invalid-feedback">{{ t(errors.member_id) }}</div>{% endif %}
-                    <div class="form-hint">{{ t('members.user.hint') }}</div>
+                    <div class="form-hint">{{ t('users.member_identity') }}</div>
+                    {% if input.member_id %}<a href="/members/{{ input.member_id }}">{{ t('users.member_edit') }}</a>{% endif %}
                 </div>
+                {% if person_data %}<div class="col-12"><dl class="row mb-0">{% for field in ['phone','address','house_number','zip','city','birth_date'] %}{% if person_data[field]|default('') %}<dt class="col-sm-3">{{ t('members.field.' ~ field) }}</dt><dd class="col-sm-9">{{ person_data[field] }}</dd>{% endif %}{% endfor %}</dl></div>{% endif %}
                 {% if not editing or user_id != me %}
                     {% include 'admin/password_field.twig' %}
                 {% endif %}
                 <div class="col-12">
+                    {% if derived_roles %}<div class="mb-3"><strong>{{ t('users.derived_roles') }}</strong>{% for source in derived_roles %}<div>{{ t('users.role.' ~ source.role) }} – {{ source.function_name }}</div>{% endfor %}</div>{% endif %}
                     <fieldset data-user-roles>
                         <legend class="form-label d-flex align-items-center gap-1">{{ t('users.roles') }} {{ role_help.button() }}</legend>
                         <div class="d-flex flex-column gap-2{% if errors.roles is defined %} is-invalid{% endif %}">
@@ -93,7 +96,7 @@
     </div>
 </div>
 {% endif %}
-{{ role_help.dialog(roles, permissions, role_permissions) }}
+{{ role_help.dialog(all_roles, permissions, role_permissions) }}
 {% endblock %}
 
-{% block scripts %}<script src="{{ asset('user-roles.js') }}"></script><script src="{{ asset('user-password.js') }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ asset('user-identity.js') }}"></script><script src="{{ asset('user-password.js') }}"></script>{% endblock %}

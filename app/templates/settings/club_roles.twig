@@ -43,6 +43,7 @@
                             </select>
                         </div>
 
+                        {% include 'settings/function_access.twig' with {prefix:'new', access_role:input.access_role|default('')} %}
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" id="new-single-holder" name="single_holder" value="1">
                             <label class="form-check-label" for="new-single-holder">
@@ -121,6 +122,7 @@
                                     <form method="post" action="/settings/club-roles/{{ r.id }}" class="row g-2 align-items-end">
                                         {{ csrf_field() }}
                                         <input type="hidden" name="version" value="{{ r.version }}">
+{% include 'settings/function_access.twig' with {prefix:'edit-' ~ r.id, access_role:r.access_role|default('')} %}
 
                                         <div class="col-md-3 col-12">
                                             <label for="role-name-{{ r.id }}" class="form-label form-label-sm">{{ t('clubroles.name') }}</label>

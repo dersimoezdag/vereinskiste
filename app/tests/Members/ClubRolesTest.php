@@ -72,7 +72,7 @@ final class ClubRolesTest extends TestCase
 
     public function test_ending_keeps_the_assignment_and_allows_reassigning(): void
     {
-        $speaker = $this->roleId('1. Sprecher');
+        $speaker = $this->roleId('1. Vorsitzender');
         $assignment = $this->assignments->assign($this->member, $speaker, '', '2026-01-01', 1);
         $this->assignments->end($assignment, '2026-06-30', 1);
         $this->assertSame([], $this->assignments->holders($speaker));
@@ -126,7 +126,7 @@ final class ClubRolesTest extends TestCase
         $passive = $this->roleId('Passives Mitglied');
         $assignment = $this->assignments->assign($this->member, $active, '', '2026-01-01', 1);
         $this->assignments->assign($this->member, $this->roleId('Ehrenmitglied'), '', null, 1);
-        $this->assignments->assign($this->member, $this->roleId('2. Sprecher'), '', null, 1);
+        $this->assignments->assign($this->member, $this->roleId('2. Vorsitzender'), '', null, 1);
         try {
             $this->assignments->assign($this->member, $passive, '', null, 1);
             $this->fail('zweite Mitgliedsart');

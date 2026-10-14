@@ -35,7 +35,7 @@ final class ClubRoleRepository
 
     /** @throws ValidationError|Conflict */
     public function save(?int $id, string $name, string $description, bool $active, int $version, int $actor,
-        bool $singleHolder = false, string $kind = 'function'): int
+        bool $singleHolder = false, string $kind = 'function', ?string $accessRole = null): int
     {
         if (!UserRepository::isStorableText($name . $description)) {
             throw new ValidationError(['name' => 'validation.text.encoding']);
@@ -51,7 +51,8 @@ final class ClubRoleRepository
         if (!in_array($kind, ['function', 'membership_type'], true)) {
             throw new ValidationError(['kind' => 'foundation.invalid']);
         }
-        return Transaction::run($this->pdo, function () use ($id, $name, $description, $active, $version, $actor, $singleHolder, $kind): int {
+        if ($accessRole !== null && (!in_array($accessRole, ['board','treasurer','secretary','auditor'],true) || $kind!=='function')) { throw new ValidationError(['access_role'=>'foundation.invalid']); }
+        return Transaction::run($this->pdo, function () use ($id, $name, $description, $active, $version, $actor, $singleHolder, $kind, $accessRole): int {
             $before = null;
             if ($id !== null) {
                 $stmt = $this->pdo->prepare('SELECT * FROM club_roles WHERE id = ? FOR UPDATE');
@@ -86,10 +87,12 @@ final class ClubRoleRepository
                 }
                 throw $e;
             }
+            if ($before && in_array($before['system_key'],['first_chairperson','second_chairperson','finance_board_member'],true) && ($accessRole!=='board' || $kind!=='function')) { throw new ValidationError(['access_role'=>'foundation.invalid']); }
+            $this->pdo->prepare('UPDATE club_roles SET access_role=? WHERE id=?')->execute([$accessRole,$id]);
             (new History($this->pdo))->record('club_role', $id,
                 $before === null ? [] : ['name' => $before['name'], 'description' => (string) $before['description'],
-                    'kind' => $before['kind'], 'single_holder' => (bool) $before['single_holder'], 'active' => (bool) $before['active']],
-                ['name' => $name, 'description' => $description, 'kind' => $kind, 'single_holder' => $singleHolder, 'active' => $active], $actor, '');
+                    'access_role'=>$before['access_role'], 'kind' => $before['kind'], 'single_holder' => (bool) $before['single_holder'], 'active' => (bool) $before['active']],
+                ['access_role'=>$accessRole,'name' => $name, 'description' => $description, 'kind' => $kind, 'single_holder' => $singleHolder, 'active' => $active], $actor, '');
             return $id;
         });
     }
@@ -98,6 +101,6 @@ final class ClubRoleRepository
     {
         return ['id' => (int) $row['id'], 'name' => $row['name'], 'description' => (string) $row['description'],
             'kind' => $row['kind'], 'single_holder' => (bool) $row['single_holder'], 'system_key' => $row['system_key'],
-            'active' => (bool) $row['active'], 'version' => (int) $row['version'], 'holders' => (int) $row['holders']];
+            'access_role'=>$row['access_role'], 'active' => (bool) $row['active'], 'version' => (int) $row['version'], 'holders' => (int) $row['holders']];
     }
 }

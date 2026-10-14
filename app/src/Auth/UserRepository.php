@@ -44,7 +44,7 @@ final class UserRepository
             return null;
         }
         $stmt = $this->db()->prepare(
-            'SELECT id, email, name, password_hash, active FROM users WHERE lower(email) = lower(?)'
+            'SELECT id, email, name, password_hash, active, member_id FROM users WHERE lower(email) = lower(?)'
         );
         $stmt->execute([$email]);
         return $this->hydrate($stmt->fetch());
@@ -83,7 +83,7 @@ final class UserRepository
                 'member_id' => $row['member_id'] === null ? null : (int) $row['member_id'],
                 'member_name' => $row['member_name'],
                 'member_no' => $row['member_no'] === null ? null : (int) $row['member_no'],
-                'roles' => $roles[(int) $row['id']] ?? [],
+                'roles' => array_values(array_unique(array_merge($roles[(int)$row['id']] ?? [], (new MemberDerivedRoles($this->db()))->roles((int)$row['id'])))),
             ];
         }
         return $users;
@@ -98,7 +98,7 @@ final class UserRepository
      */
     public function create(string $name, string $email, string $passwordHash, array $roles, ?int $actorId): int
     {
-        $roles = Permissions::onAssignment(RoleSelection::read($roles));
+        $roles = RoleSelection::read($roles);
         $email = self::normalizeEmail($email);
 
         return $this->transactional(function () use ($name, $email, $passwordHash, $roles, $actorId): int {
@@ -140,15 +140,15 @@ final class UserRepository
             // Erst sperren, dann lesen: unter READ COMMITTED sieht jedes Lesen danach den Stand nach dem Warten.
             $pdo->query('SELECT pg_advisory_xact_lock(' . self::LOCK_KEY . ')');
 
-            $stmt = $pdo->prepare('SELECT email, name, active FROM users WHERE id = ? FOR UPDATE');
+            $stmt = $pdo->prepare('SELECT email, name, active, member_id FROM users WHERE id = ? FOR UPDATE');
             $stmt->execute([$id]);
             $row = $stmt->fetch();
             if ($row === false) {
                 throw new UserNotFound($id);
             }
+            if ($row['member_id'] !== null) { $name=$row['name'];$email=$row['email']; }
             $wasActive = (bool) $row['active'];
             $before = $this->rolesOf($id);
-            $roles = Permissions::onAssignment($roles, $before);
 
             if ($actorId === $id && $wasActive && !$active) {
                 throw new ValidationError(['active' => 'validation.user.self_deactivate']);
@@ -313,6 +313,8 @@ final class UserRepository
         }
         $stmt = $this->db()->prepare('SELECT role FROM user_roles WHERE user_id = ? ORDER BY role');
         $stmt->execute([$row['id']]);
+        $manual=array_map('strval',$stmt->fetchAll(PDO::FETCH_COLUMN));
+        $derived=(new MemberDerivedRoles($this->db()))->sources((int)$row['id']);
         return [
             'id' => (int) $row['id'],
             'email' => (string) $row['email'],
@@ -320,7 +322,9 @@ final class UserRepository
             'password_hash' => (string) $row['password_hash'],
             'active' => (bool) $row['active'],
             'member_id' => isset($row['member_id']) && $row['member_id'] !== null ? (int) $row['member_id'] : null,
-            'roles' => array_map('strval', $stmt->fetchAll(PDO::FETCH_COLUMN)),
+            'roles' => array_values(array_unique(array_merge($manual, array_column($derived,'role')))),
+            'derived_roles' => $derived,
+            'manual_roles' => $manual,
         ];
     }
 

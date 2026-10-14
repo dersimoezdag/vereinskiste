@@ -35,7 +35,7 @@ final class DashboardPageTest extends TestCase
 
     public function test_dashboard_shows_charts_data_and_escapes_category_names(): void
     {
-        $user = $this->loginAs(['vorstand']);
+        $user = $this->loginAs(['admin']);
         $this->seed($user);
         $response = $this->get('/reports/dashboard?from=2026-01-01&to=2026-12-31');
         $this->assertSame(200, $response->getStatusCode());
@@ -50,7 +50,7 @@ final class DashboardPageTest extends TestCase
 
     public function test_empty_period_shows_message_without_scripts(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
         $body = (string) $this->get('/reports/dashboard?from=2026-01-01&to=2026-12-31')->getBody();
         $this->assertStringContainsString('In diesem Zeitraum gibt es keine Buchungen.', $body);
         $this->assertStringNotContainsString('chart.umd.min.js', $body);
@@ -58,7 +58,7 @@ final class DashboardPageTest extends TestCase
 
     public function test_invalid_range_is_rejected_with_message(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
         $this->assertSame(422, $this->get('/reports/dashboard?from=2026-02-01&to=2026-01-01')->getStatusCode());
         $response = $this->get('/reports/dashboard?from=1990-01-01&to=2026-12-31');
         $this->assertSame(422, $response->getStatusCode());
@@ -67,9 +67,9 @@ final class DashboardPageTest extends TestCase
 
     public function test_rights_follow_reports_read(): void
     {
-        $this->loginAs(['kassenpruefer']);
+        $this->loginAs(['auditor']);
         $this->assertSame(200, $this->get('/reports/dashboard')->getStatusCode());
-        $this->pdo->exec("UPDATE user_roles SET role='schriftfuehrer'");
+        $this->pdo->exec("UPDATE user_roles SET role='secretary'");
         $this->assertSame(403, $this->get('/reports/dashboard')->getStatusCode());
     }
 }

@@ -34,7 +34,7 @@ final class ClosingPagesTest extends TestCase
 
     public function test_closing_page_shows_state_and_forms(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $html = (string) $this->get('/settings/closing')->getBody();
         $this->assertStringContainsString('Es ist noch kein Zeitraum abgeschlossen', $html);
@@ -49,7 +49,7 @@ final class ClosingPagesTest extends TestCase
 
     public function test_vorstand_closes_and_reopens_with_reason(): void
     {
-        $userId = $this->loginAs(['vorstand']);
+        $userId = $this->loginAs(['admin']);
 
         $res = $this->postForm('/settings/closing', ['action' => 'close', 'closed_until' => '2026-03-31']);
         $this->assertSame(302, $res->getStatusCode());
@@ -80,7 +80,7 @@ final class ClosingPagesTest extends TestCase
 
     public function test_invalid_close_is_rendered_with_error_and_keeps_state(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
         $this->postForm('/settings/closing', ['action' => 'close', 'closed_until' => '2026-03-31']);
 
         $res = $this->postForm('/settings/closing', ['action' => 'close', 'closed_until' => '2026-03-01']);
@@ -97,7 +97,7 @@ final class ClosingPagesTest extends TestCase
 
     public function test_closing_requires_csrf(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
         $res = $this->app->handle(
             (new \Slim\Psr7\Factory\ServerRequestFactory())->createServerRequest('POST', '/settings/closing')
                 ->withParsedBody(['action' => 'close', 'closed_until' => '2026-03-31'])
@@ -109,12 +109,12 @@ final class ClosingPagesTest extends TestCase
 
     public function test_nav_entries_only_for_settings_manage(): void
     {
-        $this->loginAs(['kassenwart'], 'kw@example.org');
+        $this->loginAs(['treasurer'], 'kw@example.org');
         $html = (string) $this->get('/')->getBody();
         $this->assertStringNotContainsString('href="/settings/closing"', $html);
         $this->assertStringNotContainsString('href="/audit-log"', $html);
 
-        $this->webUser('vo@example.org', ['vorstand'], 'Vera Vorstand');
+        $this->webUser('vo@example.org', ['admin'], 'Vera Vorstand');
         $this->app->handle(
             (new \Slim\Psr7\Factory\ServerRequestFactory())->createServerRequest('POST', '/logout')
                 ->withParsedBody(['_csrf' => $this->csrf()])
@@ -134,7 +134,7 @@ final class ClosingPagesTest extends TestCase
 
     public function test_audit_log_lists_newest_first_with_labels_and_readable_detail(): void
     {
-        $userId = $this->loginAs(['vorstand'], 'vo@example.org', 'Vera Vorstand');
+        $userId = $this->loginAs(['admin'], 'vo@example.org', 'Vera Vorstand');
         $this->audit('period_closed', $userId, '{"from": null, "to": "2026-03-31"}', "now() + interval '1 hour'");
         $this->audit('period_reopened', $userId, '{"from": "2026-03-31", "to": "2026-02-28", "reason": "Beleg <fehlte>"}', "now() + interval '2 hours'");
 
@@ -156,7 +156,7 @@ final class ClosingPagesTest extends TestCase
 
     public function test_audit_log_filters_by_known_action_and_ignores_unknown(): void
     {
-        $userId = $this->loginAs(['vorstand'], 'vo@example.org', 'Vera Vorstand');
+        $userId = $this->loginAs(['admin'], 'vo@example.org', 'Vera Vorstand');
         $this->audit('period_closed', $userId, '{"from": null, "to": "2026-03-31"}');
 
         $html = (string) $this->get('/audit-log?action=period_closed')->getBody();
@@ -170,7 +170,7 @@ final class ClosingPagesTest extends TestCase
 
     public function test_audit_log_shows_no_personal_data_for_failed_logins(): void
     {
-        $this->loginAs(['vorstand'], 'vo@example.org', 'Vera Vorstand');
+        $this->loginAs(['admin'], 'vo@example.org', 'Vera Vorstand');
         $this->audit('login_failed', null, '{"email": "fremd@example.org", "ip": "203.0.113.9"}');
 
         $html = (string) $this->get('/audit-log?action=login_failed')->getBody();
@@ -182,7 +182,7 @@ final class ClosingPagesTest extends TestCase
 
     public function test_audit_log_is_paged(): void
     {
-        $this->loginAs(['vorstand'], 'vo@example.org', 'Vera Vorstand');
+        $this->loginAs(['admin'], 'vo@example.org', 'Vera Vorstand');
         for ($i = 0; $i < 60; $i++) {
             $this->audit('period_closed', null, '{"from": null, "to": "2026-03-31"}', "now() - interval '$i minutes'");
         }

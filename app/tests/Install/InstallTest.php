@@ -227,7 +227,7 @@ final class InstallTest extends TestCase
         $this->assertSame(200, $app->handle($factory->createServerRequest('GET', '/login'))->getStatusCode());
         $this->assertSame('/login', $app->handle($factory->createServerRequest('GET', '/settings'))->getHeaderLine('Location'));
         $this->assertSame('/login', $app->handle($factory->createServerRequest('GET', '/update'))->getHeaderLine('Location'));
-        $id = (new \Vereinskiste\Auth\UserRepository($this->pdo))->create('Leser', 'reader@example.org', 'hash', ['kassenpruefer'], null);
+        $id = (new \Vereinskiste\Auth\UserRepository($this->pdo))->create('Leser', 'reader@example.org', 'hash', ['auditor'], null);
         $store->set('user_id', $id);
         $store->set('credential_hash', hash('sha256', 'hash'));
         $this->assertSame(403, $app->handle($factory->createServerRequest('GET', '/update'))->getStatusCode());

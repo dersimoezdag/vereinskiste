@@ -10,7 +10,7 @@ final class PermissionsTest extends TestCase
 {
     public function test_kassenpruefer_cannot_write_bookings(): void
     {
-        $p = Permissions::for(['kassenpruefer']);
+        $p = Permissions::for(['auditor']);
 
         $this->assertContains('bookings.read', $p);
         $this->assertNotContains('bookings.write', $p);
@@ -20,7 +20,7 @@ final class PermissionsTest extends TestCase
 
     public function test_user_with_two_roles_gets_union_of_permissions(): void
     {
-        $p = Permissions::for(['kassenwart', 'schriftfuehrer']);
+        $p = Permissions::for(['treasurer', 'secretary']);
 
         foreach (['bookings.read', 'bookings.write', 'members.read', 'members.write'] as $right) {
             $this->assertContains($right, $p);
@@ -35,22 +35,18 @@ final class PermissionsTest extends TestCase
         $this->assertSame([], Permissions::for(['unbekannt']));
     }
 
-    public function test_board_has_minutes_rights_but_no_implicit_admin_rights(): void
+    public function test_board_has_business_rights_but_no_admin_management_rights(): void
     {
-        $this->assertEqualsCanonicalizing(['documents.read','documents.write','documents.confidential'], Permissions::for(['vorstand']));
+        $rights=Permissions::for(['board']);
+        $this->assertContains('documents.write',$rights);
+        $this->assertContains('members.write',$rights);
+        $this->assertNotContains('users.manage',$rights);
+        $this->assertNotContains('settings.manage',$rights);
     }
 
-    public function test_admin_is_added_only_when_board_is_newly_assigned(): void
-    {
-        $this->assertSame(['admin', 'vorstand'], Permissions::onAssignment(['vorstand']));
-        $this->assertSame(['vorstand'], Permissions::onAssignment(['vorstand'], ['admin', 'vorstand']));
-        $this->assertSame(['admin'], Permissions::onAssignment(['admin'], ['admin', 'vorstand']));
-        $this->assertSame([], Permissions::onAssignment([], ['admin', 'vorstand']));
-    }
-
-    public function test_admin_has_technical_rights_but_no_confidential_minutes_rights(): void
+    public function test_admin_has_all_permissions(): void
     {
         $this->assertContains('admin', Permissions::ROLES);
-        $this->assertEqualsCanonicalizing(array_diff(Permissions::ALL,['documents.write','documents.confidential']), Permissions::for(['admin']));
+        $this->assertEqualsCanonicalizing(Permissions::ALL, Permissions::for(['admin']));
     }
 }

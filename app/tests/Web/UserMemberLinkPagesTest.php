@@ -38,7 +38,7 @@ final class UserMemberLinkPagesTest extends TestCase
             'name' => 'Erika Muster',
             'email' => 'erika@example.org',
             'password' => 'Passwort123!Safe',
-            'roles' => ['schriftfuehrer'],
+            'roles' => ['secretary'],
             'member_id' => (string) $mId,
         ]);
         $this->assertSame('/users', $res->getHeaderLine('Location'));
@@ -49,7 +49,7 @@ final class UserMemberLinkPagesTest extends TestCase
     public function test_cannot_link_member_that_is_already_linked(): void
     {
         $this->loginAs(['admin']);
-        $mId = (new MemberRepository($this->pdo))->save(null, ['name' => 'Erika Muster'], 0, 1);
+        $mId = (new MemberRepository($this->pdo))->save(null, ['name' => 'Erika Muster','email'=>'linked@example.org'], 0, 1);
 
         // Link to admin user first
         $this->pdo->exec("UPDATE users SET member_id = {$mId} WHERE id = 1");
@@ -59,7 +59,7 @@ final class UserMemberLinkPagesTest extends TestCase
             'name' => 'Zweiter Benutzer',
             'email' => 'zweiter@example.org',
             'password' => 'Passwort123!Safe',
-            'roles' => ['schriftfuehrer'],
+            'roles' => ['secretary'],
             'member_id' => (string) $mId,
         ]);
         $this->assertSame(422, $res->getStatusCode());
@@ -84,8 +84,8 @@ final class UserMemberLinkPagesTest extends TestCase
     public function test_edit_user_can_link_and_unlink_member(): void
     {
         $this->loginAs(['admin']);
-        $m1 = (new MemberRepository($this->pdo))->save(null, ['name' => 'Mitglied 1'], 0, 1);
-        $m2 = (new MemberRepository($this->pdo))->save(null, ['name' => 'Mitglied 2'], 0, 1);
+        $m1 = (new MemberRepository($this->pdo))->save(null, ['name' => 'Mitglied 1','email'=>'first@example.org'], 0, 1);
+        $m2 = (new MemberRepository($this->pdo))->save(null, ['name' => 'Mitglied 2','email'=>'second@example.org'], 0, 1);
 
         // Link m1
         $this->postForm('/users/1/edit', [

@@ -18,7 +18,7 @@ final class MemberRoleAssignments
     public function forMember(int $memberId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT a.id, a.role_id, r.name AS role_name, r.active AS role_active, r.kind AS role_kind, a.scope, a.start_date, a.end_date
+            'SELECT a.id, a.role_id, r.name AS role_name, r.active AS role_active, r.access_role AS role_access_role, r.kind AS role_kind, a.scope, a.start_date, a.end_date
                FROM member_club_roles a JOIN club_roles r ON r.id = a.role_id
               WHERE a.member_id = ? ORDER BY (a.end_date IS NOT NULL), lower(r.name), a.id'
         );

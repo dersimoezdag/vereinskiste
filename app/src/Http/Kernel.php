@@ -95,7 +95,7 @@ final class Kernel
         ));
         $env->addFunction(new TwigFunction(
             'can',
-            static fn (string $permission): bool => $state->auth?->can($permission) ?? false
+            static fn (string $permission, ?array $resource=null): bool => $state->auth?->can($permission,$resource) ?? false
         ));
         $env->addFunction(new TwigFunction(
             'flash',

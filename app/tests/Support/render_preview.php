@@ -11,7 +11,7 @@ if (!is_dir($directory)) { mkdir($directory, 0700, true); }
 $pdo = Vereinskiste\Db\Connection::fromConfig(['dsn' => $dsn, 'user' => 'vk', 'pass' => 'vk']);
 (new Vereinskiste\Db\Migrator($pdo, dirname(__DIR__, 2) . '/migrations'))->migrate();
 $hash = password_hash('preview-test-only-123', PASSWORD_DEFAULT);
-$user = (new Vereinskiste\Auth\UserRepository($pdo))->create('Testvorstand', 'preview@example.org', $hash, ['vorstand'], null);
+$user = (new Vereinskiste\Auth\UserRepository($pdo))->create('Testvorstand', 'preview@example.org', $hash, ['admin'], null);
 $account = (new Vereinskiste\Ledger\AccountRepository($pdo))->create('Barkasse', 'cash', '100.00', '2026-01-01', $user);
 (new Vereinskiste\Ledger\BookingService($pdo))->create(['account_id' => (string) $account, 'booking_date' => '2026-10-12',
     'amount' => '42,50', 'direction' => 'in', 'description' => 'Spende für die Jugendarbeit und das gemeinsame Herbstfest'], $user);

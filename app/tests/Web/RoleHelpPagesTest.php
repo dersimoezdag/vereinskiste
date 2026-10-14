@@ -26,17 +26,17 @@ final class RoleHelpPagesTest extends TestCase
             $html = (string) $response->getBody();
             $this->assertStringContainsString('data-bs-target="#roles-help-modal"', $html);
             $this->assertStringContainsString('aria-labelledby="roles-help-title"', $html);
-            $this->assertStringContainsString('Admin kann anschließend unabhängig entzogen werden', $html);
+            $this->assertStringContainsString('Admin wird unabhängig am Benutzer vergeben', $html);
             $document = new DOMDocument();
             $previous = libxml_use_internal_errors(true);
             try { $document->loadHTML('<?xml encoding="UTF-8">' . $html); }
             finally { libxml_clear_errors(); libxml_use_internal_errors($previous); }
             $xpath = new DOMXPath($document);
-            $this->assertSame(0, $xpath->query('//div[@id="roles-help-modal"]//td[@data-role="vorstand"]')->length);
+            $this->assertGreaterThan(0, $xpath->query('//div[@id="roles-help-modal"]//td[@data-role="board"]')->length);
             $this->assertStringNotContainsString('Vorstand ohne Admin', $html);
-            foreach ([['bookings.write', 'admin', 'Ja'], ['bookings.write', 'kassenpruefer', 'Nein'],
-                ['members.write', 'schriftfuehrer', 'Ja'],
-                ['imports.write', 'kassenwart', 'Ja']] as [$permission, $role, $expected]) {
+            foreach ([['bookings.write', 'admin', 'Ja'], ['bookings.write', 'auditor', 'Nein'],
+                ['members.write', 'secretary', 'Ja'],
+                ['imports.write', 'treasurer', 'Ja']] as [$permission, $role, $expected]) {
                 $nodes = $xpath->query('//div[@id="roles-help-modal"]//tr[@data-permission="' . $permission . '"]/td[@data-role="' . $role . '"]');
                 $this->assertSame(1, $nodes->length);
                 $this->assertSame($expected, trim($nodes->item(0)->textContent));

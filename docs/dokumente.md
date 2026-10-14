@@ -2,7 +2,7 @@
 
 Menü: Dokumente → Protokolle, Satzung, Geschäftsordnung. Protokolle werden nach Sitzungsdatum absteigend angezeigt. Satzung und Geschäftsordnung haben jeweils eine aktuelle freigegebene Fassung. Neue Entwürfe verdrängen sie nicht; bei Freigabe wird die vorherige Fassung im Archiv abrufbar. Freigabe ist unmittelbar wirksam; „Gültig ab“ dokumentiert den Beschluss und löst keine automatische zeitgesteuerte Freigabe aus.
 
-Vorstand und Schriftführer bearbeiten alle Dokumente und lesen vertrauliche Protokolle sowie Entwürfe. Andere angemeldete Benutzer sehen freigegebene Satzungen und Geschäftsordnungen einschließlich früherer freigegebener Fassungen sowie freigegebene Mitgliederversammlungsprotokolle. Admin allein erweitert diese Rechte nicht.
+Vorstand und Schriftführer bearbeiten alle Dokumente und lesen vertrauliche Protokolle sowie Entwürfe. Andere angemeldete Benutzer sehen freigegebene Satzungen und Geschäftsordnungen einschließlich früherer freigegebener Fassungen sowie freigegebene Mitgliederversammlungsprotokolle. Admin darf alle Dokumente lesen und bearbeiten. Vorstand wird aus aktiven Vereinsfunktionen des verknüpften Mitglieds abgeleitet.
 
 Alle Inhalte liegen in PostgreSQL: Text, Metadaten und unveränderliche Versionsdatensätze; PDFs bis 10 MB werden binär in kleinen Datenbankblöcken gespeichert. Jeweils neue Originaldateien bleiben für frühere Fassungen erhalten. Metadatenänderungen können dieselbe unveränderliche Datei referenzieren. Datenbanksicherungen enthalten alle Dokumentinhalte. Konflikte bei gleichzeitigen Änderungen werden abgelehnt.
 

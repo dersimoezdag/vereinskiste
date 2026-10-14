@@ -47,7 +47,7 @@
                                 <label for="detail-email" class="form-label">{{ t('members.field.email') }}</label>
                                 <input type="email" id="detail-email" name="email" value="{{ input.email|default(member.data.email) }}"
                                        class="form-control{% if errors.email %} is-invalid{% endif %}" maxlength="254"
-                                       {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>
+                                       {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}{% if member.user_id and not can('members.write', {'login_email_change':true}) %} readonly{% endif %} >
                                 {% if errors.email %}
                                 <div class="invalid-feedback">{{ t(errors.email) }}</div>
                                 {% endif %}
@@ -189,7 +189,7 @@
                                         {% if a.end_date %} · {{ t('clubroles.assign.ended') }} {{ a.end_date|date('d.m.Y') }}{% endif %}
                                     </div>
                                 </div>
-                                {% if not a.end_date and (can('members.write') and not member.anonymized_at) %}
+                                {% if not a.end_date and (can('members.write', {'access_role':a.role_access_role}) and not member.anonymized_at) %}
                                 <form method="post" action="/members/{{ member.id }}/club-roles/{{ a.id }}/end" class="d-inline">
                                     {{ csrf_field() }}
                                     <input type="hidden" name="date" value="{{ today }}">
@@ -214,7 +214,7 @@
                             <select id="assign-role-id" name="role_id" class="form-select form-select-sm" required>
                                 <option value="">{{ t('ui.bitte_waehlen') }}</option>
                                 {% for r in club_roles %}
-                                    {% if r.kind != 'membership_type' or not has_open_membership_type %}
+                                    {% if can('members.write',r) and (r.kind != 'membership_type' or not has_open_membership_type) %}
                                     <option value="{{ r.id }}">{{ r.name }} ({{ r.kind == 'membership_type' ? 'Mitgliedsart' : 'Funktion' }})</option>
                                     {% endif %}
                                 {% endfor %}

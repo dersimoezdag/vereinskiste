@@ -71,7 +71,7 @@ final class UsersPagesTest extends TestCase
             'name' => 'Erika Muster',
             'email' => 'erika@example.org',
             'password' => 'ein-langes-passwort',
-            'roles' => ['kassenwart'],
+            'roles' => ['treasurer'],
         ];
     }
 
@@ -93,8 +93,8 @@ final class UsersPagesTest extends TestCase
 
     public function test_user_pages_require_users_manage(): void
     {
-        $other = $this->webUser('ziel@example.org', ['kassenwart']);
-        $this->loginAs(['kassenwart']);
+        $other = $this->webUser('ziel@example.org', ['treasurer']);
+        $this->loginAs(['treasurer']);
 
         foreach (['/users', '/users/new', "/users/$other/edit"] as $path) {
             $this->assertSame(403, $this->get($path)->getStatusCode(), $path);
@@ -117,7 +117,7 @@ final class UsersPagesTest extends TestCase
 
     public function test_post_without_csrf_token_is_rejected(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $res = $this->app->handle(
             (new ServerRequestFactory())->createServerRequest('POST', '/users/new')->withParsedBody($this->newUser())
@@ -131,9 +131,9 @@ final class UsersPagesTest extends TestCase
 
     public function test_list_shows_users_with_roles_and_active_flag(): void
     {
-        $this->loginAs(['vorstand'], 'chef@example.org', 'Clara Chef');
-        $this->webUser('kasse@example.org', ['kassenwart', 'schriftfuehrer'], 'Karl Kasse');
-        $id = $this->webUser('weg@example.org', ['kassenpruefer'], 'Willi Weg');
+        $this->loginAs(['admin'], 'chef@example.org', 'Clara Chef');
+        $this->webUser('kasse@example.org', ['treasurer', 'secretary'], 'Karl Kasse');
+        $id = $this->webUser('weg@example.org', ['auditor'], 'Willi Weg');
         $this->pdo->exec("UPDATE users SET active = false WHERE id = $id");
 
         $res = $this->get('/users');
@@ -155,12 +155,12 @@ final class UsersPagesTest extends TestCase
 
     public function test_new_form_renders_with_csrf_and_role_checkboxes(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $html = $this->body($this->get('/users/new'));
 
         $this->assertStringContainsString('name="_csrf"', $html);
-        foreach (['vorstand', 'kassenwart', 'schriftfuehrer', 'kassenpruefer'] as $role) {
+        foreach (['admin', 'treasurer', 'secretary', 'auditor'] as $role) {
             $this->assertStringContainsString('value="' . $role . '"', $html);
         }
         $this->assertStringContainsString('name="password"', $html);
@@ -169,10 +169,10 @@ final class UsersPagesTest extends TestCase
 
     public function test_vorstand_creates_user_with_normalized_email_hashed_password_and_audit(): void
     {
-        $actor = $this->loginAs(['vorstand']);
+        $actor = $this->loginAs(['admin']);
 
         $res = $this->postForm('/users/new', $this->newUser([
-            'email' => '  Erika@Example.ORG ', 'roles' => ['kassenwart', 'kassenpruefer'],
+            'email' => '  Erika@Example.ORG ', 'roles' => ['treasurer', 'auditor'],
         ]));
 
         $this->assertSame(302, $res->getStatusCode());
@@ -183,13 +183,13 @@ final class UsersPagesTest extends TestCase
         $this->assertSame('Erika Muster', $row['name']);
         $this->assertTrue((bool) $row['active']);
         $this->assertTrue(password_verify('ein-langes-passwort', $row['password_hash']));
-        $this->assertSame(['kassenpruefer', 'kassenwart'], $this->rolesOf((int) $row['id']));
+        $this->assertSame(['auditor', 'treasurer'], $this->rolesOf((int) $row['id']));
 
         $audit = $this->audit('user_created');
         $this->assertCount(1, $audit);
         $this->assertSame($actor, $audit[0]['user_id']);
         $this->assertSame((int) $row['id'], $audit[0]['detail']['user_id']);
-        $this->assertSame(['kassenpruefer', 'kassenwart'], $audit[0]['detail']['roles']);
+        $this->assertSame(['auditor', 'treasurer'], $audit[0]['detail']['roles']);
         $this->assertStringNotContainsString('ein-langes-passwort', $audit[0]['raw']);
         $this->assertStringNotContainsString($row['password_hash'], $audit[0]['raw']);
         $this->assertStringNotContainsString('example.org', $audit[0]['raw']);
@@ -200,7 +200,7 @@ final class UsersPagesTest extends TestCase
 
     public function test_password_shorter_than_10_is_rejected(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $res = $this->postForm('/users/new', $this->newUser(['password' => '123456789']));
 
@@ -212,7 +212,7 @@ final class UsersPagesTest extends TestCase
 
     public function test_password_length_is_counted_in_characters_not_bytes(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         // 9 Zeichen, 18 Byte: zu kurz.
         $res = $this->postForm('/users/new', $this->newUser(['password' => str_repeat('ü', 9)]));
@@ -227,7 +227,7 @@ final class UsersPagesTest extends TestCase
 
     public function test_password_above_bcrypt_byte_limit_is_rejected(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $res = $this->postForm('/users/new', $this->newUser(['password' => str_repeat('a', 201)]));
         $this->assertSame(422, $res->getStatusCode());
@@ -240,7 +240,7 @@ final class UsersPagesTest extends TestCase
 
     public function test_password_equal_to_email_or_name_is_rejected(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $res = $this->postForm('/users/new', $this->newUser(['password' => 'ERIKA@example.org']));
         $this->assertSame(422, $res->getStatusCode());
@@ -255,7 +255,7 @@ final class UsersPagesTest extends TestCase
 
     public function test_password_is_not_echoed_back_on_validation_error(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $html = $this->body($this->postForm('/users/new', $this->newUser(['password' => 'kurz', 'name' => ''])));
 
@@ -264,8 +264,8 @@ final class UsersPagesTest extends TestCase
 
     public function test_duplicate_email_is_rejected(): void
     {
-        $this->loginAs(['vorstand']);
-        $this->webUser('Erika@Example.org', ['kassenwart']);
+        $this->loginAs(['admin']);
+        $this->webUser('Erika@Example.org', ['treasurer']);
         $before = $this->userCount();
 
         $res = $this->postForm('/users/new', $this->newUser(['email' => 'erika@example.ORG']));
@@ -277,7 +277,7 @@ final class UsersPagesTest extends TestCase
 
     public function test_invalid_email_format_is_rejected(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         foreach (['kein-at-zeichen', 'a@', '@example.org', 'a b@example.org', 'a@example', ''] as $email) {
             $res = $this->postForm('/users/new', $this->newUser(['email' => $email]));
@@ -289,7 +289,7 @@ final class UsersPagesTest extends TestCase
 
     public function test_invalid_utf8_is_a_validation_error_not_a_server_error(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
         $before = $this->userCount();
 
         foreach ([['name' => "Erika \xC3\x28"], ['email' => "e\xC3\x28@example.org"], ['name' => "Nul\0l"]] as $bad) {
@@ -301,7 +301,7 @@ final class UsersPagesTest extends TestCase
 
     public function test_name_is_required_and_limited(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         foreach (['', "   \u{00A0}\u{200B}", str_repeat('n', 101)] as $name) {
             $res = $this->postForm('/users/new', $this->newUser(['name' => $name]));
@@ -312,9 +312,9 @@ final class UsersPagesTest extends TestCase
 
     public function test_at_least_one_known_role_is_required(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
-        foreach ([[], ['hacker'], ['kassenwart', 'unknown-role'], 'vorstand'] as $roles) {
+        foreach ([['board'], ['hacker'], ['treasurer', 'unknown-role'], 'board'] as $roles) {
             $res = $this->postForm('/users/new', $this->newUser(['roles' => $roles]));
             $this->assertSame(422, $res->getStatusCode(), json_encode($roles));
         }
@@ -323,21 +323,21 @@ final class UsersPagesTest extends TestCase
 
     public function test_validation_error_keeps_the_other_input(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
-        $html = $this->body($this->postForm('/users/new', $this->newUser(['password' => 'kurz', 'roles' => ['kassenpruefer']])));
+        $html = $this->body($this->postForm('/users/new', $this->newUser(['password' => 'kurz', 'roles' => ['auditor']])));
 
         $this->assertStringContainsString('value="Erika Muster"', $html);
         $this->assertStringContainsString('value="erika@example.org"', $html);
-        $this->assertMatchesRegularExpression('/value="kassenpruefer"[^>]*checked/', $html);
+        $this->assertMatchesRegularExpression('/value="auditor"[^>]*checked/', $html);
     }
 
     // --- Bearbeiten ------------------------------------------------------------------------------
 
     public function test_edit_form_shows_current_values(): void
     {
-        $this->loginAs(['vorstand']);
-        $id = $this->webUser('karl@example.org', ['kassenwart'], 'Karl Kasse');
+        $this->loginAs(['admin']);
+        $id = $this->webUser('karl@example.org', ['treasurer'], 'Karl Kasse');
 
         $res = $this->get("/users/$id/edit");
 
@@ -345,7 +345,7 @@ final class UsersPagesTest extends TestCase
         $html = $this->body($res);
         $this->assertStringContainsString('value="Karl Kasse"', $html);
         $this->assertStringContainsString('value="karl@example.org"', $html);
-        $this->assertMatchesRegularExpression('/value="kassenwart"[^>]*checked/', $html);
+        $this->assertMatchesRegularExpression('/value="treasurer"[^>]*checked/', $html);
         $this->assertStringContainsString('id="user-new-password"', $html);
         $this->assertStringContainsString('Leer lassen', $html);
         $this->assertStringNotContainsString('action="/users/' . $id . '/password"', $html);
@@ -353,7 +353,7 @@ final class UsersPagesTest extends TestCase
 
     public function test_edit_unknown_user_is_404(): void
     {
-        $this->loginAs(['vorstand']);
+        $this->loginAs(['admin']);
 
         $this->assertSame(404, $this->get('/users/99999/edit')->getStatusCode());
         $this->assertSame(404, $this->postForm('/users/99999/edit', ['name' => 'x'])->getStatusCode());
@@ -362,35 +362,35 @@ final class UsersPagesTest extends TestCase
 
     public function test_role_change_is_written_to_audit_log(): void
     {
-        $actor = $this->loginAs(['vorstand']);
-        $id = $this->webUser('karl@example.org', ['kassenwart', 'schriftfuehrer'], 'Karl Kasse');
+        $actor = $this->loginAs(['admin']);
+        $id = $this->webUser('karl@example.org', ['treasurer', 'secretary'], 'Karl Kasse');
 
         $res = $this->postForm("/users/$id/edit", [
             'name' => 'Karl Kasse', 'email' => 'karl@example.org', 'active' => '1',
-            'roles' => ['kassenwart', 'kassenpruefer'],
+            'roles' => ['treasurer', 'auditor'],
         ]);
 
         $this->assertSame(302, $res->getStatusCode());
-        $this->assertSame(['kassenpruefer', 'kassenwart'], $this->rolesOf($id));
+        $this->assertSame(['auditor', 'treasurer'], $this->rolesOf($id));
         $audit = $this->audit('user_updated');
         $this->assertCount(1, $audit);
         $this->assertSame($actor, $audit[0]['user_id']);
         $detail = $audit[0]['detail'];
         $this->assertSame($id, $detail['user_id']);
         $this->assertSame(['roles'], $detail['fields']);
-        $this->assertSame(['kassenpruefer'], $detail['roles_added']);
-        $this->assertSame(['schriftfuehrer'], $detail['roles_removed']);
+        $this->assertSame(['auditor'], $detail['roles_added']);
+        $this->assertSame(['secretary'], $detail['roles_removed']);
         $this->assertStringNotContainsString('example.org', $audit[0]['raw']);
         $this->assertSame([], $this->audit('user_deactivated'));
     }
 
     public function test_name_and_email_change_lists_field_names_without_values(): void
     {
-        $this->loginAs(['vorstand']);
-        $id = $this->webUser('karl@example.org', ['kassenwart'], 'Karl Kasse');
+        $this->loginAs(['admin']);
+        $id = $this->webUser('karl@example.org', ['treasurer'], 'Karl Kasse');
 
         $res = $this->postForm("/users/$id/edit", [
-            'name' => 'Karl Kassenwart', 'email' => 'Karl.K@Example.org', 'active' => '1', 'roles' => ['kassenwart'],
+            'name' => 'Karl Kassenwart', 'email' => 'Karl.K@Example.org', 'active' => '1', 'roles' => ['treasurer'],
         ]);
 
         $this->assertSame(302, $res->getStatusCode());
@@ -407,11 +407,11 @@ final class UsersPagesTest extends TestCase
 
     public function test_unchanged_edit_writes_no_audit_entry(): void
     {
-        $this->loginAs(['vorstand']);
-        $id = $this->webUser('karl@example.org', ['kassenwart'], 'Karl Kasse');
+        $this->loginAs(['admin']);
+        $id = $this->webUser('karl@example.org', ['treasurer'], 'Karl Kasse');
 
         $res = $this->postForm("/users/$id/edit", [
-            'name' => 'Karl Kasse', 'email' => 'karl@example.org', 'active' => '1', 'roles' => ['kassenwart'],
+            'name' => 'Karl Kasse', 'email' => 'karl@example.org', 'active' => '1', 'roles' => ['treasurer'],
         ]);
 
         $this->assertSame(302, $res->getStatusCode());
@@ -420,8 +420,8 @@ final class UsersPagesTest extends TestCase
 
     public function test_deactivation_and_activation_are_audited_and_take_effect_immediately(): void
     {
-        $this->loginAs(['vorstand'], 'chef@example.org', 'Clara Chef');
-        $id = $this->webUser('karl@example.org', ['kassenwart'], 'Karl Kasse');
+        $this->loginAs(['admin'], 'chef@example.org', 'Clara Chef');
+        $id = $this->webUser('karl@example.org', ['treasurer'], 'Karl Kasse');
         $karl = $this->secondBrowser('karl@example.org', 'richtig-richtig');
         $this->assertSame(
             200,
@@ -429,7 +429,7 @@ final class UsersPagesTest extends TestCase
         );
 
         $res = $this->postForm("/users/$id/edit", [
-            'name' => 'Karl Kasse', 'email' => 'karl@example.org', 'roles' => ['kassenwart'],
+            'name' => 'Karl Kasse', 'email' => 'karl@example.org', 'roles' => ['treasurer'],
         ]);
 
         $this->assertSame(302, $res->getStatusCode());
@@ -442,7 +442,7 @@ final class UsersPagesTest extends TestCase
         $this->assertSame('/login', $after->getHeaderLine('Location'));
 
         $res = $this->postForm("/users/$id/edit", [
-            'name' => 'Karl Kasse', 'email' => 'karl@example.org', 'active' => '1', 'roles' => ['kassenwart'],
+            'name' => 'Karl Kasse', 'email' => 'karl@example.org', 'active' => '1', 'roles' => ['treasurer'],
         ]);
         $this->assertSame(302, $res->getStatusCode());
         $this->assertTrue((bool) $this->row('karl@example.org')['active']);
@@ -451,52 +451,52 @@ final class UsersPagesTest extends TestCase
 
     public function test_duplicate_email_on_edit_is_rejected_but_own_email_is_fine(): void
     {
-        $this->loginAs(['vorstand']);
-        $this->webUser('anna@example.org', ['kassenwart'], 'Anna');
-        $id = $this->webUser('karl@example.org', ['kassenwart'], 'Karl Kasse');
+        $this->loginAs(['admin']);
+        $this->webUser('anna@example.org', ['treasurer'], 'Anna');
+        $id = $this->webUser('karl@example.org', ['treasurer'], 'Karl Kasse');
 
         $res = $this->postForm("/users/$id/edit", [
-            'name' => 'Karl Kasse', 'email' => 'ANNA@example.org', 'active' => '1', 'roles' => ['kassenwart'],
+            'name' => 'Karl Kasse', 'email' => 'ANNA@example.org', 'active' => '1', 'roles' => ['treasurer'],
         ]);
         $this->assertSame(422, $res->getStatusCode());
         $this->assertStringContainsString('bereits vergeben', $this->body($res));
         $this->assertNotNull($this->row('karl@example.org'));
 
         $res = $this->postForm("/users/$id/edit", [
-            'name' => 'Karl K.', 'email' => 'Karl@Example.org', 'active' => '1', 'roles' => ['kassenwart'],
+            'name' => 'Karl K.', 'email' => 'Karl@Example.org', 'active' => '1', 'roles' => ['treasurer'],
         ]);
         $this->assertSame(302, $res->getStatusCode());
     }
 
     public function test_edit_rejects_unknown_role_and_empty_roles(): void
     {
-        $this->loginAs(['vorstand']);
-        $id = $this->webUser('karl@example.org', ['kassenwart'], 'Karl Kasse');
+        $this->loginAs(['admin']);
+        $id = $this->webUser('karl@example.org', ['treasurer'], 'Karl Kasse');
 
-        foreach ([[], ['root']] as $roles) {
+        foreach ([['board'], ['root']] as $roles) {
             $res = $this->postForm("/users/$id/edit", [
                 'name' => 'Karl Kasse', 'email' => 'karl@example.org', 'active' => '1', 'roles' => $roles,
             ]);
             $this->assertSame(422, $res->getStatusCode());
         }
-        $this->assertSame(['kassenwart'], $this->rolesOf($id));
+        $this->assertSame(['treasurer'], $this->rolesOf($id));
     }
 
     public function test_last_vorstand_cannot_be_deactivated_or_demoted(): void
     {
-        $me = $this->loginAs(['vorstand'], 'chef@example.org', 'Clara Chef');
+        $me = $this->loginAs(['admin'], 'chef@example.org', 'Clara Chef');
 
         // Entziehen der Rolle (auch bei sich selbst)
         $res = $this->postForm("/users/$me/edit", [
-            'name' => 'Clara Chef', 'email' => 'chef@example.org', 'active' => '1', 'roles' => ['kassenwart'],
+            'name' => 'Clara Chef', 'email' => 'chef@example.org', 'active' => '1', 'roles' => ['treasurer'],
         ]);
         $this->assertSame(422, $res->getStatusCode());
         $this->assertStringContainsString('Vorstand', $this->body($res));
-        $this->assertSame(['admin', 'vorstand'], $this->rolesOf($me));
+        $this->assertSame(['admin'], $this->rolesOf($me));
 
         // Deaktivieren
         $res = $this->postForm("/users/$me/edit", [
-            'name' => 'Clara Chef', 'email' => 'chef@example.org', 'roles' => ['vorstand'],
+            'name' => 'Clara Chef', 'email' => 'chef@example.org', 'roles' => ['admin'],
         ]);
         $this->assertSame(422, $res->getStatusCode());
         $this->assertTrue((bool) $this->row('chef@example.org')['active']);
@@ -506,54 +506,54 @@ final class UsersPagesTest extends TestCase
 
     public function test_vorstand_role_can_be_given_up_when_another_active_vorstand_exists(): void
     {
-        $me = $this->loginAs(['vorstand'], 'chef@example.org', 'Clara Chef');
-        $this->webUser('vize@example.org', ['vorstand'], 'Viktor Vize');
+        $me = $this->loginAs(['admin'], 'chef@example.org', 'Clara Chef');
+        $this->webUser('vize@example.org', ['admin'], 'Viktor Vize');
 
         $res = $this->postForm("/users/$me/edit", [
-            'name' => 'Clara Chef', 'email' => 'chef@example.org', 'active' => '1', 'roles' => ['kassenwart'],
+            'name' => 'Clara Chef', 'email' => 'chef@example.org', 'active' => '1', 'roles' => ['treasurer'],
         ]);
 
         $this->assertSame(302, $res->getStatusCode());
-        $this->assertSame(['kassenwart'], $this->rolesOf($me));
+        $this->assertSame(['treasurer'], $this->rolesOf($me));
     }
 
     public function test_an_inactive_vorstand_does_not_count_as_last_vorstand_cover(): void
     {
-        $me = $this->loginAs(['vorstand'], 'chef@example.org', 'Clara Chef');
-        $other = $this->webUser('alt@example.org', ['vorstand'], 'Alt Vorstand');
+        $me = $this->loginAs(['admin'], 'chef@example.org', 'Clara Chef');
+        $other = $this->webUser('alt@example.org', ['admin'], 'Alt Vorstand');
         $this->pdo->exec("UPDATE users SET active = false WHERE id = $other");
 
         $res = $this->postForm("/users/$me/edit", [
-            'name' => 'Clara Chef', 'email' => 'chef@example.org', 'active' => '1', 'roles' => ['kassenwart'],
+            'name' => 'Clara Chef', 'email' => 'chef@example.org', 'active' => '1', 'roles' => ['treasurer'],
         ]);
 
         $this->assertSame(422, $res->getStatusCode());
-        $this->assertSame(['admin', 'vorstand'], $this->rolesOf($me));
+        $this->assertSame(['admin'], $this->rolesOf($me));
     }
 
     public function test_deactivating_another_vorstand_is_allowed_but_then_the_remaining_one_is_protected(): void
     {
-        $me = $this->loginAs(['vorstand'], 'chef@example.org', 'Clara Chef');
-        $other = $this->webUser('vize@example.org', ['vorstand'], 'Viktor Vize');
+        $me = $this->loginAs(['admin'], 'chef@example.org', 'Clara Chef');
+        $other = $this->webUser('vize@example.org', ['admin'], 'Viktor Vize');
 
         $res = $this->postForm("/users/$other/edit", [
-            'name' => 'Viktor Vize', 'email' => 'vize@example.org', 'roles' => ['vorstand'],
+            'name' => 'Viktor Vize', 'email' => 'vize@example.org', 'roles' => ['admin'],
         ]);
         $this->assertSame(302, $res->getStatusCode());
 
         $res = $this->postForm("/users/$me/edit", [
-            'name' => 'Clara Chef', 'email' => 'chef@example.org', 'active' => '1', 'roles' => ['kassenwart'],
+            'name' => 'Clara Chef', 'email' => 'chef@example.org', 'active' => '1', 'roles' => ['treasurer'],
         ]);
         $this->assertSame(422, $res->getStatusCode());
     }
 
     public function test_user_cannot_deactivate_themself(): void
     {
-        $me = $this->loginAs(['vorstand'], 'chef@example.org', 'Clara Chef');
-        $this->webUser('vize@example.org', ['vorstand'], 'Viktor Vize');
+        $me = $this->loginAs(['admin'], 'chef@example.org', 'Clara Chef');
+        $this->webUser('vize@example.org', ['admin'], 'Viktor Vize');
 
         $res = $this->postForm("/users/$me/edit", [
-            'name' => 'Clara Chef', 'email' => 'chef@example.org', 'roles' => ['vorstand'],
+            'name' => 'Clara Chef', 'email' => 'chef@example.org', 'roles' => ['admin'],
         ]);
 
         $this->assertSame(422, $res->getStatusCode());
@@ -565,8 +565,8 @@ final class UsersPagesTest extends TestCase
 
     public function test_vorstand_sets_a_new_password_for_another_user(): void
     {
-        $actor = $this->loginAs(['vorstand']);
-        $id = $this->webUser('karl@example.org', ['kassenwart'], 'Karl Kasse');
+        $actor = $this->loginAs(['admin']);
+        $id = $this->webUser('karl@example.org', ['treasurer'], 'Karl Kasse');
         $oldHash = $this->row('karl@example.org')['password_hash'];
 
         $res = $this->postForm("/users/$id/password", ['password' => 'ganz-neues-passwort']);
@@ -586,7 +586,7 @@ final class UsersPagesTest extends TestCase
 
     public function test_admin_route_cannot_be_used_to_reset_the_own_password(): void
     {
-        $me = $this->loginAs(['vorstand'], 'chef@example.org', 'Clara Chef');
+        $me = $this->loginAs(['admin'], 'chef@example.org', 'Clara Chef');
         $oldHash = $this->row('chef@example.org')['password_hash'];
 
         $res = $this->postForm("/users/$me/password", ['password' => 'ganz-neues-passwort']);
@@ -604,10 +604,10 @@ final class UsersPagesTest extends TestCase
 
     public function test_audit_log_shows_german_labels_for_user_changes(): void
     {
-        $this->loginAs(['vorstand']);
-        $id = $this->webUser('karl@example.org', ['kassenwart'], 'Karl Kasse');
+        $this->loginAs(['admin']);
+        $id = $this->webUser('karl@example.org', ['treasurer'], 'Karl Kasse');
         $this->postForm("/users/$id/edit", [
-            'name' => 'Karl Kasse', 'email' => 'karl@example.org', 'active' => '1', 'roles' => ['kassenwart', 'kassenpruefer'],
+            'name' => 'Karl Kasse', 'email' => 'karl@example.org', 'active' => '1', 'roles' => ['treasurer', 'auditor'],
         ]);
 
         $html = $this->body($this->get('/audit-log'));
@@ -615,13 +615,13 @@ final class UsersPagesTest extends TestCase
         $this->assertStringContainsString('Benutzer geändert', $html);
         $this->assertStringContainsString('Kassenprüfer', $html);
         $this->assertStringContainsString('Rollen', $html);
-        $this->assertStringNotContainsString('kassenpruefer', $html);
+        $this->assertStringNotContainsString('auditor', $html);
     }
 
     public function test_admin_password_reset_enforces_the_password_rules(): void
     {
-        $this->loginAs(['vorstand']);
-        $id = $this->webUser('karl@example.org', ['kassenwart'], 'Karl Kasse');
+        $this->loginAs(['admin']);
+        $id = $this->webUser('karl@example.org', ['treasurer'], 'Karl Kasse');
         $oldHash = $this->row('karl@example.org')['password_hash'];
 
         foreach (['kurz', 'karl@example.org', 'Karl Kasse', str_repeat('x', 201)] as $password) {
@@ -639,7 +639,7 @@ final class UsersPagesTest extends TestCase
 
     public function test_any_logged_in_user_can_open_the_own_password_form(): void
     {
-        $this->loginAs(['kassenpruefer']);
+        $this->loginAs(['auditor']);
 
         $res = $this->get('/account/password');
 
@@ -653,7 +653,7 @@ final class UsersPagesTest extends TestCase
 
     public function test_own_password_change_succeeds_regenerates_session_and_audits(): void
     {
-        $id = $this->loginAs(['kassenpruefer'], 'pruefer@example.org', 'Paul Prüfer');
+        $id = $this->loginAs(['auditor'], 'pruefer@example.org', 'Paul Prüfer');
         $token = $this->csrf();
         $before = $this->store->id();
 
@@ -684,7 +684,7 @@ final class UsersPagesTest extends TestCase
 
     public function test_own_password_change_with_wrong_current_password_is_rejected(): void
     {
-        $this->loginAs(['kassenpruefer'], 'pruefer@example.org');
+        $this->loginAs(['auditor'], 'pruefer@example.org');
         $oldHash = $this->row('pruefer@example.org')['password_hash'];
 
         $res = $this->postForm('/account/password', [
@@ -701,7 +701,7 @@ final class UsersPagesTest extends TestCase
 
     public function test_own_password_change_checks_confirmation_and_rules(): void
     {
-        $this->loginAs(['kassenpruefer'], 'pruefer@example.org', 'Paul Prüfer');
+        $this->loginAs(['auditor'], 'pruefer@example.org', 'Paul Prüfer');
         $oldHash = $this->row('pruefer@example.org')['password_hash'];
 
         $cases = [
@@ -722,7 +722,7 @@ final class UsersPagesTest extends TestCase
 
     public function test_own_password_form_is_not_prefilled_with_passwords(): void
     {
-        $this->loginAs(['kassenpruefer']);
+        $this->loginAs(['auditor']);
 
         $html = $this->body($this->postForm('/account/password', [
             'current_password' => 'geheim-geheim-1', 'new_password' => 'x', 'confirm_password' => 'y',
@@ -760,7 +760,7 @@ final class UsersPagesTest extends TestCase
 
     public function test_nav_links_to_own_password_for_every_user(): void
     {
-        $this->loginAs(['kassenpruefer']);
+        $this->loginAs(['auditor']);
 
         $this->assertStringContainsString('href="/account/password"', $this->body($this->get('/')));
     }

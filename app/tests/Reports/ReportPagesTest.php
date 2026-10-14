@@ -33,7 +33,7 @@ final class ReportPagesTest extends TestCase
     private function loginAs(array $roles): int
     {
         $id = $this->user();
-        foreach (\Vereinskiste\Auth\Permissions::onAssignment($roles) as $role) {
+        foreach ($roles as $role) {
             $this->pdo->prepare('INSERT INTO user_roles (user_id, role) VALUES (?, ?)')->execute([$id, $role]);
         }
         $html = (string) $this->get('/login')->getBody();
@@ -54,13 +54,13 @@ final class ReportPagesTest extends TestCase
     public function test_reports_require_login_and_reports_read(string $path): void
     {
         $this->assertSame(302, $this->get($path)->getStatusCode());
-        $this->loginAs(['schriftfuehrer']);
+        $this->loginAs(['secretary']);
         $this->assertSame(403, $this->get($path)->getStatusCode());
     }
 
     public function test_summary_page_shows_totals_categories_and_export_links_with_same_filter(): void
     {
-        $u = $this->loginAs(['kassenpruefer']);
+        $u = $this->loginAs(['auditor']);
         $a = $this->account('Barkasse', '100.00');
         $cat = $this->category('Spenden');
         $this->booking($a, $u, '2026-03-01', 'in', '1234.50', 'Spende', $cat);
@@ -85,7 +85,7 @@ final class ReportPagesTest extends TestCase
 
     public function test_summary_defaults_to_current_calendar_year(): void
     {
-        $this->loginAs(['kassenwart']);
+        $this->loginAs(['treasurer']);
         $html = (string) $this->get('/reports/summary')->getBody();
         $year = date('Y');
         $this->assertStringContainsString('value="' . $year . '-01-01"', $html);
@@ -94,7 +94,7 @@ final class ReportPagesTest extends TestCase
 
     public function test_swapped_range_and_invalid_date_show_validation_error(): void
     {
-        $this->loginAs(['kassenwart']);
+        $this->loginAs(['treasurer']);
         $res = $this->get('/reports/summary', ['from' => '2026-12-31', 'to' => '2026-01-01']);
         $this->assertSame(422, $res->getStatusCode());
         $this->assertStringContainsString('nicht nach dem Enddatum', (string) $res->getBody());
@@ -109,7 +109,7 @@ final class ReportPagesTest extends TestCase
 
     public function test_csv_download_headers_and_content(): void
     {
-        $u = $this->loginAs(['kassenpruefer']);
+        $u = $this->loginAs(['auditor']);
         $a = $this->account();
         $this->booking($a, $u, '2026-03-01', 'in', '12.50', 'Spende');
         $this->booking($a, $u, '2025-03-01', 'in', '99.00', 'Vorjahr');
@@ -128,7 +128,7 @@ final class ReportPagesTest extends TestCase
 
     public function test_pdf_download_headers_use_club_name_from_settings(): void
     {
-        $u = $this->loginAs(['kassenwart']);
+        $u = $this->loginAs(['treasurer']);
         $a = $this->account();
         $this->booking($a, $u, '2026-03-01', 'in', '12.50', 'Spende');
         $this->pdo->exec("INSERT INTO settings (key, value) VALUES ('club_name', 'Turnverein Äpfelstadt')");
@@ -146,20 +146,20 @@ final class ReportPagesTest extends TestCase
 
     public function test_pdf_falls_back_to_generic_club_name(): void
     {
-        $this->loginAs(['kassenwart']);
+        $this->loginAs(['treasurer']);
         $body = (string) $this->get('/reports/summary.pdf')->getBody();
         $this->assertStringContainsString('(Verein)', $body);
     }
 
     public function test_nav_links_reports_for_readers_only(): void
     {
-        $this->loginAs(['schriftfuehrer']);
+        $this->loginAs(['secretary']);
         $this->assertStringNotContainsString('href="/reports/summary"', (string) $this->get('/')->getBody());
     }
 
     public function test_nav_shows_reports_entry_with_permission(): void
     {
-        $this->loginAs(['kassenpruefer']);
+        $this->loginAs(['auditor']);
         $this->assertStringContainsString('href="/reports/summary"', (string) $this->get('/')->getBody());
     }
 }

@@ -58,7 +58,7 @@ final class BookingsPagesTest extends TestCase
         );
         $stmt->execute(['wer@example.org', 'Test Person', password_hash('richtig-richtig', PASSWORD_DEFAULT)]);
         $id = (int) $stmt->fetchColumn();
-        foreach (\Vereinskiste\Auth\Permissions::onAssignment($roles) as $role) {
+        foreach ($roles as $role) {
             $this->pdo->prepare('INSERT INTO user_roles (user_id, role) VALUES (?, ?)')->execute([$id, $role]);
         }
         $res = $this->post('/login', [
@@ -105,7 +105,7 @@ final class BookingsPagesTest extends TestCase
 
     public function test_list_shows_bookings_with_direction_sign_and_changed_marker_only_with_history(): void
     {
-        $uid = $this->loginAs(['kassenpruefer']);
+        $uid = $this->loginAs(['auditor']);
         $account = $this->account();
         $in = $this->booking($account, $uid, '2026-03-01', 'in', '1234.50', 'Spende Muster');
         $out = $this->booking($account, $uid, '2026-03-02', 'out', '20.00', 'Porto');
@@ -132,7 +132,7 @@ final class BookingsPagesTest extends TestCase
 
     public function test_search_with_invalid_utf8_is_ignored_not_500(): void
     {
-        $uid = $this->loginAs(['kassenwart']);
+        $uid = $this->loginAs(['treasurer']);
         $this->booking($this->account(), $uid, '2026-03-01', 'in', '5.00', 'Sichtbar');
 
         $res = $this->get('/bookings', ['q' => "M\xC3\x28ller", 'from' => '0000-01-01']);
@@ -143,7 +143,7 @@ final class BookingsPagesTest extends TestCase
 
     public function test_list_applies_filters_and_ignores_garbage(): void
     {
-        $uid = $this->loginAs(['kassenwart']);
+        $uid = $this->loginAs(['treasurer']);
         $account = $this->account();
         $cat = $this->category('Miete');
         $this->booking($account, $uid, '2026-01-10', 'out', '10.00', 'Alt', $cat);
@@ -160,7 +160,7 @@ final class BookingsPagesTest extends TestCase
 
     public function test_list_paginates_and_keeps_filters_in_links(): void
     {
-        $uid = $this->loginAs(['kassenwart']);
+        $uid = $this->loginAs(['treasurer']);
         $account = $this->account();
         for ($i = 1; $i <= 30; $i++) {
             $this->booking($account, $uid, '2026-03-10', 'in', '1.00', sprintf('Eintrag %02d', $i));
@@ -178,14 +178,14 @@ final class BookingsPagesTest extends TestCase
 
     public function test_new_form_requires_write_permission_and_offers_only_active_accounts(): void
     {
-        $this->loginAs(['kassenpruefer']);
+        $this->loginAs(['auditor']);
         $this->assertSame(403, $this->get('/bookings/new')->getStatusCode());
         $this->assertSame(403, $this->post('/bookings/new', ['_csrf' => $this->csrf()])->getStatusCode());
     }
 
     public function test_new_form_lists_active_accounts_only(): void
     {
-        $this->loginAs(['kassenwart']);
+        $this->loginAs(['treasurer']);
         $this->account('Aktivkasse');
         $this->account('Altkasse', false);
 
@@ -198,7 +198,7 @@ final class BookingsPagesTest extends TestCase
 
     public function test_create_redirects_to_detail_with_flash(): void
     {
-        $uid = $this->loginAs(['kassenwart']);
+        $uid = $this->loginAs(['treasurer']);
         $account = $this->account();
 
         $res = $this->post('/bookings/new', [
@@ -224,7 +224,7 @@ final class BookingsPagesTest extends TestCase
 
     public function test_date_before_account_opening_is_422_with_german_message_naming_the_date(): void
     {
-        $this->loginAs(['kassenwart']);
+        $this->loginAs(['treasurer']);
         $account = $this->account(); // Eroeffnungsdatum 2026-01-01
 
         $res = $this->post('/bookings/new', [
@@ -242,7 +242,7 @@ final class BookingsPagesTest extends TestCase
 
     public function test_invalid_form_rerenders_with_422_and_keeps_input(): void
     {
-        $this->loginAs(['kassenwart']);
+        $this->loginAs(['treasurer']);
         $account = $this->account();
 
         $res = $this->post('/bookings/new', [
@@ -265,7 +265,7 @@ final class BookingsPagesTest extends TestCase
     public function test_detail_unknown_id_is_404_and_requires_read(): void
     {
         $this->assertSame(302, $this->get('/bookings/1')->getStatusCode());
-        $this->loginAs(['schriftfuehrer']);
+        $this->loginAs(['secretary']);
         $this->assertSame(404, $this->get('/bookings/999')->getStatusCode());
     }
 }

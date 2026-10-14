@@ -31,7 +31,7 @@ final class MailSettingsPagesTest extends TestCase
     }
     public function test_configuration_is_manage_only_and_password_is_never_rendered(): void
     {
-        $this->loginAs(['kassenwart']);
+        $this->loginAs(['treasurer']);
         $this->assertSame(403, $this->get('/settings/email')->getStatusCode());
         $this->assertSame(403, $this->postForm('/settings/email', [])->getStatusCode());
         $this->pdo->exec("UPDATE user_roles SET role='admin'");

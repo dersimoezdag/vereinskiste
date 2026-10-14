@@ -2,13 +2,21 @@
 declare(strict_types=1);
 
 return [
+    'foundation.field.access_role'=>'Abgeleitete Benutzerrolle',
+    'users.permission.functions.manage'=>'Funktionen mit Zugriffsrechten zuweisen und beenden',
+    'users.member_identity'=>'Bei einer Verknüpfung stammen die Personendaten vom Mitglied. Änderungen erfolgen ausschließlich dort.',
+    'users.member_edit'=>'Personendaten beim Mitglied bearbeiten',
+    'users.derived_roles'=>'Aus aktiven Vereinsfunktionen abgeleitete Rollen',
+    'clubroles.access_role'=>'Abgeleitete Benutzerrolle',
+    'clubroles.access_none'=>'Keine Zugriffsrechte',
+    'clubroles.access_hint'=>'Die Rolle gilt nur für den Benutzer des Mitglieds während der aktiven Funktion. Vorstandsfunktionen haben derzeit dieselben Rechte. Admin wird niemals aus einer Funktion vergeben.',
     'users.roles.compare' => 'Rollen und Berechtigungen vergleichen',
     'users.roles.close' => 'Schließen',
     'users.roles.permission' => 'Berechtigung',
     'users.roles.allowed' => 'Ja',
     'users.roles.denied' => 'Nein',
     'users.roles.combine' => 'Mehrere Rollen ergänzen sich: Ein Benutzer erhält alle Berechtigungen seiner zugewiesenen Rollen.',
-    'users.roles.board_hint' => 'Bei neuer Zuweisung von Vorstand wird Admin mit vergeben. Admin kann anschließend unabhängig entzogen werden.',
+    'users.roles.board_hint' => 'Vorstand wird ausschließlich aus aktiven Vereinsfunktionen abgeleitet. Admin wird unabhängig am Benutzer vergeben und darf alles.',
     'users.roles.table_hint' => 'Die Tabelle zeigt jede Rolle einzeln. Zusätzliche Regeln wie das Vier-Augen-Prinzip gelten weiterhin.',
     'users.roles.contributions_hint' => 'Die Beitragsrechte sind vorbereitet; eine eigene Beitragsverwaltung ist derzeit noch nicht verfügbar.',
     'users.permission.bookings.read' => 'Buchungen und Belege ansehen',

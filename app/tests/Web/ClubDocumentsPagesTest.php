@@ -32,34 +32,36 @@ final class ClubDocumentsPagesTest extends TestCase
  }
  public function test_new_draft_does_not_replace_current_and_public_archive_remains_available(): void
  {
-  $this->loginAs(['schriftfuehrer']);$this->publish('constitution');
+  $this->loginAs(['secretary']);$this->publish('constitution');
   $this->assertSame(302,$this->postForm('/documents/constitution/1',$this->data(['title'=>'Zweite Fassung','label'=>'2026.2','generation'=>'1']))->getStatusCode());
   $html=(string)$this->get('/documents/constitution')->getBody();
   $this->assertStringContainsString('Satzung erste Fassung',$html);$this->assertStringContainsString('Zweite Fassung',$html);
-  $this->pdo->exec("UPDATE user_roles SET role='admin'");
+  $this->pdo->exec("UPDATE user_roles SET role='auditor'");
   $html=(string)$this->get('/documents/constitution')->getBody();
   $this->assertStringContainsString('Satzung erste Fassung',$html);$this->assertStringNotContainsString('Zweite Fassung',$html);
   $this->assertSame(404,$this->get('/documents/constitution/1/versions/2')->getStatusCode());
   $this->assertSame(404,$this->get('/documents/constitution/1/pdf?version=2')->getStatusCode());
-  $this->pdo->exec("UPDATE user_roles SET role='schriftfuehrer'");
+  $this->pdo->exec("UPDATE user_roles SET role='secretary'");
   $this->assertSame(302,$this->postForm('/documents/constitution/1',$this->data(['title'=>'Zweite Fassung','label'=>'2026.2','status'=>'published','generation'=>'2']))->getStatusCode());
-  $this->pdo->exec("UPDATE user_roles SET role='kassenwart'");
+  $this->pdo->exec("UPDATE user_roles SET role='treasurer'");
   $html=(string)$this->get('/documents/constitution')->getBody();
   $this->assertStringContainsString('Zweite Fassung',$html);$this->assertStringContainsString('/versions/1',$html);
   $this->assertSame(200,$this->get('/documents/constitution/1/versions/1')->getStatusCode());
   $this->assertSame(404,$this->get('/documents/rules/1')->getStatusCode());
   $this->assertSame(404,$this->get('/documents/constitution/1/versions/999')->getStatusCode());
  }
- public function test_minutes_are_newest_first_and_admin_alone_cannot_access_confidential_content(): void
+ public function test_minutes_are_newest_first_and_readers_cannot_access_confidential_content(): void
  {
-  $this->loginAs(['schriftfuehrer']);
+  $this->loginAs(['secretary']);
   $this->publish('minutes',['title'=>'Alte Versammlung','meeting_type'=>'assembly','document_date'=>'2025-01-01']);
   $this->publish('minutes',['title'=>'Neue Versammlung','meeting_type'=>'assembly','document_date'=>'2026-01-01']);
   $this->publish('minutes',['title'=>'Vertraulicher Vorstand','meeting_type'=>'board']);
-  $this->pdo->exec("UPDATE user_roles SET role='admin'");
+  $this->pdo->exec("UPDATE user_roles SET role='auditor'");
   $html=(string)$this->get('/documents/minutes')->getBody();
   $this->assertLessThan(strpos($html,'Alte Versammlung'),strpos($html,'Neue Versammlung'));
   $this->assertStringNotContainsString('Vertraulicher Vorstand',$html);
+  $this->assertStringContainsString('Zum Anlegen und Hochladen benötigst du',$html);
+  $this->assertStringNotContainsString('href="/documents/minutes/new"',$html);
   foreach (['/documents/minutes/3','/documents/minutes/3/pdf','/documents/minutes/1/versions/1','/documents/minutes/1/edit'] as $path) { $this->assertSame(404,$this->get($path)->getStatusCode()); }
   $this->assertSame(403,$this->postForm('/documents/minutes/new',$this->data())->getStatusCode());
   $this->assertSame(200,$this->get('/documents/minutes/1')->getStatusCode());
@@ -68,7 +70,7 @@ final class ClubDocumentsPagesTest extends TestCase
  }
  public function test_editor_content_is_clean_exported_and_versions_cannot_be_overwritten(): void
  {
-  $this->loginAs(['vorstand']);$this->pdo->exec("DELETE FROM user_roles WHERE role='admin'");
+  $this->loginAs(['secretary']);
   $this->assertSame(302,$this->postForm('/documents/rules/new',$this->data(['content'=>'<p style="color:red">Text</p><script>alert(1)</script><img src="http://127.0.0.1/"><a href="javascript:alert(1)">Link</a>']))->getStatusCode());
   $root=(new Repository($this->pdo))->root('rules');$row=(new Repository($this->pdo))->version($root,null,true);
   foreach (['<script','<img','javascript:'] as $needle) { $this->assertStringNotContainsString($needle,$row['content']); }
@@ -88,9 +90,9 @@ final class ClubDocumentsPagesTest extends TestCase
  }
  public function test_pdfs_live_in_postgresql_and_old_originals_remain_archived(): void
  {
-  $this->loginAs(['schriftfuehrer']);[$res,$first]=$this->upload(['status'=>'published']);$this->assertSame(302,$res->getStatusCode());
+  $this->loginAs(['secretary']);[$res,$first]=$this->upload(['status'=>'published']);$this->assertSame(302,$res->getStatusCode());
   [$res,$second]=$this->upload(['status'=>'published','generation'=>'1','label'=>'2026.2'],'/documents/constitution/1');$this->assertSame(302,$res->getStatusCode());
-  $this->pdo->exec("UPDATE user_roles SET role='admin'");
+  $this->pdo->exec("UPDATE user_roles SET role='auditor'");
   $this->assertSame($first,(string)$this->get('/documents/constitution/1/pdf?version=1')->getBody());
   $this->assertSame($second,(string)$this->get('/documents/constitution/1/pdf')->getBody());
   $this->assertSame(0,(int)$this->pdo->query('SELECT count(*) FROM stored_files')->fetchColumn());
@@ -101,14 +103,14 @@ final class ClubDocumentsPagesTest extends TestCase
  }
  public function test_upload_conflict_rolls_back_all_pdf_chunks(): void
  {
-  $this->loginAs(['schriftfuehrer']);[$res]=$this->upload([]);$this->assertSame(302,$res->getStatusCode());
+  $this->loginAs(['secretary']);[$res]=$this->upload([]);$this->assertSame(302,$res->getStatusCode());
   [$res]=$this->upload(['generation'=>'0'],'/documents/constitution/1');$this->assertSame(409,$res->getStatusCode());
   $this->assertSame(1,(int)$this->pdo->query('SELECT count(*) FROM document_files')->fetchColumn());
   $this->assertSame(1,(int)$this->pdo->query('SELECT count(*) FROM document_file_chunks')->fetchColumn());
  }
  public function test_large_binary_pdf_is_included_in_database_backup_and_restores_exactly(): void
  {
-  $this->loginAs(['schriftfuehrer']);[$res,$bytes]=$this->upload(['status'=>'published'],large:true);$this->assertSame(302,$res->getStatusCode());
+  $this->loginAs(['secretary']);[$res,$bytes]=$this->upload(['status'=>'published'],large:true);$this->assertSame(302,$res->getStatusCode());
   $directory=$this->securityDir().'/binary-backup';$backup=new DatabaseBackup($this->pdo,$directory);$progress=$backup->start();
   for($i=0;$i<100 && empty($progress['done']);$i++) { $progress=$backup->step($progress); }
   $this->assertTrue($progress['done']);
@@ -118,7 +120,7 @@ final class ClubDocumentsPagesTest extends TestCase
  }
  public function test_invalid_fields_csrf_and_singleton_creation_do_not_leave_documents(): void
  {
-  $this->loginAs(['schriftfuehrer']);
+  $this->loginAs(['secretary']);
   foreach ([['document_date'=>'2026-02-30'],['label'=>''],['source'=>'pdf'],['content'=>'<script>x</script>']] as $data) { $this->assertSame(422,$this->postForm('/documents/rules/new',$this->data($data))->getStatusCode()); }
   $this->assertSame(0,(int)$this->pdo->query('SELECT count(*) FROM club_documents')->fetchColumn());
   $request=(new ServerRequestFactory())->createServerRequest('POST','/documents/rules/new')->withParsedBody($this->data());$this->assertSame(403,$this->app->handle($request)->getStatusCode());

@@ -45,7 +45,7 @@ final class PaymentsTest extends TestCase
     }
     public function test_member_cannot_approve_own_reimbursement_and_name_is_from_verified_member():void
     {
-        $this->pdo->exec("INSERT INTO members(name) VALUES('Erika')");
+        $this->pdo->exec("INSERT INTO members(name,data) VALUES('Erika','{\"email\":\"erika-payment@example.org\"}')");
         $this->pdo->prepare('UPDATE users SET member_id=1 WHERE id=?')->execute([$this->reviewer]);
         $p=new Payments($this->pdo);$p->save($this->invoice,$this->input()+['member_id'=>'1'],0,$this->author);
         $input=$this->input();$input['kind']='reimbursement';$input['member_id']='1';$input['recipient']='Spoofed name';

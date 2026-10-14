@@ -65,7 +65,12 @@ final class UserController extends AdminController
             'active' => true,
             'member_id' => $memberId,
         ];
-        $errors = $this->profileErrors($input['name'], $input['email']);
+        if ($memberId !== null) {
+            $member=(new \Vereinskiste\Members\MemberRepository(($this->pdo)()))->find($memberId);
+            if ($member) { $input['name']=$member['name'];$input['email']=UserRepository::normalizeEmail($member['data']['email'] ?? ''); }
+        }
+        $errors = $this->profileErrors($input['name'], $input['email'], $memberId !== null ? 200 : self::NAME_MAX);
+        if (isset($member) && $member && $member['user_id'] !== null && (int)$member['user_id'] !== ($id ?? 0)) { $errors['member_id']='members.user.member_taken'; }
         [$input['roles'], $rolesError] = $this->roles($body);
         if ($rolesError !== null) {
             $errors['roles'] = $rolesError;
@@ -117,7 +122,7 @@ final class UserController extends AdminController
             'input' => [
                 'name' => $user['name'],
                 'email' => $user['email'],
-                'roles' => $user['roles'],
+                'roles' => $user['manual_roles'],
                 'active' => $user['active'],
                 'member_id' => $user['member_id'],
             ],
@@ -144,7 +149,12 @@ final class UserController extends AdminController
             'active' => ($body['active'] ?? '') === '1',
             'member_id' => $memberId,
         ];
-        $errors = $this->profileErrors($input['name'], $input['email']);
+        if ($memberId !== null) {
+            $member=(new \Vereinskiste\Members\MemberRepository(($this->pdo)()))->find($memberId);
+            if ($member) { $input['name']=$member['name'];$input['email']=UserRepository::normalizeEmail($member['data']['email'] ?? ''); }
+        }
+        $errors = $this->profileErrors($input['name'], $input['email'], $memberId !== null ? 200 : self::NAME_MAX);
+        if (isset($member) && $member && $member['user_id'] !== null && (int)$member['user_id'] !== ($id ?? 0)) { $errors['member_id']='members.user.member_taken'; }
         [$input['roles'], $rolesError] = $this->roles($body);
         if ($rolesError !== null) {
             $errors['roles'] = $rolesError;
@@ -225,7 +235,7 @@ final class UserController extends AdminController
         return $this->renderForm($req, $res, 422, [
             'user_id' => $id,
             'input' => [
-                'name' => $user['name'], 'email' => $user['email'], 'roles' => $user['roles'], 'active' => $user['active'],
+                'name' => $user['name'], 'email' => $user['email'], 'roles' => $user['manual_roles'], 'active' => $user['active'],
             ],
             'password_error' => $error,
         ]);
@@ -279,14 +289,14 @@ final class UserController extends AdminController
      *
      * @return array<string,string> Feld => Textschluessel
      */
-    private function profileErrors(string $name, string $email): array
+    private function profileErrors(string $name, string $email, int $nameMax=self::NAME_MAX): array
     {
         $errors = [];
         if (!UserRepository::isStorableText($name)) {
             $errors['name'] = 'validation.text.encoding';
         } elseif (TextInput::isBlank($name)) {
             $errors['name'] = 'validation.name.required';
-        } elseif (mb_strlen($name) > self::NAME_MAX) {
+        } elseif (mb_strlen($name) > $nameMax) {
             $errors['name'] = 'validation.name.too_long';
         }
 
@@ -346,9 +356,12 @@ final class UserController extends AdminController
         if ($currentMemberId !== null && !in_array($currentMemberId, array_column($members, 'id'), true)) {
             $m = (new \Vereinskiste\Members\MemberRepository(($this->pdo)()))->find($currentMemberId);
             if ($m !== null) {
-                array_unshift($members, ['id' => $m['id'], 'member_no' => $m['member_no'], 'name' => $m['name']]);
+                array_unshift($members, ['id' => $m['id'], 'member_no' => $m['member_no'], 'name' => $m['name'], 'email'=>$m['data']['email'] ?? '']);
             }
         }
+        $linkedMember=$currentMemberId !== null ? (new \Vereinskiste\Members\MemberRepository(($this->pdo)()))->find((int)$currentMemberId) : null;
+        $context['person_data']=$linkedMember['data'] ?? [];
+        $context['derived_roles']=isset($context['user_id']) ? (new \Vereinskiste\Auth\MemberDerivedRoles(($this->pdo)()))->sources((int)$context['user_id']) : [];
         $context += $this->roleHelp() + [
             'errors' => [],
             'password_error' => null,
@@ -364,7 +377,7 @@ final class UserController extends AdminController
         foreach (Permissions::ROLES as $role) {
             $rights[$role] = Permissions::for([$role]);
         }
-        return ['roles' => Permissions::ROLES, 'permissions' => Permissions::ALL, 'role_permissions' => $rights];
+        return ['roles' => Permissions::MANUAL_ROLES, 'all_roles'=>Permissions::ROLES, 'permissions' => Permissions::ALL, 'role_permissions' => $rights];
     }
 
     private function repo(): UserRepository

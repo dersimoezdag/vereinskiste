@@ -36,6 +36,8 @@ final class MemberUserLink
             try {
                 $this->pdo->prepare('UPDATE users SET member_id = ? WHERE id = ?')->execute([$memberId, $userId]);
             } catch (PDOException $e) {
+                if ($e->getCode() === '23514') { throw new ValidationError(['user'=>'validation.user.email.invalid']); }
+                if ($e->getCode() === '23505' && str_contains($e->getMessage(),'users_email')) { throw new ValidationError(['user'=>'validation.user.email.duplicate']); }
                 if ($e->getCode() === '23505') { // parallele Verknuepfung: UNIQUE users.member_id
                     throw new ValidationError(['user' => 'members.user.member_taken']);
                 }
@@ -67,8 +69,8 @@ final class MemberUserLink
     /** @return list<array{id:int,member_no:int,name:string}> */
     public function linkableMembers(): array
     {
-        $rows = $this->pdo->query('SELECT m.id, m.member_no, m.name FROM members m
-            WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.member_id = m.id) ORDER BY lower(m.name)')->fetchAll();
-        return array_map(static fn (array $r): array => ['id' => (int) $r['id'], 'member_no' => (int) $r['member_no'], 'name' => $r['name']], $rows);
+        $rows = $this->pdo->query("SELECT m.id, m.member_no, m.name, m.data->>'email' AS email FROM members m
+            WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.member_id = m.id) ORDER BY lower(m.name)")->fetchAll();
+        return array_map(static fn (array $r): array => ['id' => (int) $r['id'], 'member_no' => (int) $r['member_no'], 'name' => $r['name'], 'email'=>$r['email']], $rows);
     }
 }

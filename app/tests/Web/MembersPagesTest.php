@@ -30,14 +30,14 @@ final class MembersPagesTest extends TestCase
 
     public function test_schriftfuehrer_maintains_members_kassenwart_reads_only(): void
     {
-        $this->loginAs(['schriftfuehrer']);
+        $this->loginAs(['secretary']);
         $response = $this->postForm('/members/new', ['name' => 'Erika Muster', 'email' => 'erika@example.org', 'version' => '0']);
         $this->assertSame('/members/1', $response->getHeaderLine('Location'));
         $this->assertStringContainsString('Erika Muster', (string) $this->get('/members')->getBody());
         $this->assertSame(302, $this->postForm('/members/1/join', ['date' => '2026-01-01'])->getStatusCode());
         $this->assertSame(422, $this->postForm('/members/1/join', ['date' => '2026-02-01'])->getStatusCode());
         $this->assertSame(409, $this->postForm('/members/1', ['name' => 'X', 'version' => '99'])->getStatusCode());
-        $this->pdo->exec("UPDATE user_roles SET role='kassenwart'");
+        $this->pdo->exec("UPDATE user_roles SET role='treasurer'");
         $this->assertSame(200, $this->get('/members/1')->getStatusCode());
         $this->assertSame(403, $this->postForm('/members/1', ['name' => 'Y', 'version' => '1'])->getStatusCode());
         $this->assertSame(403, $this->get('/members/new')->getStatusCode());
@@ -45,7 +45,7 @@ final class MembersPagesTest extends TestCase
 
     public function test_membership_modal_preserves_invalid_exit_and_hides_write_forms_from_readers(): void
     {
-        $this->loginAs(['schriftfuehrer']);
+        $this->loginAs(['secretary']);
         $this->postForm('/members/new', ['name' => 'Modal Mitglied', 'version' => '0']);
         $this->postForm('/members/1/join', ['date' => '2026-01-01']);
         $html = (string) $this->get('/members/1')->getBody();
@@ -59,7 +59,7 @@ final class MembersPagesTest extends TestCase
         $this->assertStringContainsString('data-membership-reopen', $html);
         $this->assertStringContainsString('value="2025-12-31"', $html);
         $this->assertStringContainsString('value="Umzug &lt;privat&gt;"', $html);
-        $this->pdo->exec("UPDATE user_roles SET role='kassenwart'");
+        $this->pdo->exec("UPDATE user_roles SET role='treasurer'");
         $html = (string) $this->get('/members/1')->getBody();
         $this->assertStringContainsString('id="membership-modal"', $html);
         $this->assertStringNotContainsString('action="/members/1/leave"', $html);
@@ -67,8 +67,8 @@ final class MembersPagesTest extends TestCase
 
     public function test_linking_needs_users_manage_and_shows_hint_without_user(): void
     {
-        $this->loginAs(['schriftfuehrer']);
-        $this->postForm('/members/new', ['name' => 'Erika Muster', 'version' => '0']);
+        $this->loginAs(['secretary']);
+        $this->postForm('/members/new', ['name' => 'Erika Muster', 'email'=>'erika@example.org', 'version' => '0']);
         $body = (string) $this->get('/members/1')->getBody();
         $this->assertStringContainsString('Kein Benutzerzugang', $body);
         $this->assertSame(403, $this->postForm('/members/1/user', ['user_id' => '1'])->getStatusCode());
@@ -80,7 +80,7 @@ final class MembersPagesTest extends TestCase
     public function test_csv_exports_every_matching_member_with_safe_cells_and_read_permission(): void
     {
         $this->assertSame(302, $this->get('/members.csv')->getStatusCode());
-        $this->loginAs(['schriftfuehrer']);
+        $this->loginAs(['secretary']);
         $stmt = $this->pdo->prepare('INSERT INTO members(name,data) VALUES (?, ?::jsonb) RETURNING id');
         for ($i = 0; $i < 505; ++$i) {
             $stmt->execute(['Müller ' . $i, json_encode(['first_name' => 'Erika', 'last_name' => 'Müller',
@@ -113,7 +113,7 @@ final class MembersPagesTest extends TestCase
         $this->assertSame('Ja', $first['Aktuelle Mitgliedschaft']);
         $this->assertStringNotContainsString('Andere Person', $csv);
         $this->assertStringContainsString('Mitglieder als CSV exportieren', (string) $this->get('/members')->getBody());
-        $this->pdo->exec("UPDATE user_roles SET role='kassenwart'");
+        $this->pdo->exec("UPDATE user_roles SET role='treasurer'");
         $this->assertSame(200, $this->get('/members.csv?state=left')->getStatusCode());
         $this->pdo->exec('DELETE FROM user_roles');
         $this->assertSame(403, $this->get('/members.csv')->getStatusCode());
@@ -121,7 +121,7 @@ final class MembersPagesTest extends TestCase
 
     public function test_member_menu_entry_depends_on_permission(): void
     {
-        $this->loginAs(['schriftfuehrer']);
+        $this->loginAs(['secretary']);
         $this->assertStringContainsString('href="/members"', (string) $this->get('/')->getBody());
     }
 }

@@ -54,7 +54,7 @@ final class AuthPagesTest extends TestCase
         );
         $stmt->execute([$email, 'Test Person', password_hash($password, PASSWORD_DEFAULT), $active ? 'true' : 'false']);
         $id = (int) $stmt->fetchColumn();
-        foreach (\Vereinskiste\Auth\Permissions::onAssignment($roles) as $role) {
+        foreach ($roles as $role) {
             $this->pdo->prepare('INSERT INTO user_roles (user_id, role) VALUES (?, ?)')->execute([$id, $role]);
         }
         return $id;
@@ -118,7 +118,7 @@ final class AuthPagesTest extends TestCase
 
     public function test_login_with_wrong_password_shows_error_and_401(): void
     {
-        $this->user('kasse@example.org', 'richtig-richtig', ['kassenwart']);
+        $this->user('kasse@example.org', 'richtig-richtig', ['treasurer']);
 
         $res = $this->login('kasse@example.org', 'falsch');
 
@@ -136,7 +136,7 @@ final class AuthPagesTest extends TestCase
 
     public function test_failed_login_is_audited_without_email(): void
     {
-        $this->user('kasse@example.org', 'richtig-richtig', ['kassenwart']);
+        $this->user('kasse@example.org', 'richtig-richtig', ['treasurer']);
 
         $this->login('kasse@example.org', 'falsch');
 
@@ -150,7 +150,7 @@ final class AuthPagesTest extends TestCase
 
     public function test_successful_login_redirects_audits_and_grants_access(): void
     {
-        $id = $this->user('kasse@example.org', 'richtig-richtig', ['kassenwart']);
+        $id = $this->user('kasse@example.org', 'richtig-richtig', ['treasurer']);
 
         $res = $this->login('kasse@example.org', 'richtig-richtig');
 
@@ -163,7 +163,7 @@ final class AuthPagesTest extends TestCase
 
     public function test_login_ignores_case_and_surrounding_spaces_in_email(): void
     {
-        $this->user('kasse@example.org', 'richtig-richtig', ['kassenwart']);
+        $this->user('kasse@example.org', 'richtig-richtig', ['treasurer']);
 
         $res = $this->login('  Kasse@Example.org ', 'richtig-richtig');
 
@@ -172,7 +172,7 @@ final class AuthPagesTest extends TestCase
 
     public function test_session_id_is_regenerated_on_login(): void
     {
-        $this->user('kasse@example.org', 'richtig-richtig', ['kassenwart']);
+        $this->user('kasse@example.org', 'richtig-richtig', ['treasurer']);
         $token = $this->csrfToken();
         $before = $this->store->id();
 
@@ -197,7 +197,7 @@ final class AuthPagesTest extends TestCase
         $this->assertNull($auth->login('niemand@example.org', 'egal'));
         $this->assertSame([AuthService::DUMMY_HASH], $calls);
 
-        $this->user('kasse@example.org', 'richtig-richtig', ['kassenwart']);
+        $this->user('kasse@example.org', 'richtig-richtig', ['treasurer']);
         $calls = [];
         $this->assertNull($auth->login('kasse@example.org', 'falsch'));
         $this->assertCount(1, $calls);
@@ -206,7 +206,7 @@ final class AuthPagesTest extends TestCase
 
     public function test_pre_upgrade_hashes_have_comparable_failed_login_time_and_still_rehash_on_success(): void
     {
-        $id = $this->user('old@example.org', 'richtig-richtig', ['vorstand']);
+        $id = $this->user('old@example.org', 'richtig-richtig', ['admin']);
         $stmt = $this->pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
         $stmt->execute([password_hash('richtig-richtig', PASSWORD_BCRYPT, ['cost' => 10]), $id]);
         $old = $unknown = [];
@@ -238,7 +238,7 @@ final class AuthPagesTest extends TestCase
 
     public function test_missing_permission_gives_403_page(): void
     {
-        $this->user('pruefer@example.org', 'richtig-richtig', ['kassenpruefer']);
+        $this->user('pruefer@example.org', 'richtig-richtig', ['auditor']);
         $this->login('pruefer@example.org', 'richtig-richtig');
 
         $res = $this->get('/_test/users');
@@ -249,7 +249,7 @@ final class AuthPagesTest extends TestCase
 
     public function test_deactivated_user_session_is_rejected(): void
     {
-        $id = $this->user('kasse@example.org', 'richtig-richtig', ['kassenwart']);
+        $id = $this->user('kasse@example.org', 'richtig-richtig', ['treasurer']);
         $this->login('kasse@example.org', 'richtig-richtig');
         $this->assertSame(200, $this->get('/_test/bookings')->getStatusCode());
 
@@ -262,7 +262,7 @@ final class AuthPagesTest extends TestCase
 
     public function test_role_change_takes_effect_on_next_request(): void
     {
-        $id = $this->user('kasse@example.org', 'richtig-richtig', ['kassenwart']);
+        $id = $this->user('kasse@example.org', 'richtig-richtig', ['treasurer']);
         $this->login('kasse@example.org', 'richtig-richtig');
         $this->pdo->prepare('DELETE FROM user_roles WHERE user_id = ?')->execute([$id]);
 
@@ -271,7 +271,7 @@ final class AuthPagesTest extends TestCase
 
     public function test_deactivated_user_cannot_log_in(): void
     {
-        $this->user('weg@example.org', 'richtig-richtig', ['vorstand'], false);
+        $this->user('weg@example.org', 'richtig-richtig', ['admin'], false);
 
         $res = $this->login('weg@example.org', 'richtig-richtig');
 
@@ -294,7 +294,7 @@ final class AuthPagesTest extends TestCase
 
     public function test_logout_destroys_session(): void
     {
-        $this->user('kasse@example.org', 'richtig-richtig', ['kassenwart']);
+        $this->user('kasse@example.org', 'richtig-richtig', ['treasurer']);
         $this->login('kasse@example.org', 'richtig-richtig');
 
         $res = $this->post('/logout', ['_csrf' => $this->csrfToken()]);
@@ -306,7 +306,7 @@ final class AuthPagesTest extends TestCase
 
     public function test_home_page_uses_can_to_hide_content_without_permission(): void
     {
-        $this->user('pruefer@example.org', 'richtig-richtig', ['kassenpruefer']);
+        $this->user('pruefer@example.org', 'richtig-richtig', ['auditor']);
         $this->login('pruefer@example.org', 'richtig-richtig');
 
         $html = (string) $this->get('/')->getBody();
@@ -318,7 +318,7 @@ final class AuthPagesTest extends TestCase
 
     public function test_home_page_shows_user_admin_link_for_vorstand(): void
     {
-        $this->user('chef@example.org', 'richtig-richtig', ['vorstand']);
+        $this->user('chef@example.org', 'richtig-richtig', ['admin']);
         $this->login('chef@example.org', 'richtig-richtig');
 
         $this->assertStringContainsString('href="/settings"', (string) $this->get('/')->getBody());

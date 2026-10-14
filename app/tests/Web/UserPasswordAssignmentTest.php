@@ -23,12 +23,12 @@ final class UserPasswordAssignmentTest extends TestCase
         (new Migrator($this->pdo,dirname(__DIR__,2).'/migrations'))->migrate();
         $this->bootApp();
         $this->admin=$this->loginAs(['admin']);
-        $this->target=$this->webUser('target@example.org',['kassenwart']);
+        $this->target=$this->webUser('target@example.org',['treasurer']);
     }
 
     private function input(array $override=[]): array
     {
-        return $override+['name'=>'Test Person','email'=>'target@example.org','roles'=>['kassenwart'],'active'=>'1'];
+        return $override+['name'=>'Test Person','email'=>'target@example.org','roles'=>['treasurer'],'active'=>'1'];
     }
     private function user(): array { return (new UserRepository($this->pdo))->findById($this->target); }
 

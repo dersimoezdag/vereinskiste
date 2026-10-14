@@ -30,7 +30,7 @@ final class ClubRoleController extends AdminController
 
         $repo = new ClubRoleRepository(($this->pdo)());
         try {
-            $repo->save(null, $name, $desc, true, 0, $this->userId($req), $single, $kind);
+            $repo->save(null, $name, $desc, true, 0, $this->userId($req), $single, $kind, $this->str($body,'access_role') ?: null);
         } catch (ValidationError $e) {
             return $this->renderList($req, $res->withStatus(422), $body, $e->errors);
         }
@@ -52,7 +52,7 @@ final class ClubRoleController extends AdminController
 
         $repo = new ClubRoleRepository(($this->pdo)());
         try {
-            $repo->save($id, $name, $desc, $active, $version, $this->userId($req), $single, $kind);
+            $repo->save($id, $name, $desc, $active, $version, $this->userId($req), $single, $kind, $this->str($body,'access_role') ?: null);
         } catch (ValidationError $e) {
             return $this->renderList($req, $res->withStatus(422), $body, $e->errors, $id);
         } catch (Conflict) {

@@ -26,7 +26,7 @@ final class PasswordResetPagesTest extends TestCase
     {
         $this->pdo = $this->pdo();
         (new Migrator($this->pdo, dirname(__DIR__, 2) . '/migrations'))->migrate();
-        $this->userId = $this->webUser('user@example.org', ['vorstand']);
+        $this->userId = $this->webUser('user@example.org', ['admin']);
         $this->configure();
     }
 

@@ -6,8 +6,6 @@ final class Access
 {
  public static function canRead(array $document, AuthService $auth, bool $historic=false): bool
  {
-  if ($auth->can('documents.confidential')) { return true; }
-  if (!$auth->currentUser() || $document['status'] !== 'published') { return false; }
-  return $document['kind'] !== 'minutes' || (!$historic && $document['meeting_type'] === 'assembly');
+  return $auth->can('documents.read',$document+['historic'=>$historic]);
  }
 }

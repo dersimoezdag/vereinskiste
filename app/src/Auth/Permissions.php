@@ -6,6 +6,7 @@ namespace Vereinskiste\Auth;
 final class Permissions
 {
     public const ALL = [
+        'functions.manage',
         'documents.read', 'documents.write', 'documents.confidential',
         'bookings.read',
         'bookings.write',
@@ -19,33 +20,20 @@ final class Permissions
     ];
 
     /** Zulaessige Rollen (Whitelist fuer Eingaben und Benutzerverwaltung). */
-    public const ROLES = ['admin', 'vorstand', 'kassenwart', 'schriftfuehrer', 'kassenpruefer'];
+    public const ROLES = ['admin', 'board', 'treasurer', 'secretary', 'auditor'];
+
+    public const MANUAL_ROLES = ['admin', 'treasurer', 'secretary', 'auditor'];
 
     private const BY_ROLE = [
         'admin' => self::ALL,
-        'vorstand' => ['documents.read', 'documents.write', 'documents.confidential'],
-        'kassenwart' => ['documents.read', 'bookings.read', 'bookings.write', 'members.read', 'reports.read',
+        'board' => ['documents.read', 'documents.write', 'documents.confidential', 'members.read', 'members.write', 'bookings.read', 'bookings.write', 'reports.read', 'imports.read', 'imports.write', 'invoices.read', 'invoices.write', 'payments.approve', 'contacts.read', 'contacts.write', 'contributions.read', 'contributions.write'],
+        'treasurer' => ['documents.read', 'bookings.read', 'bookings.write', 'members.read', 'reports.read',
             'imports.read', 'imports.write', 'invoices.read', 'invoices.write', 'payments.approve',
             'contacts.read', 'contacts.write', 'contributions.read', 'contributions.write'],
-        'schriftfuehrer' => ['documents.read', 'documents.write', 'documents.confidential', 'members.read', 'members.write', 'bookings.read'],
-        'kassenpruefer' => ['documents.read', 'bookings.read', 'members.read', 'reports.read',
+        'secretary' => ['documents.read', 'documents.write', 'documents.confidential', 'members.read', 'members.write', 'bookings.read'],
+        'auditor' => ['documents.read', 'bookings.read', 'members.read', 'reports.read',
             'imports.read', 'invoices.read', 'contacts.read', 'contributions.read'],
     ];
-
-    /** Admin nur bei neuer Vorstand-Zuweisung vergeben, niemals beim Lesen nachtraeglich ergaenzen.
-     * @param string[] $roles
-     * @param string[] $previous
-     * @return string[]
-     */
-    public static function onAssignment(array $roles, array $previous = []): array
-    {
-        if (in_array('vorstand', $roles, true) && !in_array('vorstand', $previous, true)) {
-            $roles[] = 'admin';
-        }
-        $roles = array_values(array_unique($roles));
-        sort($roles, SORT_STRING);
-        return $roles;
-    }
 
     /**
      * Vereinigung der Rechte aller Rollen; unbekannte Rollen geben nichts.
@@ -58,7 +46,6 @@ final class Permissions
         $rights = [];
         foreach ($roles as $role) {
             foreach (self::BY_ROLE[$role] ?? [] as $right) {
-                if ($role === 'admin' && in_array($right, ['documents.write', 'documents.confidential'], true)) { continue; }
                 $rights[$right] = true;
             }
         }
