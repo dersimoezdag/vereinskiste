@@ -25,7 +25,13 @@ final class Runtime
     public function asset(string $path): string
     {
         $maintenance = $this->maintenance(); $pointer = $maintenance !== null ? ($maintenance['previous'] ?? null) : $this->active();
-        return $pointer === null ? '/assets/' . $path : '/_release-assets/' . $pointer['id'] . '/' . $path;
+        if ($pointer !== null) { return '/_release-assets/' . $pointer['id'] . '/' . $path; }
+        // Ohne Release-Zeiger: Aenderungsdatum als Version anhaengen, damit Browser geaenderte Dateien nicht aus dem Cache bedienen.
+        foreach ([dirname($this->instance) . '/public/assets/', $this->instance . '/public/assets/'] as $root) {
+            $mtime = is_file($root . $path) ? filemtime($root . $path) : false;
+            if ($mtime !== false) { return '/assets/' . $path . '?v=' . $mtime; }
+        }
+        return '/assets/' . $path;
     }
     public function pointer(?array $pointer): void
     {

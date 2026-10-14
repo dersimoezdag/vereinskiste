@@ -13,7 +13,7 @@ final class DatabaseBackup
         Files::mkdir($this->directory);
         $schema = (new DatabaseSchema($this->db))->capture();
         Files::json($this->directory . '/schema.json', $schema);
-        return ['table'=>0,'last'=>null,'rows'=>0,'bytes'=>0,'total_bytes'=>0];
+        return ['table'=>0,'tables'=>count($schema['tables']),'last'=>null,'rows'=>0,'bytes'=>0,'total_bytes'=>0];
     }
     public function step(array $progress): array
     {

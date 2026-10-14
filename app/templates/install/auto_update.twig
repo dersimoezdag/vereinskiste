@@ -61,10 +61,15 @@
             <!-- Status Headline & Details -->
             <div class="status-box mb-3">
                 <h2 id="automatic-status" role="status" class="h3 mb-2">{{ t('auto_update.phase.' ~ operation.phase) }}</h2>
+                {% set inBackup = operation.phase in ['waiting', 'backup'] %}
+                {% set inDownload = operation.phase in ['download', 'inspect', 'extract'] and operation.downloaded is defined %}
                 <p id="automatic-detail" class="text-secondary font-monospace small mb-0">
-                    {% if operation.downloaded is defined %}{{ operation.downloaded|number_format(0, ',', '.') }} / {{ operation.size|number_format(0, ',', '.') }} {{ t('ui.bytes') }}{% endif %}
+                    {% if inBackup and operation.backup_rows is defined %}{{ t('auto_update.backup_rows') }} {{ operation.backup_rows|number_format(0, ',', '.') }}
+                    {% elseif inDownload %}{{ operation.downloaded|number_format(0, ',', '.') }} / {{ operation.size|number_format(0, ',', '.') }} {{ t('ui.bytes') }}{% endif %}
                 </p>
-                <progress id="automatic-download" class="progress progress-sm mt-2" max="{{ operation.size|default(0) }}" value="{{ operation.downloaded|default(0) }}" aria-label="{{ t('auto_update.step.download') }}"{% if operation.downloaded is not defined or not operation.size %} hidden{% endif %}></progress>
+                {% set measureMax = inBackup ? operation.backup_tables|default(0) : (inDownload ? operation.size|default(0) : 0) %}
+                {% set measureValue = inBackup ? operation.backup_table|default(0) : (inDownload ? operation.downloaded|default(0) : 0) %}
+                <progress id="automatic-measure" class="progress progress-sm mt-2" max="{{ measureMax }}" value="{{ measureValue }}" aria-label="{{ inBackup ? t('auto_update.step.backup') : t('auto_update.step.download') }}"{% if not measureMax %} hidden{% endif %}></progress>
             </div>
 
             <!-- Error Box -->

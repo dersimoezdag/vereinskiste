@@ -75,14 +75,18 @@
             failures = 0;
             if (stalled) stalled.hidden = true;
             document.getElementById('automatic-status').textContent = message(`[data-phase="${state.phase}"]`) || state.phase;
-            document.getElementById('automatic-detail').textContent = state.backup_rows !== undefined
-                ? `${message('[data-label="backup_rows"]') || ''} ${state.backup_rows}`.trim()
-                : state.downloaded !== undefined ? `${number.format(state.downloaded)} / ${number.format(state.size)} Bytes` : '';
-            const download = document.getElementById('automatic-download');
-            if (download) {
-                const known = state.downloaded !== undefined && state.size > 0;
-                download.hidden = !known;
-                if (known) { download.max = state.size; download.value = state.downloaded; }
+            const inBackup = ['waiting', 'backup'].includes(state.phase);
+            const inDownload = ['download', 'inspect', 'extract'].includes(state.phase) && state.downloaded !== undefined;
+            let detail = '';
+            if (inBackup && state.backup_rows !== undefined) detail = `${message('[data-label="backup_rows"]') || ''} ${number.format(state.backup_rows)}`.trim();
+            else if (inDownload) detail = `${number.format(state.downloaded)} / ${number.format(state.size)} Bytes`;
+            document.getElementById('automatic-detail').textContent = detail;
+            const measure = document.getElementById('automatic-measure');
+            if (measure) {
+                const max = inBackup ? state.backup_tables : inDownload ? state.size : 0;
+                const value = inBackup ? state.backup_table : state.downloaded;
+                measure.hidden = !(max > 0);
+                if (max > 0) { measure.max = max; measure.value = value || 0; }
             }
             paint(state);
             if (state.error) showError(state.error);

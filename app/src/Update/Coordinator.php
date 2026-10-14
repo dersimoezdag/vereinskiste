@@ -63,6 +63,7 @@ final class Coordinator
                         case 'backup':
                             $data['backup']=(new DatabaseBackup($this->db,$this->state->path($data) . '/backup'))->step($data['backup']);
                             $data['backup_rows']=$data['backup']['rows'];
+                            $data['backup_table']=$data['backup']['table']; $data['backup_tables']=$data['backup']['tables']??0;
                             if ($data['backup']['done']??false) { $data['phase']='activate'; }
                             break;
                         case 'activate': $data=$activation->apply($data); break;
