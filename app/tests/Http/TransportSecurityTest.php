@@ -26,5 +26,6 @@ final class TransportSecurityTest extends TestCase
         $this->assertSame('max-age=31536000', $secure->getHeaderLine('Strict-Transport-Security'));
         $this->assertStringContainsString("frame-ancestors 'none'", $secure->getHeaderLine('Content-Security-Policy'));
         $this->assertSame('nosniff', $secure->getHeaderLine('X-Content-Type-Options'));
+        $this->assertSame('no-store, no-transform', $secure->getHeaderLine('Cache-Control'));
     }
 }

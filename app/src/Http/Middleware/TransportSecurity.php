@@ -30,7 +30,7 @@ final class TransportSecurity implements MiddlewareInterface
             $response = $handler->handle($request);
         }
         $scriptPolicy=str_starts_with($request->getUri()->getPath(),'/invoices/') ? "'self' 'wasm-unsafe-eval'" : "'self'";
-        foreach (['Cache-Control' => 'no-store', 'Referrer-Policy' => 'no-referrer',
+        foreach (['Cache-Control' => 'no-store, no-transform', 'Referrer-Policy' => 'no-referrer',
             'X-Content-Type-Options' => 'nosniff', 'X-Frame-Options' => 'DENY',
             'Content-Security-Policy' => "default-src 'self'; script-src $scriptPolicy; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"] as $name => $value) {
             if (!$response->hasHeader($name)) { $response = $response->withHeader($name, $value); }

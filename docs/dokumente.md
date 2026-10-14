@@ -8,4 +8,6 @@ Alle Inhalte liegen in PostgreSQL: Text, Metadaten und unveränderliche Versions
 
 TinyMCE 8.10.0 ist lokal mit freien Plugins und deutscher Community-Übersetzung eingebunden. HTML Purifier bereinigt Editor-Inhalte, Dompdf exportiert A4-PDFs ohne externe Ressourcen. PDF-Uploads bleiben Originale und werden nicht in Editor-Text umgewandelt. Bilder und eingebettete Frames werden nicht übernommen. PHP-DOM muss verfügbar sein. Auf dem Hosting sind weder Node noch ein zusätzlicher Dienst erforderlich.
 
+DOCX-Dateien bis 10 MB können als Editor-Text importiert werden. Absätze, Fett/Kursiv/Unterstreichung und Tabellen werden übernommen. Bilder, Kopf-/Fußzeilen und das genaue Word-Seitenlayout werden nicht übernommen. Die DOCX-Originaldatei wird nicht gespeichert. PHP-ZIP muss verfügbar sein.
+
 Lizenz: TinyMCE GPL-2.0-or-later (GPLv3 kompatibel mit AGPLv3). Vollständiger Quellcode und Lizenzhinweise sind enthalten: `/assets/vendor/tinymce-source/tinymce-8.10.0.tar.gz`. Migration: `0017_club_documents.sql`. Keine Kompatibilitätsschicht für frühere Installationen.

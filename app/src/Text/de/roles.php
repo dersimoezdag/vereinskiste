@@ -6,6 +6,8 @@ return [
     'users.permission.functions.manage'=>'Funktionen mit Zugriffsrechten zuweisen und beenden',
     'users.member_identity'=>'Bei einer Verknüpfung stammen die Personendaten vom Mitglied. Änderungen erfolgen ausschließlich dort.',
     'users.member_edit'=>'Personendaten beim Mitglied bearbeiten',
+    'users.member_unlock'=>'Mitgliedsverknüpfung durch Doppelklick oder Doppeltippen entsperren',
+    'users.member_locked'=>'Die bestehende Verknüpfung ist gesperrt. Nur ein Admin kann sie über das Bearbeiten-Icon entsperren.',
     'users.derived_roles'=>'Aus aktiven Vereinsfunktionen abgeleitete Rollen',
     'clubroles.access_role'=>'Abgeleitete Benutzerrolle',
     'clubroles.access_none'=>'Keine Zugriffsrechte',

@@ -1,4 +1,8 @@
 Options -Indexes
+# PageSpeed script combining injects inline eval calls blocked by our CSP.
+<IfModule pagespeed_module>
+    ModPagespeed Off
+</IfModule>
 DirectoryIndex index.php
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f

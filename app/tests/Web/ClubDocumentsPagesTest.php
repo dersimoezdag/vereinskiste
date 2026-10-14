@@ -108,6 +108,22 @@ final class ClubDocumentsPagesTest extends TestCase
   $this->assertSame(1,(int)$this->pdo->query('SELECT count(*) FROM document_files')->fetchColumn());
   $this->assertSame(1,(int)$this->pdo->query('SELECT count(*) FROM document_file_chunks')->fetchColumn());
  }
+ public function test_docx_upload_becomes_editable_text_and_exports_as_pdf(): void
+ {
+  $this->loginAs(['secretary']);$file=$this->securityDir().'/import.docx';
+  $zip=new \ZipArchive();$zip->open($file,\ZipArchive::CREATE);
+  $zip->addFromString('[Content_Types].xml','<Types/>');
+  $zip->addFromString('word/document.xml','<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Importierter Beschluss</w:t></w:r></w:p></w:body></w:document>');$zip->close();
+  $request=(new ServerRequestFactory())->createServerRequest('POST','/documents/constitution/new')
+   ->withParsedBody(['_csrf'=>$this->csrf()]+$this->data(['source'=>'docx','status'=>'published','content'=>'']))
+   ->withUploadedFiles(['receipt'=>new UploadedFile($file,'import.docx','application/vnd.openxmlformats-officedocument.wordprocessingml.document',filesize($file),UPLOAD_ERR_OK)]);
+  $this->assertSame(302,$this->app->handle($request)->getStatusCode());
+  $repo=new Repository($this->pdo);$row=$repo->version($repo->root('constitution'));
+  $this->assertSame('editor',$row['source']);$this->assertNull($row['file_id']);
+  $this->assertStringContainsString('Importierter Beschluss',$row['content']);
+  $this->assertStringContainsString('Importierter Beschluss',(string)$this->get('/documents/constitution/1/edit')->getBody());
+  $this->assertStringStartsWith('%PDF-',(string)$this->get('/documents/constitution/1/pdf')->getBody());
+ }
  public function test_large_binary_pdf_is_included_in_database_backup_and_restores_exactly(): void
  {
   $this->loginAs(['secretary']);[$res,$bytes]=$this->upload(['status'=>'published'],large:true);$this->assertSame(302,$res->getStatusCode());

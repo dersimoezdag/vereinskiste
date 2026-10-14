@@ -140,8 +140,13 @@ final class UserController extends AdminController
         }
 
         $body = $this->body($req);
+        $body += ['member_id' => $existing['member_id'] === null ? '' : (string) $existing['member_id']];
         $memberId = isset($body['member_id']) && ctype_digit((string) $body['member_id']) && (int) $body['member_id'] > 0
             ? (int) $body['member_id'] : null;
+        if ($existing['member_id'] !== null && $memberId !== (int) $existing['member_id']
+            && (!in_array('admin', $req->getAttribute('auth')->currentUser()['roles'], true) || ($body['member_link_unlocked'] ?? '') !== '1')) {
+            return $res->withStatus(403);
+        }
         $input = [
             'name' => $this->str($body, 'name'),
             'email' => UserRepository::normalizeEmail($this->str($body, 'email')),
@@ -361,6 +366,9 @@ final class UserController extends AdminController
         }
         $linkedMember=$currentMemberId !== null ? (new \Vereinskiste\Members\MemberRepository(($this->pdo)()))->find((int)$currentMemberId) : null;
         $context['person_data']=$linkedMember['data'] ?? [];
+        $persistedMemberId=isset($context['user_id']) ? $this->repo()->findById((int)$context['user_id'])['member_id'] : null;
+        $context['member_link_locked']=$persistedMemberId !== null;
+        $context['member_link_admin']=in_array('admin',$req->getAttribute('auth')->currentUser()['roles'],true);
         $context['derived_roles']=isset($context['user_id']) ? (new \Vereinskiste\Auth\MemberDerivedRoles(($this->pdo)()))->sources((int)$context['user_id']) : [];
         $context += $this->roleHelp() + [
             'errors' => [],

@@ -50,7 +50,13 @@ final class ClubDocumentController extends AdminController
   if ($id!==null && !$root) { return $this->notFound($req); }
   $body=$this->body($req);
   try {
-   $saved=$repo->save($kind,$id,Input::read($body,$kind),UploadInput::fromRequest($req),Fields::version($body['generation'] ?? null),$this->userId($req));
+   $upload=UploadInput::fromRequest($req);
+   if (($body['source'] ?? '')==='docx') {
+    if (!$upload) { throw new ValidationError(['receipt'=>'validation.receipt.none']); }
+    $body['content']=\Vereinskiste\ClubDocuments\Docx::read($upload['path']);
+    $body['source']='editor';$upload=null;
+   }
+   $saved=$repo->save($kind,$id,Input::read($body,$kind),$upload,Fields::version($body['generation'] ?? null),$this->userId($req));
   } catch (ValidationError|Conflict $e) {
    return $this->form($req,$res->withStatus($e instanceof Conflict?409:422),$kind,$root,$body,$e instanceof Conflict?['generation'=>'foundation.conflict']:$e->errors);
   }

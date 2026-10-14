@@ -99,6 +99,7 @@ final class UserMemberLinkPagesTest extends TestCase
 
         // Change to m2
         $this->postForm('/users/1/edit', [
+            'member_link_unlocked' => '1',
             'name' => 'Admin',
             'email' => 'wer@example.org',
             'roles' => ['admin'],
@@ -109,6 +110,7 @@ final class UserMemberLinkPagesTest extends TestCase
 
         // Unlink
         $this->postForm('/users/1/edit', [
+            'member_link_unlocked' => '1',
             'name' => 'Admin',
             'email' => 'wer@example.org',
             'roles' => ['admin'],
@@ -116,5 +118,20 @@ final class UserMemberLinkPagesTest extends TestCase
             'member_id' => '',
         ]);
         $this->assertNull($this->pdo->query('SELECT member_id FROM users WHERE id = 1')->fetchColumn() ?: null);
+    }
+
+    public function test_existing_member_link_requires_explicit_unlock_and_survives_disabled_field_submission(): void
+    {
+        $this->loginAs(['admin']);
+        $member=(new MemberRepository($this->pdo))->save(null,['name'=>'Mitglied','email'=>'locked@example.org'],0,1);
+        $data=['roles'=>['admin'],'active'=>'1','member_id'=>(string)$member];
+        $this->assertSame(302,$this->postForm('/users/1/edit',$data)->getStatusCode());
+        $html=(string)$this->get('/users/1/edit')->getBody();
+        $this->assertStringContainsString('data-member-link-unlock',$html);
+        $this->assertMatchesRegularExpression('/<select id="user-member-id"[^>]* disabled>/',$html);
+        $this->assertSame(403,$this->postForm('/users/1/edit',['member_id'=>'']+$data)->getStatusCode());
+        unset($data['member_id']);
+        $this->assertSame(302,$this->postForm('/users/1/edit',$data)->getStatusCode());
+        $this->assertSame($member,(int)$this->pdo->query('SELECT member_id FROM users WHERE id=1')->fetchColumn());
     }
 }

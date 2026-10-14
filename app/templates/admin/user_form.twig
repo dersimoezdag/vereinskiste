@@ -15,19 +15,21 @@
                     <label class="form-label" for="user-name">{{ t('users.name') }}</label>
                     <input type="text" id="user-name" name="name" data-linked-name maxlength="200" required autocomplete="off"
                            class="form-control{% if errors.name is defined %} is-invalid{% endif %}"
-                           value="{{ input.name }}"{% if input.member_id %} readonly{% endif %}>
+                           value="{{ input.name }}"{% if input.member_id %} disabled{% endif %}>
                     {% if errors.name is defined %}<div class="invalid-feedback">{{ t(errors.name) }}</div>{% endif %}
                 </div>
                 <div class="col-md-6">
                     <label class="form-label" for="user-email">{{ t('users.email') }}</label>
                     <input type="email" id="user-email" name="email" data-linked-email maxlength="254" required autocomplete="off"
                            class="form-control{% if errors.email is defined %} is-invalid{% endif %}"
-                           value="{{ input.email }}"{% if input.member_id %} readonly{% endif %}>
+                           value="{{ input.email }}"{% if input.member_id %} disabled{% endif %}>
                     {% if errors.email is defined %}<div class="invalid-feedback">{{ t(errors.email) }}</div>{% endif %}
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="user-member-id">{{ t('members.user.field') }}</label>
-                    <select id="user-member-id" name="member_id" class="form-select{% if errors.member_id is defined %} is-invalid{% endif %}">
+                    <div class="d-flex align-items-center gap-2"><label class="form-label" for="user-member-id">{{ t('members.user.field') }}</label>
+                    {% if member_link_locked and member_link_admin %}<button type="button" class="btn btn-sm btn-icon" data-member-link-unlock aria-label="{{ t('users.member_unlock') }}" title="{{ t('users.member_unlock') }}"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m16 3 5 5-12 12H4v-5L16 3zM14 5l5 5"/></svg></button>{% endif %}</div>
+                    <input type="hidden" name="member_link_unlocked" value="0" data-member-link-unlocked>
+                    <select id="user-member-id" name="member_id" class="form-select{% if errors.member_id is defined %} is-invalid{% endif %}"{% if member_link_locked %} disabled{% endif %}>
                         <option value="">{{ t('members.user.field.none') }}</option>
                         {% for m in linkable_members %}
                         <option value="{{ m.id }}"{% if input.member_id == m.id %} selected{% endif %} data-member-name="{{ m.name }}" data-member-email="{{ m.email|default('') }}">
@@ -37,6 +39,7 @@
                     </select>
                     {% if errors.member_id is defined %}<div class="invalid-feedback">{{ t(errors.member_id) }}</div>{% endif %}
                     <div class="form-hint">{{ t('users.member_identity') }}</div>
+                    {% if member_link_locked %}<div class="form-hint">{{ t('users.member_locked') }}</div>{% endif %}
                     {% if input.member_id %}<a href="/members/{{ input.member_id }}">{{ t('users.member_edit') }}</a>{% endif %}
                 </div>
                 {% if person_data %}<div class="col-12"><dl class="row mb-0">{% for field in ['phone','address','house_number','zip','city','birth_date'] %}{% if person_data[field]|default('') %}<dt class="col-sm-3">{{ t('members.field.' ~ field) }}</dt><dd class="col-sm-9">{{ person_data[field] }}</dd>{% endif %}{% endfor %}</dl></div>{% endif %}

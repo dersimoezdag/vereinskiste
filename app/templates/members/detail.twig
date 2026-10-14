@@ -47,7 +47,7 @@
                                 <label for="detail-email" class="form-label">{{ t('members.field.email') }}</label>
                                 <input type="email" id="detail-email" name="email" value="{{ input.email|default(member.data.email) }}"
                                        class="form-control{% if errors.email %} is-invalid{% endif %}" maxlength="254"
-                                       {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}{% if member.user_id and not can('members.write', {'login_email_change':true}) %} readonly{% endif %} >
+                                       {% if not (can('members.write') and not member.anonymized_at) or (member.user_id and not can('members.write', {'login_email_change':true})) %}disabled{% endif %}>
                                 {% if errors.email %}
                                 <div class="invalid-feedback">{{ t(errors.email) }}</div>
                                 {% endif %}

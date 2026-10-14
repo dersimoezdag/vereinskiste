@@ -7,6 +7,8 @@ https://www.php.net/supported-versions.php
 
 ## Einrichtung ohne SSH
 
+Apache mod_pagespeed muss für diese Anwendung deaktiviert sein. Seine JavaScript-Kombination fügt Inline-Skripte mit `eval` ein, die an der Content-Security-Policy scheitern und unter anderem den Dokumenteditor verhindern. `public/.htaccess` enthält dafür `ModPagespeed Off` innerhalb eines Modulchecks. Bei bestehenden Installationen die `.htaccess` im tatsächlich verwendeten öffentlichen Dokumentenverzeichnis aktualisieren oder PageSpeed im Hosting-Panel abschalten; automatische Releases ersetzen diese ursprüngliche Datei nicht. HTML-Antworten senden zusätzlich `Cache-Control: no-store, no-transform`.
+
 1. Eigene Domain mit gültigem HTTPS-Zertifikat und eigene PostgreSQL-Datenbank
    im Hosting-Panel anlegen. Domain beim Upload vorübergehend sperren.
 2. Release entpacken, `app/` und `public/` als benachbarte Verzeichnisse hochladen.
