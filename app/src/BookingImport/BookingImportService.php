@@ -72,7 +72,7 @@ final class BookingImportService
         foreach ($sheet['rows'] as $row) {
             if (count(array_filter($row['c'], static fn (string $v): bool => $v !== '')) >= 3) { $header = $row; break; }
         }
-        $mapping = ['header_row' => $header['n'], 'date' => '', 'amount' => '', 'description' => '', 'counterparty' => '', 'event' => '', 'notes' => [], 'category_id' => ''];
+        $mapping = ['header_row' => $header['n'], 'date' => '', 'amount' => '', 'description' => '', 'counterparty' => '', 'event' => '', 'notes' => [], 'category_id' => '', 'ignore_rows' => ''];
         $patterns = ['date' => '/datum/iu', 'amount' => '/betrag|menge|summe|wert/iu', 'description' => '/zweck|verwendung|beschreibung|text/iu',
             'counterparty' => '/person|name|empf|gegen|auftrag/iu'];
         foreach ($header['c'] as $index => $label) {
@@ -124,6 +124,10 @@ final class BookingImportService
             if ($header === 0) { $errors['header_row'] = 'foundation.invalid'; }
             $category = is_string($input['category_id'] ?? null) ? $input['category_id'] : '';
             if ($category !== '' && preg_match('/^[1-9]\d{0,17}\z/', $category) !== 1) { $errors['category_id'] = 'validation.booking.category'; }
+            $ignore = is_string($input['ignore_rows'] ?? null) ? trim($input['ignore_rows']) : '';
+            if ($ignore !== '' && preg_match('/^\d{1,6}(\s*-\s*\d{1,6})?(\s*,\s*\d{1,6}(\s*-\s*\d{1,6})?)*\z/', $ignore) !== 1) {
+                $errors['ignore_rows'] = 'booking_import.ignore_rows_invalid';
+            }
             if ($errors !== []) { throw new ValidationError($errors); }
             $notes = [];
             foreach ((array) ($input['notes'] ?? []) as $note) {
@@ -131,7 +135,7 @@ final class BookingImportService
             }
             $settings = ['sheet' => (int) $input['sheet'], 'header_row' => $header, 'date' => $column('date'), 'amount' => $column('amount'),
                 'description' => $column('description'), 'counterparty' => $column('counterparty'), 'event' => $column('event'),
-                'notes' => $notes, 'category_id' => $category];
+                'notes' => $notes, 'category_id' => $category, 'ignore_rows' => $ignore];
             $this->pdo->prepare('UPDATE booking_imports SET settings = ?::jsonb, version = version + 1 WHERE id = ?')
                 ->execute([json_encode($settings, JSON_THROW_ON_ERROR), $id]);
         });
@@ -155,7 +159,10 @@ final class BookingImportService
             if ($row === null) { continue; }
             $row['problem'] = null;
             $row['duplicate'] = false;
-            if ($row['amount'] === null) {
+            if ($this->ignored($source['n'], (string) ($settings['ignore_rows'] ?? ''))) {
+                $row['state'] = 'ignored';
+                $row['problem'] = 'booking_import.problem.ignored';
+            } elseif ($row['amount'] === null) {
                 $row['state'] = 'ignored';
                 $row['problem'] = 'booking_import.problem.amount';
             } elseif ($row['date'] === null) {
@@ -204,10 +211,9 @@ final class BookingImportService
             $dates = (array) ($input['date'] ?? []);
             $selected = $errors = [];
             foreach ($preview['rows'] as $row) {
-                if ($row['state'] === 'ignored') { continue; }
+                if ($row['state'] === 'ignored' || isset($skip[$row['n']])) { continue; }
                 $typed = is_string($dates[$row['n']] ?? null) ? trim($dates[$row['n']]) : '';
                 if ($row['state'] === 'needs_date' && $typed === '') { continue; }
-                if ($row['state'] === 'ok' && isset($skip[$row['n']])) { continue; }
                 if ($row['state'] === 'needs_date' && !DateInput::valid($typed)) {
                     $errors['row_' . $row['n']] = 'validation.date.invalid';
                     continue;
@@ -223,7 +229,7 @@ final class BookingImportService
                         'direction' => $row['direction'], 'description' => $row['description'], 'counterparty' => $row['counterparty'],
                         'category_id' => $import['settings']['category_id'], 'event_id' => (string) ($events[$row['event_value']] ?? '')], $actor);
                 } catch (ValidationError $e) {
-                    $errors['row_' . $row['n']] = reset($e->errors);
+                    $errors['row_' . $row['n']] = array_values($e->errors)[0];
                 } catch (ClosedPeriod) {
                     $errors['row_' . $row['n']] = 'booking_import.problem.closed';
                 }
@@ -270,6 +276,16 @@ final class BookingImportService
                 'status' => max($dates) < date('Y-m-d') ? 'done' : 'planned'], 0, $actor);
         }
         return $resolved;
+    }
+
+    /** $list wie "4, 75-76" */
+    private function ignored(int $row, string $list): bool
+    {
+        foreach ($list === '' ? [] : explode(',', $list) as $part) {
+            $range = array_map('intval', explode('-', $part));
+            if ($row >= $range[0] && $row <= ($range[1] ?? $range[0])) { return true; }
+        }
+        return false;
     }
 
     private function row(array $source, array $settings): ?array

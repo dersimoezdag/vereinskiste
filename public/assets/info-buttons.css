@@ -18,3 +18,6 @@
 .info-button:focus-visible { outline: 2px solid var(--tblr-primary); outline-offset: -3px; }
 .info-button .icon { width: 20px; height: 20px; }
 @media (pointer: coarse) { .info-button { width: 44px; height: 44px; } }
+/* In Beschriftungen bleibt die Klickflaeche gross, ohne die Zeile zu erhoehen: Felder daneben stehen sonst versetzt. */
+.form-label .info-button { margin-block: -8px; }
+@media (pointer: coarse) { .form-label .info-button { margin-block: -14px; } }

@@ -41,7 +41,7 @@
                     <label class="form-label" for="budget-direction-{{ item.id }}">{{ t('bookings.direction') }}</label>
                     <select class="form-select mb-2" id="budget-direction-{{ item.id }}" name="direction">{% for direction in ['out', 'in'] %}<option value="{{ direction }}"{% if item.direction == direction %} selected{% endif %}>{{ t('bookings.direction.' ~ direction) }}</option>{% endfor %}</select>
                     <label class="form-label" for="budget-amount-{{ item.id }}">{{ t('events.budget.amount') }}</label>
-                    <input class="form-control mb-2" id="budget-amount-{{ item.id }}" name="planned_amount" inputmode="decimal" required value="{{ item.planned_amount }}">
+                    <input class="form-control mb-2" id="budget-amount-{{ item.id }}" name="planned_amount" data-mask="amount" inputmode="decimal" required value="{{ item.planned_amount }}">
                     <button class="btn btn-outline-primary btn-sm" type="submit">{{ t('foundation.save') }}</button>
                 </form>
             </details>
@@ -56,7 +56,7 @@
         <div class="col-md-3"><label class="form-label" for="budget-direction">{{ t('bookings.direction') }}</label>
             <select class="form-select" id="budget-direction" name="direction"><option value="out">{{ t('bookings.direction.out') }}</option><option value="in">{{ t('bookings.direction.in') }}</option></select></div>
         <div class="col-md-2"><label class="form-label" for="budget-amount">{{ t('events.budget.amount') }}</label>
-            <input class="form-control{% if errors.planned_amount is defined %} is-invalid{% endif %}" id="budget-amount" name="planned_amount" inputmode="decimal" required>
+            <input class="form-control{% if errors.planned_amount is defined %} is-invalid{% endif %}" id="budget-amount" name="planned_amount" data-mask="amount" inputmode="decimal" required>
             {% if errors.planned_amount is defined %}<div class="invalid-feedback">{{ t(errors.planned_amount) }}</div>{% endif %}</div>
         <div class="col-md-2 d-flex align-items-end"><button class="btn btn-outline-primary w-100" type="submit">{{ t('events.budget.add') }}</button></div>
     </form>

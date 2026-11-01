@@ -39,7 +39,7 @@ final class CsvExporter
             $this->t('reports.csv.id'), $this->t('bookings.date'), $this->t('bookings.account'),
             $this->t('reports.csv.direction'), $this->t('bookings.amount_eur'), $this->t('bookings.category'),
             $this->t('bookings.description'), $this->t('bookings.counterparty'), $this->t('bookings.receipt_no'),
-            $this->t('bookings.kind'), $this->t('bookings.status'),
+            $this->t('bookings.kind'), $this->t('bookings.status'), $this->t('events.single'), $this->t('funding.single'),
         ]);
 
         $repo = new BookingRepository($this->pdo);
@@ -59,6 +59,8 @@ final class CsvExporter
                     self::safe((string) ($b['receipt_no'] ?? '')),
                     $this->t('bookings.kind.' . $b['kind']),
                     $this->t('bookings.status.' . $b['status']),
+                    self::safe((string) ($b['event_title'] ?? '')),
+                    self::safe((string) ($b['funding_title'] ?? '')),
                 ]);
             }
             $last = end($rows);

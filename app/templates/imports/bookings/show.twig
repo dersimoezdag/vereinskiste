@@ -44,10 +44,14 @@
         <div class="col-md-4">{{ form.column_select('map-description', 'description', t('booking_import.description'), columns, mapping.description, false, errors) }}</div>
         <div class="col-md-4">{{ form.column_select('map-counterparty', 'counterparty', t('booking_import.counterparty'), columns, mapping.counterparty, false, errors) }}</div>
         <div class="col-md-4">{{ form.column_select('map-event', 'event', t('booking_import.event'), columns, mapping.event, false, errors) }}</div>
-        <div class="col-md-6"><label class="form-label" for="map-category">{{ t('booking_import.category') }}</label>
+        <div class="col-md-4"><label class="form-label" for="map-ignore">{{ t('booking_import.ignore_rows') }}</label>
+            <input class="form-control{% if errors.ignore_rows is defined %} is-invalid{% endif %}" id="map-ignore" name="ignore_rows" maxlength="500" value="{{ input.ignore_rows|default(mapping.ignore_rows|default('')) }}" aria-describedby="map-ignore-hint">
+            {% if errors.ignore_rows is defined %}<div class="invalid-feedback">{{ t(errors.ignore_rows) }}</div>{% endif %}
+            <div class="form-hint" id="map-ignore-hint">{{ t('booking_import.ignore_rows_hint') }}</div></div>
+        <div class="col-md-4"><label class="form-label" for="map-category">{{ t('booking_import.category') }}</label>
             <select class="form-select" id="map-category" name="category_id"><option value="">{{ t('bookings.no_category') }}</option>
             {% for category in categories %}<option value="{{ category.id }}"{% if mapping.category_id ~ '' == category.id ~ '' %} selected{% endif %}>{{ category.name }}</option>{% endfor %}</select></div>
-        <div class="col-md-6"><fieldset><legend class="form-label">{{ t('booking_import.notes') }}</legend>
+        <div class="col-md-4"><fieldset><legend class="form-label">{{ t('booking_import.notes') }}</legend>
             {% for index, title in columns %}<label class="form-check" for="map-note-{{ index }}"><input class="form-check-input" type="checkbox" id="map-note-{{ index }}" name="notes[]" value="{{ index }}"{% if index in mapping.notes %} checked{% endif %}><span class="form-check-label">{{ title }}</span></label>{% endfor %}
         </fieldset></div>
     </div>
@@ -62,7 +66,7 @@
     <h2 class="card-title">{{ t('booking_import.preview') }}</h2>
     <p><strong>{{ preview.ready }} {{ t('booking_import.summary') }}</strong> · {{ t('events.income') }} {{ preview.income|eur }} · {{ t('events.expense') }} {{ preview.expense|eur }}</p>
     <p class="form-hint">{{ t('booking_import.needs_date_hint') }}</p>
-    <table class="table table-cards"><thead><tr><th>{{ t('booking_import.row') }}</th><th>{{ t('booking_import.date') }}</th><th>{{ t('bookings.amount_eur') }}</th><th>{{ t('booking_import.description') }}</th><th>{{ t('booking_import.counterparty') }}</th><th>{{ t('booking_import.state') }}</th></tr></thead><tbody>
+    <table class="table table-cards"><thead><tr><th>{{ t('booking_import.row') }}</th><th>{{ t('booking_import.date') }}</th><th>{{ t('bookings.amount_eur') }}</th><th>{{ t('booking_import.description') }}</th><th>{{ t('booking_import.counterparty') }}</th><th>{{ t('booking_import.state') }}</th><th>{{ t('booking_import.skip') }}</th></tr></thead><tbody>
     {% for row in preview.rows %}<tr>
         <td data-label="{{ t('booking_import.row') }}">{{ row.n }}</td>
         <td data-label="{{ t('booking_import.date') }}">
@@ -78,10 +82,10 @@
             {% if errors['row_' ~ row.n] is defined %}<p class="text-danger mb-1" role="alert">{{ t(errors['row_' ~ row.n]) }}</p>{% endif %}
             {% if row.state == 'ok' %}
             {% if row.duplicate %}<p class="text-warning mb-1">{{ t('booking_import.state.duplicate') }}</p>{% else %}{{ t('booking_import.state.ok') }}{% endif %}
-            <label class="form-check" for="row-skip-{{ row.n }}"><input class="form-check-input" type="checkbox" id="row-skip-{{ row.n }}" name="skip[{{ row.n }}]" value="1"{% if row.duplicate or input.skip[row.n] is defined %} checked{% endif %}><span class="form-check-label">{{ t('booking_import.skip') }}</span></label>
             {% elseif row.state == 'needs_date' %}<span id="row-problem-{{ row.n }}">{{ t(row.problem) }}. {{ t('booking_import.date_needed') }}</span>
             {% else %}{{ t(row.problem) }}{% endif %}
         </td>
+        <td data-label="{{ t('booking_import.skip') }}">{% if row.state != 'ignored' %}<label class="form-check" for="row-skip-{{ row.n }}"><input class="form-check-input" type="checkbox" id="row-skip-{{ row.n }}" name="skip[{{ row.n }}]" value="1"{% if input.skip is defined ? input.skip[row.n] is defined : row.duplicate %} checked{% endif %}><span class="form-check-label">{{ t('booking_import.skip') }}</span></label>{% else %}–{% endif %}</td>
     </tr>{% endfor %}
     </tbody></table>
     {% if preview.event_values %}

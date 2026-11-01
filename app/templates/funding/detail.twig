@@ -26,7 +26,7 @@
             <select class="form-select" id="funding-status" name="status">{% for status in statuses %}<option value="{{ status }}"{% if input.status|default('draft') == status %} selected{% endif %}>{{ t('funding.status.' ~ status) }}</option>{% endfor %}</select></div>
         {% for field in ['requested_amount', 'approved_amount'] %}
         <div class="col-md-6"><label class="form-label" for="funding-{{ field }}">{{ t('foundation.field.' ~ field) }}</label>
-            <input class="form-control{% if errors[field] is defined %} is-invalid{% endif %}" id="funding-{{ field }}" name="{{ field }}" inputmode="decimal"{% if field == 'requested_amount' %} required{% endif %} value="{{ input[field]|default('') }}">
+            <input class="form-control{% if errors[field] is defined %} is-invalid{% endif %}" id="funding-{{ field }}" name="{{ field }}" data-mask="{{ field == 'approved_amount' ? 'approved_amount' : 'amount' }}" inputmode="decimal"{% if field == 'requested_amount' %} required{% endif %} value="{{ input[field]|default('') }}">
             {% if errors[field] is defined %}<div class="invalid-feedback">{{ t(errors[field]) }}</div>{% endif %}</div>
         {% endfor %}
         {% for field in ['submitted_on', 'decided_on', 'proof_due_on'] %}

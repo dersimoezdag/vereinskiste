@@ -47,9 +47,9 @@ final class ExportTest extends TestCase
         $rows = $this->csvRows((new CsvExporter($this->pdo))->bookings(['from' => '2026-01-01', 'to' => '2026-12-31']));
 
         $this->assertCount(3, $rows);
-        $this->assertSame(['ID', 'Datum', 'Konto', 'Richtung', 'Betrag (EUR)', 'Kategorie', 'Beschreibung', 'Gegenpartei', 'Belegnummer', 'Typ', 'Status'], $rows[0]);
-        $this->assertSame(['2026-03-01', 'Barkasse', 'Einnahme', '1234,50', 'Spenden', 'Spende; "groß"', 'Müller', '', 'Regulär', 'Aktiv'], array_slice($rows[1], 1));
-        $this->assertSame(['2026-03-02', 'Barkasse', 'Ausgabe', '5,00', '', 'Storniert', '', '', 'Korrektur', 'Storniert'], array_slice($rows[2], 1));
+        $this->assertSame(['ID', 'Datum', 'Konto', 'Richtung', 'Betrag (EUR)', 'Kategorie', 'Beschreibung', 'Gegenpartei', 'Belegnummer', 'Typ', 'Status', 'Veranstaltung', 'Fördermittelantrag'], $rows[0]);
+        $this->assertSame(['2026-03-01', 'Barkasse', 'Einnahme', '1234,50', 'Spenden', 'Spende; "groß"', 'Müller', '', 'Regulär', 'Aktiv', '', ''], array_slice($rows[1], 1));
+        $this->assertSame(['2026-03-02', 'Barkasse', 'Ausgabe', '5,00', '', 'Storniert', '', '', 'Korrektur', 'Storniert', '', ''], array_slice($rows[2], 1));
     }
 
     public function test_csv_neutralizes_formula_injection(): void

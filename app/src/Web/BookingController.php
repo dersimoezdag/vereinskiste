@@ -57,6 +57,7 @@ final class BookingController extends LedgerController
             'funding_applications' => (new \Vereinskiste\Funding\FundingRepository(($this->pdo)()))->options($filter['funding_id'] ?? null),
             'accounts' => (new AccountRepository(($this->pdo)()))->all(),
             'categories' => (new CategoryRepository(($this->pdo)()))->all(),
+            'export_query' => $base,
             'total' => $total,
             'page' => $page,
             'pages' => $pages,

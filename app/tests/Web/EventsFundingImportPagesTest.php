@@ -128,6 +128,54 @@ final class EventsFundingImportPagesTest extends TestCase
         $this->assertSame(2, (int) $this->pdo->query('SELECT count(*) FROM bookings')->fetchColumn());
     }
 
+    public function test_rows_can_be_ignored_in_mapping_and_preview(): void
+    {
+        $this->loginAs(['treasurer']);
+        $path = $this->tmpFile("Datum;Betrag;Zweck\n01.03.2026;10,00;Eins\n02.03.2026;20,00;Zwei\n03.03.2026;30,00;Drei\n;40,00;Ohne Datum\n05.03.2026;50,00;Fuenf\n");
+        $this->assertSame(302, $this->upload($path, 'kasse.csv'));
+        $mapping = ['version' => '1', 'sheet' => '0', 'header_row' => '1', 'date' => '0', 'amount' => '1', 'description' => '2'];
+        $this->assertSame(422, $this->postForm('/imports/bookings/1/mapping', $mapping + ['ignore_rows' => 'vier'])->getStatusCode());
+        $this->assertSame(302, $this->postForm('/imports/bookings/1/mapping', $mapping + ['ignore_rows' => '2, 6-6'])->getStatusCode());
+        $page = (string) $this->get('/imports/bookings/1')->getBody();
+        $this->assertStringContainsString('value="2, 6-6"', $page);
+        $this->assertStringContainsString('<strong>2 ', $page);
+        $this->assertStringNotContainsString('name="skip[2]"', $page);
+        // Auch eine Zeile mit eingetragenem Datum bleibt draussen, wenn sie angekreuzt ist.
+        $this->assertSame(302, $this->postForm('/imports/bookings/1/confirm', ['version' => '2', 'confirm_check' => '1',
+            'skip' => ['3' => '1', '5' => '1'], 'date' => ['5' => '2026-03-04']])->getStatusCode());
+        $this->assertSame(['Drei'], $this->pdo->query('SELECT description FROM bookings')->fetchAll(PDO::FETCH_COLUMN));
+    }
+
+    public function test_booking_list_exports_the_current_filter_as_csv(): void
+    {
+        $this->loginAs(['treasurer']);
+        $this->postForm('/events/new', ['title' => 'Sommerfest', 'starts_on' => '2026-06-20']);
+        $base = ['account_id' => '1', 'booking_date' => '2026-06-21', 'amount' => '5', 'direction' => 'in'];
+        $this->postForm('/bookings/new', $base + ['description' => 'Mit Fest', 'event_id' => '1']);
+        $this->postForm('/bookings/new', $base + ['description' => 'Ohne Fest']);
+        $this->assertStringContainsString('href="/reports/bookings.csv?event_id=1"', (string) $this->get('/bookings?event_id=1')->getBody());
+        $csv = $this->app->handle((new ServerRequestFactory())->createServerRequest('GET', '/reports/bookings.csv')->withQueryParams(['event_id' => '1']));
+        $this->assertSame(200, $csv->getStatusCode());
+        $body = (string) $csv->getBody();
+        $this->assertStringContainsString('Mit Fest', $body);
+        $this->assertStringContainsString('Sommerfest', $body);
+        $this->assertStringNotContainsString('Ohne Fest', $body);
+        $this->pdo->exec("UPDATE user_roles SET role = 'secretary'");
+        $this->assertStringNotContainsString('/reports/bookings.csv', (string) $this->get('/bookings')->getBody());
+    }
+
+    public function test_typed_date_before_opening_shows_a_message_and_books_nothing(): void
+    {
+        $this->loginAs(['treasurer']);
+        $this->assertSame(302, $this->upload($this->tmpFile("Datum;Betrag;Zweck\n05.03.2026;10,00;Ok\n01.02.-28.02.;20,00;Zeitraum\n"), 'kasse.csv'));
+        $this->postForm('/imports/bookings/1/mapping', ['version' => '1', 'sheet' => '0', 'header_row' => '1', 'date' => '0', 'amount' => '1', 'description' => '2']);
+        $res = $this->postForm('/imports/bookings/1/confirm', ['version' => '2', 'confirm_check' => '1', 'date' => ['3' => '2025-02-15']]);
+        $this->assertSame(422, $res->getStatusCode());
+        $this->assertStringContainsString('01.01.2026', (string) $res->getBody());
+        $this->assertStringContainsString('value="2025-02-15"', (string) $res->getBody());
+        $this->assertSame(0, (int) $this->pdo->query('SELECT count(*) FROM bookings')->fetchColumn());
+    }
+
     public function test_reader_rejects_unsafe_and_legacy_files(): void
     {
         $this->loginAs(['treasurer']);

@@ -39,6 +39,7 @@ Regeln der Vorschau:
 - Zeilen ohne eindeutiges Datum, vor der Kontoeröffnung oder im abgeschlossenen Zeitraum werden nur
   übernommen, wenn ein Datum eingetragen wird. So bleiben Zeilen wie „Start“ und „Gesamt“ draußen.
 - Gleiche Buchungen auf dem Konto (Datum, Betrag, Richtung) sind als mögliche Dublette vorab ausgelassen.
+- Zeilen lassen sich ausschließen: bei der Zuordnung über Zeilennummern (`4, 75-76`) oder in der Vorschau per Checkbox.
 - Werte einer Spalte können vorhandenen oder neuen Veranstaltungen zugeordnet werden.
 
 Formeln werden nicht ausgewertet, es zählt der von Excel gespeicherte Wert. Nach der Übernahme werden die
