@@ -60,6 +60,11 @@ abstract class LedgerController extends AdminController
         foreach (self::FORM_FIELDS as $field) {
             $input[$field] = $this->str($body, $field);
         }
+        // Die Betragsmaske zeigt das Vorzeichen der Richtung; gespeichert wird der Betrag ohne Vorzeichen.
+        if (preg_match('/^([+-])\s*(.*)\z/su', $input['amount'], $match) === 1) {
+            $input['amount'] = $match[2];
+            $input['direction'] = $match[1] === '-' ? 'out' : 'in';
+        }
         return $input;
     }
 

@@ -35,7 +35,7 @@
             {% if errors[field] is defined %}<div class="invalid-feedback">{{ t(errors[field]) }}</div>{% endif %}</div>
         {% endfor %}
         <div class="col-12"><label class="form-label" for="funding-notes">{{ t('foundation.field.notes') }}</label>
-            <textarea class="form-control{% if errors.notes is defined %} is-invalid{% endif %}" id="funding-notes" name="notes" maxlength="2000" rows="3">{{ input.notes|default('') }}</textarea></div>
+            {% if writable %}<textarea class="form-control{% if errors.notes is defined %} is-invalid{% endif %}" id="funding-notes" name="notes" rows="8" data-rich-text>{{ input.notes|default('')|note|e }}</textarea>{% elseif input.notes|default('') %}<div class="document-content" id="funding-notes">{{ input.notes|note }}</div>{% else %}<p id="funding-notes">–</p>{% endif %}</div>
     </div>
     {% if writable %}<div><button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button></div>{% endif %}
     </fieldset>
@@ -74,3 +74,4 @@
 <a class="btn btn-link" href="/funding">{{ t('common.back') }}</a>
 {% include 'components/foundation_history.twig' %}
 {% endblock %}
+{% block scripts %}{% if can('funding.write') %}<script src="{{ asset('vendor/tinymce/tinymce.min.js') }}"></script><script src="{{ asset('rich-text.js') }}"></script>{% endif %}{% endblock %}

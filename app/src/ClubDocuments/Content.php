@@ -7,6 +7,20 @@ use HTMLPurifier_Config;
 
 final class Content
 {
+    /** Notizfeld als sicheres HTML; aeltere Notizen ohne Tags bleiben mit ihren Zeilenumbruechen lesbar. */
+    public static function note(string $text): string
+    {
+        return preg_match('/<\/?[a-z!][^>]*>/i', $text) !== 1
+            ? nl2br(htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'))
+            : self::clean($text);
+    }
+
+    /** Lesbare Fassung fuer den Aenderungsverlauf. */
+    public static function plain(string $html): string
+    {
+        return trim(html_entity_decode(strip_tags(str_replace(['</p>', '<br />', '<br>'], ' ', $html)), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    }
+
     public static function clean(string $html): string
     {
         $config = HTMLPurifier_Config::createDefault();

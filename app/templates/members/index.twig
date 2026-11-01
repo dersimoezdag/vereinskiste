@@ -43,6 +43,7 @@
     <div class="card mb-3">
         <div class="card-body">
             <form method="get" action="/members" class="row g-2 align-items-center">
+                {% if per_page %}<input type="hidden" name="per_page" value="{{ per_page }}">{% endif %}
                 <input type="hidden" name="state" value="{{ state }}">
                 <div class="col-md-6 col-12">
                     <div class="input-group">
@@ -130,5 +131,6 @@
             </table>
         </div>
     </div>
+    {% include 'components/pagination.twig' %}
 </div>
 {% endblock %}

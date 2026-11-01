@@ -114,6 +114,7 @@ final class Kernel
             static fn (): string => $state->path
         ));
         $env->addFilter(new TwigFilter('eur', [MoneyFormat::class, 'eur']));
+        $env->addFilter(new TwigFilter('note', [\Vereinskiste\ClubDocuments\Content::class, 'note'], ['is_safe' => ['html']]));
         $runtime = new \Vereinskiste\Update\Runtime($appDir);
         $env->addFunction(new TwigFunction('interface_texts', static fn (): string => json_encode(array_filter($texts, static fn (string $key): bool => str_starts_with($key, 'js.'), ARRAY_FILTER_USE_KEY), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR)));
         $env->addFunction(new TwigFunction('asset', static fn (string $path): string => $runtime->asset($path)));
@@ -277,6 +278,15 @@ final class Kernel
         $app->get('/imports/bank/{id:[0-9]+}', [$bankImports, 'show'])->add(Auth::requires('imports.read'));
         $app->get('/imports/bank/{id:[0-9]+}/status', [$bankImports, 'status'])->add(Auth::requires('imports.read'));
         $app->post('/imports/bank/{id:[0-9]+}/{action:mapping|parse|decision|confirm|cancel|reset}', [$bankImports, 'action'])->add(Auth::requires('imports.write'));
+        $expenses = new \Vereinskiste\Web\ExpenseController($pdoProvider);
+        $app->get('/expenses', [$expenses, 'index'])->add(Auth::requires('bookings.read'));
+        $app->get('/expenses/new', [$expenses, 'create'])->add(Auth::requires('bookings.write'));
+        $app->post('/expenses/new', [$expenses, 'save'])->add(Auth::requires('bookings.write'));
+        $app->get('/expenses/{id:[0-9]+}', [$expenses, 'show'])->add(Auth::requires('bookings.read'));
+        $app->post('/expenses/{id:[0-9]+}', [$expenses, 'save'])->add(Auth::requires('bookings.write'));
+        $app->post('/expenses/{id:[0-9]+}/{action:reimburse|link|unlink|delete}', [$expenses, 'action'])->add(Auth::requires('bookings.write'));
+        $cashbook = new \Vereinskiste\Web\CashbookController($pdoProvider);
+        $app->get('/cashbook', [$cashbook, 'index'])->add(Auth::requires('bookings.read'));
         $bookingImports = new \Vereinskiste\Web\BookingImportController($pdoProvider);
         $app->get('/imports/bookings', [$bookingImports, 'index'])->add(Auth::requires('imports.read'));
         $app->post('/imports/bookings', [$bookingImports, 'upload'])->add(Auth::requires('bookings.write'));
@@ -288,8 +298,8 @@ final class Kernel
         $app->post('/events/new', [$events, 'save'])->add(Auth::requires('events.write'));
         $app->get('/events/{id:[0-9]+}', [$events, 'show'])->add(Auth::requires('events.read'));
         $app->post('/events/{id:[0-9]+}', [$events, 'save'])->add(Auth::requires('events.write'));
-        $app->post('/events/{id:[0-9]+}/{action:clone|delete|budget|task}', [$events, 'action'])->add(Auth::requires('events.write'));
-        $app->post('/events/{id:[0-9]+}/{action:budget-save|budget-remove|task-save|task-toggle|task-remove}/{item:[0-9]+}', [$events, 'itemAction'])->add(Auth::requires('events.write'));
+        $app->post('/events/{id:[0-9]+}/{action:clone|delete|budget|task|list}', [$events, 'action'])->add(Auth::requires('events.write'));
+        $app->post('/events/{id:[0-9]+}/{action:budget-save|budget-remove|task-save|task-toggle|task-remove|list-remove|list-item|item-save|item-toggle|item-remove}/{item:[0-9]+}', [$events, 'itemAction'])->add(Auth::requires('events.write'));
         $funding = new \Vereinskiste\Web\FundingController($pdoProvider);
         $app->get('/funding', [$funding, 'index'])->add(Auth::requires('funding.read'));
         $app->get('/funding/new', [$funding, 'create'])->add(Auth::requires('funding.write'));

@@ -70,7 +70,7 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="b-amount">{{ t('bookings.amount_eur') }}</label>
-                    <input type="text" inputmode="decimal" id="b-amount" name="amount" required
+                    <input type="text" inputmode="decimal" id="b-amount" name="amount" data-mask="signed_amount" data-sign-select="b-direction" required
                             class="form-control{% if errors.amount is defined %} is-invalid{% endif %}"
                             value="{{ input.amount }}">
                     {% if errors.amount is defined %}<div class="invalid-feedback">{{ t(errors.amount) }}</div>{% endif %}

@@ -29,7 +29,7 @@
     </div>
     <div class="col-12">
         <label class="form-label" for="event-notes">{{ t('foundation.field.notes') }}</label>
-        <textarea class="form-control{% if errors.notes is defined %} is-invalid{% endif %}" id="event-notes" name="notes" maxlength="2000" rows="3">{{ input.notes|default('') }}</textarea>
+        <textarea class="form-control{% if errors.notes is defined %} is-invalid{% endif %}" id="event-notes" name="notes" rows="8" data-rich-text>{{ input.notes|default('')|note|e }}</textarea>
         {% if errors.notes is defined %}<div class="invalid-feedback">{{ t(errors.notes) }}</div>{% endif %}
     </div>
 </div>

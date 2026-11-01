@@ -79,12 +79,36 @@
         tax: {hint: window.vkText('js.steuerbetrag_z_b_190_00'), error: window.vkText('js.bitte_einen_betrag_ab_0_mit_hochstens_2_nachkommastellen_eingeben')},
         gross: {hint: window.vkText('js.bruttobetrag_z_b_1_190_00'), error: window.vkText('js.bitte_einen_betrag_groer_als_0_mit_hochstens_2_nachkommastellen_eingeben')},
         approved_amount: {hint: window.vkText('js.betrag_z_b_1_234_56'), error: window.vkText('js.bitte_einen_betrag_ab_0_mit_hochstens_2_nachkommastellen_eingeben')},
+        signed_amount: {hint: window.vkText('js.betrag_mit_vorzeichen'), error: window.vkText('js.bitte_einen_betrag_groer_als_0_mit_hochstens_2_nachkommastellen_eingeben_ma')},
         amount: {hint: window.vkText('js.betrag_z_b_1_234_56'), error: window.vkText('js.bitte_einen_betrag_groer_als_0_mit_hochstens_2_nachkommastellen_eingeben_ma')},
         opening_balance: {hint: window.vkText('js.betrag_z_b_123_45'), error: window.vkText('js.bitte_einen_betrag_mit_hochstens_2_nachkommastellen_eingeben_max_9_999_999_')},
         phone: {hint: window.vkText('js.telefonnummer_mit_vorwahl_z_b_49_30_123456')},
         email: {hint: window.vkText('js.e_mail_z_b_name_example_org')}
     };
-    var moneyTypes = ['amount', 'opening_balance', 'net', 'tax', 'gross', 'approved_amount'];
+    var moneyTypes = ['amount', 'opening_balance', 'net', 'tax', 'gross', 'approved_amount', 'signed_amount'];
+    // Vorzeichen und Richtungsauswahl (data-sign-select) halten sich gegenseitig aktuell.
+    function signSelect(field) { return field.dataset.signSelect ? document.getElementById(field.dataset.signSelect) : null; }
+    function markSign(field, select) { field.classList.toggle('amount-negative', select.value === 'out'); }
+    function applyDirection(field, select) {
+        var bare = field.value.replace(/^[+-]/, '');
+        field.value = bare === '' ? '' : (select.value === 'out' ? '-' : '') + bare;
+        field.hadMinus = field.value[0] === '-';
+        markSign(field, select);
+    }
+    function applySign(field, select) {
+        var value = field.value;
+        if (value[0] === '+') {
+            select.value = 'in';
+            field.value = value.slice(1);
+        } else if (value[0] === '-') {
+            select.value = 'out';
+        } else if (value !== '') {
+            // Minus geloescht heisst Einnahme; sonst bekommt ein neuer Betrag das Vorzeichen der Auswahl.
+            if (field.hadMinus) { select.value = 'in'; } else if (select.value === 'out') { field.value = '-' + value; }
+        }
+        field.hadMinus = field.value[0] === '-';
+        markSign(field, select);
+    }
     function liveGroup(field) {
         var value = field.value;
         if (field.moneyGrouped && value.slice(-1) === '.' && !value.includes(',')) { value = value.slice(0, -1) + ','; }
@@ -120,7 +144,7 @@
                 formatted = compact(value);
                 error = /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(formatted) ? '' : specs[type].error;
             } else if (moneyTypes.includes(type)) {
-                var result = money(value, ['opening_balance', 'net', 'tax', 'approved_amount'].includes(type));
+                var result = money(value, ['opening_balance', 'net', 'tax', 'approved_amount', 'signed_amount'].includes(type));
                 error = result === null || (['net', 'tax', 'approved_amount'].includes(type) && result[0] === '-') ? specs[type].error : '';
                 if (result !== null) { formatted = result; }
             } else if (type === 'phone') {
@@ -205,6 +229,8 @@
             field.setAttribute('aria-describedby', [field.getAttribute('aria-describedby'), feedback.id].filter(Boolean).join(' '));
             field.addEventListener('input', function () {
                 if (field.composing) { return; }
+                var select = signSelect(field);
+                if (select) { applySign(field, select); }
                 if (moneyTypes.includes(type)) { liveGroup(field); }
                 update(field, false);
             });
@@ -212,6 +238,12 @@
             field.addEventListener('compositionend', function () { field.composing = false; update(field, false); });
             field.addEventListener('blur', function () { update(field, true); });
             if (field.disabled || field.readOnly || (moneyTypes.includes(type) && field.value !== '')) { update(field, true); }
+            var direction = signSelect(field);
+            if (direction) {
+                applyDirection(field, direction);
+                update(field, true);
+                direction.addEventListener('change', function () { applyDirection(field, direction); update(field, true); });
+            }
         });
     }
     enhance(document);

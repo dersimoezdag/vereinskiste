@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Vereinskiste\Events;
 
 use PDO;
+use Vereinskiste\ClubDocuments\Content;
 use Vereinskiste\Foundation\Conflict;
 use Vereinskiste\Foundation\Fields;
 use Vereinskiste\Foundation\History;
@@ -16,7 +17,7 @@ use Vereinskiste\Ledger\ValidationError;
 /** Veranstaltungen und wiederverwendbare Vorlagen samt Budgetposten und Aufgaben. */
 final class EventRepository
 {
-    public const FIELDS = ['title' => 200, 'location' => 200, 'notes' => 2000];
+    public const FIELDS = ['title' => 200, 'location' => 200, 'notes' => 20000];
     public const STATUSES = ['planned', 'done', 'cancelled'];
 
     public function __construct(private PDO $pdo) {}
@@ -56,6 +57,7 @@ final class EventRepository
     public function save(?int $id, array $input, int $version, int $actor): int
     {
         $data = Fields::read($input, self::FIELDS, ['title']);
+        $data['notes'] = Content::clean($data['notes']);
         return Transaction::run($this->pdo, function () use ($id, $input, $data, $version, $actor): int {
             $before = $id === null ? null : $this->find($id, true);
             if ($id !== null && ($before === null || $before['version'] !== $version)) { throw new Conflict(); }
@@ -74,7 +76,9 @@ final class EventRepository
                     version = version + 1, updated_at = now() WHERE id = ?')
                     ->execute([$data['title'], $starts, $ends, $data['location'], $data['notes'], $status, $id]);
             }
-            (new History($this->pdo))->record('event', $id, $before === null ? [] : array_intersect_key($before, $after), $after, $actor, '');
+            $old = $before === null ? [] : array_intersect_key($before, $after);
+            if ($old !== []) { $old['notes'] = Content::plain($old['notes']); }
+            (new History($this->pdo))->record('event', $id, $old, ['notes' => Content::plain($data['notes'])] + $after, $actor, '');
             return $id;
         });
     }
@@ -96,6 +100,7 @@ final class EventRepository
                 SELECT ?, label, direction, planned_amount FROM event_budget_items WHERE event_id = ? ORDER BY id')->execute([$id, $sourceId]);
             $this->pdo->prepare('INSERT INTO event_tasks (event_id, title, member_id, person_name, due_offset_days)
                 SELECT ?, title, member_id, person_name, due_offset_days FROM event_tasks WHERE event_id = ? ORDER BY id')->execute([$id, $sourceId]);
+            (new EventLists($this->pdo))->copy($sourceId, $id);
             (new History($this->pdo))->record('event', $id, [], ['title' => $data['title'], 'starts_on' => $starts, 'ends_on' => $ends], $actor, '');
             return $id;
         });

@@ -176,6 +176,123 @@ final class EventsFundingImportPagesTest extends TestCase
         $this->assertSame(0, (int) $this->pdo->query('SELECT count(*) FROM bookings')->fetchColumn());
     }
 
+    public function test_cashbook_overview_shows_balances_running_saldo_and_charts(): void
+    {
+        $this->loginAs(['secretary']);
+        $this->pdo->exec("INSERT INTO accounts (name, type, opening_balance, opening_date) VALUES ('Kasse', 'cash', 50, '2026-01-01')");
+        $insert = $this->pdo->prepare("INSERT INTO bookings (account_id, booking_date, amount, direction, description, created_by, status) VALUES (?, ?, ?, ?, ?, 1, ?)");
+        $insert->execute([1, '2026-02-01', '1000.00', 'in', 'Spende', 'active']);
+        $insert->execute([1, '2026-02-02', '250.50', 'out', 'Einkauf', 'active']);
+        $insert->execute([1, '2026-02-03', '9.00', 'out', 'Storniert', 'cancelled']);
+        $res = $this->get('/cashbook?from=2026-01-01&to=2026-12-31');
+        $this->assertSame(200, $res->getStatusCode());
+        $page = (string) $res->getBody();
+        $this->assertStringContainsString('899,50', $page);
+        $this->assertStringContainsString('849,50', $page);
+        $this->assertStringContainsString('1.150,00', $page);
+        $this->assertStringNotContainsString('Storniert', $page);
+        $this->assertStringContainsString('id="chart-monthly"', $page);
+        $this->assertStringContainsString('chart.umd.min.js', $page);
+        $this->assertStringContainsString('Noch keine Buchungen vorhanden', (string) $this->get('/cashbook?account_id=2&from=2026-01-01&to=2026-12-31')->getBody());
+        $this->assertSame(422, $this->get('/cashbook?from=2026-12-31&to=2026-01-01')->getStatusCode());
+        $this->pdo->exec('DELETE FROM user_roles');
+        $this->assertSame(403, $this->get('/cashbook')->getStatusCode());
+    }
+
+    public function test_expense_status_follows_the_linked_booking(): void
+    {
+        $user = $this->loginAs(['treasurer']);
+        $member = (new \Vereinskiste\Members\MemberRepository($this->pdo))->save(null, ['name' => 'Jule Test'], 0, $user);
+        $this->assertSame(422, $this->postForm('/expenses/new', ['purpose' => 'Ohne Person', 'amount' => '1', 'spent_on' => '2026-02-01'])->getStatusCode());
+        $this->assertSame(302, $this->postForm('/expenses/new', ['member_id' => (string) $member, 'purpose' => 'Würste', 'amount' => '48,60', 'spent_on' => '2026-02-01', 'has_receipt' => '1'])->getStatusCode());
+        $this->assertStringContainsString('48,60', (string) $this->get('/expenses')->getBody());
+        $this->assertStringContainsString('48,60', (string) $this->get('/cashbook')->getBody());
+
+        $this->assertSame(422, $this->postForm('/expenses/1/reimburse', ['account_id' => '1', 'booking_date' => '2025-01-01'])->getStatusCode());
+        $this->assertSame(302, $this->postForm('/expenses/1/reimburse', ['account_id' => '1', 'booking_date' => '2026-02-05'])->getStatusCode());
+        $booking = $this->pdo->query('SELECT id, amount::text AS amount, direction, counterparty, version FROM bookings')->fetch();
+        $this->assertSame(['48.60', 'out', 'Jule Test'], [$booking['amount'], $booking['direction'], $booking['counterparty']]);
+        $this->assertStringContainsString('Jule Test · Würste', (string) $this->get('/bookings/' . $booking['id'])->getBody());
+        $this->assertStringContainsString('Erstattet', (string) $this->get('/members/' . $member)->getBody());
+        $this->assertStringNotContainsString('Würste', (string) $this->get('/expenses')->getBody());
+        $this->assertSame(422, $this->postForm('/expenses/1/reimburse', ['account_id' => '1', 'booking_date' => '2026-02-05'])->getStatusCode());
+        $this->assertSame(422, $this->postForm('/expenses/1/delete', [])->getStatusCode());
+
+        $this->assertSame(302, $this->postForm('/bookings/' . $booking['id'] . '/cancel', ['version' => (string) $booking['version'], 'reason' => 'Falsch gebucht'])->getStatusCode());
+        $this->assertStringContainsString('Würste', (string) $this->get('/expenses')->getBody());
+
+        $this->postForm('/bookings/new', ['account_id' => '1', 'booking_date' => '2026-03-01', 'amount' => '48,60', 'direction' => 'out', 'description' => 'Aus Import']);
+        $other = (int) $this->pdo->query("SELECT id FROM bookings WHERE description = 'Aus Import'")->fetchColumn();
+        $this->assertSame(422, $this->postForm('/expenses/1/link', ['booking_id' => (string) $booking['id']])->getStatusCode());
+        $this->assertSame(302, $this->postForm('/expenses/1/link', ['booking_id' => (string) $other])->getStatusCode());
+        $this->assertStringContainsString('Würste', (string) $this->get('/expenses?state=reimbursed')->getBody());
+        $this->assertSame(302, $this->postForm('/expenses/1/unlink', [])->getStatusCode());
+        $this->assertSame(1, (int) $this->pdo->query("SELECT count(*) FROM bookings WHERE id = $other AND status = 'active'")->fetchColumn());
+        $this->assertSame(302, $this->postForm('/expenses/1/delete', [])->getStatusCode());
+    }
+
+    public function test_amount_sign_decides_the_direction_and_is_not_stored(): void
+    {
+        $this->loginAs(['treasurer']);
+        $this->pdo->exec("INSERT INTO accounts (name, type, opening_date) VALUES ('Sign', 'cash', '2026-01-01')");
+        $account = (string) $this->pdo->query("SELECT id FROM accounts WHERE name = 'Sign'")->fetchColumn();
+        $base = ['account_id' => $account, 'booking_date' => '2026-02-01', 'description' => 'Vorzeichen'];
+        $this->assertSame(302, $this->postForm('/bookings/new', $base + ['amount' => '-1.234,50', 'direction' => 'in'])->getStatusCode());
+        $this->assertSame(302, $this->postForm('/bookings/new', $base + ['amount' => '+5,00', 'direction' => 'out'])->getStatusCode());
+        $rows = $this->pdo->query("SELECT amount::text AS amount, direction FROM bookings WHERE description = 'Vorzeichen' ORDER BY id")->fetchAll();
+        $this->assertSame(['1234.50', 'out'], [$rows[0]['amount'], $rows[0]['direction']]);
+        $this->assertSame(['5.00', 'in'], [$rows[1]['amount'], $rows[1]['direction']]);
+    }
+
+    public function test_notes_are_sanitized_and_old_plain_text_stays_readable(): void
+    {
+        $this->loginAs(['treasurer']);
+        $this->postForm('/events/new', ['title' => 'Fest', 'starts_on' => '2026-06-20', 'notes' => '<p><strong>Wichtig</strong></p><script>alert(1)</script>']);
+        $stored = (string) $this->pdo->query('SELECT notes FROM events')->fetchColumn();
+        $this->assertStringContainsString('<strong>Wichtig</strong>', $stored);
+        $this->assertStringNotContainsString('script', $stored);
+        $this->assertStringContainsString('data-rich-text', (string) $this->get('/events/1')->getBody());
+        $this->assertStringContainsString('rich-text.js', (string) $this->get('/events/1')->getBody());
+        $this->assertSame("Zeile 1<br />\nZeile &lt;2&gt;", \Vereinskiste\ClubDocuments\Content::note("Zeile 1\nZeile <2>"));
+
+        $this->pdo->exec("UPDATE events SET notes = '<script>alert(2)</script><b>alt</b>'");
+        $this->pdo->exec("UPDATE user_roles SET role = 'auditor'");
+        $page = (string) $this->get('/events/1')->getBody();
+        $this->assertStringContainsString('<b>alt</b>', $page);
+        $this->assertStringNotContainsString('alert(2)', $page);
+        $this->assertStringNotContainsString('data-rich-text', $page);
+    }
+
+    public function test_lists_are_kept_per_event_and_cloned_without_ticks(): void
+    {
+        $this->loginAs(['treasurer']);
+        $this->postForm('/events/new', ['kind' => 'template', 'title' => 'Sommerfest']);
+        $this->postForm('/events/new', ['title' => 'Anderes', 'starts_on' => '2026-06-20']);
+        $this->assertSame(422, $this->postForm('/events/1/list', ['list_title' => ''])->getStatusCode());
+        $this->assertSame(302, $this->postForm('/events/1/list', ['list_title' => 'Einkaufsliste'])->getStatusCode());
+        $this->assertSame(302, $this->postForm('/events/1/list-item/1', ['label' => 'Würste', 'quantity' => '50 Stück', 'estimated_cost' => '40,00', 'person_name' => 'Jule'])->getStatusCode());
+        $this->assertSame(302, $this->postForm('/events/1/list-item/1', ['label' => 'Senf', 'estimated_cost' => '2,50'])->getStatusCode());
+        $this->assertSame(422, $this->postForm('/events/1/list-item/1', ['label' => 'Kaputt', 'estimated_cost' => 'viel'])->getStatusCode());
+        $this->assertSame(302, $this->postForm('/events/1/item-toggle/1', [])->getStatusCode());
+        $page = (string) $this->get('/events/1')->getBody();
+        $this->assertStringContainsString('42,50', $page);
+        $this->assertStringContainsString('1 / 2', $page);
+
+        // Fremde Veranstaltung darf Eintraege nicht aendern.
+        $this->postForm('/events/2/item-save/2', ['label' => 'Fremd']);
+        $this->postForm('/events/2/list-item/1', ['label' => 'Fremd']);
+        $this->assertSame(0, (int) $this->pdo->query("SELECT count(*) FROM event_list_items WHERE label = 'Fremd'")->fetchColumn());
+        $this->assertSame(302, $this->postForm('/events/1/item-save/2', ['label' => 'Scharfer Senf', 'quantity' => '2'])->getStatusCode());
+        $this->assertSame(1, (int) $this->pdo->query("SELECT count(*) FROM event_list_items WHERE label = 'Scharfer Senf' AND estimated_cost IS NULL")->fetchColumn());
+
+        $clone = $this->postForm('/events/1/clone', ['title' => 'Sommerfest 2027', 'kind' => 'event', 'starts_on' => '2027-06-20']);
+        $id = (int) basename($clone->getHeaderLine('Location'));
+        $this->assertSame(2, (int) $this->pdo->query("SELECT count(*) FROM event_list_items i JOIN event_lists l ON l.id = i.list_id WHERE l.event_id = $id AND NOT i.done")->fetchColumn());
+        $this->assertStringContainsString('Einkaufsliste', (string) $this->get('/events/' . $id)->getBody());
+        $this->assertSame(302, $this->postForm('/events/1/list-remove/1', [])->getStatusCode());
+        $this->assertSame(2, (int) $this->pdo->query('SELECT count(*) FROM event_list_items')->fetchColumn());
+    }
+
     public function test_reader_rejects_unsafe_and_legacy_files(): void
     {
         $this->loginAs(['treasurer']);

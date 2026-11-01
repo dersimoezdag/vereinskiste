@@ -1171,3 +1171,7 @@ form:not(.is-stepper) .stepper { display: none; }
 @media (prefers-reduced-motion: reduce) { .snackbar { transition: none; } }
 .date-field-meta { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 .75rem; }
 .date-field-meta .date-pick-button { min-height: 0; font-size: var(--tblr-font-size-h6, .75rem); }
+.list-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; margin-top: 1rem; }
+.list-pagination .pagination { flex-wrap: wrap; }
+.list-pagination-sizes { display: inline-flex; align-items: center; gap: .5rem; }
+[data-bs-theme] .form-control.amount-negative, .form-control.amount-negative { color: var(--tblr-danger) !important; }

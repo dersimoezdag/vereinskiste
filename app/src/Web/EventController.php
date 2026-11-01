@@ -6,6 +6,7 @@ namespace Vereinskiste\Web;
 use Closure;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Vereinskiste\Events\EventLists;
 use Vereinskiste\Events\EventRepository;
 use Vereinskiste\Foundation\Conflict;
 use Vereinskiste\Foundation\Fields;
@@ -45,6 +46,7 @@ final class EventController extends AdminController
             'event' => $event, 'input' => $input ?? $event, 'errors' => $errors,
             'budget' => $repo->budgetItems($event['id']),
             'tasks' => $repo->tasks($event),
+            'lists' => (new EventLists($pdo))->forEvent($event['id']),
             'totals' => $repo->totals($event['id']),
             'bookings' => $bookings->search($filter, 50, 0),
             'bookings_total' => $bookings->count($filter),
@@ -90,6 +92,9 @@ final class EventController extends AdminController
                     $repo->delete($id);
                     $this->flash($req, 'events.deleted');
                     return $this->redirect($kind === 'template' ? '/events?view=templates' : '/events');
+                case 'list':
+                    (new EventLists(($this->pdo)()))->addList($id, $body);
+                    break;
                 case 'budget':
                     $repo->addBudgetItem($id, $body);
                     break;
@@ -107,8 +112,14 @@ final class EventController extends AdminController
         $id = (int) $args['id'];
         $item = (int) $args['item'];
         $repo = new EventRepository(($this->pdo)());
+        $lists = new EventLists(($this->pdo)());
         try {
             match ($args['action']) {
+                'list-remove' => $lists->removeList($id, $item),
+                'list-item' => $lists->addItem($id, $item, $this->body($req)),
+                'item-save' => $lists->updateItem($id, $item, $this->body($req)),
+                'item-toggle' => $lists->toggleItem($id, $item),
+                'item-remove' => $lists->removeItem($id, $item),
                 'budget-save' => $repo->updateBudgetItem($id, $item, $this->body($req)),
                 'budget-remove' => $repo->removeBudgetItem($id, $item),
                 'task-save' => $repo->updateTask($id, $item, $this->body($req)),

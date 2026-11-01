@@ -1,0 +1,72 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ expense ? expense.purpose : t('expenses.new') }}{% endblock %}
+{% block content %}
+{% set writable = can('bookings.write') %}
+<h1>{{ expense ? expense.purpose : t('expenses.new') }}</h1>
+{% if expense %}<p>{% include 'expenses/_badge.twig' %}{% if expense.reimbursed %} {{ expense.reimbursed_on|date('d.m.Y') }} · <a href="/bookings/{{ expense.booking_id }}">{{ t('expenses.to_booking') }}</a>{% endif %}</p>{% endif %}
+{% for key in ['delete', 'version', 'booking_id'] %}{% if errors[key] is defined %}<p class="alert alert-warning" role="alert">{{ t(errors[key]) }}</p>{% endif %}{% endfor %}
+
+<form method="post" action="{{ expense ? '/expenses/' ~ expense.id : '/expenses/new' }}" class="card card-body mb-3">
+    {{ csrf_field() }}
+    <input type="hidden" name="version" value="{{ expense ? expense.version : 0 }}">
+    <fieldset{% if not writable %} disabled{% endif %}>
+    <div class="row g-3 mb-3">
+        <div class="col-md-6"><label class="form-label" for="expense-member">{{ t('events.task.member') }}</label>
+            <select class="form-select{% if errors.member_id is defined %} is-invalid{% endif %}" id="expense-member" name="member_id"><option value="">{{ t('bookings.choose') }}</option>
+            {% for member in members %}<option value="{{ member.id }}"{% if input.member_id|default('') ~ '' == member.id ~ '' %} selected{% endif %}>{{ member.name }}</option>{% endfor %}</select>
+            {% if errors.member_id is defined %}<div class="invalid-feedback">{{ t(errors.member_id) }}</div>{% endif %}</div>
+        <div class="col-md-6"><label class="form-label" for="expense-person">{{ t('events.task.person') }}</label>
+            <input class="form-control" id="expense-person" name="person_name" maxlength="200" value="{{ input.person_name|default('') }}"></div>
+        <div class="col-12"><label class="form-label" for="expense-purpose">{{ t('foundation.field.purpose') }}</label>
+            <input class="form-control{% if errors.purpose is defined %} is-invalid{% endif %}" id="expense-purpose" name="purpose" maxlength="200" required value="{{ input.purpose|default('') }}">
+            {% if errors.purpose is defined %}<div class="invalid-feedback">{{ t(errors.purpose) }}</div>{% endif %}</div>
+        <div class="col-md-4"><label class="form-label" for="expense-amount">{{ t('bookings.amount_eur') }}</label>
+            <input class="form-control{% if errors.amount is defined %} is-invalid{% endif %}" id="expense-amount" name="amount" inputmode="decimal" required value="{{ input.amount|default('') }}">
+            {% if errors.amount is defined %}<div class="invalid-feedback">{{ t(errors.amount) }}</div>{% endif %}</div>
+        <div class="col-md-4"><label class="form-label" for="expense-date">{{ t('foundation.field.spent_on') }}</label>
+            <input class="form-control{% if errors.spent_on is defined %} is-invalid{% endif %}" type="date" id="expense-date" name="spent_on" required value="{{ input.spent_on|default('') }}">
+            {% if errors.spent_on is defined %}<div class="invalid-feedback">{{ t(errors.spent_on) }}</div>{% endif %}</div>
+        <div class="col-md-4"><label class="form-label" for="expense-event">{{ t('events.single') }}</label>
+            <select class="form-select" id="expense-event" name="event_id"><option value="">{{ t('events.none') }}</option>
+            {% for event in events %}<option value="{{ event.id }}"{% if input.event_id|default('') ~ '' == event.id ~ '' %} selected{% endif %}>{{ event.title }} ({{ event.starts_on|date('d.m.Y') }})</option>{% endfor %}</select></div>
+        <div class="col-12"><label class="form-check" for="expense-receipt"><input class="form-check-input" type="checkbox" id="expense-receipt" name="has_receipt" value="1"{% if input.has_receipt|default(false) in [true, '1'] %} checked{% endif %}><span class="form-check-label">{{ t('foundation.field.has_receipt') }}</span></label></div>
+    </div>
+    {% if writable %}<div><button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button></div>{% endif %}
+    </fieldset>
+</form>
+
+{% if expense and writable %}
+{% if expense.reimbursed %}
+<form method="post" action="/expenses/{{ expense.id }}/unlink" class="mb-3">{{ csrf_field() }}<button class="btn btn-outline-secondary" type="submit">{{ t('expenses.unlink') }}</button></form>
+{% else %}
+<div class="card mb-3"><div class="card-body">
+    <h2 class="card-title">{{ t('expenses.reimburse') }}</h2>
+    <p>{{ t('expenses.reimburse_hint') }}</p>
+    <form method="post" action="/expenses/{{ expense.id }}/reimburse" class="row g-2">
+        {{ csrf_field() }}
+        <div class="col-md-4"><label class="form-label" for="pay-account">{{ t('bookings.account') }}</label>
+            <select class="form-select{% if errors.account_id is defined %} is-invalid{% endif %}" id="pay-account" name="account_id" required><option value="">{{ t('bookings.choose') }}</option>{% for account in accounts %}<option value="{{ account.id }}">{{ account.name }}</option>{% endfor %}</select>
+            {% if errors.account_id is defined %}<div class="invalid-feedback">{{ t(errors.account_id) }}</div>{% endif %}</div>
+        <div class="col-md-3"><label class="form-label" for="pay-date">{{ t('bookings.date') }}</label>
+            <input class="form-control{% if errors.booking_date is defined %} is-invalid{% endif %}" type="date" id="pay-date" name="booking_date" required value="{{ today }}">
+            {% if errors.booking_date is defined %}<div class="invalid-feedback">{{ t(errors.booking_date) }}</div>{% endif %}</div>
+        <div class="col-md-3"><label class="form-label" for="pay-category">{{ t('bookings.category') }}</label>
+            <select class="form-select" id="pay-category" name="category_id"><option value="">{{ t('bookings.no_category') }}</option>{% for category in categories %}<option value="{{ category.id }}">{{ category.name }}</option>{% endfor %}</select></div>
+        <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100" type="submit">{{ t('expenses.reimburse_action') }}</button></div>
+    </form>
+    {% if candidates %}
+    <h3 class="mt-4">{{ t('expenses.link') }}</h3>
+    <form method="post" action="/expenses/{{ expense.id }}/link" class="row g-2">
+        {{ csrf_field() }}
+        <div class="col-md-10"><label class="form-label" for="link-booking">{{ t('expenses.link_label') }}</label>
+            <select class="form-select" id="link-booking" name="booking_id" required><option value="">{{ t('bookings.choose') }}</option>{% for booking in candidates %}<option value="{{ booking.id }}">{{ booking.booking_date|date('d.m.Y') }} · {{ booking.description }}{% if booking.counterparty %} · {{ booking.counterparty }}{% endif %}</option>{% endfor %}</select></div>
+        <div class="col-md-2 d-flex align-items-end"><button class="btn btn-outline-primary w-100" type="submit">{{ t('expenses.link_action') }}</button></div>
+    </form>
+    {% endif %}
+</div></div>
+{% if not expense.booking_id %}<form method="post" action="/expenses/{{ expense.id }}/delete" class="mb-3">{{ csrf_field() }}<button class="btn btn-outline-danger" type="submit">{{ t('events.delete') }}</button></form>{% endif %}
+{% endif %}
+{% endif %}
+<a class="btn btn-link" href="/expenses">{{ t('common.back') }}</a>
+{% include 'components/foundation_history.twig' %}
+{% endblock %}

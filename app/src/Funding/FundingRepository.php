@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Vereinskiste\Funding;
 
 use PDO;
+use Vereinskiste\ClubDocuments\Content;
 use Vereinskiste\Foundation\Conflict;
 use Vereinskiste\Foundation\Fields;
 use Vereinskiste\Foundation\History;
@@ -16,7 +17,7 @@ use Vereinskiste\Ledger\ValidationError;
 /** Foerdermittelantraege beliebiger Geldgeber. Eingegangene Betraege kommen immer aus den Buchungen. */
 final class FundingRepository
 {
-    public const FIELDS = ['title' => 200, 'funder' => 200, 'notes' => 2000];
+    public const FIELDS = ['title' => 200, 'funder' => 200, 'notes' => 20000];
     public const STATUSES = ['draft', 'submitted', 'approved', 'rejected', 'closed'];
     private const SELECT = "SELECT f.id, f.title, f.funder, f.event_id, e.title AS event_title, f.status,
             f.requested_amount::text AS requested_amount, f.approved_amount::text AS approved_amount,
@@ -79,7 +80,8 @@ final class FundingRepository
                 $stmt->execute([...array_values($values), $actor]);
                 $id = (int) $stmt->fetchColumn();
             }
-            (new History($this->pdo))->record('funding', $id, $before, $values, $actor, '');
+            if ($before !== []) { $before['notes'] = Content::plain($before['notes']); }
+            (new History($this->pdo))->record('funding', $id, $before, ['notes' => Content::plain($values['notes'])] + $values, $actor, '');
             return $id;
         });
     }
@@ -163,6 +165,6 @@ final class FundingRepository
         }
         if ($errors !== []) { throw new ValidationError($errors); }
         return ['title' => $data['title'], 'funder' => $data['funder'], 'event_id' => $event, 'status' => $status,
-            'requested_amount' => $requested, 'approved_amount' => $approved] + $dates + ['notes' => $data['notes']];
+            'requested_amount' => $requested, 'approved_amount' => $approved] + $dates + ['notes' => Content::clean($data['notes'])];
     }
 }

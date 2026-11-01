@@ -42,18 +42,8 @@ final class ReportController
             } catch (ValidationError $e) {
                 return $view->render($res->withStatus(422), 'reports/dashboard.twig', $this->context($input, $e->errors, null));
             }
-            $uncategorized = $this->texts['reports.uncategorized'] ?? SummaryService::UNCATEGORIZED;
-            $other = $this->texts['dashboard.other'] ?? 'Weitere';
-            $income = DashboardService::topCategories($summary['byCategory'], 'income', $uncategorized, $other);
-            $expense = DashboardService::topCategories($summary['byCategory'], 'expense', $uncategorized, $other);
-            // JSON_HEX_*: Kategorienamen duerfen den <script>-Block nicht verlassen (CSP erlaubt nur Daten, kein Inline-Skript).
-            $json = json_encode(
-                DashboardService::chartData($monthly, $income, $expense),
-                JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
-            );
-            return $view->render($res, 'reports/dashboard.twig', $this->context($input, [], $summary) + [
-                'monthly' => $monthly, 'income_rows' => $income, 'expense_rows' => $expense, 'charts_json' => $json,
-            ]);
+            return $view->render($res, 'reports/dashboard.twig', $this->context($input, [], $summary) + ['monthly' => $monthly]
+                + DashboardService::chartContext($summary, $monthly, $this->texts));
         }, 'reports/dashboard.twig');
     }
 

@@ -174,6 +174,15 @@ final class BookingsPagesTest extends TestCase
         $this->assertStringContainsString('Eintrag 05', $page2);
         $this->assertStringNotContainsString('Eintrag 30', $page2);
         $this->assertMatchesRegularExpression('/href="[^"]*direction=in[^"]*page=2"/', $page1);
+        $this->assertStringContainsString('1–25 von 30', $page1);
+        $this->assertStringContainsString('aria-current="page">1<', $page1);
+
+        $all = (string) $this->get('/bookings', ['direction' => 'in', 'per_page' => '50'])->getBody();
+        $this->assertStringContainsString('Eintrag 05', $all);
+        $this->assertStringContainsString('1–30 von 30', $all);
+        $this->assertStringContainsString('name="per_page" value="50"', $all);
+        $invalid = (string) $this->get('/bookings', ['direction' => 'in', 'per_page' => '999999'])->getBody();
+        $this->assertStringContainsString('1–25 von 30', $invalid);
     }
 
     public function test_new_form_requires_write_permission_and_offers_only_active_accounts(): void

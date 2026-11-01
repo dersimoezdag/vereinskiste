@@ -73,13 +73,15 @@
                     </li>
                     {% endif %}
                     {% if can('bookings.read') %}
-                    {% set cashActive = path starts with '/bookings' or path starts with '/accounts' or path starts with '/categories' or path starts with '/imports' or path starts with '/invoices' or path starts with '/contacts' or path == '/receipt-inbox'  or path starts with '/transfers' or path starts with '/corrections' %}
+                    {% set cashActive = path == '/cashbook' or path starts with '/expenses' or path starts with '/bookings' or path starts with '/accounts' or path starts with '/categories' or path starts with '/imports' or path starts with '/invoices' or path starts with '/contacts' or path == '/receipt-inbox'  or path starts with '/transfers' or path starts with '/corrections' %}
                     <li class="nav-item dropdown{% if cashActive %} active{% endif %}">
                         <a class="nav-link dropdown-toggle{% if cashActive %} show{% endif %}" href="#cashbook-menu" data-bs-toggle="dropdown"
                            data-bs-auto-close="false" role="button" aria-expanded="{{ cashActive ? 'true' : 'false' }}" aria-controls="cashbook-menu">
                             <span class="nav-link-icon">{{ icons.icon('bookings') }}</span><span class="nav-link-title">{{ t('nav.cashbook') }}</span>
                         </a>
                         <div class="dropdown-menu{% if cashActive %} show{% endif %}" id="cashbook-menu">
+                            <a class="dropdown-item{% if path == '/cashbook' %} active{% endif %}" href="/cashbook">{{ t('cashbook.overview') }}</a>
+                            <a class="dropdown-item{% if path starts with '/expenses' %} active{% endif %}" href="/expenses">{{ t('expenses.title') }}</a>
                             <a class="dropdown-item{% if path starts with '/bookings' or path starts with '/transfers' or path starts with '/corrections' or path starts with '/imports' %} active{% endif %}" href="/bookings">{{ t('nav.bookings') }}</a>
                             <a class="dropdown-item{% if path starts with '/accounts' or path starts with '/categories' or path starts with '/contacts' %} active{% endif %}" href="/accounts">{{ t('finance.master_data') }}</a>
                             {% if can('invoices.read') %}

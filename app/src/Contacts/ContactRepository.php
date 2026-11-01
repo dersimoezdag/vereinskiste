@@ -18,12 +18,21 @@ final class ContactRepository
 
     public function __construct(private PDO $pdo) {}
 
-    public function list(string $search = '', string $state = 'active', int $page = 1): array
+    public function count(string $search = '', string $state = 'active'): int
+    {
+        $stmt = $this->pdo->prepare('SELECT count(*) FROM finance_contacts WHERE (name ILIKE ?)
+            AND (?::boolean IS NULL OR active = ?::boolean)');
+        $active = match ($state) { 'active' => 'true', 'archived' => 'false', default => null };
+        $stmt->execute(['%' . mb_substr($search, 0, 200) . '%', $active, $active]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function list(string $search = '', string $state = 'active', int $page = 1, int $perPage = 50): array
     {
         $stmt = $this->pdo->prepare('SELECT * FROM finance_contacts WHERE (name ILIKE ?)
-            AND (?::boolean IS NULL OR active = ?::boolean) ORDER BY lower(name), id LIMIT 50 OFFSET ?');
+            AND (?::boolean IS NULL OR active = ?::boolean) ORDER BY lower(name), id LIMIT ' . $perPage . ' OFFSET ?');
         $active = match ($state) { 'active' => 'true', 'archived' => 'false', default => null };
-        $stmt->execute(['%' . mb_substr($search, 0, 200) . '%', $active, $active, (max(1, min($page, 100000)) - 1) * 50]);
+        $stmt->execute(['%' . mb_substr($search, 0, 200) . '%', $active, $active, (max(1, min($page, 100000)) - 1) * $perPage]);
         return array_map(self::hydrate(...), $stmt->fetchAll());
     }
 

@@ -19,8 +19,9 @@ final class InvoiceController extends AdminController
     {
         $query=$req->getQueryParams();$state=$this->str($query,'state')?:'all';$search=$this->str($query,'q');
         if(!mb_check_encoding($search,'UTF-8')) {$search='';}
-        $page=max(1,min(100000,(int)$this->str($query,'page')));
-        return $req->getAttribute('view')->render($res,'invoices/index.twig',['invoices'=>(new InvoiceRepository(($this->pdo)()))->list($state,$search,$page),'state'=>$state,'search'=>$search,'page'=>$page]);
+        $repo=new InvoiceRepository(($this->pdo)());
+        $pagination=Pagination::from($query,$repo->count($state,$search),'/invoices',array_filter(['state'=>$state,'q'=>$search]),[50,100,200]);
+        return $req->getAttribute('view')->render($res,'invoices/index.twig',['invoices'=>$repo->list($state,$search,$pagination->page,$pagination->perPage),'state'=>$state,'search'=>$search,'pagination'=>$pagination->view(),'per_page'=>$pagination->perPageParam()]);
     }
     public function create(Request $req,Response $res):Response {return $this->detail($req,$res);}
     public function show(Request $req,Response $res,array $args):Response {return $this->detail($req,$res,(int)$args['id']);}

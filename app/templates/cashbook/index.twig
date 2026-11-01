@@ -1,0 +1,90 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('nav.cashbook') }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="mb-0">{{ t('nav.cashbook') }}</h1>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn" href="/bookings">{{ t('nav.bookings') }}</a>
+        {% if can('bookings.write') %}<a class="btn btn-primary" href="/bookings/new">{{ t('bookings.new') }}</a>{% endif %}
+    </div>
+</div>
+
+<div class="row row-cards mb-3">
+    <div class="col-12 col-lg-4">
+        <div class="card h-100"><div class="card-body">
+            <div class="text-secondary">{{ t('cashbook.total') }}</div>
+            <div class="h1 mb-3">{{ total|eur }}</div>
+            <a class="text-secondary" href="/expenses">{{ t('expenses.open_total') }}</a>
+            <div class="h3 mb-0">{{ open_expenses.total|eur }} <span class="text-secondary">({{ open_expenses.count }})</span></div>
+        </div></div>
+    </div>
+    <div class="col-12 col-lg-8">
+        <div class="card h-100"><table class="table table-cards mb-0"><thead><tr><th>{{ t('bookings.account') }}</th><th>{{ t('accounts.type') }}</th><th class="text-end">{{ t('cashbook.balance') }}</th></tr></thead><tbody>
+        {% for account in accounts %}<tr>
+            <td data-label="{{ t('bookings.account') }}"><a href="/cashbook?account_id={{ account.id }}&amp;from={{ filter.from }}&amp;to={{ filter.to }}">{{ account.name }}</a></td>
+            <td data-label="{{ t('accounts.type') }}">{{ t('accounts.type.' ~ account.type) }}</td>
+            <td data-label="{{ t('cashbook.balance') }}" class="text-end">{{ account.balance|eur }}</td>
+        </tr>{% else %}<tr><td colspan="3">{{ t('cashbook.no_accounts') }}</td></tr>{% endfor %}
+        </tbody></table></div>
+    </div>
+</div>
+
+<form method="get" action="/cashbook" class="card card-body mb-3">
+    <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-3"><label class="form-label" for="cash-from">{{ t('bookings.filter.from') }}</label>
+            <input class="form-control" type="date" id="cash-from" name="from" value="{{ filter.from }}"></div>
+        <div class="col-12 col-md-3"><label class="form-label" for="cash-to">{{ t('bookings.filter.to') }}</label>
+            <input class="form-control" type="date" id="cash-to" name="to" value="{{ filter.to }}"></div>
+        <div class="col-12 col-md-4"><label class="form-label" for="cash-account">{{ t('bookings.account') }}</label>
+            <select class="form-select" id="cash-account" name="account_id"><option value="">{{ t('bookings.filter.all') }}</option>
+            {% for account in account_options %}<option value="{{ account.id }}"{% if filter.account_id == account.id %} selected{% endif %}>{{ account.name }}</option>{% endfor %}</select></div>
+        <div class="col-12 col-md-2"><button class="btn btn-outline-primary w-100" type="submit">{{ t('cashbook.apply') }}</button></div>
+    </div>
+</form>
+{% for error in errors %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endfor %}
+
+{% if summary %}
+<div class="row row-cards mb-3">
+    <div class="col-12 col-md-4"><div class="card"><div class="card-body">
+        <div class="text-secondary"><span class="viz-swatch viz-swatch-income" aria-hidden="true"></span>{{ t('reports.income') }}</div>
+        <div class="h2 mb-0">{{ summary.income|eur }}</div>
+    </div></div></div>
+    <div class="col-12 col-md-4"><div class="card"><div class="card-body">
+        <div class="text-secondary"><span class="viz-swatch viz-swatch-expense" aria-hidden="true"></span>{{ t('reports.expense') }}</div>
+        <div class="h2 mb-0">{{ summary.expense|eur }}</div>
+    </div></div></div>
+    <div class="col-12 col-md-4"><div class="card"><div class="card-body">
+        <div class="text-secondary">{{ t('reports.balance') }}</div>
+        <div class="h2 mb-0">{{ summary.balance|eur }}</div>
+    </div></div></div>
+</div>
+{% if summary.income == '0.00' and summary.expense == '0.00' %}
+<p class="text-secondary">{{ t('reports.empty') }}</p>
+{% else %}
+{% include 'reports/_charts.twig' %}
+{% endif %}
+{% endif %}
+
+<section class="card mb-3" aria-labelledby="ledger-title">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h2 class="card-title mb-0" id="ledger-title">{{ t('cashbook.ledger') }}</h2>
+        <a href="/bookings{% if filter.account_id %}?account_id={{ filter.account_id }}{% endif %}">{{ t('cashbook.all_bookings') }}</a>
+    </div>
+    <table class="table table-cards mb-0"><thead><tr><th>{{ t('bookings.date') }}</th><th>{{ t('bookings.description') }}</th><th>{{ t('bookings.counterparty') }}</th><th>{{ t('bookings.account') }}</th><th class="text-end">{{ t('bookings.amount_eur') }}</th><th class="text-end">{{ t('cashbook.balance') }}</th></tr></thead><tbody>
+    {% for row in ledger %}<tr>
+        <td data-label="{{ t('bookings.date') }}">{{ row.booking_date|date('d.m.Y') }}</td>
+        <td data-label="{{ t('bookings.description') }}"><a href="/bookings/{{ row.id }}">{{ row.description }}</a></td>
+        <td data-label="{{ t('bookings.counterparty') }}">{{ row.counterparty ?: '–' }}</td>
+        <td data-label="{{ t('bookings.account') }}">{{ row.account_name }}</td>
+        <td data-label="{{ t('bookings.amount_eur') }}" class="text-end">{{ row.direction == 'out' ? '-' : '' }}{{ row.amount|eur }}</td>
+        <td data-label="{{ t('cashbook.balance') }}" class="text-end"><strong>{{ row.running|eur }}</strong></td>
+    </tr>{% else %}<tr><td colspan="6">{{ t('cashbook.no_bookings') }}</td></tr>{% endfor %}
+    </tbody></table>
+</section>
+{% endblock %}
+{% block scripts %}
+{% if summary and (summary.income != '0.00' or summary.expense != '0.00') %}
+<script src="{{ asset('vendor/chartjs/chart.umd.min.js') }}"></script>
+<script src="{{ asset('dashboard.js') }}"></script>
+{% endif %}
+{% endblock %}

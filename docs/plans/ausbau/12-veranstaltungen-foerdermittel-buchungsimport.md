@@ -12,6 +12,8 @@ Setzt E4 aus [Paket 8](08-auswertung-betrieb.md) um und erweitert es um Vorlagen
   Notizen, Budgetposten und Aufgaben samt Personen. Nicht mit kommen Erledigt-Haken und Buchungen.
 - Eine Buchung kann einer Veranstaltung zugeordnet werden. Der Ist-Wert wird aus aktiven Buchungen ohne
   Umbuchungen berechnet, nie gespeichert. Ist-Werte gibt es je Veranstaltung, nicht je Budgetposten.
+- Notizen bei Veranstaltungen und Förderanträgen nutzen einen schlanken Editor. Der Inhalt wird beim Speichern und bei der Anzeige bereinigt.
+- Listen wie Einkaufs- oder Packliste: Einträge mit Menge, geschätzten Kosten und zuständiger Person zum Abhaken. Sie werden mit geklont, die Haken zurückgesetzt. Die Kosten fließen nicht ins Budget.
 - Veranstaltungen mit zugeordneten Buchungen oder Förderanträgen lassen sich nicht löschen, nur absagen.
 - Aufgaben eines Mitglieds erscheinen in der Datenschutz-Einzelauskunft.
 
@@ -22,6 +24,14 @@ Setzt E4 aus [Paket 8](08-auswertung-betrieb.md) um und erweitert es um Vorlagen
 - Eine Buchung kann einem Antrag zugeordnet werden. „Eingegangen“ wird daraus berechnet
   (Einnahmen minus Rückzahlungen).
 - Es gibt keine automatischen Erinnerungen an Fristen.
+
+## Vereinskasse-Übersicht und Auslagen
+
+- **Vereinskasse → Übersicht** (`/cashbook`): aktueller Gesamtsaldo, Saldo je Konto, Einnahmen gegen Ausgaben im gewählten Zeitraum, die Diagramme aus den Auswertungen und die letzten Buchungen mit laufendem Saldo.
+- **Vereinskasse → Auslagen** (`/expenses`): Person, Zweck, Betrag, Datum, Beleg vorhanden, optional Veranstaltung.
+- Erstattet ist eine Auslage nur über eine aktive verknüpfte Buchung. Sie wird direkt angelegt oder aus Ausgaben mit gleichem Betrag zugeordnet. Eine stornierte Buchung macht die Auslage wieder offen.
+- Eine Buchung gehört zu höchstens einer Auslage. Sammelerstattungen brauchen daher vorerst eine zusammengefasste Auslage.
+- Der Beleg wird nur als „vorhanden“ vermerkt, die Datei selbst liegt weiter an der Buchung.
 
 ## Buchungsimport
 

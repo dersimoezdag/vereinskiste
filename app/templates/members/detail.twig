@@ -139,6 +139,15 @@
                 </div>
             </div>
 
+            {% if member_expenses is defined %}
+            <div class="card mt-3"><div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <h2 class="card-title mb-0">{{ t('expenses.title') }}</h2>
+                {% if can('bookings.write') and not member.anonymized_at %}<a href="/expenses/new?member_id={{ member.id }}">{{ t('expenses.new') }}</a>{% endif %}
+            </div><div class="card-body">
+                <ul class="list-unstyled mb-0">{% for expense in member_expenses %}<li class="mb-1">{% include 'expenses/_badge.twig' %} {{ expense.spent_on|date('d.m.Y') }} · <a href="/expenses/{{ expense.id }}">{{ expense.purpose }}</a> · {{ expense.amount|eur }}</li>{% else %}<li>{{ t('expenses.empty') }}</li>{% endfor %}</ul>
+            </div></div>
+            {% endif %}
+
             <!-- Änderungshistorie -->
             {% include 'components/foundation_history.twig' %}
         </div>

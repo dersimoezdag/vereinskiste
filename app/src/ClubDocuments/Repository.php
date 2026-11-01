@@ -22,15 +22,25 @@ final class Repository
   $stmt=$this->pdo->prepare('SELECT v.*,d.kind,d.generation,d.published_version,f.name AS file_name,f.size AS file_size FROM club_document_versions v JOIN club_documents d ON d.id=v.document_id LEFT JOIN document_files f ON f.id=v.file_id WHERE document_id=? AND version=?');
   $stmt->execute([$root['id'],$number]);return $stmt->fetch() ?: null;
  }
- public function listing(bool $writer,int $page): array
+ public function listingCount(bool $writer): int
  {
   $where=$writer?'':" AND v.status='published' AND v.meeting_type='assembly'";
-  $stmt=$this->pdo->prepare('SELECT v.*,d.kind FROM club_documents d JOIN club_document_versions v ON v.document_id=d.id AND v.version='.($writer?'d.generation':'d.published_version')." WHERE d.kind='minutes'".$where.' ORDER BY v.document_date DESC,d.id DESC LIMIT 51 OFFSET ?');
-  $stmt->bindValue(1,($page-1)*50,PDO::PARAM_INT);$stmt->execute();return $stmt->fetchAll();
+  return (int)$this->pdo->query('SELECT count(*) FROM club_documents d JOIN club_document_versions v ON v.document_id=d.id AND v.version='.($writer?'d.generation':'d.published_version')." WHERE d.kind='minutes'".$where)->fetchColumn();
  }
- public function history(array $root,bool $writer,int $page=1): array
+ public function historyCount(array $root,bool $writer): int
  {
-  $stmt=$this->pdo->prepare('SELECT version,label,title,document_date,status,created_at FROM club_document_versions WHERE document_id=?'.($writer?'':" AND status='published'").' ORDER BY version DESC LIMIT 51 OFFSET ?');
+  $stmt=$this->pdo->prepare('SELECT count(*) FROM club_document_versions WHERE document_id=?'.($writer?'':" AND status='published'"));
+  $stmt->execute([$root['id']]);return (int)$stmt->fetchColumn();
+ }
+ public function listing(bool $writer,int $page,int $perPage=50): array
+ {
+  $where=$writer?'':" AND v.status='published' AND v.meeting_type='assembly'";
+  $stmt=$this->pdo->prepare('SELECT v.*,d.kind FROM club_documents d JOIN club_document_versions v ON v.document_id=d.id AND v.version='.($writer?'d.generation':'d.published_version')." WHERE d.kind='minutes'".$where.' ORDER BY v.document_date DESC,d.id DESC LIMIT '.$perPage.' OFFSET ?');
+  $stmt->bindValue(1,($page-1)*$perPage,PDO::PARAM_INT);$stmt->execute();return $stmt->fetchAll();
+ }
+ public function history(array $root,bool $writer,int $page=1,int $perPage=50): array
+ {
+  $stmt=$this->pdo->prepare('SELECT version,label,title,document_date,status,created_at FROM club_document_versions WHERE document_id=?'.($writer?'':" AND status='published'").' ORDER BY version DESC LIMIT '.$perPage.' OFFSET ?');
   $stmt->bindValue(1,$root['id'],PDO::PARAM_INT);$stmt->bindValue(2,($page-1)*50,PDO::PARAM_INT);$stmt->execute();return $stmt->fetchAll();
  }
  public function save(string $kind,?int $id,array $data,?array $upload,int $generation,int $actor): int

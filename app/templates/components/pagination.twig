@@ -1,0 +1,24 @@
+{# Seitenleiste fuer Listen. Erwartet: pagination (Vereinskiste\Web\Pagination::view) #}
+{% if pagination.total > 0 %}
+<nav class="list-pagination" aria-label="{{ t('bookings.pagination') }}">
+    <span class="text-secondary">{{ t('pagination.range')|replace({'{from}': pagination.from, '{to}': pagination.to, '{total}': pagination.total}) }}</span>
+    {% if pagination.numbers %}
+    <ul class="pagination m-0">
+        <li class="page-item{% if not pagination.prev_url %} disabled{% endif %}"><a class="page-link" {% if pagination.prev_url %}href="{{ pagination.prev_url }}"{% else %}aria-disabled="true"{% endif %}>{{ t('bookings.prev') }}</a></li>
+        {% for item in pagination.numbers %}
+        {% if item.gap %}<li class="page-item disabled"><span class="page-link">…</span></li>
+        {% else %}<li class="page-item{% if item.current %} active{% endif %}"><a class="page-link" href="{{ item.url }}"{% if item.current %} aria-current="page"{% endif %}>{{ item.number }}</a></li>{% endif %}
+        {% endfor %}
+        <li class="page-item{% if not pagination.next_url %} disabled{% endif %}"><a class="page-link" {% if pagination.next_url %}href="{{ pagination.next_url }}"{% else %}aria-disabled="true"{% endif %}>{{ t('bookings.next') }}</a></li>
+    </ul>
+    {% endif %}
+    {% if pagination.sizes %}
+    <span class="list-pagination-sizes">
+        <span class="text-secondary">{{ t('pagination.per_page') }}</span>
+        {% for item in pagination.sizes %}
+        {% if item.current %}<strong aria-current="true">{{ item.size }}</strong>{% else %}<a href="{{ item.url }}">{{ item.size }}</a>{% endif %}
+        {% endfor %}
+    </span>
+    {% endif %}
+</nav>
+{% endif %}

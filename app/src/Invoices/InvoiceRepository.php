@@ -14,18 +14,28 @@ final class InvoiceRepository
 {
     public const FIELDS=['supplier_name'=>200,'number'=>100,'invoice_date'=>10,'due_date'=>10,'currency'=>3,'net'=>30,'tax'=>30,'gross'=>30,'notes'=>2000,'kind'=>20];
     public function __construct(private PDO $pdo) {}
-    public function list(string $state='all',string $search='',int $page=1):array
+    public function count(string $state='all',string $search=''):int
+    {
+        [$sql,$params]=$this->listQuery($state,$search);
+        $stmt=$this->pdo->prepare('SELECT count(*)'.$sql);$stmt->execute($params);return (int)$stmt->fetchColumn();
+    }
+    public function list(string $state='all',string $search='',int $page=1,int $perPage=50):array
+    {
+        [$sql,$params]=$this->listQuery($state,$search);
+        $stmt=$this->pdo->prepare('SELECT i.*,p.status AS payment_status,'.PaymentAmounts::COLUMNS.$sql.' ORDER BY i.id DESC LIMIT '.$perPage.' OFFSET ?');
+        $stmt->execute([...$params,(max(1,min(100000,$page))-1)*$perPage]);return $stmt->fetchAll();
+    }
+    private function listQuery(string $state,string $search):array
     {
         $state=in_array($state,['draft','reviewed','cancelled','overdue','unpaid','partially_paid','paid','all'],true)?$state:'all';
-        $stmt=$this->pdo->prepare("SELECT i.*,p.status AS payment_status,".PaymentAmounts::COLUMNS."
-            FROM invoices i LEFT JOIN invoice_payment_requests p ON p.invoice_id=i.id ".PaymentAmounts::JOIN."
+        $sql=" FROM invoices i LEFT JOIN invoice_payment_requests p ON p.invoice_id=i.id ".PaymentAmounts::JOIN."
             WHERE (i.number ILIKE ? OR i.supplier_name ILIKE ?) AND (?='all' OR i.status=?
                 OR (?='overdue' AND i.status='reviewed' AND i.kind='invoice' AND i.due_date<CURRENT_DATE AND COALESCE(t.paid,0)<i.gross)
                 OR (?='unpaid' AND i.status='reviewed' AND i.kind='invoice' AND COALESCE(t.paid,0)=0)
                 OR (?='partially_paid' AND i.status='reviewed' AND i.kind='invoice' AND t.paid>0 AND t.paid<i.gross)
-                OR (?='paid' AND i.status='reviewed' AND i.kind='invoice' AND t.paid>=i.gross)) ORDER BY i.id DESC LIMIT 50 OFFSET ?");
+                OR (?='paid' AND i.status='reviewed' AND i.kind='invoice' AND t.paid>=i.gross))";
         $q='%'.str_replace(['\\','%','_'],['\\\\','\\%','\\_'],mb_substr($search,0,100)).'%';
-        $stmt->execute([$q,$q,$state,$state,$state,$state,$state,$state,(max(1,min(100000,$page))-1)*50]);return $stmt->fetchAll();
+        return [$sql,[$q,$q,$state,$state,$state,$state,$state,$state]];
     }
 
     public function find(int $id,bool $lock=false):?array
