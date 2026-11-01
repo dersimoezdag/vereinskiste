@@ -107,11 +107,17 @@ final class EventController extends AdminController
         $id = (int) $args['id'];
         $item = (int) $args['item'];
         $repo = new EventRepository(($this->pdo)());
-        match ($args['action']) {
-            'budget-remove' => $repo->removeBudgetItem($id, $item),
-            'task-toggle' => $repo->toggleTask($id, $item),
-            default => $repo->removeTask($id, $item),
-        };
+        try {
+            match ($args['action']) {
+                'budget-save' => $repo->updateBudgetItem($id, $item, $this->body($req)),
+                'budget-remove' => $repo->removeBudgetItem($id, $item),
+                'task-save' => $repo->updateTask($id, $item, $this->body($req)),
+                'task-toggle' => $repo->toggleTask($id, $item),
+                default => $repo->removeTask($id, $item),
+            };
+        } catch (ValidationError) {
+            return $this->show($req, $res->withStatus(422), $args, ['item' => 'events.item_invalid']);
+        }
         return $this->redirect('/events/' . $id);
     }
 }

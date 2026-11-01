@@ -289,7 +289,7 @@ final class Kernel
         $app->get('/events/{id:[0-9]+}', [$events, 'show'])->add(Auth::requires('events.read'));
         $app->post('/events/{id:[0-9]+}', [$events, 'save'])->add(Auth::requires('events.write'));
         $app->post('/events/{id:[0-9]+}/{action:clone|delete|budget|task}', [$events, 'action'])->add(Auth::requires('events.write'));
-        $app->post('/events/{id:[0-9]+}/{action:budget-remove|task-toggle|task-remove}/{item:[0-9]+}', [$events, 'itemAction'])->add(Auth::requires('events.write'));
+        $app->post('/events/{id:[0-9]+}/{action:budget-save|budget-remove|task-save|task-toggle|task-remove}/{item:[0-9]+}', [$events, 'itemAction'])->add(Auth::requires('events.write'));
         $funding = new \Vereinskiste\Web\FundingController($pdoProvider);
         $app->get('/funding', [$funding, 'index'])->add(Auth::requires('funding.read'));
         $app->get('/funding/new', [$funding, 'create'])->add(Auth::requires('funding.write'));

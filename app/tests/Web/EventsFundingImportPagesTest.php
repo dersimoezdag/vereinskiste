@@ -34,7 +34,7 @@ final class EventsFundingImportPagesTest extends TestCase
 
     public function test_template_is_cloned_with_budget_and_tasks_but_without_progress(): void
     {
-        $this->loginAs(['board']);
+        $this->loginAs(['treasurer']);
         $this->assertSame(302, $this->postForm('/events/new', ['kind' => 'template', 'title' => 'Sommerfest'])->getStatusCode());
         $this->assertSame(302, $this->postForm('/events/1/budget', ['label' => 'Würste', 'direction' => 'out', 'planned_amount' => '368,93'])->getStatusCode());
         $this->assertSame(302, $this->postForm('/events/1/task', ['title' => 'Grill besorgen', 'person_name' => 'Jule', 'due_offset_days' => '-7'])->getStatusCode());
@@ -95,9 +95,10 @@ final class EventsFundingImportPagesTest extends TestCase
         $this->assertStringContainsString('<strong>2 ', $page);
         $this->assertStringContainsString('name="date[4]"', $page);
 
-        $this->assertSame(422, $this->postForm('/imports/bookings/1/confirm', ['version' => '2', 'date' => ['5' => 'kaputt']])->getStatusCode());
+        $this->assertSame(422, $this->postForm('/imports/bookings/1/confirm', ['version' => '2'])->getStatusCode());
+        $this->assertSame(422, $this->postForm('/imports/bookings/1/confirm', ['version' => '2', 'confirm_check' => '1', 'date' => ['5' => 'kaputt']])->getStatusCode());
         $this->assertSame(0, (int) $this->pdo->query('SELECT count(*) FROM bookings')->fetchColumn());
-        $done = $this->postForm('/imports/bookings/1/confirm', ['version' => '2', 'date' => ['5' => '2026-02-15'], 'event_map' => ['0' => 'new']]);
+        $done = $this->postForm('/imports/bookings/1/confirm', ['version' => '2', 'confirm_check' => '1', 'date' => ['5' => '2026-02-15'], 'event_map' => ['0' => 'new']]);
         $this->assertSame(302, $done->getStatusCode(), (string) $done->getBody());
         $rows = $this->pdo->query('SELECT booking_date::text AS d, amount::text AS a, direction, description, counterparty, event_id FROM bookings ORDER BY booking_date, id')->fetchAll();
         $this->assertCount(3, $rows);
@@ -123,7 +124,7 @@ final class EventsFundingImportPagesTest extends TestCase
         $this->assertStringContainsString('<strong>1 ', $page);
         $this->assertMatchesRegularExpression('/name="skip\[2\]"[^>]*checked/', $page);
         $this->assertStringContainsString('name="date[4]"', $page);
-        $this->assertSame(302, $this->postForm('/imports/bookings/1/confirm', ['version' => '2', 'skip' => ['2' => '1']])->getStatusCode());
+        $this->assertSame(302, $this->postForm('/imports/bookings/1/confirm', ['version' => '2', 'confirm_check' => '1', 'skip' => ['2' => '1']])->getStatusCode());
         $this->assertSame(2, (int) $this->pdo->query('SELECT count(*) FROM bookings')->fetchColumn());
     }
 
@@ -139,6 +140,50 @@ final class EventsFundingImportPagesTest extends TestCase
         $zip->close();
         $this->assertSame(422, $this->upload($path));
         $this->assertSame('AA', XlsxReader::columnName(26));
+    }
+
+    public function test_budget_and_tasks_can_be_edited_and_history_shows_names(): void
+    {
+        $this->loginAs(['treasurer']);
+        $this->postForm('/events/new', ['title' => 'Sommerfest', 'starts_on' => '2026-06-20']);
+        $this->postForm('/events/1/budget', ['label' => 'Würste', 'direction' => 'out', 'planned_amount' => '10']);
+        $this->postForm('/events/1/task', ['title' => 'Grill', 'person_name' => 'Jule']);
+        $this->pdo->exec('UPDATE event_tasks SET done = true');
+        $this->assertSame(302, $this->postForm('/events/1/budget-save/1', ['label' => 'Bratwürste', 'direction' => 'out', 'planned_amount' => '20,50'])->getStatusCode());
+        $this->assertSame(422, $this->postForm('/events/1/budget-save/1', ['label' => '', 'direction' => 'out', 'planned_amount' => '1'])->getStatusCode());
+        $this->assertSame(302, $this->postForm('/events/1/task-save/1', ['title' => 'Grill holen', 'person_name' => 'Henrik', 'due_offset_days' => '-3'])->getStatusCode());
+        $this->assertSame('20.50', $this->pdo->query('SELECT planned_amount::text FROM event_budget_items')->fetchColumn());
+        $task = $this->pdo->query('SELECT title, person_name, due_offset_days, done::text AS done FROM event_tasks')->fetch();
+        $this->assertSame(['Grill holen', 'Henrik', -3, 'true'], [$task['title'], $task['person_name'], (int) $task['due_offset_days'], $task['done']]);
+
+        $this->postForm('/bookings/new', ['account_id' => '1', 'booking_date' => '2026-06-21', 'amount' => '5', 'direction' => 'in', 'description' => 'Spende']);
+        $this->assertSame(302, $this->postForm('/bookings/1/edit', ['account_id' => '1', 'booking_date' => '2026-06-21', 'amount' => '5', 'direction' => 'in', 'description' => 'Spende',
+            'event_id' => '1', 'version' => '1', 'reason' => 'Zuordnung'])->getStatusCode());
+        $this->assertStringContainsString('Sommerfest', (string) $this->get('/bookings/1')->getBody());
+        $this->assertMatchesRegularExpression('/→\s*Sommerfest/u', (string) $this->get('/bookings/1')->getBody());
+        $this->assertSame(1, substr_count((string) $this->get('/bookings?event_id=1')->getBody(), 'href="/bookings/1"'));
+        $this->assertStringContainsString('name="event_id"', (string) $this->get('/bookings')->getBody());
+    }
+
+    public function test_old_drafts_are_purged_and_confirmed_imports_stay(): void
+    {
+        $user = $this->loginAs(['treasurer']);
+        $insert = $this->pdo->prepare("INSERT INTO booking_imports (account_id, file_name, file_sha256, status, sheets, created_by, created_at)
+            VALUES (1, 'x', 'x', ?, '[]', ?, ?::timestamptz)");
+        $insert->execute(['draft', $user, '2020-01-01']);
+        $insert->execute(['confirmed', $user, '2020-01-01']);
+        $insert->execute(['draft', $user, date('Y-m-d')]);
+        $this->assertSame(1, (new \Vereinskiste\BookingImport\BookingImportService($this->pdo))->purgeDrafts());
+        $this->assertSame(2, (int) $this->pdo->query('SELECT count(*) FROM booking_imports')->fetchColumn());
+    }
+
+    public function test_dashboard_offers_new_cards_only_with_permission(): void
+    {
+        $metrics = new \Vereinskiste\Dashboard\Metrics($this->pdo);
+        $this->assertSame('0', $metrics->forCard('events')['value']);
+        $this->assertSame('0', $metrics->forCard('funding')['value']);
+        $allowed = \Vereinskiste\Dashboard\Catalog::allowed(\Vereinskiste\Dashboard\Catalog::SHORTCUTS, static fn (string $right): bool => $right === 'events.read');
+        $this->assertSame([], $allowed);
     }
 
     public function test_pages_render_for_markup_checks(): void

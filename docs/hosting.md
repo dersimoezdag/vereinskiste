@@ -1,7 +1,7 @@
 # Hosting und Betriebsprüfung
 
 Die Anwendung benötigt PHP 8.4 oder neuer, PostgreSQL 15 oder neuer und die
-Erweiterungen `pdo_pgsql`, `mbstring`, `fileinfo`, `gd`, `openssl`.
+Erweiterungen `pdo_pgsql`, `mbstring`, `fileinfo`, `gd`, `zip`, `openssl`.
 PHP 8.1 erhält keine Sicherheitsupdates mehr. Unterstützte Versionen:
 https://www.php.net/supported-versions.php
 

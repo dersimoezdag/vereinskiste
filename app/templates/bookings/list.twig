@@ -51,6 +51,24 @@
                         <option value="out"{% if filter.direction == 'out' %} selected{% endif %}>{{ t('bookings.direction.out') }}</option>
                     </select>
                 </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label" for="f-event">{{ t('events.single') }}</label>
+                    <select id="f-event" name="event_id" class="form-select">
+                        <option value="">{{ t('bookings.filter.all') }}</option>
+                        {% for event in events %}
+                        <option value="{{ event.id }}"{% if filter.event_id == event.id %} selected{% endif %}>{{ event.title }} ({{ event.starts_on|date('d.m.Y') }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label" for="f-funding">{{ t('funding.single') }}</label>
+                    <select id="f-funding" name="funding_id" class="form-select">
+                        <option value="">{{ t('bookings.filter.all') }}</option>
+                        {% for application in funding_applications %}
+                        <option value="{{ application.id }}"{% if filter.funding_id == application.id %} selected{% endif %}>{{ application.title }} ({{ application.funder }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <div class="col-6 col-md-3">
                     <label class="form-label" for="f-kind">{{ t('bookings.kind') }}</label>
                     <select id="f-kind" name="kind" class="form-select">

@@ -13,6 +13,7 @@ final class Docx
     public static function read(string $path): string
     {
         if (filesize($path)>10485760) { throw new ValidationError(['receipt'=>'validation.receipt.too_large']); }
+        if (!class_exists(ZipArchive::class)) { throw new ValidationError(['receipt'=>'documents.zip_missing']); }
         $zip=new ZipArchive();
         if ($zip->open($path,ZipArchive::RDONLY)!==true) { self::invalid(); }
         try {

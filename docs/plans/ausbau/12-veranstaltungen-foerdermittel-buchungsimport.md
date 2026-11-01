@@ -44,4 +44,6 @@ Regeln der Vorschau:
 Formeln werden nicht ausgewertet, es zählt der von Excel gespeicherte Wert. Nach der Übernahme werden die
 Tabellendaten gelöscht, nur Dateiname, Prüfsumme und Anzahl bleiben. Die Originaldatei wird nicht gespeichert.
 Grenzen: 10 MB, 30 Blätter, 2.000 Zeilen je Blatt. Das alte Format `.xls` wird abgelehnt.
-Der Excel-Import benötigt die PHP-Erweiterung `zip`, wie schon der DOCX-Import.
+Der Excel-Import benötigt die PHP-Erweiterung `zip`, wie schon der DOCX-Import. Die Installationsprüfung
+prüft sie; fehlt sie auf einem bestehenden Hosting, erscheint beim Upload ein Hinweis, und CSV funktioniert weiter.
+Nicht übernommene Entwürfe löscht der Cronjob nach 30 Tagen.

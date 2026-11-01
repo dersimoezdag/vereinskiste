@@ -117,16 +117,16 @@ final class EventRepository
 
     public function addBudgetItem(int $eventId, array $input): void
     {
-        $data = Fields::read($input, ['label' => 200], ['label']);
-        $direction = $input['direction'] ?? '';
-        if (!in_array($direction, ['in', 'out'], true)) { throw new ValidationError(['direction' => 'foundation.invalid']); }
-        try {
-            $amount = Money::parse(is_string($input['planned_amount'] ?? null) ? $input['planned_amount'] : '');
-        } catch (InvalidAmount) {
-            throw new ValidationError(['planned_amount' => 'validation.booking.amount']);
-        }
+        [$label, $direction, $amount] = $this->budgetValues($input);
         $this->pdo->prepare('INSERT INTO event_budget_items (event_id, label, direction, planned_amount) VALUES (?, ?, ?, ?)')
-            ->execute([$eventId, $data['label'], $direction, $amount]);
+            ->execute([$eventId, $label, $direction, $amount]);
+    }
+
+    public function updateBudgetItem(int $eventId, int $itemId, array $input): void
+    {
+        [$label, $direction, $amount] = $this->budgetValues($input);
+        $this->pdo->prepare('UPDATE event_budget_items SET label = ?, direction = ?, planned_amount = ? WHERE id = ? AND event_id = ?')
+            ->execute([$label, $direction, $amount, $itemId, $eventId]);
     }
 
     public function removeBudgetItem(int $eventId, int $itemId): void
@@ -136,20 +136,17 @@ final class EventRepository
 
     public function addTask(int $eventId, array $input): void
     {
-        $data = Fields::read($input, ['title' => 200, 'person_name' => 200], ['title']);
-        $member = is_string($input['member_id'] ?? null) && $input['member_id'] !== '' ? Fields::version($input['member_id']) : null;
-        if ($member === 0) { throw new ValidationError(['member_id' => 'foundation.invalid']); }
-        if ($member !== null) {
-            $stmt = $this->pdo->prepare('SELECT 1 FROM members WHERE id = ? AND anonymized_at IS NULL');
-            $stmt->execute([$member]);
-            if ($stmt->fetchColumn() === false) { throw new ValidationError(['member_id' => 'foundation.invalid']); }
-        }
-        $raw = is_string($input['due_offset_days'] ?? null) ? trim($input['due_offset_days']) : '';
-        if ($raw !== '' && (preg_match('/^-?\d{1,4}\z/', $raw) !== 1 || abs((int) $raw) > 3650)) {
-            throw new ValidationError(['due_offset_days' => 'foundation.invalid']);
-        }
+        [$title, $member, $person, $offset] = $this->taskValues($input);
         $this->pdo->prepare('INSERT INTO event_tasks (event_id, title, member_id, person_name, due_offset_days) VALUES (?, ?, ?, ?, ?)')
-            ->execute([$eventId, $data['title'], $member, $member === null ? $data['person_name'] : '', $raw === '' ? null : (int) $raw]);
+            ->execute([$eventId, $title, $member, $person, $offset]);
+    }
+
+    /** Der Erledigt-Stand bleibt beim Bearbeiten unveraendert. */
+    public function updateTask(int $eventId, int $taskId, array $input): void
+    {
+        [$title, $member, $person, $offset] = $this->taskValues($input);
+        $this->pdo->prepare('UPDATE event_tasks SET title = ?, member_id = ?, person_name = ?, due_offset_days = ? WHERE id = ? AND event_id = ?')
+            ->execute([$title, $member, $person, $offset, $taskId, $eventId]);
     }
 
     public function toggleTask(int $eventId, int $taskId): void
@@ -172,7 +169,7 @@ final class EventRepository
     /** @return list<array<string,mixed>> Aufgaben mit errechnetem Faelligkeitsdatum (bei Vorlagen null) */
     public function tasks(array $event): array
     {
-        $stmt = $this->pdo->prepare('SELECT t.id, t.title, t.member_id, t.due_offset_days, t.done, COALESCE(m.name, t.person_name) AS person
+        $stmt = $this->pdo->prepare('SELECT t.id, t.title, t.member_id, t.person_name, t.due_offset_days, t.done, COALESCE(m.name, t.person_name) AS person
             FROM event_tasks t LEFT JOIN members m ON m.id = t.member_id WHERE t.event_id = ?
             ORDER BY t.due_offset_days NULLS LAST, t.id');
         $stmt->execute([$event['id']]);
@@ -196,6 +193,38 @@ final class EventRepository
         $row['planned_balance'] = Money::fromCents(Money::toCents($row['planned_in']) - Money::toCents($row['planned_out']));
         $row['actual_balance'] = Money::fromCents(Money::toCents($row['actual_in']) - Money::toCents($row['actual_out']));
         return $row;
+    }
+
+    /** @return array{0:string,1:string,2:string} */
+    private function budgetValues(array $input): array
+    {
+        $data = Fields::read($input, ['label' => 200], ['label']);
+        $direction = $input['direction'] ?? '';
+        if (!in_array($direction, ['in', 'out'], true)) { throw new ValidationError(['direction' => 'foundation.invalid']); }
+        try {
+            $amount = Money::parse(is_string($input['planned_amount'] ?? null) ? $input['planned_amount'] : '');
+        } catch (InvalidAmount) {
+            throw new ValidationError(['planned_amount' => 'validation.booking.amount']);
+        }
+        return [$data['label'], $direction, $amount];
+    }
+
+    /** @return array{0:string,1:?int,2:string,3:?int} */
+    private function taskValues(array $input): array
+    {
+        $data = Fields::read($input, ['title' => 200, 'person_name' => 200], ['title']);
+        $member = is_string($input['member_id'] ?? null) && $input['member_id'] !== '' ? Fields::version($input['member_id']) : null;
+        if ($member === 0) { throw new ValidationError(['member_id' => 'foundation.invalid']); }
+        if ($member !== null) {
+            $stmt = $this->pdo->prepare('SELECT 1 FROM members WHERE id = ? AND anonymized_at IS NULL');
+            $stmt->execute([$member]);
+            if ($stmt->fetchColumn() === false) { throw new ValidationError(['member_id' => 'foundation.invalid']); }
+        }
+        $raw = is_string($input['due_offset_days'] ?? null) ? trim($input['due_offset_days']) : '';
+        if ($raw !== '' && (preg_match('/^-?\d{1,4}\z/', $raw) !== 1 || abs((int) $raw) > 3650)) {
+            throw new ValidationError(['due_offset_days' => 'foundation.invalid']);
+        }
+        return [$data['title'], $member, $member === null ? $data['person_name'] : '', $raw === '' ? null : (int) $raw];
     }
 
     /** @return array{0:?string,1:?string} */

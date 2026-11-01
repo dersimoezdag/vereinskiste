@@ -1,13 +1,15 @@
 {# Aenderungsverlauf einer Buchung. Erwartet: history (ChangeLog::forBooking), account_names, category_names #}
-{% macro value(field, v, account_names, category_names) %}
+{% macro value(field, v, account_names, category_names, event_names, funding_names) %}
 {%- if v is null or v is same as('') -%}
     –
 {%- elseif field == 'account_id' -%}
     {{ account_names[v] ?? ('#' ~ v) }}
 {%- elseif field == 'category_id' -%}
     {{ category_names[v] ?? ('#' ~ v) }}
-{%- elseif field in ['event_id', 'funding_id'] -%}
-    {{ '#' ~ v }}
+{%- elseif field == 'event_id' -%}
+    {{ event_names[v] ?? ('#' ~ v) }}
+{%- elseif field == 'funding_id' -%}
+    {{ funding_names[v] ?? ('#' ~ v) }}
 {%- elseif field == 'amount' -%}
     {{ v|eur }}
 {%- elseif field == 'booking_date' -%}
@@ -49,9 +51,9 @@
                             {% else %}
                             <li>
                                 <strong>{{ t('bookings.field.' ~ change.field) }}:</strong>
-                                {{ h.value(change.field, change.from, account_names, category_names) }}
+                                {{ h.value(change.field, change.from, account_names, category_names, event_names, funding_names) }}
                                 →
-                                {{ h.value(change.field, change.to, account_names, category_names) }}
+                                {{ h.value(change.field, change.to, account_names, category_names, event_names, funding_names) }}
                             </li>
                             {% endif %}
                         {% endfor %}

@@ -19,6 +19,8 @@ final class Metrics
             'finance' => $this->finance(),
             'invoices' => ['value' => $this->count("SELECT count(*) FROM invoices WHERE status='draft'"), 'description' => \Vereinskiste\Text\Catalogue::get('home.metric.entwuerfe_warten_auf_pruefung')],
             'contacts' => ['value' => $this->count('SELECT count(*) FROM finance_contacts WHERE active'), 'description' => \Vereinskiste\Text\Catalogue::get('home.metric.aktive_personen_und_unternehmen')],
+            'events' => ['value' => $this->count("SELECT count(*) FROM events WHERE kind='event' AND status='planned' AND COALESCE(ends_on,starts_on)>=CURRENT_DATE"), 'description' => \Vereinskiste\Text\Catalogue::get('home.metric.geplante_veranstaltungen')],
+            'funding' => ['value' => $this->count("SELECT count(*) FROM funding_applications WHERE status IN ('draft','submitted','approved')"), 'description' => \Vereinskiste\Text\Catalogue::get('home.metric.foerderantraege_in_bearbeitung')],
             'operations' => ['value' => $this->count("SELECT count(*) FROM mail_outbox WHERE status IN ('failed','uncertain')"), 'description' => \Vereinskiste\Text\Catalogue::get('home.metric.fehlgeschlagene_oder_unklare_zustellungen')],
             default => throw new \InvalidArgumentException('Unknown dashboard card'),
         };

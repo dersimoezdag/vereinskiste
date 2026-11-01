@@ -32,6 +32,7 @@ final class XlsxReader
     public function read(string $path): array
     {
         if ((int) filesize($path) > self::MAX_BYTES) { $this->fail('booking_import.file_size'); }
+        if (!class_exists(ZipArchive::class)) { $this->fail('booking_import.zip_missing'); }
         $zip = new ZipArchive();
         if ($zip->open($path, ZipArchive::RDONLY) !== true) { $this->fail('booking_import.file_invalid'); }
         try {

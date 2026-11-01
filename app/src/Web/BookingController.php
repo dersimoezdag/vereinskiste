@@ -51,8 +51,10 @@ final class BookingController extends LedgerController
             'bookings' => $repo->search($filter, self::PAGE_SIZE, ($page - 1) * self::PAGE_SIZE),
             'filter' => $filter + [
                 'from' => '', 'to' => '', 'account_id' => '', 'category_id' => '', 'direction' => '',
-                'kind' => '', 'status' => '', 'q' => '',
+                'kind' => '', 'status' => '', 'q' => '', 'event_id' => '', 'funding_id' => '',
             ],
+            'events' => (new \Vereinskiste\Events\EventRepository(($this->pdo)()))->options($filter['event_id'] ?? null),
+            'funding_applications' => (new \Vereinskiste\Funding\FundingRepository(($this->pdo)()))->options($filter['funding_id'] ?? null),
             'accounts' => (new AccountRepository(($this->pdo)()))->all(),
             'categories' => (new CategoryRepository(($this->pdo)()))->all(),
             'total' => $total,
@@ -117,6 +119,8 @@ final class BookingController extends LedgerController
             'receipts' => (new ReceiptStore($pdo, $this->receiptsDir))->forBooking($booking['id']),
             'account_names' => array_column((new AccountRepository($pdo))->all(), 'name', 'id'),
             'category_names' => array_column((new CategoryRepository($pdo))->all(), 'name', 'id'),
+            'event_names' => $pdo->query('SELECT id, title FROM events')->fetchAll(\PDO::FETCH_KEY_PAIR),
+            'funding_names' => $pdo->query('SELECT id, title FROM funding_applications')->fetchAll(\PDO::FETCH_KEY_PAIR),
             'original' => $booking['correction_of_id'] === null ? null : $repo->find($booking['correction_of_id']),
             'counterparts' => $counterparts,
         ]);

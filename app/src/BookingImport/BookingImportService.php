@@ -29,6 +29,7 @@ final class BookingImportService
 {
     private const MAX_ROWS = 2000;
     private const DESCRIPTION_SEPARATOR = ' – ';
+    private const DRAFT_DAYS = 30;
 
     public function __construct(private PDO $pdo) {}
 
@@ -197,6 +198,7 @@ final class BookingImportService
     {
         return Transaction::run($this->pdo, function () use ($id, $input, $version, $actor): int {
             $import = $this->editable($id, $version);
+            if (($input['confirm_check'] ?? '') !== '1') { throw new ValidationError(['rows' => 'booking_import.confirm_required']); }
             $preview = $this->preview($import);
             $skip = (array) ($input['skip'] ?? []);
             $dates = (array) ($input['date'] ?? []);
@@ -238,6 +240,14 @@ final class BookingImportService
     public function delete(int $id): void
     {
         $this->pdo->prepare("DELETE FROM booking_imports WHERE id = ? AND status = 'draft'")->execute([$id]);
+    }
+
+    /** Liegengebliebene Entwuerfe enthalten vollstaendige Tabellen samt Personennamen. */
+    public function purgeDrafts(): int
+    {
+        $stmt = $this->pdo->prepare("DELETE FROM booking_imports WHERE status = 'draft' AND created_at < now() - make_interval(days => ?)");
+        $stmt->execute([self::DRAFT_DAYS]);
+        return $stmt->rowCount();
     }
 
     /** @return array<string,int> Spaltenwert => Veranstaltung */

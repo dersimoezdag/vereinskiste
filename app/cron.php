@@ -48,6 +48,7 @@ try {
     }
     $queue->enqueue('application_mail', [], $slot, 90);
     $queue->enqueue('receipt_registration', [], $slot, 10);
+    $queue->enqueue('booking_import_cleanup', [], (string) intdiv(time(), 86400), -10);
     $queue->enqueue('upload_cleanup', [], (string) intdiv(time(), 86400), -10);
     (new Vereinskiste\Jobs\Runner($queue, [
         'application_mail' => static function () use ($pdo, $smtp): void {
@@ -63,6 +64,9 @@ try {
         },
         'bank_csv_parse' => static function (array $payload) use ($pdo): void {
             (new Vereinskiste\BankImport\ParseService($pdo, VK_INSTANCE_APP . '/storage/documents'))->step((int) $payload['id']);
+        },
+        'booking_import_cleanup' => static function () use ($pdo): void {
+            (new Vereinskiste\BookingImport\BookingImportService($pdo))->purgeDrafts();
         },
         'upload_cleanup' => static function () use ($pdo): void {
             (new Vereinskiste\Files\UnregisteredUploads($pdo, VK_INSTANCE_APP . '/storage/documents'))->clean();

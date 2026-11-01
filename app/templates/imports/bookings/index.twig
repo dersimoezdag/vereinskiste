@@ -18,6 +18,7 @@
 </form>
 {% endif %}
 <h2>{{ t('booking_import.history') }}</h2>
+<p class="form-hint">{{ t('booking_import.draft_hint') }}</p>
 <div class="card"><table class="table table-cards"><thead><tr><th>{{ t('booking_import.file_name') }}</th><th>{{ t('booking_import.account') }}</th><th>{{ t('foundation.field.status') }}</th><th>{{ t('booking_import.count') }}</th></tr></thead><tbody>
 {% for import in imports %}<tr>
     <td data-label="{{ t('booking_import.file_name') }}"><a href="/imports/bookings/{{ import.id }}">{{ import.file_name }}</a></td>

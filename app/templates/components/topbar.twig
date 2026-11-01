@@ -26,6 +26,14 @@
     {% set crumbs = [cash, {'label': t('nav.accounts'), 'url': '/accounts'}, {'label': t('foundation.bank')}] %}
 {% elseif path starts with '/categories' %}
     {% set crumbs = [cash, {'label': t('nav.categories')}] %}
+{% elseif path == '/events' %}
+    {% set crumbs = [{'label': t('events.title')}] %}
+{% elseif path starts with '/events' %}
+    {% set crumbs = [{'label': t('events.title'), 'url': '/events'}, {'label': t('events.single')}] %}
+{% elseif path == '/funding' %}
+    {% set crumbs = [{'label': t('funding.title')}] %}
+{% elseif path starts with '/funding' %}
+    {% set crumbs = [{'label': t('funding.title'), 'url': '/funding'}, {'label': t('funding.single')}] %}
 {% elseif path starts with '/imports/bookings' %}
     {% set crumbs = [cash, {'label': t('booking_import.title')}] %}
 {% elseif path == '/imports/bank' %}
