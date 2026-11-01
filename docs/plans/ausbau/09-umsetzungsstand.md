@@ -58,3 +58,7 @@ Der genaue Umfang und die Grenzen stehen in [Paketübersicht](11-antraege-datens
 Die früheren Hinweise „Rechnungsimport folgt“ beziehen sich auf die noch offenen
 PDF-/OCR-/ZUGFeRD-Auslesung und den Zahlungsabgleich, nicht auf die neue manuelle
 Rechnungsverwaltung.
+
+## Veranstaltungen, Fördermittel und Buchungsimport
+
+Umfang und Grenzen stehen in [dieser Übersicht](12-veranstaltungen-foerdermittel-buchungsimport.md).

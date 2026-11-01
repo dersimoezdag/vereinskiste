@@ -32,6 +32,26 @@
                     </select>
                     {% if errors.category_id is defined %}<div class="invalid-feedback">{{ t(errors.category_id) }}</div>{% endif %}
                 </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="b-event">{{ t('events.single') }}</label>
+                    <select id="b-event" name="event_id" class="form-select{% if errors.event_id is defined %} is-invalid{% endif %}">
+                        <option value="">{{ t('events.none') }}</option>
+                        {% for event in events|default([]) %}
+                        <option value="{{ event.id }}"{% if input.event_id|default('') == (event.id ~ '') %} selected{% endif %}>{{ event.title }} ({{ event.starts_on|date('d.m.Y') }})</option>
+                        {% endfor %}
+                    </select>
+                    {% if errors.event_id is defined %}<div class="invalid-feedback">{{ t(errors.event_id) }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="b-funding">{{ t('funding.single') }}</label>
+                    <select id="b-funding" name="funding_id" class="form-select{% if errors.funding_id is defined %} is-invalid{% endif %}">
+                        <option value="">{{ t('funding.none') }}</option>
+                        {% for application in funding_applications|default([]) %}
+                        <option value="{{ application.id }}"{% if input.funding_id|default('') == (application.id ~ '') %} selected{% endif %}>{{ application.title }} ({{ application.funder }})</option>
+                        {% endfor %}
+                    </select>
+                    {% if errors.funding_id is defined %}<div class="invalid-feedback">{{ t(errors.funding_id) }}</div>{% endif %}
+                </div>
                 <div class="col-md-4">
                     <label class="form-label" for="b-date">{{ t('bookings.date') }}</label>
                     <input type="date" id="b-date" name="booking_date" required

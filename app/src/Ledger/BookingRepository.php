@@ -16,7 +16,8 @@ final class BookingRepository
     private const SELECT = "
         SELECT b.id, b.account_id, a.name AS account_name, b.booking_date::text AS booking_date,
                b.amount::text AS amount, b.direction, b.category_id, c.name AS category_name,
-               b.description, b.counterparty, b.receipt_no, b.finance_contact_id, b.kind, b.status, b.correction_of_id,
+               b.description, b.counterparty, b.receipt_no, b.finance_contact_id, b.event_id, e.title AS event_title,
+               b.funding_id, fa.title AS funding_title, b.kind, b.status, b.correction_of_id,
                b.transfer_id, b.version, b.created_by, u.name AS created_by_name,
                b.created_at::text AS created_at, b.updated_at::text AS updated_at,
                EXISTS (SELECT 1 FROM booking_changes bc
@@ -25,7 +26,9 @@ final class BookingRepository
           FROM bookings b
           JOIN accounts a ON a.id = b.account_id
           JOIN users u ON u.id = b.created_by
-          LEFT JOIN categories c ON c.id = b.category_id";
+          LEFT JOIN categories c ON c.id = b.category_id
+          LEFT JOIN events e ON e.id = b.event_id
+          LEFT JOIN funding_applications fa ON fa.id = b.funding_id";
 
     public function __construct(private PDO $pdo)
     {
@@ -103,7 +106,7 @@ final class BookingRepository
                 $out[$key] = $value;
             }
         }
-        foreach (['account_id', 'category_id'] as $key) {
+        foreach (['account_id', 'category_id', 'event_id', 'funding_id'] as $key) {
             $value = $raw[$key] ?? null;
             if ((is_string($value) || is_int($value)) && preg_match('/^[1-9]\d{0,17}\z/', (string) $value) === 1) {
                 $out[$key] = (int) $value;
@@ -140,7 +143,7 @@ final class BookingRepository
             $conds[] = 'b.booking_date <= ?::date';
             $params[] = $f['to'];
         }
-        foreach (['account_id', 'category_id', 'direction', 'kind', 'status'] as $key) {
+        foreach (['account_id', 'category_id', 'event_id', 'funding_id', 'direction', 'kind', 'status'] as $key) {
             if (isset($f[$key])) {
                 $conds[] = "b.$key = ?";
                 $params[] = $f[$key];
@@ -164,7 +167,7 @@ final class BookingRepository
         foreach (['id', 'account_id', 'version', 'created_by'] as $key) {
             $row[$key] = (int) $row[$key];
         }
-        foreach (['category_id', 'correction_of_id', 'transfer_id', 'finance_contact_id'] as $key) {
+        foreach (['category_id', 'correction_of_id', 'transfer_id', 'finance_contact_id', 'event_id', 'funding_id'] as $key) {
             $row[$key] = $row[$key] === null ? null : (int) $row[$key];
         }
         $row['changed'] = (bool) $row['changed'];

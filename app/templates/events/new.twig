@@ -1,0 +1,15 @@
+{% extends 'layout.twig' %}
+{% set heading = t(kind == 'template' ? 'events.new_template' : 'events.new') %}
+{% block title %}{{ heading }}{% endblock %}
+{% block content %}
+<h1>{{ heading }}</h1>
+<form method="post" action="/events/new" class="card card-body">
+    {{ csrf_field() }}
+    <input type="hidden" name="kind" value="{{ kind }}">
+    {% include 'events/_fields.twig' %}
+    <div class="d-flex flex-wrap gap-2">
+        <button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button>
+        <a class="btn" href="/events{% if kind == 'template' %}?view=templates{% endif %}">{{ t('common.cancel') }}</a>
+    </div>
+</form>
+{% endblock %}

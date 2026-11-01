@@ -1,0 +1,19 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('funding.title') }}{% endblock %}
+{% block content %}
+<h1>{{ t('funding.title') }}</h1>
+{% if can('funding.write') %}<div class="mb-3"><a class="btn btn-primary" href="/funding/new">{{ t('funding.new') }}</a></div>{% endif %}
+<div class="card"><table class="table table-cards"><thead><tr>
+    <th>{{ t('funding.field.title') }}</th><th>{{ t('foundation.field.funder') }}</th><th>{{ t('foundation.field.status') }}</th>
+    <th>{{ t('foundation.field.requested_amount') }}</th><th>{{ t('foundation.field.approved_amount') }}</th><th>{{ t('funding.received') }}</th>
+</tr></thead><tbody>
+{% for application in applications %}<tr>
+    <td data-label="{{ t('funding.field.title') }}"><a href="/funding/{{ application.id }}">{{ application.title }}</a></td>
+    <td data-label="{{ t('foundation.field.funder') }}">{{ application.funder }}</td>
+    <td data-label="{{ t('foundation.field.status') }}">{{ t('funding.status.' ~ application.status) }}</td>
+    <td data-label="{{ t('foundation.field.requested_amount') }}">{{ application.requested_amount|eur }}</td>
+    <td data-label="{{ t('foundation.field.approved_amount') }}">{{ application.approved_amount is null ? '–' : application.approved_amount|eur }}</td>
+    <td data-label="{{ t('funding.received') }}">{{ application.received|eur }}</td>
+</tr>{% else %}<tr><td colspan="6">{{ t('funding.empty') }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

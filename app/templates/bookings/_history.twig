@@ -6,6 +6,8 @@
     {{ account_names[v] ?? ('#' ~ v) }}
 {%- elseif field == 'category_id' -%}
     {{ category_names[v] ?? ('#' ~ v) }}
+{%- elseif field in ['event_id', 'funding_id'] -%}
+    {{ '#' ~ v }}
 {%- elseif field == 'amount' -%}
     {{ v|eur }}
 {%- elseif field == 'booking_date' -%}

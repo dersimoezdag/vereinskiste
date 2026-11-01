@@ -88,6 +88,16 @@
                         </div>
                     </li>
                     {% endif %}
+                    {% if can('events.read') %}
+                    <li class="nav-item{% if path starts with '/events' %} active{% endif %}">
+                        <a class="nav-link" href="/events"><span class="nav-link-icon">{{ icons.icon('rocket') }}</span><span class="nav-link-title">{{ t('events.title') }}</span></a>
+                    </li>
+                    {% endif %}
+                    {% if can('funding.read') %}
+                    <li class="nav-item{% if path starts with '/funding' %} active{% endif %}">
+                        <a class="nav-link" href="/funding"><span class="nav-link-icon">{{ icons.icon('accounts') }}</span><span class="nav-link-title">{{ t('funding.title') }}</span></a>
+                    </li>
+                    {% endif %}
                     {% if can('reports.read') %}
                     <li class="nav-item{% if path starts with '/reports' %} active{% endif %}">
                         <a class="nav-link" href="/reports/summary"><span class="nav-link-icon">{{ icons.icon('reports') }}</span><span class="nav-link-title">{{ t('nav.reports') }}</span></a>

@@ -1,5 +1,6 @@
 {% set finance_path = current_path() %}
 <nav class="mui-tabs mb-3" aria-label="{{ t('nav.cashbook') }}">
     <a class="mui-tab{% if finance_path starts with '/bookings' or finance_path starts with '/transfers' or finance_path starts with '/corrections' %} active{% endif %}" href="/bookings">{{ t('nav.bookings') }}</a>
-    {% if can('imports.read') %}<a class="mui-tab{% if finance_path starts with '/imports' %} active{% endif %}" href="/imports/bank">{{ t('finance.bank_imports') }}</a>{% endif %}
+    {% if can('imports.read') %}<a class="mui-tab{% if finance_path starts with '/imports/bank' %} active{% endif %}" href="/imports/bank">{{ t('finance.bank_imports') }}</a>{% endif %}
+    {% if can('imports.read') %}<a class="mui-tab{% if finance_path starts with '/imports/bookings' %} active{% endif %}" href="/imports/bookings">{{ t('booking_import.title') }}</a>{% endif %}
 </nav>

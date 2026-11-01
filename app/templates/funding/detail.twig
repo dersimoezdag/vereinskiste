@@ -1,0 +1,76 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ application ? application.title : t('funding.new') }}{% endblock %}
+{% block content %}
+{% set writable = can('funding.write') %}
+<h1>{{ application ? application.title : t('funding.new') }}</h1>
+{% if errors.delete is defined %}<p class="alert alert-warning" role="alert">{{ t(errors.delete) }}</p>{% endif %}
+{% if errors.version is defined %}<p class="alert alert-warning" role="alert">{{ t(errors.version) }}</p>{% endif %}
+{% if application %}
+<p><strong>{{ t('funding.received') }}: {{ application.received|eur }}</strong><br><span class="form-hint">{{ t('funding.received_hint') }}</span></p>
+{% endif %}
+<form method="post" action="{{ application ? '/funding/' ~ application.id : '/funding/new' }}" class="card card-body mb-3">
+    {{ csrf_field() }}
+    <input type="hidden" name="version" value="{{ application ? application.version : 0 }}">
+    <fieldset{% if not writable %} disabled{% endif %}>
+    <div class="row g-3 mb-3">
+        <div class="col-md-6"><label class="form-label" for="funding-title">{{ t('funding.field.title') }}</label>
+            <input class="form-control{% if errors.title is defined %} is-invalid{% endif %}" id="funding-title" name="title" maxlength="200" required value="{{ input.title|default('') }}">
+            {% if errors.title is defined %}<div class="invalid-feedback">{{ t(errors.title) }}</div>{% endif %}</div>
+        <div class="col-md-6"><label class="form-label" for="funding-funder">{{ t('foundation.field.funder') }}</label>
+            <input class="form-control{% if errors.funder is defined %} is-invalid{% endif %}" id="funding-funder" name="funder" maxlength="200" required value="{{ input.funder|default('') }}">
+            {% if errors.funder is defined %}<div class="invalid-feedback">{{ t(errors.funder) }}</div>{% endif %}</div>
+        <div class="col-md-6"><label class="form-label" for="funding-event">{{ t('foundation.field.event_id') }}</label>
+            <select class="form-select{% if errors.event_id is defined %} is-invalid{% endif %}" id="funding-event" name="event_id"><option value="">{{ t('events.none') }}</option>
+            {% for event in events %}<option value="{{ event.id }}"{% if input.event_id|default('') ~ '' == event.id ~ '' %} selected{% endif %}>{{ event.title }} ({{ event.starts_on|date('d.m.Y') }})</option>{% endfor %}</select></div>
+        <div class="col-md-6"><label class="form-label" for="funding-status">{{ t('foundation.field.status') }}</label>
+            <select class="form-select" id="funding-status" name="status">{% for status in statuses %}<option value="{{ status }}"{% if input.status|default('draft') == status %} selected{% endif %}>{{ t('funding.status.' ~ status) }}</option>{% endfor %}</select></div>
+        {% for field in ['requested_amount', 'approved_amount'] %}
+        <div class="col-md-6"><label class="form-label" for="funding-{{ field }}">{{ t('foundation.field.' ~ field) }}</label>
+            <input class="form-control{% if errors[field] is defined %} is-invalid{% endif %}" id="funding-{{ field }}" name="{{ field }}" inputmode="decimal"{% if field == 'requested_amount' %} required{% endif %} value="{{ input[field]|default('') }}">
+            {% if errors[field] is defined %}<div class="invalid-feedback">{{ t(errors[field]) }}</div>{% endif %}</div>
+        {% endfor %}
+        {% for field in ['submitted_on', 'decided_on', 'proof_due_on'] %}
+        <div class="col-md-4"><label class="form-label" for="funding-{{ field }}">{{ t('foundation.field.' ~ field) }}</label>
+            <input class="form-control{% if errors[field] is defined %} is-invalid{% endif %}" type="date" id="funding-{{ field }}" name="{{ field }}" value="{{ input[field]|default('') }}">
+            {% if errors[field] is defined %}<div class="invalid-feedback">{{ t(errors[field]) }}</div>{% endif %}</div>
+        {% endfor %}
+        <div class="col-12"><label class="form-label" for="funding-notes">{{ t('foundation.field.notes') }}</label>
+            <textarea class="form-control{% if errors.notes is defined %} is-invalid{% endif %}" id="funding-notes" name="notes" maxlength="2000" rows="3">{{ input.notes|default('') }}</textarea></div>
+    </div>
+    {% if writable %}<div><button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button></div>{% endif %}
+    </fieldset>
+</form>
+{% if application %}
+<div class="card mb-3"><div class="card-body">
+    <h2 class="card-title">{{ t('funding.items') }}</h2>
+    {% set sum = 0 %}
+    <table class="table table-cards"><thead><tr><th>{{ t('funding.item.label') }}</th><th>{{ t('bookings.amount_eur') }}</th>{% if writable %}<th>{{ t('events.remove') }}</th>{% endif %}</tr></thead><tbody>
+    {% for item in items %}<tr>
+        <td data-label="{{ t('funding.item.label') }}">{{ item.label }}</td>
+        <td data-label="{{ t('bookings.amount_eur') }}">{{ item.amount is null ? '–' : item.amount|eur }}</td>
+        {% if writable %}<td data-label="{{ t('events.remove') }}"><form method="post" action="/funding/{{ application.id }}/item-remove/{{ item.id }}">{{ csrf_field() }}<button class="btn btn-link p-0" type="submit">{{ t('events.remove') }}</button></form></td>{% endif %}
+    </tr>{% else %}<tr><td colspan="3">{{ t('foundation.empty') }}</td></tr>{% endfor %}
+    </tbody></table>
+    {% if writable %}
+    <form method="post" action="/funding/{{ application.id }}/item" class="row g-2 mt-2">
+        {{ csrf_field() }}
+        <div class="col-md-6"><label class="form-label" for="item-label">{{ t('funding.item.label') }}</label>
+            <input class="form-control{% if errors.label is defined %} is-invalid{% endif %}" id="item-label" name="label" maxlength="200" required></div>
+        <div class="col-md-3"><label class="form-label" for="item-amount">{{ t('funding.item.amount') }}</label>
+            <input class="form-control{% if errors.amount is defined %} is-invalid{% endif %}" id="item-amount" name="amount" inputmode="decimal">
+            {% if errors.amount is defined %}<div class="invalid-feedback">{{ t(errors.amount) }}</div>{% endif %}</div>
+        <div class="col-md-3 d-flex align-items-end"><button class="btn btn-outline-primary w-100" type="submit">{{ t('funding.item.add') }}</button></div>
+    </form>
+    {% endif %}
+</div></div>
+{% if can('bookings.read') %}
+<div class="card mb-3"><div class="card-body">
+    <h2 class="card-title">{{ t('events.bookings') }}</h2>
+    <ul class="mb-0">{% for booking in bookings %}<li>{{ booking.booking_date|date('d.m.Y') }} · <a href="/bookings/{{ booking.id }}">{{ booking.description }}</a> · {{ booking.direction == 'out' ? '-' : '' }}{{ booking.amount|eur }}</li>{% else %}<li>{{ t('events.bookings_empty') }}</li>{% endfor %}</ul>
+</div></div>
+{% endif %}
+{% if writable %}<form method="post" action="/funding/{{ application.id }}/delete" class="mb-3">{{ csrf_field() }}<button class="btn btn-outline-danger" type="submit">{{ t('events.delete') }}</button></form>{% endif %}
+{% endif %}
+<a class="btn btn-link" href="/funding">{{ t('common.back') }}</a>
+{% include 'components/foundation_history.twig' %}
+{% endblock %}

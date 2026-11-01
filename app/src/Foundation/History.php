@@ -17,7 +17,7 @@ final class History
             throw new \Vereinskiste\Ledger\ValidationError(['reason' => 'validation.text.encoding']);
         }
         // Stammdaten (Verein, Kontakte, Kontodaten, Mitglieder) brauchen keine Begruendung; nur Buchungen, Belege und Abschluss.
-        if (trim($reason) === '' && in_array($subject, ['club', 'contact', 'account_bank', 'member', 'club_role'], true)) {
+        if (trim($reason) === '' && in_array($subject, ['club', 'contact', 'account_bank', 'member', 'club_role', 'event', 'funding'], true)) {
             $reason = '–';
         }
         $reason = ChangeLog::normalizeReason($reason);

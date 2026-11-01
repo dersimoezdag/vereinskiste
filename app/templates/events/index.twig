@@ -1,0 +1,30 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('events.title') }}{% endblock %}
+{% block content %}
+<h1>{{ t('events.title') }}</h1>
+<nav class="mui-tabs mb-3" aria-label="{{ t('events.title') }}">
+    <a class="mui-tab{% if kind == 'event' %} active{% endif %}" href="/events">{{ t('events.title') }}</a>
+    <a class="mui-tab{% if kind == 'template' %} active{% endif %}" href="/events?view=templates">{{ t('events.templates') }}</a>
+</nav>
+{% if can('events.write') %}
+<div class="d-flex flex-wrap gap-2 mb-3">
+    <a class="btn btn-primary" href="/events/new{% if kind == 'template' %}?kind=template{% endif %}">{{ t(kind == 'template' ? 'events.new_template' : 'events.new') }}</a>
+</div>
+{% endif %}
+<div class="card"><table class="table table-cards"><thead><tr>
+    <th>{{ t('foundation.field.title') }}</th>
+    {% if kind == 'event' %}<th>{{ t('foundation.field.starts_on') }}</th><th>{{ t('foundation.field.status') }}</th>{% endif %}
+    <th>{{ t('foundation.field.location') }}</th><th>{{ t('events.tasks_progress') }}</th>
+</tr></thead><tbody>
+{% for event in events %}<tr>
+    <td data-label="{{ t('foundation.field.title') }}"><a href="/events/{{ event.id }}">{{ event.title }}</a></td>
+    {% if kind == 'event' %}
+    <td data-label="{{ t('foundation.field.starts_on') }}">{{ event.starts_on|date('d.m.Y') }}{% if event.ends_on %} – {{ event.ends_on|date('d.m.Y') }}{% endif %}</td>
+    <td data-label="{{ t('foundation.field.status') }}">{{ t('events.status.' ~ event.status) }}</td>
+    {% endif %}
+    <td data-label="{{ t('foundation.field.location') }}">{{ event.location ?: '–' }}</td>
+    <td data-label="{{ t('events.tasks_progress') }}">{{ event.tasks_done }} / {{ event.tasks_total }}</td>
+</tr>
+{% else %}<tr><td colspan="5">{{ t(kind == 'template' ? 'events.templates_empty' : 'events.empty') }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

@@ -17,6 +17,7 @@ final class Permissions
         'settings.manage',
         'imports.read', 'imports.write', 'invoices.read', 'invoices.write', 'payments.approve',
         'contacts.read', 'contacts.write', 'contributions.read', 'contributions.write',
+        'events.read', 'events.write', 'funding.read', 'funding.write',
     ];
 
     /** Zulaessige Rollen (Whitelist fuer Eingaben und Benutzerverwaltung). */
@@ -26,13 +27,15 @@ final class Permissions
 
     private const BY_ROLE = [
         'admin' => self::ALL,
-        'board' => ['documents.read', 'documents.write', 'documents.confidential', 'members.read', 'members.write', 'bookings.read', 'bookings.write', 'reports.read', 'imports.read', 'imports.write', 'invoices.read', 'invoices.write', 'payments.approve', 'contacts.read', 'contacts.write', 'contributions.read', 'contributions.write'],
+        'board' => ['documents.read', 'documents.write', 'documents.confidential', 'members.read', 'members.write', 'bookings.read', 'bookings.write', 'reports.read', 'imports.read', 'imports.write', 'invoices.read', 'invoices.write', 'payments.approve', 'contacts.read', 'contacts.write', 'contributions.read', 'contributions.write', 'events.read', 'events.write', 'funding.read', 'funding.write'],
         'treasurer' => ['documents.read', 'bookings.read', 'bookings.write', 'members.read', 'reports.read',
             'imports.read', 'imports.write', 'invoices.read', 'invoices.write', 'payments.approve',
-            'contacts.read', 'contacts.write', 'contributions.read', 'contributions.write'],
-        'secretary' => ['documents.read', 'documents.write', 'documents.confidential', 'members.read', 'members.write', 'bookings.read'],
+            'contacts.read', 'contacts.write', 'contributions.read', 'contributions.write',
+            'events.read', 'events.write', 'funding.read', 'funding.write'],
+        'secretary' => ['documents.read', 'documents.write', 'documents.confidential', 'members.read', 'members.write', 'bookings.read',
+            'events.read', 'events.write', 'funding.read', 'funding.write'],
         'auditor' => ['documents.read', 'bookings.read', 'members.read', 'reports.read',
-            'imports.read', 'invoices.read', 'contacts.read', 'contributions.read'],
+            'imports.read', 'invoices.read', 'contacts.read', 'contributions.read', 'events.read', 'funding.read'],
     ];
 
     /**

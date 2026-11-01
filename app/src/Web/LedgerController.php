@@ -13,7 +13,7 @@ use Vereinskiste\Ledger\CategoryRepository;
 abstract class LedgerController extends AdminController
 {
     protected const FORM_FIELDS = [
-        'account_id', 'booking_date', 'amount', 'direction', 'category_id', 'description', 'counterparty', 'receipt_no', 'finance_contact_id',
+        'account_id', 'booking_date', 'amount', 'direction', 'category_id', 'description', 'counterparty', 'receipt_no', 'finance_contact_id', 'event_id', 'funding_id',
     ];
 
     /** @param Closure():\PDO $pdo */
@@ -32,7 +32,7 @@ abstract class LedgerController extends AdminController
         $pdo = ($this->pdo)();
         $context['input'] = ($context['input'] ?? []) + [
             'account_id' => '', 'booking_date' => date('Y-m-d'), 'amount' => '', 'direction' => 'out',
-            'category_id' => '', 'description' => '', 'counterparty' => '', 'receipt_no' => '', 'finance_contact_id' => '',
+            'category_id' => '', 'description' => '', 'counterparty' => '', 'receipt_no' => '', 'finance_contact_id' => '', 'event_id' => '', 'funding_id' => '',
         ];
         $context['errors'] ??= [];
         $keep = static fn (string $key): ?int => isset($context['booking'][$key]) ? (int) $context['booking'][$key] : null;
@@ -45,6 +45,8 @@ abstract class LedgerController extends AdminController
             static fn (array $c): bool => $c['active'] || $c['id'] === $keep('category_id')
         ));
         $context['contacts'] = $pdo->query('SELECT id, name, active FROM finance_contacts ORDER BY lower(name), id')->fetchAll();
+        $context['events'] = (new \Vereinskiste\Events\EventRepository($pdo))->options($keep('event_id'));
+        $context['funding_applications'] = (new \Vereinskiste\Funding\FundingRepository($pdo))->options($keep('funding_id'));
         return $req->getAttribute('view')->render($res, $template, $context);
     }
 

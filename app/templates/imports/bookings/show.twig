@@ -1,0 +1,110 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('booking_import.title') }}{% endblock %}
+{% macro column_select(id, name, label, columns, selected, required, errors) %}
+<label class="form-label" for="{{ id }}">{{ label }}</label>
+<select class="form-select{% if errors[name] is defined %} is-invalid{% endif %}" id="{{ id }}" name="{{ name }}"{% if required %} required{% endif %}>
+    <option value="">{{ t('booking_import.no_column') }}</option>
+    {% for index, title in columns %}<option value="{{ index }}"{% if selected is not null and selected is not same as('') and selected == index %} selected{% endif %}>{{ title }}</option>{% endfor %}
+</select>
+{% if errors[name] is defined %}<div class="invalid-feedback">{{ t(errors[name]) }}</div>{% endif %}
+{% endmacro %}
+{% import _self as form %}
+{% block content %}
+{% include 'components/finance_tabs.twig' %}
+<h1>{{ t('booking_import.title') }}: {{ import.file_name }}</h1>
+<p>{{ t('booking_import.account') }}: {{ import.account_name }}{% if import.status == 'draft' %} · {{ t('booking_import.sheet') }}: {{ import.sheets[sheet_index].name }}{% endif %}</p>
+{% if import.status == 'confirmed' %}
+<p class="alert alert-success">{{ t('booking_import.done') }} {{ t('booking_import.count') }}: {{ import.created_count }}</p>
+<a class="btn btn-outline-primary" href="/bookings">{{ t('nav.bookings') }}</a>
+{% else %}
+{% if import.already_imported %}<p class="alert alert-warning" role="alert">{{ t('booking_import.already_imported') }}</p>{% endif %}
+{% if errors.rows is defined %}<p class="alert alert-danger" role="alert">{{ t(errors.rows) }}</p>{% endif %}
+{% if errors.event_map is defined %}<p class="alert alert-danger" role="alert">{{ t(errors.event_map) }}</p>{% endif %}
+
+{% if import.sheets|length > 1 %}
+<form method="get" action="/imports/bookings/{{ import.id }}" class="card card-body mb-3">
+    <label class="form-label" for="import-sheet">{{ t('booking_import.sheet') }}</label>
+    <select class="form-select mb-2" id="import-sheet" name="sheet">{% for sheet in import.sheets %}<option value="{{ loop.index0 }}"{% if loop.index0 == sheet_index %} selected{% endif %}>{{ sheet.name }}</option>{% endfor %}</select>
+    <div><button class="btn btn-outline-primary" type="submit">{{ t('booking_import.sheet_change') }}</button></div>
+</form>
+{% endif %}
+
+{% set editable = can('bookings.write') %}
+<form method="post" action="/imports/bookings/{{ import.id }}/mapping" class="card card-body mb-3">
+    {{ csrf_field() }}
+    <h2 class="card-title">{{ t('booking_import.mapping') }}</h2>
+    <input type="hidden" name="version" value="{{ import.version }}">
+    <input type="hidden" name="sheet" value="{{ sheet_index }}">
+    <fieldset{% if not editable %} disabled{% endif %}>
+    <div class="row g-3 mb-3">
+        <div class="col-md-4"><label class="form-label" for="map-header">{{ t('booking_import.header_row') }}</label>
+            <input class="form-control{% if errors.header_row is defined %} is-invalid{% endif %}" id="map-header" name="header_row" inputmode="numeric" required value="{{ mapping.header_row }}"></div>
+        <div class="col-md-4">{{ form.column_select('map-date', 'date', t('booking_import.date'), columns, mapping.date, true, errors) }}</div>
+        <div class="col-md-4">{{ form.column_select('map-amount', 'amount', t('booking_import.amount'), columns, mapping.amount, true, errors) }}<div class="form-hint">{{ t('booking_import.amount_hint') }}</div></div>
+        <div class="col-md-4">{{ form.column_select('map-description', 'description', t('booking_import.description'), columns, mapping.description, false, errors) }}</div>
+        <div class="col-md-4">{{ form.column_select('map-counterparty', 'counterparty', t('booking_import.counterparty'), columns, mapping.counterparty, false, errors) }}</div>
+        <div class="col-md-4">{{ form.column_select('map-event', 'event', t('booking_import.event'), columns, mapping.event, false, errors) }}</div>
+        <div class="col-md-6"><label class="form-label" for="map-category">{{ t('booking_import.category') }}</label>
+            <select class="form-select" id="map-category" name="category_id"><option value="">{{ t('bookings.no_category') }}</option>
+            {% for category in categories %}<option value="{{ category.id }}"{% if mapping.category_id ~ '' == category.id ~ '' %} selected{% endif %}>{{ category.name }}</option>{% endfor %}</select></div>
+        <div class="col-md-6"><fieldset><legend class="form-label">{{ t('booking_import.notes') }}</legend>
+            {% for index, title in columns %}<label class="form-check" for="map-note-{{ index }}"><input class="form-check-input" type="checkbox" id="map-note-{{ index }}" name="notes[]" value="{{ index }}"{% if index in mapping.notes %} checked{% endif %}><span class="form-check-label">{{ title }}</span></label>{% endfor %}
+        </fieldset></div>
+    </div>
+    {% if editable %}<div><button class="btn btn-primary" type="submit">{{ t('booking_import.preview_open') }}</button></div>{% endif %}
+    </fieldset>
+</form>
+
+{% if preview %}
+<form method="post" action="/imports/bookings/{{ import.id }}/confirm" class="card card-body mb-3">
+    {{ csrf_field() }}
+    <input type="hidden" name="version" value="{{ import.version }}">
+    <h2 class="card-title">{{ t('booking_import.preview') }}</h2>
+    <p><strong>{{ preview.ready }} {{ t('booking_import.summary') }}</strong> · {{ t('events.income') }} {{ preview.income|eur }} · {{ t('events.expense') }} {{ preview.expense|eur }}</p>
+    <p class="form-hint">{{ t('booking_import.needs_date_hint') }}</p>
+    <table class="table table-cards"><thead><tr><th>{{ t('booking_import.row') }}</th><th>{{ t('booking_import.date') }}</th><th>{{ t('bookings.amount_eur') }}</th><th>{{ t('booking_import.description') }}</th><th>{{ t('booking_import.counterparty') }}</th><th>{{ t('booking_import.state') }}</th></tr></thead><tbody>
+    {% for row in preview.rows %}<tr>
+        <td data-label="{{ t('booking_import.row') }}">{{ row.n }}</td>
+        <td data-label="{{ t('booking_import.date') }}">
+            {% if row.state == 'needs_date' %}
+            <label class="form-label" for="row-date-{{ row.n }}">{{ row.date_raw ?: '–' }}</label>
+            <input class="form-control{% if errors['row_' ~ row.n] is defined %} is-invalid{% endif %}" type="date" id="row-date-{{ row.n }}" name="date[{{ row.n }}]" value="{{ input.date[row.n]|default('') }}" aria-describedby="row-problem-{{ row.n }}">
+            {% elseif row.date %}{{ row.date|date('d.m.Y') }}{% else %}{{ row.date_raw ?: '–' }}{% endif %}
+        </td>
+        <td data-label="{{ t('bookings.amount_eur') }}">{% if row.amount %}{{ row.direction == 'out' ? '-' : '' }}{{ row.amount|eur }}{% else %}{{ row.amount_raw ?: '–' }}{% endif %}</td>
+        <td data-label="{{ t('booking_import.description') }}">{{ row.description ?: '–' }}</td>
+        <td data-label="{{ t('booking_import.counterparty') }}">{{ row.counterparty ?: '–' }}</td>
+        <td data-label="{{ t('booking_import.state') }}">
+            {% if errors['row_' ~ row.n] is defined %}<p class="text-danger mb-1" role="alert">{{ t(errors['row_' ~ row.n]) }}</p>{% endif %}
+            {% if row.state == 'ok' %}
+            {% if row.duplicate %}<p class="text-warning mb-1">{{ t('booking_import.state.duplicate') }}</p>{% else %}{{ t('booking_import.state.ok') }}{% endif %}
+            <label class="form-check" for="row-skip-{{ row.n }}"><input class="form-check-input" type="checkbox" id="row-skip-{{ row.n }}" name="skip[{{ row.n }}]" value="1"{% if row.duplicate or input.skip[row.n] is defined %} checked{% endif %}><span class="form-check-label">{{ t('booking_import.skip') }}</span></label>
+            {% elseif row.state == 'needs_date' %}<span id="row-problem-{{ row.n }}">{{ t(row.problem) }}. {{ t('booking_import.date_needed') }}</span>
+            {% else %}{{ t(row.problem) }}{% endif %}
+        </td>
+    </tr>{% endfor %}
+    </tbody></table>
+    {% if preview.event_values %}
+    <h3 class="mt-3">{{ t('booking_import.events') }}</h3>
+    <table class="table table-cards"><thead><tr><th>{{ t('booking_import.event_value') }}</th><th>{{ t('events.single') }}</th></tr></thead><tbody>
+    {% for value in preview.event_values %}<tr>
+        <td data-label="{{ t('booking_import.event_value') }}"><label class="form-label mb-0" for="event-map-{{ loop.index0 }}">{{ value }}</label></td>
+        <td data-label="{{ t('events.single') }}"><select class="form-select" id="event-map-{{ loop.index0 }}" name="event_map[{{ loop.index0 }}]">
+            <option value="">{{ t('events.none') }}</option>
+            <option value="new">{{ t('booking_import.event_new') }}</option>
+            {% for event in events %}<option value="{{ event.id }}">{{ event.title }} ({{ event.starts_on|date('d.m.Y') }})</option>{% endfor %}
+        </select></td>
+    </tr>{% endfor %}
+    </tbody></table>
+    {% endif %}
+    {% if editable %}
+    <div class="mt-3"><button class="btn btn-primary" type="submit">{{ t('booking_import.confirm') }}</button></div>
+    {% endif %}
+</form>
+{% endif %}
+{% if editable %}
+<form method="post" action="/imports/bookings/{{ import.id }}/delete" class="mb-3">{{ csrf_field() }}<button class="btn btn-outline-danger" type="submit">{{ t('booking_import.delete') }}</button></form>
+{% endif %}
+{% endif %}
+<a class="btn btn-link" href="/imports/bookings">{{ t('common.back') }}</a>
+{% endblock %}
