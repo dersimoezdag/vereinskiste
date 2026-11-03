@@ -2,6 +2,30 @@
 {% block content %}
 <h1>{{ t('applications.decision.title') }} · {{ application.applicant_name }}</h1>
 <p>{{ application.email }}</p>
+<p><a class="btn" href="/members/applications/{{ application.id }}/pdf">{{ t('applications.pdf') }}</a></p>
+{% if signatures is not empty %}
+<section class="panel panel-body mb-4" aria-labelledby="declarations-heading">
+    <h2 id="declarations-heading" class="panel-title">{{ t('declarations.title') }}</h2>
+    <ul class="divide-y divide-line">
+    {% for s in signatures %}
+        <li class="py-3">
+            <div class="flex flex-wrap items-center gap-3">
+                <strong class="min-w-0 flex-1">{{ s.snapshot.title|default('') }}</strong>
+                <span class="text-sm text-muted">{{ t('declarations.field.version') }} {{ s.version }}</span>
+                <span>{% if s.kind == 'consent' %}{{ t(s.granted ? 'declarations.consent_yes' : 'declarations.consent_no') }}{% elseif s.kind == 'confirmation' %}{{ t('declarations.confirmed') }}{% else %}{{ t('declarations.noticed') }}{% endif %}</span>
+            </div>
+            {% if s.has_signature %}
+            <div class="mt-2 flex flex-wrap items-end gap-4">
+                <img class="h-16 w-auto rounded border border-line bg-white" src="/members/applications/{{ application.id }}/signatures/{{ s.id }}.png" alt="{{ t('declarations.signature') }}">
+                <span class="text-sm text-muted">{{ t('declarations.place_date') }}: {{ s.signed_place }}, {{ s.signed_at|date('d.m.Y') }}</span>
+            </div>
+            {% endif %}
+            <details class="mt-2"><summary class="text-sm">{{ t('privacy.snapshot') }}</summary><div class="rich-text text-sm">{{ s.snapshot.content|default('')|note }}</div><code class="text-xs">{{ s.snapshot_hash }}</code></details>
+        </li>
+    {% endfor %}
+    </ul>
+</section>
+{% endif %}
 {% for error in errors %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endfor %}
 {% if not system_mail_available() %}<p class="alert alert-warning">{{ t('applications.mail.disabled') }}</p>{% endif %}
 {% if application.status == 'pending' %}

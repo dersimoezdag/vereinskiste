@@ -324,6 +324,8 @@ final class Kernel
         $decisions = new \Vereinskiste\Web\ApplicationDecisionController($pdoProvider);
         $app->get('/members/applications/{id:[0-9]+}/decision', [$decisions, 'show'])->add(Auth::requires('members.write'));
         $app->post('/members/applications/{id:[0-9]+}/decision', [$decisions, 'save'])->add(Auth::requires('members.write'));
+        $app->get('/members/applications/{id:[0-9]+}/signatures/{signature:[0-9]+}.png', [$decisions, 'signature'])->add(Auth::requires('members.write'));
+        $app->get('/members/applications/{id:[0-9]+}/pdf', [$decisions, 'pdf'])->add(Auth::requires('members.write'));
         $app->post('/members/application-mails/{id:[0-9]+}/retry', [$decisions, 'retry'])->add(Auth::requires('members.write'));
         $privacy = new \Vereinskiste\Web\PrivacyController($pdoProvider);
         $app->get('/members/applications/{id:[0-9]+}/privacy', [$privacy, 'application'])->add(Auth::requires('settings.manage'));

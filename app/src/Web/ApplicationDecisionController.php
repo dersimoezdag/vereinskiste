@@ -43,6 +43,26 @@ final class ApplicationDecisionController extends AdminController
         if(!in_array($decision,['approved','rejected'],true)) {$decision='approved';}
         $values=$input??((new ApplicationNotifications(($this->pdo)()))->defaults($decision)+['reason'=>'','decision'=>$decision]);$safe=[];
         foreach($values as $key=>$value) {$safe[$key]=is_string($value)&&mb_check_encoding($value,'UTF-8')?$value:'';}
-        return $req->getAttribute('view')->render($res,'members/decision.twig',['application'=>$app,'input'=>$safe,'errors'=>$errors,'preview'=>$preview,'mail_configured'=>$req->getAttribute('mail_configured',false)]);
+        return $req->getAttribute('view')->render($res,'members/decision.twig',['application'=>$app,'input'=>$safe,'errors'=>$errors,'preview'=>$preview,'signatures'=>(new \Vereinskiste\Members\ApplicationSignatures(($this->pdo)()))->forApplication($id),'mail_configured'=>$req->getAttribute('mail_configured',false)]);
+    }
+    public function signature(Request $req,Response $res,array $args):Response
+    {
+        $png=(new \Vereinskiste\Members\ApplicationSignatures(($this->pdo)()))->png((int)$args['id'],(int)$args['signature']);
+        if($png===null) {return $this->notFound($req);}
+        $res->getBody()->write($png);
+        return $res->withHeader('Content-Type','image/png')->withHeader('Cache-Control','no-store');
+    }
+    public function pdf(Request $req,Response $res,array $args):Response
+    {
+        $pdo=($this->pdo)();$id=(int)$args['id'];
+        $app=(new ApplicationRepository($pdo))->findApplication($id);
+        if(!$app) {return $this->notFound($req);}
+        $signatures=new \Vereinskiste\Members\ApplicationSignatures($pdo);$rows=$signatures->forApplication($id);$pngs=[];
+        foreach($rows as $row) {if($row['has_signature']) {$pngs[$row['id']]=(string)$signatures->png($id,$row['id']);}}
+        $club=(string)((new \Vereinskiste\Club\Profile($pdo))->get()['data']['name']??'');
+        $body=\Vereinskiste\Members\ApplicationPdf::render($app,$rows,$pngs,$club);
+        (new \Vereinskiste\Audit\AuditLog($pdo))->record('application_pdf_downloaded',$this->userId($req),['application_id'=>$id]);
+        $res->getBody()->write($body);
+        return $res->withHeader('Content-Type','application/pdf')->withHeader('Content-Disposition','attachment; filename="mitgliedsantrag-'.$id.'.pdf"')->withHeader('Cache-Control','no-store');
     }
 }
