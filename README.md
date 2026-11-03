@@ -21,6 +21,14 @@ Nur ein Teil, z. B. die Migrationstests:
 
 Aufraeumen: `docker compose -f docker-compose.dev.yml down -v`
 
+Styles: Die Oberflaeche nutzt Tailwind CSS. Quelle ist `app/styles/app.css` (Farben,
+Schriften und wiederkehrende Bausteine wie `btn`, `input`, `panel`, `data-table`);
+Layout und Abstaende stehen als Tailwind-Klassen direkt in den Templates.
+`public/assets/app.css` wird erzeugt und nicht versioniert (Node noetig, Pakete in `tests/`):
+
+    npm --prefix tests ci
+    node scripts/build-css.cjs --watch
+
 Parallele Chats oder Testläufe brauchen jeweils eine eigene Testdatenbank, da
 die Tests das Schema der Testdatenbank zurücksetzen. Eine zusätzliche Datenbank
 im Entwicklungscontainer anlegen und `VK_TEST_DSN` für den Testlauf überschreiben.

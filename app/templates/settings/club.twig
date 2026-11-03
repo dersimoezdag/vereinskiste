@@ -3,22 +3,22 @@
 {% block content %}
 {% include 'components/settings_tabs.twig' %}
 <h2>{{ t('foundation.club') }}</h2>
-<form method="post" action="/settings/club" class="card card-body">
+<form method="post" action="/settings/club" class="panel panel-body">
     {{ csrf_field() }}
     <input type="hidden" name="version" value="{{ version }}">
     {% include 'components/foundation_fields.twig' with {'reason_required': false} %}
     <button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button>
 </form>
-<h2 class="h3 mt-4">{{ t('foundation.logo') }}</h2>
-{% if logo_id %}<a class="btn btn-outline-secondary mb-3" href="/documents/{{ logo_id }}">{{ t('foundation.logo') }} {{ t('ui.herunterladen') }}</a>{% endif %}
-<form method="post" action="/settings/club/logo" enctype="multipart/form-data" class="card card-body">
+<h2 class="h3 mt-6">{{ t('foundation.logo') }}</h2>
+{% if logo_id %}<a class="btn mb-4" href="/documents/{{ logo_id }}">{{ t('foundation.logo') }} {{ t('ui.herunterladen') }}</a>{% endif %}
+<form method="post" action="/settings/club/logo" enctype="multipart/form-data" class="panel panel-body">
     {{ csrf_field() }}
     <input type="hidden" name="version" value="{{ version }}">
-    <label class="form-label" for="club-logo">{{ t('foundation.logo') }} {{ t('ui.png_jpeg_max_2_mb') }}</label>
-    <input class="form-control mb-3" id="club-logo" type="file" name="receipt" accept="image/png,image/jpeg" required>
+    <label class="label" for="club-logo">{{ t('foundation.logo') }} {{ t('ui.png_jpeg_max_2_mb') }}</label>
+    <input class="input mb-4" id="club-logo" type="file" name="receipt" accept="image/png,image/jpeg" required>
     <button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button>
 </form>
 {% include 'components/foundation_history.twig' %}
-{% if jobs %}<h2 class="h3 mt-4">{{ t('foundation.jobs') }}</h2>
+{% if jobs %}<h2 class="h3 mt-6">{{ t('foundation.jobs') }}</h2>
 <ul>{% for job in jobs %}<li>{{ t('foundation.job.' ~ job.status) }}: {{ job.count }}</li>{% endfor %}</ul>{% endif %}
 {% endblock %}

@@ -12,10 +12,10 @@ foreach (['app/migrations/0017_club_documents.sql', 'public/assets/vendor/tinymc
     'app/src/Text/de/core.php', 'app/src/Text/de/foundation.php', 'app/src/Text/de/bank_import.php',
     'app/src/Text/de/updates.php', 'app/src/Text/de/dashboard.php', 'app/src/Install/GitHubTransport.php', 'app/src/Install/UpdateCheckFailure.php',
     'app/cron.php', 'app/migrations/0015_receipt_intake_payments.sql', 'public/assets/vendor/ocr/tesseract.min.js', 'public/assets/invoice-ocr.js', 'docs/hosting.md', 'docs/automatic-updates.md', 'docs/plans/ausbau/10-csv-import.md', 'app/config/', 'app/storage/',
-    'public/index.php', 'public/.htaccess', 'public/assets/logo.svg', 'public/assets/logo-dark.svg', 'public/assets/app.css', 'public/assets/user-card.css', 'public/assets/bank-import.js', 'public/assets/dashboard.js', 'public/assets/theme.js',
+    'public/index.php', 'public/.htaccess', 'public/assets/logo.svg', 'public/assets/logo-dark.svg', 'public/assets/app.css', 'public/assets/ui.js', 'public/assets/bank-import.js', 'public/assets/dashboard.js', 'public/assets/theme.js',
     'public/assets/vendor/chartjs/chart.umd.min.js', 'public/assets/vendor/chartjs/LICENSE',
     'public/assets/vendor/material-symbols/symbols.svg', 'public/assets/vendor/material-symbols/LICENSE',
-    'public/assets/vendor/tabler/tabler.min.css', 'public/assets/vendor/tabler/tabler.min.js', 'LICENSE', 'README.md'] as $name) {
+    'public/assets/vendor/fonts/geist-latin-wght-normal.woff2', 'public/assets/vendor/fonts/geist-LICENSE', 'LICENSE', 'README.md'] as $name) {
     if ($zip->locateName($name) === false) { throw new RuntimeException('Release-Datei fehlt: ' . $name); }
 }
 for ($i = 0; $i < $zip->numFiles; $i++) {

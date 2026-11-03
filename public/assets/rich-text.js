@@ -4,7 +4,7 @@
     var fields = document.querySelectorAll('textarea[data-rich-text]');
     if (!fields.length || !window.tinymce) { return; }
     var script = document.querySelector('script[src*="vendor/tinymce/tinymce.min.js"]');
-    var dark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
     fields.forEach(function (field) {
         window.tinymce.init({
             base_url: new URL('.', script.src).href.replace(/\/$/, ''), suffix: '.min',

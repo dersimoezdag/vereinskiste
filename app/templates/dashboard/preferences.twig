@@ -7,7 +7,7 @@
 <form method="post" action="/dashboard/preferences" data-dashboard-form>
     {{ csrf_field() }}<input type="hidden" name="version" value="{{ preferences.version }}">
     {% for key, catalog in {'cards': cards, 'shortcuts': shortcuts} %}
-    <section class="card mb-3"><div class="card-body">
+    <section class="panel mb-4"><div class="panel-body">
         <h2>{{ key == 'cards' ? t('home.cards') : t('ui.schnellaktionen') }}</h2>
         <div class="dashboard-options" data-dashboard-list>
         {% set ordered = preferences[key] %}
@@ -16,14 +16,14 @@
         {% set item = catalog[id] %}
         <div class="dashboard-option" data-dashboard-item>
             {% include 'dashboard/controls.twig' with {label: t(item.label)} %}
-            <label class="dashboard-option-label"><input type="checkbox" class="form-check-input" name="{{ key }}[]" value="{{ id }}" {% if id in preferences[key] %}checked{% endif %}> {{ t(item.label) }}</label>
-            <label class="dashboard-position">{{ t('ui.position') }} <input class="form-control" type="number" name="{{ key }}_positions[{{ id }}]" min="1" max="99" value="{{ loop.index }}" data-position aria-label="{{ t('home.position')|replace({'{label}': t(item.label)}) }}"></label>
+            <label class="dashboard-option-label"><input type="checkbox" class="check-input" name="{{ key }}[]" value="{{ id }}" {% if id in preferences[key] %}checked{% endif %}> {{ t(item.label) }}</label>
+            <label class="dashboard-position">{{ t('ui.position') }} <input class="input" type="number" name="{{ key }}_positions[{{ id }}]" min="1" max="99" value="{{ loop.index }}" data-position aria-label="{{ t('home.position')|replace({'{label}': t(item.label)}) }}"></label>
         </div>
         {% else %}<p class="text-muted">{{ t('ui.fuer_deine_berechtigungen_sind_keine_eintraege_verfuegbar') }}</p>{% endfor %}
         </div>
     </div></section>
     {% endfor %}
-    <div class="d-flex gap-3 align-items-center"><button class="btn btn-primary">{{ t('ui.auswahl_speichern') }}</button><a class="btn" href="/">{{ t('common.cancel') }}</a><span role="status" aria-live="polite" data-dashboard-status></span></div>
+    <div class="flex gap-4 items-center"><button class="btn btn-primary">{{ t('ui.auswahl_speichern') }}</button><a class="btn" href="/">{{ t('common.cancel') }}</a><span role="status" aria-live="polite" data-dashboard-status></span></div>
 </form>
 {% endblock %}
 {% block scripts %}<script src="{{ asset('home-dashboard.js') }}"></script>{% endblock %}

@@ -2,13 +2,13 @@
 {% import 'components/icons.twig' as icons %}
 
 {% block content %}
-<div class="container-xl py-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8 col-md-10 col-12">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-primary text-white py-4 text-center border-0 rounded-top">
+<div class="mx-auto w-full max-w-7xl py-6">
+    <div class="grid-12 gap-x-6 justify-center">
+        <div class="lg:col-span-8 md:col-span-10 col-span-12">
+            <div class="panel shadow-panel border-0">
+                <div class="panel-header bg-primary text-on-primary py-6 text-center border-0 rounded-t-2xl">
                     {% include 'components/logo.twig' with {size: 48, alt: 'Vereinskiste Logo', class: 'mb-2'} %}
-                    <h1 class="h2 mb-1 fw-bold text-white">{{ t('applications.public_title') }}</h1>
+                    <h1 class="h2 mb-1 font-semibold text-white">{{ t('applications.public_title') }}</h1>
                     <p class="mb-0 opacity-75">
                         {% if invite.title %}
                             {{ t('ui.mitgliedsantrag_fuer') }} <strong>{{ invite.title }}</strong>
@@ -17,11 +17,11 @@
                         {% endif %}
                     </p>
                 </div>
-                <div class="card-body p-4 p-md-5">
+                <div class="panel-body p-6 md:p-12">
                     {% if errors is not empty %}
-                    <div class="alert alert-danger mb-4">
-                        <div class="fw-semibold mb-1">{{ t('ui.bitte_ueberpruefe_deine_angaben') }}</div>
-                        <ul class="mb-0 ps-3">
+                    <div class="alert alert-danger mb-6">
+                        <div class="font-semibold mb-1">{{ t('ui.bitte_ueberpruefe_deine_angaben') }}</div>
+                        <ul class="mb-0 ps-4">
                             {% for err in errors %}
                             <li>{{ t(err) }}</li>
                             {% endfor %}
@@ -42,87 +42,87 @@
                         </div>
 
                         <!-- Persönliche Daten -->
-                        <h2 class="h5 text-primary border-bottom pb-2 mb-3">{{ t('ui.1_persoenliche_angaben') }}</h2>
+                        <h2 class="h5 text-primary border-b border-line pb-2 mb-4">{{ t('ui.1_persoenliche_angaben') }}</h2>
 
                         {% include 'members/_name_fields.twig' with {id_prefix: 'antrag', values: input, errors: errors, large: true} %}
 
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6 col-12">
-                                <label for="antrag-email" class="form-label required">{{ t('members.field.email') }}</label>
+                        <div class="grid-12 gap-4 mb-4">
+                            <div class="md:col-span-6 col-span-12">
+                                <label for="antrag-email" class="label required">{{ t('members.field.email') }}</label>
                                 <input type="email" id="antrag-email" name="email" value="{{ input.email|default('') }}"
-                                       class="form-control{% if errors.email %} is-invalid{% endif %}"
+                                       class="input{% if errors.email %} is-invalid{% endif %}"
                                        placeholder="{{ t('ui.deine_email_beispiel_de') }}" required maxlength="254">
                             </div>
-                            <div class="col-md-6 col-12">
-                                <label for="antrag-phone" class="form-label">{{ t('members.field.phone') }}</label>
+                            <div class="md:col-span-6 col-span-12">
+                                <label for="antrag-phone" class="label">{{ t('members.field.phone') }}</label>
                                 <input type="tel" id="antrag-phone" name="phone" value="{{ input.phone|default('') }}"
-                                       class="form-control" placeholder="{{ t('ui.z_b_49_170_1234567') }}" maxlength="50">
+                                       class="input" placeholder="{{ t('ui.z_b_49_170_1234567') }}" maxlength="50">
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="antrag-birth-date" class="form-label">{{ t('members.field.birth_date') }}</label>
+                        <div class="mb-4">
+                            <label for="antrag-birth-date" class="label">{{ t('members.field.birth_date') }}</label>
                             <input type="date" id="antrag-birth-date" name="birth_date" value="{{ input.birth_date|default('') }}"
-                                   class="form-control{% if errors.birth_date %} is-invalid{% endif %}">
+                                   class="input{% if errors.birth_date %} is-invalid{% endif %}">
                         </div>
 
                         <!-- Anschrift -->
-                        <h2 class="h5 text-primary border-bottom pb-2 mt-4 mb-3">{{ t('ui.2_anschrift') }}</h2>
+                        <h2 class="h5 text-primary border-b border-line pb-2 mt-6 mb-4">{{ t('ui.2_anschrift') }}</h2>
 
-                        <div class="mb-3">
-                            <label for="antrag-address" class="form-label">{{ t('members.field.address') }}</label>
+                        <div class="mb-4">
+                            <label for="antrag-address" class="label">{{ t('members.field.address') }}</label>
                             <input type="text" id="antrag-address" name="address" value="{{ input.address|default('') }}"
-                                   class="form-control" placeholder="{{ t('ui.musterstrasse_12') }}" maxlength="200">
+                                   class="input" placeholder="{{ t('ui.musterstrasse_12') }}" maxlength="200">
                         </div>
 
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-4 col-12">
-                                <label for="antrag-zip" class="form-label">{{ t('members.field.zip') }}</label>
+                        <div class="grid-12 gap-4 mb-4">
+                            <div class="md:col-span-4 col-span-12">
+                                <label for="antrag-zip" class="label">{{ t('members.field.zip') }}</label>
                                 <input type="text" id="antrag-zip" name="zip" value="{{ input.zip|default('') }}"
-                                       class="form-control" placeholder="12345" maxlength="20">
+                                       class="input" placeholder="12345" maxlength="20">
                             </div>
-                            <div class="col-md-5 col-12">
-                                <label for="antrag-city" class="form-label">{{ t('members.field.city') }}</label>
+                            <div class="md:col-span-5 col-span-12">
+                                <label for="antrag-city" class="label">{{ t('members.field.city') }}</label>
                                 <input type="text" id="antrag-city" name="city" value="{{ input.city|default('') }}"
-                                       class="form-control" placeholder="{{ t('ui.musterstadt') }}" maxlength="100">
+                                       class="input" placeholder="{{ t('ui.musterstadt') }}" maxlength="100">
                             </div>
-                            <div class="col-md-3 col-12">
-                                <label for="antrag-country" class="form-label">{{ t('members.field.country') }}</label>
+                            <div class="md:col-span-3 col-span-12">
+                                <label for="antrag-country" class="label">{{ t('members.field.country') }}</label>
                                 <input type="text" id="antrag-country" name="country" value="{{ input.country|default('Deutschland') }}"
-                                       class="form-control" maxlength="100">
+                                       class="input" maxlength="100">
                             </div>
                         </div>
 
                         <!-- SEPA-Lastschriftmandat (falls im Einladungs-Link gefordert) -->
                         {% if invite.require_sepa %}
-                        <h2 class="h5 text-primary border-bottom pb-2 mt-4 mb-3">3. {{ t('applications.sepa.section_title') }}</h2>
+                        <h2 class="h5 text-primary border-b border-line pb-2 mt-6 mb-4">3. {{ t('applications.sepa.section_title') }}</h2>
 
-                        <div class="mb-3">
-                            <label for="antrag-account-holder" class="form-label required">{{ t('applications.sepa.account_holder') }}</label>
+                        <div class="mb-4">
+                            <label for="antrag-account-holder" class="label required">{{ t('applications.sepa.account_holder') }}</label>
                             <input type="text" id="antrag-account-holder" name="account_holder" value="{{ input.account_holder|default('') }}"
-                                   class="form-control{% if errors.account_holder %} is-invalid{% endif %}" required maxlength="200">
+                                   class="input{% if errors.account_holder %} is-invalid{% endif %}" required maxlength="200">
                         </div>
 
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-8 col-12">
-                                <label for="antrag-iban" class="form-label required">{{ t('applications.sepa.iban') }}</label>
+                        <div class="grid-12 gap-4 mb-4">
+                            <div class="md:col-span-8 col-span-12">
+                                <label for="antrag-iban" class="label required">{{ t('applications.sepa.iban') }}</label>
                                 <input type="text" id="antrag-iban" name="iban" value="{{ input.iban|default('') }}"
-                                       class="form-control font-monospace{% if errors.iban %} is-invalid{% endif %}"
+                                       class="input font-mono{% if errors.iban %} is-invalid{% endif %}"
                                        placeholder="{{ t('ui.de00_0000_0000_0000_0000_00') }}" required maxlength="34">
                             </div>
-                            <div class="col-md-4 col-12">
-                                <label for="antrag-bic" class="form-label">{{ t('applications.sepa.bic') }}</label>
+                            <div class="md:col-span-4 col-span-12">
+                                <label for="antrag-bic" class="label">{{ t('applications.sepa.bic') }}</label>
                                 <input type="text" id="antrag-bic" name="bic" value="{{ input.bic|default('') }}"
-                                       class="form-control font-monospace" placeholder="{{ t('ui.xxxxxxxxxxx') }}" maxlength="11">
+                                       class="input font-mono" placeholder="{{ t('ui.xxxxxxxxxxx') }}" maxlength="11">
                             </div>
                         </div>
 
-                        <div class="card bg-light-subtle border p-3 mb-3">
-                            <div class="small text-muted mb-2">{{ t('applications.sepa.mandate_text') }}</div>
-                            <div class="form-check">
-                                <input class="form-check-input{% if errors.sepa_mandate_consent %} is-invalid{% endif %}" type="checkbox"
+                        <div class="panel bg-subtle border border-line p-4 mb-4">
+                            <div class="text-sm text-muted mb-2">{{ t('applications.sepa.mandate_text') }}</div>
+                            <div class="check">
+                                <input class="check-input{% if errors.sepa_mandate_consent %} is-invalid{% endif %}" type="checkbox"
                                        id="sepa-consent" name="sepa_mandate_consent" value="1" {% if input.sepa_mandate_consent %}checked{% endif %} required>
-                                <label class="form-check-label fw-semibold" for="sepa-consent">
+                                <label class="check-label font-semibold" for="sepa-consent">
                                     {{ t('applications.sepa.mandate_consent') }}
                                 </label>
                             </div>
@@ -130,35 +130,35 @@
                         {% endif %}
 
                         <!-- Bemerkungen -->
-                        <h2 class="h5 text-primary border-bottom pb-2 mt-4 mb-3">{% if invite.require_sepa %}4.{% else %}3.{% endif %} {{ t('ui.bemerkungen') }}</h2>
+                        <h2 class="h5 text-primary border-b border-line pb-2 mt-6 mb-4">{% if invite.require_sepa %}4.{% else %}3.{% endif %} {{ t('ui.bemerkungen') }}</h2>
 
-                        <div class="mb-3">
-                            <label for="antrag-notes" class="form-label">{{ t('members.field.notes') }}</label>
-                            <textarea id="antrag-notes" name="notes" rows="2" class="form-control"
+                        <div class="mb-4">
+                            <label for="antrag-notes" class="label">{{ t('members.field.notes') }}</label>
+                            <textarea id="antrag-notes" name="notes" rows="2" class="input"
                                       placeholder="{{ t('ui.moechtest_du_uns_noch_etwas_mitteilen') }}" maxlength="1000">{{ input.notes|default('') }}</textarea>
                         </div>
 
                         <!-- Einverständnisse -->
-                        <h2 class="h5 text-primary border-bottom pb-2 mt-4 mb-3">{% if invite.require_sepa %}5.{% else %}4.{% endif %} {{ t('ui.bestaetigung') }}</h2>
+                        <h2 class="h5 text-primary border-b border-line pb-2 mt-6 mb-4">{% if invite.require_sepa %}5.{% else %}4.{% endif %} {{ t('ui.bestaetigung') }}</h2>
 
-                        <div class="form-check mb-3">
-                            <input class="form-check-input{% if errors.consent_statute %} is-invalid{% endif %}" type="checkbox"
+                        <div class="check mb-4">
+                            <input class="check-input{% if errors.consent_statute %} is-invalid{% endif %}" type="checkbox"
                                    id="consent-statute" name="consent_statute" value="1" {% if input.consent_statute %}checked{% endif %} required>
-                            <label class="form-check-label" for="consent-statute">
+                            <label class="check-label" for="consent-statute">
                                 {{ t('applications.consent_statute') }}{% if consent_documents.statute.url %} <a href="{{ consent_documents.statute.url }}" target="_blank" rel="noopener noreferrer">{{ t('privacy.consent.statute') }}</a>{% endif %}
                             </label>
                         </div>
 
-                        <div class="form-check mb-4">
-                            <input class="form-check-input{% if errors.consent_privacy %} is-invalid{% endif %}" type="checkbox"
+                        <div class="check mb-6">
+                            <input class="check-input{% if errors.consent_privacy %} is-invalid{% endif %}" type="checkbox"
                                    id="consent-privacy" name="consent_privacy" value="1" {% if input.consent_privacy %}checked{% endif %} required>
-                            <label class="form-check-label" for="consent-privacy">
+                            <label class="check-label" for="consent-privacy">
                                 {{ t('applications.consent_privacy') }}{% if consent_documents.privacy.url %} <a href="{{ consent_documents.privacy.url }}" target="_blank" rel="noopener noreferrer">{{ t('privacy.consent.privacy') }}</a>{% endif %}
                             </label>
                         </div>
 
-                        <div class="pt-3 border-top text-center">
-                            <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm">
+                        <div class="pt-4 border-t border-line text-center">
+                            <button type="submit" class="btn btn-primary btn-lg px-12 shadow-panel">
                                 {{ t('applications.submit') }}
                             </button>
                         </div>

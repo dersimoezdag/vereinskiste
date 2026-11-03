@@ -4,32 +4,32 @@
 {% block content %}
 {% include 'components/settings_tabs.twig' %}
 {% set editing = user_id is not null %}
-<h2 class="h2 mb-4">{{ editing ? t('users.edit.title') : t('users.new') }}</h2>
+<h2 class="h2 mb-6">{{ editing ? t('users.edit.title') : t('users.new') }}</h2>
 
-<div class="card mb-4">
-    <div class="card-body">
+<div class="panel mb-6">
+    <div class="panel-body">
         <form method="post" action="{{ editing ? '/users/' ~ user_id ~ '/edit' : '/users/new' }}" novalidate>
             {{ csrf_field() }}
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label" for="user-name">{{ t('users.name') }}</label>
+            <div class="grid-12 gap-4">
+                <div class="col-span-12 md:col-span-6">
+                    <label class="label" for="user-name">{{ t('users.name') }}</label>
                     <input type="text" id="user-name" name="name" data-linked-name maxlength="200" required autocomplete="off"
-                           class="form-control{% if errors.name is defined %} is-invalid{% endif %}"
+                           class="input{% if errors.name is defined %} is-invalid{% endif %}"
                            value="{{ input.name }}"{% if input.member_id %} disabled{% endif %}>
-                    {% if errors.name is defined %}<div class="invalid-feedback">{{ t(errors.name) }}</div>{% endif %}
+                    {% if errors.name is defined %}<div class="field-error">{{ t(errors.name) }}</div>{% endif %}
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label" for="user-email">{{ t('users.email') }}</label>
+                <div class="col-span-12 md:col-span-6">
+                    <label class="label" for="user-email">{{ t('users.email') }}</label>
                     <input type="email" id="user-email" name="email" data-linked-email maxlength="254" required autocomplete="off"
-                           class="form-control{% if errors.email is defined %} is-invalid{% endif %}"
+                           class="input{% if errors.email is defined %} is-invalid{% endif %}"
                            value="{{ input.email }}"{% if input.member_id %} disabled{% endif %}>
-                    {% if errors.email is defined %}<div class="invalid-feedback">{{ t(errors.email) }}</div>{% endif %}
+                    {% if errors.email is defined %}<div class="field-error">{{ t(errors.email) }}</div>{% endif %}
                 </div>
-                <div class="col-md-6">
-                    <div class="d-flex align-items-center gap-2"><label class="form-label" for="user-member-id">{{ t('members.user.field') }}</label>
+                <div class="col-span-12 md:col-span-6">
+                    <div class="flex items-center gap-2"><label class="label" for="user-member-id">{{ t('members.user.field') }}</label>
                     {% if member_link_locked and member_link_admin %}<button type="button" class="btn btn-sm btn-icon" data-member-link-unlock aria-label="{{ t('users.member_unlock') }}" title="{{ t('users.member_unlock') }}"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m16 3 5 5-12 12H4v-5L16 3zM14 5l5 5"/></svg></button>{% endif %}</div>
                     <input type="hidden" name="member_link_unlocked" value="0" data-member-link-unlocked>
-                    <select id="user-member-id" name="member_id" class="form-select{% if errors.member_id is defined %} is-invalid{% endif %}"{% if member_link_locked %} disabled{% endif %}>
+                    <select id="user-member-id" name="member_id" class="input{% if errors.member_id is defined %} is-invalid{% endif %}"{% if member_link_locked %} disabled{% endif %}>
                         <option value="">{{ t('members.user.field.none') }}</option>
                         {% for m in linkable_members %}
                         <option value="{{ m.id }}"{% if input.member_id == m.id %} selected{% endif %} data-member-name="{{ m.name }}" data-member-email="{{ m.email|default('') }}">
@@ -37,51 +37,51 @@
                         </option>
                         {% endfor %}
                     </select>
-                    {% if errors.member_id is defined %}<div class="invalid-feedback">{{ t(errors.member_id) }}</div>{% endif %}
-                    <div class="form-hint">{{ t('users.member_identity') }}</div>
-                    {% if member_link_locked %}<div class="form-hint">{{ t('users.member_locked') }}</div>{% endif %}
+                    {% if errors.member_id is defined %}<div class="field-error">{{ t(errors.member_id) }}</div>{% endif %}
+                    <div class="field-hint">{{ t('users.member_identity') }}</div>
+                    {% if member_link_locked %}<div class="field-hint">{{ t('users.member_locked') }}</div>{% endif %}
                     {% if input.member_id %}<a href="/members/{{ input.member_id }}">{{ t('users.member_edit') }}</a>{% endif %}
                 </div>
-                {% if person_data %}<div class="col-12"><dl class="row mb-0">{% for field in ['phone','address','house_number','zip','city','birth_date'] %}{% if person_data[field]|default('') %}<dt class="col-sm-3">{{ t('members.field.' ~ field) }}</dt><dd class="col-sm-9">{{ person_data[field] }}</dd>{% endif %}{% endfor %}</dl></div>{% endif %}
+                {% if person_data %}<div class="col-span-12"><dl class="grid-12 gap-x-6 mb-0">{% for field in ['phone','address','house_number','zip','city','birth_date'] %}{% if person_data[field]|default('') %}<dt class="col-span-12 sm:col-span-3">{{ t('members.field.' ~ field) }}</dt><dd class="col-span-12 sm:col-span-9">{{ person_data[field] }}</dd>{% endif %}{% endfor %}</dl></div>{% endif %}
                 {% if not editing or user_id != me %}
                     {% include 'admin/password_field.twig' %}
                 {% endif %}
-                <div class="col-12">
-                    {% if derived_roles %}<div class="mb-3"><strong>{{ t('users.derived_roles') }}</strong>{% for source in derived_roles %}<div>{{ t('users.role.' ~ source.role) }} – {{ source.function_name }}</div>{% endfor %}</div>{% endif %}
+                <div class="col-span-12">
+                    {% if derived_roles %}<div class="mb-4"><strong>{{ t('users.derived_roles') }}</strong>{% for source in derived_roles %}<div>{{ t('users.role.' ~ source.role) }} – {{ source.function_name }}</div>{% endfor %}</div>{% endif %}
                     <fieldset data-user-roles>
-                        <legend class="form-label d-flex align-items-center gap-1">{{ t('users.roles') }} {{ role_help.button() }}</legend>
-                        <div class="d-flex flex-column gap-2{% if errors.roles is defined %} is-invalid{% endif %}">
+                        <legend class="label flex items-center gap-1">{{ t('users.roles') }} {{ role_help.button() }}</legend>
+                        <div class="flex flex-col gap-2{% if errors.roles is defined %} is-invalid{% endif %}">
                             {% for role in roles %}
-                            <label class="form-check mb-0">
-                                <input class="form-check-input" type="checkbox" name="roles[]" value="{{ role }}"{% if role in input.roles %} checked{% endif %}>
-                                <span class="form-check-label">{{ t('users.role.' ~ role) }}</span>
+                            <label class="check mb-0">
+                                <input class="check-input" type="checkbox" name="roles[]" value="{{ role }}"{% if role in input.roles %} checked{% endif %}>
+                                <span class="check-label">{{ t('users.role.' ~ role) }}</span>
                             </label>
                             {% endfor %}
                         </div>
-                        {% if errors.roles is defined %}<div class="invalid-feedback">{{ t(errors.roles) }}</div>{% endif %}
-                        <div class="form-hint">{{ t('users.roles.help') }}</div>
+                        {% if errors.roles is defined %}<div class="field-error">{{ t(errors.roles) }}</div>{% endif %}
+                        <div class="field-hint">{{ t('users.roles.help') }}</div>
                     </fieldset>
                 </div>
                 {% if editing %}
-                <div class="col-12">
+                <div class="col-span-12">
                     {% if user_id == me %}
                     <input type="hidden" name="active" value="1">
-                    <label class="form-check mb-0">
-                        <input class="form-check-input" type="checkbox" checked disabled>
-                        <span class="form-check-label">{{ t('users.active.label') }}</span>
+                    <label class="check mb-0">
+                        <input class="check-input" type="checkbox" checked disabled>
+                        <span class="check-label">{{ t('users.active.label') }}</span>
                     </label>
-                    <div class="form-hint">{{ t('users.active.self_hint') }}</div>
+                    <div class="field-hint">{{ t('users.active.self_hint') }}</div>
                     {% else %}
-                    <label class="form-check mb-0">
-                        <input class="form-check-input{% if errors.active is defined %} is-invalid{% endif %}" type="checkbox" name="active" value="1"{% if input.active %} checked{% endif %}>
-                        <span class="form-check-label">{{ t('users.active.label') }}</span>
+                    <label class="check mb-0">
+                        <input class="check-input{% if errors.active is defined %} is-invalid{% endif %}" type="checkbox" name="active" value="1"{% if input.active %} checked{% endif %}>
+                        <span class="check-label">{{ t('users.active.label') }}</span>
                     </label>
                     {% endif %}
                     {% if errors.active is defined %}<div class="text-danger mt-1">{{ t(errors.active) }}</div>{% endif %}
                 </div>
                 {% endif %}
             </div>
-            <div class="mt-4 d-flex flex-wrap gap-2">
+            <div class="mt-6 flex flex-wrap gap-2">
                 <button type="submit" class="btn btn-primary">{{ editing ? t('users.save') : t('users.create') }}</button>
                 <a class="btn" href="/users">{{ t('common.cancel') }}</a>
             </div>
@@ -90,11 +90,11 @@
 </div>
 
 {% if editing and user_id == me %}
-<div class="card">
-    <div class="card-header"><h2 class="card-title">{{ t('account.password.title') }}</h2></div>
-    <div class="card-body">
+<div class="panel">
+    <div class="panel-header"><h2 class="panel-title">{{ t('account.password.title') }}</h2></div>
+    <div class="panel-body">
         {% if password_error is not null %}<div class="alert alert-danger" role="alert">{{ t(password_error) }}</div>{% endif %}
-        <p class="text-secondary">{{ t('users.password.self_hint') }}</p>
+        <p class="text-muted">{{ t('users.password.self_hint') }}</p>
         <a class="btn" href="/account/password">{{ t('account.password.title') }}</a>
     </div>
 </div>

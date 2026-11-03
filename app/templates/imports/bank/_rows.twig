@@ -1,4 +1,4 @@
-<div class="card mt-3"><table class="table table-cards"><thead><tr><th>{{ t('ui.zeile_datum') }}</th><th>{{ t('bookings.amount') }}</th><th>{{ t('ui.gegenpartei_zweck') }}</th><th>{{ t('auto_update.step.check') }}</th></tr></thead><tbody>
+<div class="panel mt-4"><table class="data-table table-cards"><thead><tr><th>{{ t('ui.zeile_datum') }}</th><th>{{ t('bookings.amount') }}</th><th>{{ t('ui.gegenpartei_zweck') }}</th><th>{{ t('auto_update.step.check') }}</th></tr></thead><tbody>
 {% for row in rows %}<tr><td data-label="Zeile / Datum">{{ row.row_number }} · {{ row.proposal.booking_date }}<br>{{ t('ui.valuta') }} {{ row.proposal.value_date|default('–') }}</td>
 <td data-label="Betrag">{{ row.proposal.amount }} {{ row.proposal.currency }}</td><td data-label="Gegenpartei / Zweck">{{ row.proposal.counterparty }}<br>{{ row.proposal.purpose }}</td>
 <td data-label="Prüfung">
@@ -10,11 +10,11 @@
 {% if import.status == 'review' and can('imports.write') and not row.transaction_id %}
 <form method="post" action="/imports/bank/{{ import.id }}/decision">{{ csrf_field() }}
 <input type="hidden" name="version" value="{{ import.version }}"><input type="hidden" name="row_number" value="{{ row.row_number }}"><input type="hidden" name="page" value="{{ page }}">
-<label for="decision-{{ row.id }}">{{ t('ui.entscheidung') }}</label><select id="decision-{{ row.id }}" name="decision" class="form-select mb-1">
+<label for="decision-{{ row.id }}">{{ t('ui.entscheidung') }}</label><select id="decision-{{ row.id }}" name="decision" class="input mb-1">
 <option value="new">{{ t('ui.tatsaechlich_neuer_umsatz') }}</option>{% if row.candidates %}<option value="duplicate">{{ t('ui.bereits_vorhandener_umsatz') }}</option>{% endif %}<option value="excluded">{{ t('ui.begruendet_ausschliessen') }}</option></select>
-{% if row.candidates %}<label for="duplicate-{{ row.id }}">{{ t('ui.vorhandener_umsatz') }}</label><select id="duplicate-{{ row.id }}" name="duplicate_id" class="form-select mb-1">
+{% if row.candidates %}<label for="duplicate-{{ row.id }}">{{ t('ui.vorhandener_umsatz') }}</label><select id="duplicate-{{ row.id }}" name="duplicate_id" class="input mb-1">
 {% for candidate in row.candidates %}<option value="{{ candidate.id }}">#{{ candidate.id }} · {{ candidate.booking_date }} · {{ candidate.amount }} {{ t('ui.eur') }} {{ candidate.counterparty }}</option>{% endfor %}</select>{% endif %}
-<label for="reason-{{ row.id }}">{{ t('ui.begruendung_bei_ausschluss_oder_dublette_erforderlich') }}</label><input id="reason-{{ row.id }}" name="reason" class="form-control mb-1" maxlength="500">
-<button type="submit" class="btn btn-sm btn-outline-primary">{{ t('ui.entscheidung_speichern') }}</button></form>{% endif %}
+<label for="reason-{{ row.id }}">{{ t('ui.begruendung_bei_ausschluss_oder_dublette_erforderlich') }}</label><input id="reason-{{ row.id }}" name="reason" class="input mb-1" maxlength="500">
+<button type="submit" class="btn btn-sm btn-soft">{{ t('ui.entscheidung_speichern') }}</button></form>{% endif %}
 </td></tr>{% else %}<tr><td colspan="4">{{ t('ui.noch_keine_vorgeprueften_zeilen') }}</td></tr>{% endfor %}</tbody></table></div>
 {% include 'components/pagination.twig' %}

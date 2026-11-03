@@ -1,10 +1,10 @@
 {% extends 'layout.twig' %}
 {% block title %}{{ t('bookings.' ~ action ~ '.title') }}{% endblock %}
 {% block content %}
-<h1 class="mb-4">{{ t('bookings.' ~ action ~ '.title') }}</h1>
+<h1 class="mb-6">{{ t('bookings.' ~ action ~ '.title') }}</h1>
 
-<div class="card mb-4">
-    <div class="card-body">
+<div class="panel mb-6">
+    <div class="panel-body">
         <p>
             <a href="/bookings/{{ booking.id }}">#{{ booking.id }} {{ booking.description }}</a><br>
             {{ booking.booking_date|date('d.m.Y') }} · {{ booking.account_name }} ·

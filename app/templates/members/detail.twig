@@ -3,135 +3,135 @@
 {% import 'components/help.twig' as help %}
 
 {% block content %}
-<div class="container-xl">
-    <div class="page-header d-print-none mb-3">
-        <div class="row align-items-center">
-            <div class="col">
-                <div class="text-muted font-monospace mb-1">{{ t('members.no') }} {{ member.member_no }}</div>
-                <h1 class="page-title d-flex align-items-center gap-2">
+<div class="mx-auto w-full max-w-7xl">
+    <div class="page-header print:hidden mb-4">
+        <div class="flex flex-wrap items-center gap-4">
+            <div class="min-w-0 flex-1">
+                <div class="text-muted font-mono mb-1">{{ t('members.no') }} {{ member.member_no }}</div>
+                <h1 class="page-title flex items-center gap-2">
                     {{ member.name }}
                     {% if member.current %}
-                        <span class="badge bg-success-subtle text-success border border-success-subtle fs-6">{{ t('bookings.status.active') }}</span>
+                        <span class="badge bg-success-soft text-success border border-success/30 text-base">{{ t('bookings.status.active') }}</span>
                     {% else %}
-                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle fs-6">{{ t('ui.ausgetreten') }}</span>
+                        <span class="badge bg-subtle text-muted border border-line text-base">{{ t('ui.ausgetreten') }}</span>
                     {% endif %}
                 </h1>
             </div>
-            <div class="col-auto ms-auto d-print-none">
-                {% if can('settings.manage') %}<a class="btn btn-outline-secondary" href="/members/{{ member.id }}/privacy">{{ t('privacy.title') }}</a>{% endif %}
-                <a href="/members" class="btn btn-outline-secondary">{{ t('common.back') }}</a>
+            <div class="shrink-0 flex flex-wrap gap-2 ms-auto print:hidden">
+                {% if can('settings.manage') %}<a class="btn" href="/members/{{ member.id }}/privacy">{{ t('privacy.title') }}</a>{% endif %}
+                <a href="/members" class="btn">{{ t('common.back') }}</a>
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
+    <div class="grid-12 gap-6">
         <!-- Linke Spalte: Stammdaten -->
-        <div class="col-lg-7 col-12">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h3 class="card-title">{{ t('ui.stammdaten') }}</h3>
+        <div class="lg:col-span-7 col-span-12">
+            <div class="panel mb-6">
+                <div class="panel-header">
+                    <h3 class="panel-title">{{ t('ui.stammdaten') }}</h3>
                 </div>
-                <div class="card-body">
+                <div class="panel-body">
                     <form method="post" action="/members/{{ member.id }}" novalidate>
                         {{ csrf_field() }}
                         <input type="hidden" name="version" value="{{ member.version }}">
 
                         {% if errors.version %}
-                        <div class="alert alert-danger mb-3">{{ t(errors.version) }}</div>
+                        <div class="alert alert-danger mb-4">{{ t(errors.version) }}</div>
                         {% endif %}
 
                         {% include 'members/_name_fields.twig' with {id_prefix: 'detail', values: ((input.first_name is defined or input.last_name is defined) ? input : member.data), errors: errors, disabled: not (can('members.write') and not member.anonymized_at)} %}
 
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6 col-12">
-                                <label for="detail-email" class="form-label">{{ t('members.field.email') }}</label>
+                        <div class="grid-12 gap-4 mb-4">
+                            <div class="md:col-span-6 col-span-12">
+                                <label for="detail-email" class="label">{{ t('members.field.email') }}</label>
                                 <input type="email" id="detail-email" name="email" value="{{ input.email|default(member.data.email) }}"
-                                       class="form-control{% if errors.email %} is-invalid{% endif %}" maxlength="254"
+                                       class="input{% if errors.email %} is-invalid{% endif %}" maxlength="254"
                                        {% if not (can('members.write') and not member.anonymized_at) or (member.user_id and not can('members.write', {'login_email_change':true})) %}disabled{% endif %}>
                                 {% if errors.email %}
-                                <div class="invalid-feedback">{{ t(errors.email) }}</div>
+                                <div class="field-error">{{ t(errors.email) }}</div>
                                 {% endif %}
                             </div>
-                            <div class="col-md-6 col-12">
-                                <label for="detail-phone" class="form-label">{{ t('members.field.phone') }}</label>
+                            <div class="md:col-span-6 col-span-12">
+                                <label for="detail-phone" class="label">{{ t('members.field.phone') }}</label>
                                 <input type="tel" id="detail-phone" name="phone" value="{{ input.phone|default(member.data.phone) }}"
-                                       class="form-control{% if errors.phone %} is-invalid{% endif %}" maxlength="50"
+                                       class="input{% if errors.phone %} is-invalid{% endif %}" maxlength="50"
                                        {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>
                                 {% if errors.phone %}
-                                <div class="invalid-feedback">{{ t(errors.phone) }}</div>
+                                <div class="field-error">{{ t(errors.phone) }}</div>
                                 {% endif %}
                             </div>
                         </div>
 
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-9 col-12">
-                                <label for="detail-address" class="form-label">{{ t('members.field.address') }}</label>
+                        <div class="grid-12 gap-4 mb-4">
+                            <div class="md:col-span-9 col-span-12">
+                                <label for="detail-address" class="label">{{ t('members.field.address') }}</label>
                                 <input type="text" id="detail-address" name="address" value="{{ input.address|default(member.data.address) }}"
-                                       class="form-control{% if errors.address %} is-invalid{% endif %}" maxlength="200" autocomplete="address-line1"
+                                       class="input{% if errors.address %} is-invalid{% endif %}" maxlength="200" autocomplete="address-line1"
                                        {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>
-                                {% if errors.address %}<div class="invalid-feedback">{{ t(errors.address) }}</div>{% endif %}
+                                {% if errors.address %}<div class="field-error">{{ t(errors.address) }}</div>{% endif %}
                             </div>
-                            <div class="col-md-3 col-12">
-                                <label for="detail-house-number" class="form-label">{{ t('members.field.house_number') }}</label>
+                            <div class="md:col-span-3 col-span-12">
+                                <label for="detail-house-number" class="label">{{ t('members.field.house_number') }}</label>
                                 <input type="text" id="detail-house-number" name="house_number" value="{{ input.house_number|default(member.data.house_number|default('')) }}"
-                                       class="form-control{% if errors.house_number %} is-invalid{% endif %}" maxlength="20"
+                                       class="input{% if errors.house_number %} is-invalid{% endif %}" maxlength="20"
                                        {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>
-                                {% if errors.house_number %}<div class="invalid-feedback">{{ t(errors.house_number) }}</div>{% endif %}
+                                {% if errors.house_number %}<div class="field-error">{{ t(errors.house_number) }}</div>{% endif %}
                             </div>
                         </div>
 
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-4 col-12">
-                                <label for="detail-zip" class="form-label">{{ t('members.field.zip') }}</label>
+                        <div class="grid-12 gap-4 mb-4">
+                            <div class="md:col-span-4 col-span-12">
+                                <label for="detail-zip" class="label">{{ t('members.field.zip') }}</label>
                                 <input type="text" id="detail-zip" name="zip" value="{{ input.zip|default(member.data.zip) }}"
-                                       class="form-control{% if errors.zip %} is-invalid{% endif %}" maxlength="20"
+                                       class="input{% if errors.zip %} is-invalid{% endif %}" maxlength="20"
                                        {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>
                                 {% if errors.zip %}
-                                <div class="invalid-feedback">{{ t(errors.zip) }}</div>
+                                <div class="field-error">{{ t(errors.zip) }}</div>
                                 {% endif %}
                             </div>
-                            <div class="col-md-5 col-12">
-                                <label for="detail-city" class="form-label">{{ t('members.field.city') }}</label>
+                            <div class="md:col-span-5 col-span-12">
+                                <label for="detail-city" class="label">{{ t('members.field.city') }}</label>
                                 <input type="text" id="detail-city" name="city" value="{{ input.city|default(member.data.city) }}"
-                                       class="form-control{% if errors.city %} is-invalid{% endif %}" maxlength="100"
+                                       class="input{% if errors.city %} is-invalid{% endif %}" maxlength="100"
                                        {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>
                                 {% if errors.city %}
-                                <div class="invalid-feedback">{{ t(errors.city) }}</div>
+                                <div class="field-error">{{ t(errors.city) }}</div>
                                 {% endif %}
                             </div>
-                            <div class="col-md-3 col-12">
-                                <label for="detail-country" class="form-label">{{ t('members.field.country') }}</label>
+                            <div class="md:col-span-3 col-span-12">
+                                <label for="detail-country" class="label">{{ t('members.field.country') }}</label>
                                 <input type="text" id="detail-country" name="country" value="{{ input.country|default(member.data.country) }}"
-                                       class="form-control{% if errors.country %} is-invalid{% endif %}" maxlength="100"
+                                       class="input{% if errors.country %} is-invalid{% endif %}" maxlength="100"
                                        {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>
                                 {% if errors.country %}
-                                <div class="invalid-feedback">{{ t(errors.country) }}</div>
+                                <div class="field-error">{{ t(errors.country) }}</div>
                                 {% endif %}
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="detail-birth-date" class="form-label">{{ t('members.field.birth_date') }}</label>
+                        <div class="mb-4">
+                            <label for="detail-birth-date" class="label">{{ t('members.field.birth_date') }}</label>
                             <input type="date" id="detail-birth-date" name="birth_date" value="{{ input.birth_date|default(member.data.birth_date) }}"
-                                   class="form-control{% if errors.birth_date %} is-invalid{% endif %}"
+                                   class="input{% if errors.birth_date %} is-invalid{% endif %}"
                                    {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>
                             {% if errors.birth_date %}
-                            <div class="invalid-feedback">{{ t(errors.birth_date) }}</div>
+                            <div class="field-error">{{ t(errors.birth_date) }}</div>
                             {% endif %}
                         </div>
 
-                        <div class="mb-3">
-                            <label for="detail-notes" class="form-label">{{ t('members.field.notes') }}</label>
+                        <div class="mb-4">
+                            <label for="detail-notes" class="label">{{ t('members.field.notes') }}</label>
                             <textarea id="detail-notes" name="notes" rows="3"
-                                      class="form-control{% if errors.notes %} is-invalid{% endif %}" maxlength="1000"
+                                      class="input{% if errors.notes %} is-invalid{% endif %}" maxlength="1000"
                                       {% if not (can('members.write') and not member.anonymized_at) %}disabled{% endif %}>{{ input.notes|default(member.data.notes) }}</textarea>
                             {% if errors.notes %}
-                            <div class="invalid-feedback">{{ t(errors.notes) }}</div>
+                            <div class="field-error">{{ t(errors.notes) }}</div>
                             {% endif %}
                         </div>
 
                         {% if (can('members.write') and not member.anonymized_at) %}
-                        <div class="text-end">
+                        <div class="text-right">
                             <button type="submit" class="btn btn-primary">{{ t('common.save') }}</button>
                         </div>
                         {% endif %}
@@ -140,11 +140,11 @@
             </div>
 
             {% if member_expenses is defined %}
-            <div class="card mt-3"><div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <h2 class="card-title mb-0">{{ t('expenses.title') }}</h2>
+            <div class="panel mt-4"><div class="panel-header flex flex-wrap justify-between items-center gap-2">
+                <h2 class="panel-title mb-0">{{ t('expenses.title') }}</h2>
                 {% if can('bookings.write') and not member.anonymized_at %}<a href="/expenses/new?member_id={{ member.id }}">{{ t('expenses.new') }}</a>{% endif %}
-            </div><div class="card-body">
-                <ul class="list-unstyled mb-0">{% for expense in member_expenses %}<li class="mb-1">{% include 'expenses/_badge.twig' %} {{ expense.spent_on|date('d.m.Y') }} · <a href="/expenses/{{ expense.id }}">{{ expense.purpose }}</a> · {{ expense.amount|eur }}</li>{% else %}<li>{{ t('expenses.empty') }}</li>{% endfor %}</ul>
+            </div><div class="panel-body">
+                <ul class="list-none pl-0 mb-0">{% for expense in member_expenses %}<li class="mb-1">{% include 'expenses/_badge.twig' %} {{ expense.spent_on|date('d.m.Y') }} · <a href="/expenses/{{ expense.id }}">{{ expense.purpose }}</a> · {{ expense.amount|eur }}</li>{% else %}<li>{{ t('expenses.empty') }}</li>{% endfor %}</ul>
             </div></div>
             {% endif %}
 
@@ -153,56 +153,56 @@
         </div>
 
         <!-- Rechte Spalte: Mitgliedschaft, Vereinsrollen, Benutzer -->
-        <div class="col-lg-5 col-12">
+        <div class="lg:col-span-5 col-span-12">
             <!-- Karte: Mitgliedschaft (Eintritt / Austritt) -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h3 class="card-title">{{ t('members.period.title') }} {{ help.tip(t('ui.mitgliedszeitraeume_bildet_die_lueckenlose_historie_aller_beitrit')) }}</h3>
+            <div class="panel mb-6">
+                <div class="panel-header">
+                    <h3 class="panel-title">{{ t('members.period.title') }} {{ help.tip(t('ui.mitgliedszeitraeume_bildet_die_lueckenlose_historie_aller_beitrit')) }}</h3>
                 </div>
-                <div class="card-body">
+                <div class="panel-body">
                     {% include 'members/membership_summary.twig' %}
-                    <button type="button" class="btn btn-outline-primary mt-3" data-bs-toggle="modal" data-bs-target="#membership-modal"{% if period_input is not empty %} data-membership-reopen{% endif %}>{{ t('members.period.manage') }}</button>
+                    <button type="button" class="btn btn-soft mt-4" data-dialog-open="#membership-modal"{% if period_input is not empty %} data-membership-reopen{% endif %}>{{ t('members.period.manage') }}</button>
                 </div>
             </div>
 
             <!-- Karte: Vereinsrollen -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h3 class="card-title">{{ t('clubroles.assign.title') }} {{ help.tip(t('ui.vereinsrollen_weisen_dem_mitglied_aemter_z_b_vorstand_oder_beitra')) }}</h3>
+            <div class="panel mb-6">
+                <div class="panel-header">
+                    <h3 class="panel-title">{{ t('clubroles.assign.title') }} {{ help.tip(t('ui.vereinsrollen_weisen_dem_mitglied_aemter_z_b_vorstand_oder_beitra')) }}</h3>
                 </div>
-                <div class="card-body">
+                <div class="panel-body">
                     {% if errors.role %}
-                    <div class="alert alert-danger mb-3">{{ t(errors.role) }}</div>
+                    <div class="alert alert-danger mb-4">{{ t(errors.role) }}</div>
                     {% endif %}
 
-                    <p class="text-muted small mb-3">
+                    <p class="text-muted text-sm mb-4">
                         {{ t('clubroles.help') }}
                     </p>
 
                     <!-- Zugewiesene Rollen -->
-                    <div class="mb-3">
+                    <div class="mb-4">
                         {% if assignments is empty %}
-                        <div class="text-muted small fst-italic">{{ t('clubroles.assign.none') }}</div>
+                        <div class="text-muted text-sm italic">{{ t('clubroles.assign.none') }}</div>
                         {% else %}
-                        <ul class="list-group list-group-flush">
+                        <ul class="list list-flush">
                             {% for a in assignments %}
-                            <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center {% if a.end_date %}text-muted opacity-75{% endif %}">
+                            <li class="list-item px-0 py-2 flex justify-between items-center {% if a.end_date %}text-muted opacity-75{% endif %}">
                                 <div>
-                                    <div class="fw-semibold">
+                                    <div class="font-semibold">
                                         {{ a.role_name }}
-                                        {% if a.scope %}<span class="badge bg-info-subtle text-info ms-1">{{ a.scope }}</span>{% endif %}
-                                        {% if a.role_kind == 'membership_type' %}<span class="badge bg-light text-dark ms-1">{{ t('clubroles.assign.type') }}</span>{% endif %}
+                                        {% if a.scope %}<span class="badge bg-info-soft text-info ms-1">{{ a.scope }}</span>{% endif %}
+                                        {% if a.role_kind == 'membership_type' %}<span class="badge bg-subtle text-ink ms-1">{{ t('clubroles.assign.type') }}</span>{% endif %}
                                     </div>
-                                    <div class="small text-muted">
+                                    <div class="text-sm text-muted">
                                         {% if a.start_date %}{{ t('ui.seit') }} {{ a.start_date|date('d.m.Y') }}{% endif %}
                                         {% if a.end_date %} · {{ t('clubroles.assign.ended') }} {{ a.end_date|date('d.m.Y') }}{% endif %}
                                     </div>
                                 </div>
                                 {% if not a.end_date and (can('members.write', {'access_role':a.role_access_role}) and not member.anonymized_at) %}
-                                <form method="post" action="/members/{{ member.id }}/club-roles/{{ a.id }}/end" class="d-inline">
+                                <form method="post" action="/members/{{ member.id }}/club-roles/{{ a.id }}/end" class="inline">
                                     {{ csrf_field() }}
                                     <input type="hidden" name="date" value="{{ today }}">
-                                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="{{ t('clubroles.assign.end') }}">
+                                    <button type="submit" class="btn btn-sm" title="{{ t('clubroles.assign.end') }}">
                                         {{ t('clubroles.assign.end') }}
                                     </button>
                                 </form>
@@ -215,12 +215,12 @@
 
                     <!-- Vereinsrolle zuweisen (Formular) -->
                     {% if (can('members.write') and not member.anonymized_at) %}
-                    <form method="post" action="/members/{{ member.id }}/club-roles" class="border rounded p-3 bg-light-subtle">
+                    <form method="post" action="/members/{{ member.id }}/club-roles" class="border border-line rounded-lg p-4 bg-subtle">
                         {{ csrf_field() }}
                         <h4 class="h5 mb-2">{{ t('clubroles.assign.add') }}</h4>
                         <div class="mb-2">
-                            <label for="assign-role-id" class="form-label">{{ t('clubroles.assign.role') }}</label>
-                            <select id="assign-role-id" name="role_id" class="form-select form-select-sm" required>
+                            <label for="assign-role-id" class="label">{{ t('clubroles.assign.role') }}</label>
+                            <select id="assign-role-id" name="role_id" class="input input-sm" required>
                                 <option value="">{{ t('ui.bitte_waehlen') }}</option>
                                 {% for r in club_roles %}
                                     {% if can('members.write',r) and (r.kind != 'membership_type' or not has_open_membership_type) %}
@@ -230,35 +230,35 @@
                             </select>
                         </div>
                         <div class="mb-2">
-                            <label for="assign-scope" class="form-label">{{ t('clubroles.assign.scope') }}</label>
-                            <input type="text" id="assign-scope" name="scope" class="form-control form-control-sm" placeholder="{{ t('ui.z_b_jugend') }}">
+                            <label for="assign-scope" class="label">{{ t('clubroles.assign.scope') }}</label>
+                            <input type="text" id="assign-scope" name="scope" class="input input-sm" placeholder="{{ t('ui.z_b_jugend') }}">
                         </div>
-                        <div class="mb-3">
-                            <label for="assign-start-date" class="form-label">{{ t('clubroles.assign.start') }}</label>
-                            <input type="date" id="assign-start-date" name="start_date" value="{{ today }}" class="form-control form-control-sm">
+                        <div class="mb-4">
+                            <label for="assign-start-date" class="label">{{ t('clubroles.assign.start') }}</label>
+                            <input type="date" id="assign-start-date" name="start_date" value="{{ today }}" class="input input-sm">
                         </div>
-                        <button type="submit" class="btn btn-sm btn-outline-primary w-100">{{ t('clubroles.assign.add') }}</button>
+                        <button type="submit" class="btn btn-sm btn-soft w-full">{{ t('clubroles.assign.add') }}</button>
                     </form>
                     {% endif %}
                 </div>
             </div>
 
             <!-- Karte: Benutzerzugang -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h3 class="card-title">{{ t('members.user.title') }} {{ help.tip(t('ui.benutzerzugang_verknuepft_das_mitglied_mit_einem_login_benutzerko')) }}</h3>
+            <div class="panel mb-6">
+                <div class="panel-header">
+                    <h3 class="panel-title">{{ t('members.user.title') }} {{ help.tip(t('ui.benutzerzugang_verknuepft_das_mitglied_mit_einem_login_benutzerko')) }}</h3>
                 </div>
-                <div class="card-body">
+                <div class="panel-body">
                     {% if errors.user %}
-                    <div class="alert alert-danger mb-3">{{ t(errors.user) }}</div>
+                    <div class="alert alert-danger mb-4">{{ t(errors.user) }}</div>
                     {% endif %}
 
-                    <p class="text-muted small mb-3">
+                    <p class="text-muted text-sm mb-4">
                         {{ t('members.user.hint') }}
                     </p>
 
                     {% if member.user_id %}
-                        <div class="alert alert-success d-flex justify-content-between align-items-center mb-0">
+                        <div class="alert alert-success flex justify-between items-center mb-0">
                             <div>
                                 {{ icons.icon('users') }}
                                 <strong>{{ t('ui.verknuepft_mit_benutzer_id') }}{{ member.user_id }}</strong>
@@ -266,32 +266,32 @@
                             {% if can('users.manage') %}
                             <form method="post" action="/members/{{ member.id }}/user/unlink" class="m-0">
                                 {{ csrf_field() }}
-                                <button type="submit" class="btn btn-sm btn-outline-danger">{{ t('members.user.unlink') }}</button>
+                                <button type="submit" class="btn btn-sm btn-danger-soft">{{ t('members.user.unlink') }}</button>
                             </form>
                             {% endif %}
                         </div>
                     {% else %}
-                        <p class="text-muted mb-3">{{ t('members.user.none') }}</p>
+                        <p class="text-muted mb-4">{{ t('members.user.none') }}</p>
 
                         {% if can('users.manage') %}
                             {% if linkable_users is not empty %}
-                            <form method="post" action="/members/{{ member.id }}/user" class="border rounded p-3 bg-light-subtle mb-3">
+                            <form method="post" action="/members/{{ member.id }}/user" class="border border-line rounded-lg p-4 bg-subtle mb-4">
                                 {{ csrf_field() }}
                                 <h4 class="h5 mb-2">{{ t('members.user.link') }}</h4>
-                                <div class="mb-3">
-                                    <label for="link-user-id" class="form-label">{{ t('ui.vorhandenen_benutzer_waehlen') }}</label>
-                                    <select id="link-user-id" name="user_id" class="form-select form-select-sm" required>
+                                <div class="mb-4">
+                                    <label for="link-user-id" class="label">{{ t('ui.vorhandenen_benutzer_waehlen') }}</label>
+                                    <select id="link-user-id" name="user_id" class="input input-sm" required>
                                         <option value="">{{ t('ui.benutzer_auswaehlen') }}</option>
                                         {% for u in linkable_users %}
                                         <option value="{{ u.id }}">{{ u.name }} ({{ u.email }})</option>
                                         {% endfor %}
                                     </select>
                                 </div>
-                                <button type="submit" class="btn btn-sm btn-primary w-100">{{ t('members.user.link') }}</button>
+                                <button type="submit" class="btn btn-sm btn-primary w-full">{{ t('members.user.link') }}</button>
                             </form>
                             {% endif %}
 
-                            <a href="/users/new?member={{ member.id }}" class="btn btn-outline-secondary btn-sm w-100">
+                            <a href="/users/new?member={{ member.id }}" class="btn btn-sm w-full">
                                 {{ t('members.user.create') }}
                             </a>
                         {% endif %}

@@ -1,17 +1,15 @@
 {% if history %}
-<div class="mt-4">
-    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#history-modal">{{ t('foundation.history.show') }}</button>
+<div class="mt-6">
+    <button type="button" class="btn" data-dialog-open="#history-modal">{{ t('foundation.history.show') }}</button>
 </div>
-<div class="modal modal-blur fade" id="history-modal" tabindex="-1" aria-labelledby="history-modal-title" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
+<dialog class="modal modal-lg" id="history-modal" aria-labelledby="history-modal-title">
             <div class="modal-header">
                 <h2 class="modal-title h3" id="history-modal-title">{{ t('foundation.history') }}</h2>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ t('foundation.history.close') }}"></button>
+                <button type="button" class="btn-close" data-dialog-close aria-label="{{ t('foundation.history.close') }}"></button>
             </div>
             <div class="modal-body">
 {% for entry in history %}
-                <div class="card mb-2"><div class="card-body">
+                <div class="panel mb-2"><div class="panel-body">
                     <p>{{ entry.at|date('d.m.Y H:i') }} · {{ entry.actor }} · {{ entry.reason == 'privacy.redacted' ? t('privacy.redacted') : entry.reason }}</p>
                     <ul class="mb-0">{% for change in entry.changes %}
                         <li>{{ t('foundation.field.' ~ change.field) }}: {{ change.from is same as(true) ? 'Ja' : (change.from is same as(false) ? 'Nein' : (change.field ends with '_date' and change.from ? change.from|date('d.m.Y') : change.from|default('–'))) }}
@@ -20,7 +18,5 @@
                 </div></div>
 {% endfor %}
             </div>
-        </div>
-    </div>
-</div>
+</dialog>
 {% endif %}

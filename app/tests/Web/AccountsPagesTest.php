@@ -408,22 +408,23 @@ final class AccountsPagesTest extends TestCase
 
         $this->assertStringContainsString('<meta name="viewport" content="width=device-width, initial-scale=1">', $html);
         $this->assertMatchesRegularExpression(
-            '/<button[^>]*class="[^"]*navbar-toggler[^"]*"[^>]*data-bs-toggle="collapse"[^>]*data-bs-target="#sidebar-menu"/s',
+            '/<button[^>]*data-nav-toggle[^>]*aria-controls="sidebar-menu"/s',
             $html
         );
         $this->assertStringContainsString('id="sidebar-menu"', $html);
-        $this->assertStringContainsString('/assets/vendor/tabler/tabler.min.css', $html);
-        $this->assertStringContainsString('/assets/vendor/tabler/tabler.min.js', $html);
+        $this->assertStringNotContainsString('/assets/vendor/tabler/', $html);
+        $this->assertStringContainsString('/assets/ui.js', $html);
         $this->assertStringContainsString('/assets/app.css', $html);
         $this->assertStringContainsString('/assets/app.js', $html);
     }
 
     public function test_bundled_assets_exist_with_license(): void
     {
-        $assets = dirname(__DIR__, 3) . '/public/assets';
+        $root = dirname(__DIR__, 3);
 
-        foreach (['app.css', 'app.js', 'vendor/tabler/tabler.min.css', 'vendor/tabler/tabler.min.js', 'vendor/tabler/LICENSE'] as $file) {
-            $this->assertFileExists("$assets/$file");
+        // public/assets/app.css entsteht erst beim Bauen (scripts/build-css.cjs) aus app/styles/app.css.
+        foreach (['app/styles/app.css', 'public/assets/app.js', 'public/assets/ui.js', 'scripts/build-css.cjs'] as $file) {
+            $this->assertFileExists("$root/$file");
         }
     }
 }

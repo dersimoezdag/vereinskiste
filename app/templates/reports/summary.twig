@@ -1,80 +1,80 @@
 {% extends 'layout.twig' %}
 {% block title %}{{ t('reports.title') }}{% endblock %}
 {% block content %}
-<h1 class="mb-4">{{ t('reports.title') }}</h1>
+<h1 class="mb-6">{{ t('reports.title') }}</h1>
 
 {% include 'reports/_tabs.twig' with {'active': 'summary'} %}
 {% include 'reports/_filter.twig' with {'action': '/reports/summary'} %}
 
 {% if summary %}
-<div class="row row-cards mb-4">
-    <div class="col-12 col-md-4">
-        <div class="card"><div class="card-body">
-            <div class="text-secondary">{{ t('reports.income') }}</div>
+<div class="grid-12 gap-4 mb-6">
+    <div class="col-span-12 md:col-span-4">
+        <div class="panel"><div class="panel-body">
+            <div class="text-muted">{{ t('reports.income') }}</div>
             <div class="h2 mb-0 text-success">{{ summary.income|eur }}</div>
         </div></div>
     </div>
-    <div class="col-12 col-md-4">
-        <div class="card"><div class="card-body">
-            <div class="text-secondary">{{ t('reports.expense') }}</div>
+    <div class="col-span-12 md:col-span-4">
+        <div class="panel"><div class="panel-body">
+            <div class="text-muted">{{ t('reports.expense') }}</div>
             <div class="h2 mb-0 text-danger">{{ summary.expense|eur }}</div>
         </div></div>
     </div>
-    <div class="col-12 col-md-4">
-        <div class="card"><div class="card-body">
-            <div class="text-secondary">{{ t('reports.balance') }}</div>
+    <div class="col-span-12 md:col-span-4">
+        <div class="panel"><div class="panel-body">
+            <div class="text-muted">{{ t('reports.balance') }}</div>
             <div class="h2 mb-0">{{ summary.balance|eur }}</div>
         </div></div>
     </div>
     {% if summary.accountBalanceAtEnd is not null %}
-    <div class="col-12">
-        <div class="card"><div class="card-body">
-            <div class="text-secondary">{{ summary.account_name }} – {{ t('reports.account_balance_at_end') }} ({{ summary.to|date('d.m.Y') }})</div>
+    <div class="col-span-12">
+        <div class="panel"><div class="panel-body">
+            <div class="text-muted">{{ summary.account_name }} – {{ t('reports.account_balance_at_end') }} ({{ summary.to|date('d.m.Y') }})</div>
             <div class="h2 mb-0">{{ summary.accountBalanceAtEnd|eur }}</div>
         </div></div>
     </div>
     {% endif %}
 </div>
 
-<div class="card mb-3">
-    <div class="card-header"><h2 class="card-title">{{ t('reports.by_category') }}</h2></div>
-    <div class="table-responsive">
-        <table class="table table-vcenter card-table table-cards">
+<div class="panel mb-4">
+    <div class="panel-header"><h2 class="panel-title">{{ t('reports.by_category') }}</h2></div>
+    <div class="table-scroll">
+        <table class="data-table table-cards">
             <thead>
                 <tr>
                     <th>{{ t('reports.category') }}</th>
-                    <th class="text-end">{{ t('reports.income') }}</th>
-                    <th class="text-end">{{ t('reports.expense') }}</th>
+                    <th class="text-right">{{ t('reports.income') }}</th>
+                    <th class="text-right">{{ t('reports.expense') }}</th>
                 </tr>
             </thead>
             <tbody>
             {% for row in summary.byCategory %}
                 <tr>
                     <td data-label="{{ t('reports.category') }}">{{ row.category_id is null ? t('reports.uncategorized') : row.name }}</td>
-                    <td data-label="{{ t('reports.income') }}" class="text-end">{{ row.income|eur }}</td>
-                    <td data-label="{{ t('reports.expense') }}" class="text-end">{{ row.expense|eur }}</td>
+                    <td data-label="{{ t('reports.income') }}" class="text-right">{{ row.income|eur }}</td>
+                    <td data-label="{{ t('reports.expense') }}" class="text-right">{{ row.expense|eur }}</td>
                 </tr>
             {% else %}
-                <tr><td colspan="3" class="text-secondary">{{ t('reports.empty') }}</td></tr>
+                <tr><td colspan="3" class="text-muted">{{ t('reports.empty') }}</td></tr>
             {% endfor %}
             </tbody>
             {% if summary.byCategory %}
             <tfoot>
-                <tr class="fw-bold">
+                <tr class="font-semibold">
                     <td data-label="{{ t('reports.total') }}">{{ t('reports.total') }}</td>
-                    <td data-label="{{ t('reports.income') }}" class="text-end">{{ summary.income|eur }}</td>
-                    <td data-label="{{ t('reports.expense') }}" class="text-end">{{ summary.expense|eur }}</td>
+                    <td data-label="{{ t('reports.income') }}" class="text-right">{{ summary.income|eur }}</td>
+                    <td data-label="{{ t('reports.expense') }}" class="text-right">{{ summary.expense|eur }}</td>
                 </tr>
             </tfoot>
             {% endif %}
         </table>
     </div>
 </div>
-<p class="text-secondary small">{{ t('reports.note') }}</p>
+<p class="text-muted text-sm">{{ t('reports.note') }}</p>
 
-<div class="card">
-    <div class="card-header"><h2 class="card-title">{{ t('reports.export') }}</h2></div>
-    <div class="card-body d-flex flex-wrap gap-2">
+<div class="panel">
+    <div class="panel-header"><h2 class="panel-title">{{ t('reports.export') }}</h2></div>
+    <div class="panel-body flex flex-wrap gap-2">
         <a class="btn" href="/reports/bookings.csv?{{ export_query }}">{{ t('reports.export.csv') }}</a>
         <a class="btn" href="/reports/summary.pdf?{{ export_query }}">{{ t('reports.export.pdf') }}</a>
     </div>

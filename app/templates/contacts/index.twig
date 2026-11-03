@@ -3,20 +3,20 @@
 {% block content %}
 {% include 'components/finance_master_tabs.twig' %}
 <h1>{{ t('foundation.contacts') }}</h1>
-<div class="d-flex flex-wrap gap-2 mb-3">
+<div class="flex flex-wrap gap-2 mb-4">
     {% if can('contacts.write') %}<a class="btn btn-primary" href="/contacts/new">{{ t('foundation.contact.new') }}</a>{% endif %}
-    <a class="btn btn-outline-secondary" href="/contacts.csv">{{ t('ui.csv_alle_kontakte') }}</a>
+    <a class="btn" href="/contacts.csv">{{ t('ui.csv_alle_kontakte') }}</a>
 </div>
-<form method="get" action="/contacts" class="d-flex flex-wrap gap-2 mb-3">
+<form method="get" action="/contacts" class="flex flex-wrap gap-2 mb-4">
     {% if per_page %}<input type="hidden" name="per_page" value="{{ per_page }}">{% endif %}
-    <label for="contact-search" class="form-label">{{ t('foundation.search') }}</label>
-    <input class="form-control" type="search" id="contact-search" name="q" value="{{ search }}" maxlength="200">
-    <label for="contact-state" class="form-label">{{ t('foundation.field.active') }}</label>
-    <select class="form-select" id="contact-state" name="state">{% for value, label in {'active':'Aktiv','archived':'Archiviert','all':'Alle'} %}
+    <label for="contact-search" class="label">{{ t('foundation.search') }}</label>
+    <input class="input" type="search" id="contact-search" name="q" value="{{ search }}" maxlength="200">
+    <label for="contact-state" class="label">{{ t('foundation.field.active') }}</label>
+    <select class="input" id="contact-state" name="state">{% for value, label in {'active':'Aktiv','archived':'Archiviert','all':'Alle'} %}
         <option value="{{ value }}"{% if state == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
-    <button class="btn btn-outline-primary" type="submit">{{ t('foundation.search') }}</button>
+    <button class="btn btn-soft" type="submit">{{ t('foundation.search') }}</button>
 </form>
-<div class="card"><table class="table table-cards"><thead><tr><th>{{ t('install.admin_name') }}</th><th>{{ t('ui.e_mail') }}</th><th>{{ t('privacy.field.status') }}</th></tr></thead><tbody>
+<div class="panel"><table class="data-table table-cards"><thead><tr><th>{{ t('install.admin_name') }}</th><th>{{ t('ui.e_mail') }}</th><th>{{ t('privacy.field.status') }}</th></tr></thead><tbody>
 {% for contact in contacts %}<tr><td data-label="Name"><a href="/contacts/{{ contact.id }}">{{ contact.name }}</a></td>
     <td data-label="E-Mail">{{ contact.data.email }}</td><td data-label="Status">{{ contact.active ? 'Aktiv' : 'Archiviert' }}</td></tr>
 {% else %}<tr><td colspan="3">{{ t('foundation.empty') }}</td></tr>{% endfor %}

@@ -2,12 +2,12 @@
 {% block title %}{{ t('audit.title') }}{% endblock %}
 {% block content %}
 {% include 'components/settings_tabs.twig' %}
-<h2 class="mb-4">{{ t('audit.title') }}</h2>
+<h2 class="mb-6">{{ t('audit.title') }}</h2>
 
-<form method="get" action="/audit-log" class="d-flex flex-wrap align-items-end gap-2 mb-4">
+<form method="get" action="/audit-log" class="flex flex-wrap items-end gap-2 mb-6">
     <div>
-        <label class="form-label" for="audit-action">{{ t('audit.filter') }}</label>
-        <select id="audit-action" name="action" class="form-select">
+        <label class="label" for="audit-action">{{ t('audit.filter') }}</label>
+        <select id="audit-action" name="action" class="input">
             <option value="">{{ t('audit.filter.all') }}</option>
             {% for a in actions %}
             <option value="{{ a }}"{% if a == action %} selected{% endif %}>{{ t('audit.action.' ~ a) }}</option>
@@ -17,9 +17,9 @@
     <button type="submit" class="btn">{{ t('audit.filter.apply') }}</button>
 </form>
 
-<div class="card mb-4">
-    <div class="table-responsive">
-        <table class="table table-vcenter card-table table-cards">
+<div class="panel mb-6">
+    <div class="table-scroll">
+        <table class="data-table table-cards">
             <thead>
                 <tr>
                     <th>{{ t('audit.when') }}</th>
@@ -36,7 +36,7 @@
                     <td data-label="{{ t('audit.action') }}">{% set action_label = t('audit.action.' ~ entry.action) %}{{ action_label starts with 'audit.action.' ? entry.action : action_label }}</td>
                     <td data-label="{{ t('audit.detail') }}">
                         {% if entry.detail %}
-                        <ul class="list-unstyled mb-0">
+                        <ul class="list-none pl-0 mb-0">
                             {% for d in entry.detail %}
                             <li>
                                 {% set detail_label = t('audit.detail.' ~ d.key) %}
@@ -49,7 +49,7 @@
                     </td>
                 </tr>
             {% else %}
-                <tr><td colspan="4" class="text-secondary">{{ t('audit.empty') }}</td></tr>
+                <tr><td colspan="4" class="text-muted">{{ t('audit.empty') }}</td></tr>
             {% endfor %}
             </tbody>
         </table>

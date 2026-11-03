@@ -1,35 +1,35 @@
 {# Stammdaten. Erwartet: kind, input, errors #}
-<div class="row g-3 mb-3">
-    <div class="col-12">
-        <label class="form-label" for="event-title">{{ t('foundation.field.title') }}</label>
-        <input class="form-control{% if errors.title is defined %} is-invalid{% endif %}" id="event-title" name="title" maxlength="200" required value="{{ input.title|default('') }}">
-        {% if errors.title is defined %}<div class="invalid-feedback">{{ t(errors.title) }}</div>{% endif %}
+<div class="grid-12 gap-4 mb-4">
+    <div class="col-span-12">
+        <label class="label" for="event-title">{{ t('foundation.field.title') }}</label>
+        <input class="input{% if errors.title is defined %} is-invalid{% endif %}" id="event-title" name="title" maxlength="200" required value="{{ input.title|default('') }}">
+        {% if errors.title is defined %}<div class="field-error">{{ t(errors.title) }}</div>{% endif %}
     </div>
     {% if kind == 'event' %}
-    <div class="col-md-4">
-        <label class="form-label" for="event-starts">{{ t('foundation.field.starts_on') }}</label>
-        <input class="form-control{% if errors.starts_on is defined %} is-invalid{% endif %}" type="date" id="event-starts" name="starts_on" required value="{{ input.starts_on|default('') }}">
-        {% if errors.starts_on is defined %}<div class="invalid-feedback">{{ t(errors.starts_on) }}</div>{% endif %}
+    <div class="col-span-12 md:col-span-4">
+        <label class="label" for="event-starts">{{ t('foundation.field.starts_on') }}</label>
+        <input class="input{% if errors.starts_on is defined %} is-invalid{% endif %}" type="date" id="event-starts" name="starts_on" required value="{{ input.starts_on|default('') }}">
+        {% if errors.starts_on is defined %}<div class="field-error">{{ t(errors.starts_on) }}</div>{% endif %}
     </div>
-    <div class="col-md-4">
-        <label class="form-label" for="event-ends">{{ t('foundation.field.ends_on') }}</label>
-        <input class="form-control{% if errors.ends_on is defined %} is-invalid{% endif %}" type="date" id="event-ends" name="ends_on" value="{{ input.ends_on|default('') }}">
-        {% if errors.ends_on is defined %}<div class="invalid-feedback">{{ t(errors.ends_on) }}</div>{% endif %}
+    <div class="col-span-12 md:col-span-4">
+        <label class="label" for="event-ends">{{ t('foundation.field.ends_on') }}</label>
+        <input class="input{% if errors.ends_on is defined %} is-invalid{% endif %}" type="date" id="event-ends" name="ends_on" value="{{ input.ends_on|default('') }}">
+        {% if errors.ends_on is defined %}<div class="field-error">{{ t(errors.ends_on) }}</div>{% endif %}
     </div>
-    <div class="col-md-4">
-        <label class="form-label" for="event-status">{{ t('foundation.field.status') }}</label>
-        <select class="form-select" id="event-status" name="status">{% for status in ['planned', 'done', 'cancelled'] %}
+    <div class="col-span-12 md:col-span-4">
+        <label class="label" for="event-status">{{ t('foundation.field.status') }}</label>
+        <select class="input" id="event-status" name="status">{% for status in ['planned', 'done', 'cancelled'] %}
             <option value="{{ status }}"{% if input.status|default('planned') == status %} selected{% endif %}>{{ t('events.status.' ~ status) }}</option>{% endfor %}</select>
     </div>
     {% endif %}
-    <div class="col-12">
-        <label class="form-label" for="event-location">{{ t('foundation.field.location') }}</label>
-        <input class="form-control{% if errors.location is defined %} is-invalid{% endif %}" id="event-location" name="location" maxlength="200" value="{{ input.location|default('') }}">
-        {% if errors.location is defined %}<div class="invalid-feedback">{{ t(errors.location) }}</div>{% endif %}
+    <div class="col-span-12">
+        <label class="label" for="event-location">{{ t('foundation.field.location') }}</label>
+        <input class="input{% if errors.location is defined %} is-invalid{% endif %}" id="event-location" name="location" maxlength="200" value="{{ input.location|default('') }}">
+        {% if errors.location is defined %}<div class="field-error">{{ t(errors.location) }}</div>{% endif %}
     </div>
-    <div class="col-12">
-        <label class="form-label" for="event-notes">{{ t('foundation.field.notes') }}</label>
-        <textarea class="form-control{% if errors.notes is defined %} is-invalid{% endif %}" id="event-notes" name="notes" rows="8" data-rich-text>{{ input.notes|default('')|note|e }}</textarea>
-        {% if errors.notes is defined %}<div class="invalid-feedback">{{ t(errors.notes) }}</div>{% endif %}
+    <div class="col-span-12">
+        <label class="label" for="event-notes">{{ t('foundation.field.notes') }}</label>
+        <textarea class="input{% if errors.notes is defined %} is-invalid{% endif %}" id="event-notes" name="notes" rows="8" data-rich-text>{{ input.notes|default('')|note|e }}</textarea>
+        {% if errors.notes is defined %}<div class="field-error">{{ t(errors.notes) }}</div>{% endif %}
     </div>
 </div>

@@ -2,16 +2,16 @@
 {% block title %}{{ t('events.title') }}{% endblock %}
 {% block content %}
 <h1>{{ t('events.title') }}</h1>
-<nav class="mui-tabs mb-3" aria-label="{{ t('events.title') }}">
-    <a class="mui-tab{% if kind == 'event' %} active{% endif %}" href="/events">{{ t('events.title') }}</a>
-    <a class="mui-tab{% if kind == 'template' %} active{% endif %}" href="/events?view=templates">{{ t('events.templates') }}</a>
+<nav class="tabs mb-4" aria-label="{{ t('events.title') }}">
+    <a class="tab{% if kind == 'event' %} active{% endif %}" href="/events">{{ t('events.title') }}</a>
+    <a class="tab{% if kind == 'template' %} active{% endif %}" href="/events?view=templates">{{ t('events.templates') }}</a>
 </nav>
 {% if can('events.write') %}
-<div class="d-flex flex-wrap gap-2 mb-3">
+<div class="flex flex-wrap gap-2 mb-4">
     <a class="btn btn-primary" href="/events/new{% if kind == 'template' %}?kind=template{% endif %}">{{ t(kind == 'template' ? 'events.new_template' : 'events.new') }}</a>
 </div>
 {% endif %}
-<div class="card"><table class="table table-cards"><thead><tr>
+<div class="panel"><table class="data-table table-cards"><thead><tr>
     <th>{{ t('foundation.field.title') }}</th>
     {% if kind == 'event' %}<th>{{ t('foundation.field.starts_on') }}</th><th>{{ t('foundation.field.status') }}</th>{% endif %}
     <th>{{ t('foundation.field.location') }}</th><th>{{ t('events.tasks_progress') }}</th>

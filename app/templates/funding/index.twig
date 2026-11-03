@@ -2,8 +2,8 @@
 {% block title %}{{ t('funding.title') }}{% endblock %}
 {% block content %}
 <h1>{{ t('funding.title') }}</h1>
-{% if can('funding.write') %}<div class="mb-3"><a class="btn btn-primary" href="/funding/new">{{ t('funding.new') }}</a></div>{% endif %}
-<div class="card"><table class="table table-cards"><thead><tr>
+{% if can('funding.write') %}<div class="mb-4"><a class="btn btn-primary" href="/funding/new">{{ t('funding.new') }}</a></div>{% endif %}
+<div class="panel"><table class="data-table table-cards"><thead><tr>
     <th>{{ t('funding.field.title') }}</th><th>{{ t('foundation.field.funder') }}</th><th>{{ t('foundation.field.status') }}</th>
     <th>{{ t('foundation.field.requested_amount') }}</th><th>{{ t('foundation.field.approved_amount') }}</th><th>{{ t('funding.received') }}</th>
 </tr></thead><tbody>

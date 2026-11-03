@@ -23,13 +23,13 @@
 {%- endif -%}
 {% endmacro %}
 {% import _self as h %}
-<div class="card mb-4" id="history">
-    <div class="card-header"><h2 class="card-title">{{ t('bookings.history') }}</h2></div>
+<div class="panel mb-6" id="history">
+    <div class="panel-header"><h2 class="panel-title">{{ t('bookings.history') }}</h2></div>
     {% if history is empty %}
-    <div class="card-body text-secondary">{{ t('bookings.history.empty') }}</div>
+    <div class="panel-body text-muted">{{ t('bookings.history.empty') }}</div>
     {% else %}
-    <div class="table-responsive">
-        <table class="table table-vcenter card-table table-cards">
+    <div class="table-scroll">
+        <table class="data-table table-cards">
             <thead>
                 <tr>
                     <th>{{ t('bookings.history.when') }}</th>
@@ -44,7 +44,7 @@
                     <td data-label="{{ t('bookings.history.when') }}">{{ entry.changed_at|date('d.m.Y H:i') }}</td>
                     <td data-label="{{ t('bookings.history.who') }}">{{ entry.changed_by_name }}</td>
                     <td data-label="{{ t('bookings.history.what') }}">
-                        <ul class="list-unstyled mb-0">
+                        <ul class="list-none pl-0 mb-0">
                         {% for change in entry.changes %}
                             {% if change.field == 'created' %}
                             <li>{{ t('bookings.history.created') }}</li>

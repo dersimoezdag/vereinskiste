@@ -3,14 +3,14 @@
 {% block title %}{{ t('users.title') }}{% endblock %}
 {% block content %}
 {% include 'components/settings_tabs.twig' %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+<div class="flex flex-wrap justify-between items-center gap-2 mb-6">
     <h2 class="h2 mb-0">{{ t('users.title') }}</h2>
     <a class="btn btn-primary" href="/users/new">{{ t('users.new') }}</a>
 </div>
 
-<div class="card">
-    <div class="table-responsive">
-        <table class="table table-vcenter card-table table-cards">
+<div class="panel">
+    <div class="table-scroll">
+        <table class="data-table table-cards">
             <thead>
                 <tr>
                     <th>{{ t('users.name') }}</th>
@@ -23,31 +23,31 @@
             </thead>
             <tbody>
             {% for user in users %}
-                <tr{% if not user.active %} class="text-secondary"{% endif %}>
+                <tr{% if not user.active %} class="text-muted"{% endif %}>
                     <td data-label="{{ t('users.name') }}">
                         {{ user.name }}
-                        {% if user.id == me %}<span class="badge bg-blue-lt">{{ t('users.you') }}</span>{% endif %}
+                        {% if user.id == me %}<span class="badge bg-primary-soft text-primary">{{ t('users.you') }}</span>{% endif %}
                     </td>
                     <td data-label="{{ t('users.email') }}">{{ user.email }}</td>
                     <td data-label="{{ t('members.user.field') }}">
                         {% if user.member_id %}
-                            <a href="/members/{{ user.member_id }}" class="text-reset">#{{ user.member_no }} {{ user.member_name }}</a>
+                            <a href="/members/{{ user.member_id }}" class="text-inherit">#{{ user.member_no }} {{ user.member_name }}</a>
                         {% else %}
-                            <span class="text-secondary">–</span>
+                            <span class="text-muted">–</span>
                         {% endif %}
                     </td>
                     <td data-label="{{ t('users.roles') }}">
-                        {% for role in user.roles %}<span class="badge bg-secondary-lt me-1">{{ t('users.role.' ~ role) }}</span>{% endfor %}
+                        {% for role in user.roles %}<span class="badge bg-subtle text-muted me-1">{{ t('users.role.' ~ role) }}</span>{% endfor %}
                     </td>
                     <td data-label="{{ t('users.status') }}">
-                        {% if user.active %}<span class="badge bg-green-lt">{{ t('users.active') }}</span>{% else %}<span class="badge bg-secondary-lt">{{ t('common.inactive') }}</span>{% endif %}
+                        {% if user.active %}<span class="badge bg-success-soft text-success">{{ t('users.active') }}</span>{% else %}<span class="badge bg-subtle text-muted">{{ t('common.inactive') }}</span>{% endif %}
                     </td>
                     <td data-label="{{ t('common.actions') }}">
                         <a class="btn" href="/users/{{ user.id }}/edit">{{ t('users.edit') }}</a>
                     </td>
                 </tr>
             {% else %}
-                <tr><td colspan="6" class="text-secondary">{{ t('users.empty') }}</td></tr>
+                <tr><td colspan="6" class="text-muted">{{ t('users.empty') }}</td></tr>
             {% endfor %}
             </tbody>
         </table>

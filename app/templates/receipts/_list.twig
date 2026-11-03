@@ -1,11 +1,11 @@
 {# Belege einer Buchung. Erwartet: booking, receipts (ReceiptStore::forBooking) #}
-<div class="card mb-4" id="receipts">
-    <div class="card-header"><h2 class="card-title">{{ t('receipts.title') }}</h2></div>
+<div class="panel mb-6" id="receipts">
+    <div class="panel-header"><h2 class="panel-title">{{ t('receipts.title') }}</h2></div>
     {% if receipts is empty and invoice_documents|default([]) is empty %}
-    <div class="card-body text-secondary">{{ t('receipts.empty') }}</div>
+    <div class="panel-body text-muted">{{ t('receipts.empty') }}</div>
     {% else %}
-    <div class="table-responsive">
-        <table class="table table-vcenter card-table table-cards">
+    <div class="table-scroll">
+        <table class="data-table table-cards">
             <thead>
                 <tr>
                     <th>{{ t('receipts.col.name') }}</th>
@@ -20,11 +20,11 @@
                 <tr>
                     <td data-label="{{ t('receipts.col.name') }}">
                         <a href="/receipts/{{ receipt.id }}">{{ receipt.original_name }}</a>
-                        {% if receipt.replaced_at %}<span class="badge bg-secondary-lt">{{ t('receipts.replaced') }}</span>{% endif %}
+                        {% if receipt.replaced_at %}<span class="badge bg-subtle text-muted">{{ t('receipts.replaced') }}</span>{% endif %}
                     </td>
                     <td data-label="{{ t('receipts.col.uploaded') }}">{{ receipt.uploaded_at|date('d.m.Y H:i') }} · {{ receipt.uploaded_by_name }}</td>
                     <td data-label="{{ t('receipts.col.size') }}">{{ (receipt.size / 1024)|number_format(0, ',', '.') }} {{ t('ui.kb') }}</td>
-                    <td data-label="{{ t('receipts.col.sha256') }}"><code class="text-break">{{ receipt.sha256 }}</code></td>
+                    <td data-label="{{ t('receipts.col.sha256') }}"><code class="break-words">{{ receipt.sha256 }}</code></td>
                     <td data-label="{{ t('receipts.col.actions') }}">
                         <a class="btn btn-sm" href="/receipts/{{ receipt.id }}">{{ t('receipts.download') }}</a>
                         {% if can('bookings.write') and not receipt.replaced_at %}
@@ -32,10 +32,10 @@
                             <summary class="btn btn-sm">{{ t('receipts.replace') }}</summary>
                             <form method="post" action="/receipts/{{ receipt.id }}/replace" enctype="multipart/form-data" class="mt-2" novalidate>
                                 {{ csrf_field() }}
-                                <p class="text-secondary">{{ t('receipts.replace.hint') }}</p>
+                                <p class="text-muted">{{ t('receipts.replace.hint') }}</p>
                                 {% include 'receipts/_dropzone.twig' with {id_prefix: 'rep-' ~ receipt.id, name: 'receipt', multiple: false, errors: {}} %}
                                 {% include 'bookings/_reason.twig' with {reason_id: 'rep-reason-' ~ receipt.id, reason: '', errors: {}} %}
-                                <div class="mt-3">
+                                <div class="mt-4">
                                     <button type="submit" class="btn btn-primary">{{ t('receipts.replace.submit') }}</button>
                                 </div>
                             </form>
@@ -46,10 +46,10 @@
             {% endfor %}
             {% for document in invoice_documents|default([]) %}
                 <tr>
-                    <td data-label="{{ t('receipts.col.name') }}"><a href="/documents/{{ document.file_id }}">{{ document.original_name }}</a><span class="badge bg-primary-lt">{{ t('receipts.from_invoice') }} #{{ document.invoice_id }}</span></td>
+                    <td data-label="{{ t('receipts.col.name') }}"><a href="/documents/{{ document.file_id }}">{{ document.original_name }}</a><span class="badge bg-primary-soft text-primary">{{ t('receipts.from_invoice') }} #{{ document.invoice_id }}</span></td>
                     <td data-label="{{ t('receipts.col.uploaded') }}">{{ document.uploaded_at|date('d.m.Y H:i') }} · {{ document.uploaded_by_name }}</td>
                     <td data-label="{{ t('receipts.col.size') }}">{{ (document.size / 1024)|number_format(0, ',', '.') }} {{ t('ui.kb') }}</td>
-                    <td data-label="{{ t('receipts.col.sha256') }}"><code class="text-break">{{ document.sha256 }}</code></td>
+                    <td data-label="{{ t('receipts.col.sha256') }}"><code class="break-words">{{ document.sha256 }}</code></td>
                     <td data-label="{{ t('receipts.col.actions') }}"><a class="btn btn-sm" href="/documents/{{ document.file_id }}">{{ t('receipts.download') }}</a>{% if can('invoices.read') %} <a class="btn btn-sm" href="/invoices/{{ document.invoice_id }}">{{ t('receipts.open_invoice') }}</a>{% endif %}</td>
                 </tr>
             {% endfor %}
@@ -58,8 +58,8 @@
     </div>
     {% endif %}
     {% if can('bookings.write') %}
-    <div class="card-body border-top">
-        <h3 class="card-subtitle">{{ t('receipts.add') }}</h3>
+    <div class="panel-body border-t border-line">
+        <h3 class="panel-subtitle">{{ t('receipts.add') }}</h3>
         <form method="post" action="/bookings/{{ booking.id }}/receipts" enctype="multipart/form-data" novalidate>
             {{ csrf_field() }}
             {% include 'receipts/_dropzone.twig' with {id_prefix: 'new-receipt', errors: {}} %}

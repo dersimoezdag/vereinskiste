@@ -49,7 +49,7 @@ final class MembersPagesTest extends TestCase
         $this->postForm('/members/new', ['name' => 'Modal Mitglied', 'version' => '0']);
         $this->postForm('/members/1/join', ['date' => '2026-01-01']);
         $html = (string) $this->get('/members/1')->getBody();
-        $this->assertStringContainsString('data-bs-target="#membership-modal"', $html);
+        $this->assertStringContainsString('data-dialog-open="#membership-modal"', $html);
         $modal = substr($html, strpos($html, 'id="membership-modal"'));
         $this->assertStringContainsString('action="/members/1/leave"', $modal);
         $this->assertStringContainsString('01.01.2026', $modal);

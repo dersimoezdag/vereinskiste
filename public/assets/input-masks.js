@@ -193,7 +193,7 @@
                 field.defaultValue = germanDate(initial); canonical.defaultValue = initial; picker.defaultValue = initial;
                 picker.min = field.dataset.dateMin; picker.max = field.dataset.dateMax;
                 picker.disabled = field.disabled; picker.readOnly = field.readOnly;
-                picker.tabIndex = -1; picker.className = 'visually-hidden';
+                picker.tabIndex = -1; picker.className = 'sr-only';
                 picker.setAttribute('aria-label', window.vkText('js.datum_auswahlen'));
                 field.insertAdjacentElement('afterend', picker);
                 if (!field.disabled && !field.readOnly && typeof picker.showPicker === 'function') {
@@ -216,7 +216,7 @@
             if (!field.placeholder) { field.placeholder = spec.hint; }
             var feedback = document.createElement('div');
             feedback.id = 'input-mask-help-' + (++sequence);
-            feedback.className = 'form-hint';
+            feedback.className = 'field-hint';
             feedback.textContent = spec.hint;
             field.insertAdjacentElement('afterend', feedback);
             if (button) {

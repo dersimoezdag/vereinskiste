@@ -1,10 +1,10 @@
 {% import 'components/icons.twig' as icons %}
 {% if key == 'cards' %}
-<section class="card dashboard-card" data-dashboard-item data-dashboard-id="{{ id }}">
+<section class="panel dashboard-card" data-dashboard-item data-dashboard-id="{{ id }}">
     <input type="hidden" name="cards[]" value="{{ id }}">
-    <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start gap-2">
-            <h2 class="card-title"><a href="{{ item.url }}">{{ icons.icon(item.icon) }} {{ t(item.label) }}</a></h2>
+    <div class="panel-body">
+        <div class="flex justify-between items-start gap-2">
+            <h2 class="panel-title"><a href="{{ item.url }}">{{ icons.icon(item.icon) }} {{ t(item.label) }}</a></h2>
             {% include 'dashboard/controls.twig' with {label: t(item.label), removable: true} %}
         </div>
         <div class="dashboard-value">{{ metric.value }}</div>

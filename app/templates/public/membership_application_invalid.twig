@@ -2,15 +2,15 @@
 {% import 'components/icons.twig' as icons %}
 
 {% block content %}
-<div class="container-xl py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-12">
-            <div class="card shadow-sm border-0 text-center p-4">
-                <div class="mb-3">
+<div class="mx-auto w-full max-w-7xl py-12">
+    <div class="grid-12 gap-x-6 justify-center">
+        <div class="md:col-span-6 col-span-12">
+            <div class="panel shadow-panel border-0 text-center p-6">
+                <div class="mb-4">
                     {% include 'components/logo.twig' with {size: 56, alt: 'Vereinskiste Logo'} %}
                 </div>
-                <h1 class="h3 fw-bold mb-2">{{ t('ui.mitgliedsantrag') }}</h1>
-                <div class="alert alert-warning my-3">
+                <h1 class="h3 font-semibold mb-2">{{ t('ui.mitgliedsantrag') }}</h1>
+                <div class="alert alert-warning my-4">
                     {% if reason == 'expired' %}
                         {{ t('applications.link_expired') }}
                     {% elseif reason == 'used' %}
@@ -19,11 +19,11 @@
                         {{ t('applications.link_invalid') }}
                     {% endif %}
                 </div>
-                <p class="text-muted small">
+                <p class="text-muted text-sm">
                     {{ t('ui.bitte_wende_dich_an_den_vereinsvorstand_um_einen_neuen_antrags_li') }}
                 </p>
-                <div class="mt-3">
-                    <a href="/" class="btn btn-outline-secondary">{{ t('applications.back_home') }}</a>
+                <div class="mt-4">
+                    <a href="/" class="btn">{{ t('applications.back_home') }}</a>
                 </div>
             </div>
         </div>
