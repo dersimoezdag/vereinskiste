@@ -15,7 +15,8 @@ foreach (['app/migrations/0017_club_documents.sql', 'public/assets/vendor/tinymc
     'public/index.php', 'public/.htaccess', 'public/assets/logo.svg', 'public/assets/logo-dark.svg', 'public/assets/app.css', 'public/assets/ui.js', 'public/assets/bank-import.js', 'public/assets/dashboard.js', 'public/assets/theme.js',
     'public/assets/vendor/chartjs/chart.umd.min.js', 'public/assets/vendor/chartjs/LICENSE',
     'public/assets/vendor/material-symbols/symbols.svg', 'public/assets/vendor/material-symbols/LICENSE',
-    'public/assets/vendor/fonts/geist-latin-wght-normal.woff2', 'public/assets/vendor/fonts/geist-LICENSE', 'LICENSE', 'README.md'] as $name) {
+    'public/assets/vendor/fonts/geist-latin-wght-normal.woff2', 'public/assets/vendor/fonts/geist-latin-ext-wght-normal.woff2', 'public/assets/vendor/fonts/geist-LICENSE',
+    'public/assets/vendor/fonts/geist-mono-latin-wght-normal.woff2', 'public/assets/vendor/fonts/geist-mono-latin-ext-wght-normal.woff2', 'public/assets/vendor/fonts/geist-mono-LICENSE', 'LICENSE', 'README.md'] as $name) {
     if ($zip->locateName($name) === false) { throw new RuntimeException('Release-Datei fehlt: ' . $name); }
 }
 for ($i = 0; $i < $zip->numFiles; $i++) {
@@ -27,6 +28,14 @@ for ($i = 0; $i < $zip->numFiles; $i++) {
         || in_array($name, ['Dockerfile.dev', 'docker-compose.dev.yml'], true)) {
         throw new RuntimeException('Unerlaubte Release-Datei: ' . $name);
     }
+}
+// app.css wird gebaut: Sie muss Tailwind-Ausgabe sein und jede per @font-face eingebundene Schrift muss im Paket liegen.
+$css = (string)$zip->getFromName('public/assets/app.css');
+if (strlen($css) < 10000 || !str_contains($css, 'tailwindcss')) { throw new RuntimeException('public/assets/app.css ist leer oder kein Tailwind-Build.'); }
+preg_match_all('~url\(\s*[\'"]?(vendor/fonts/[^\'")]+)~', $css, $fonts);
+if ($fonts[1] === []) { throw new RuntimeException('public/assets/app.css bindet keine Schriften ein.'); }
+foreach (array_unique($fonts[1]) as $font) {
+    if ($zip->locateName('public/assets/' . $font) === false) { throw new RuntimeException('Schrift aus app.css fehlt: public/assets/' . $font); }
 }
 $zip->close();
 echo "Release-Paket geprüft.\n";

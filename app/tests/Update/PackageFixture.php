@@ -11,7 +11,7 @@ trait PackageFixture
     {
         $files=['app/bootstrap.php'=>'<?php','app/cron.php'=>'<?php','app/update-bootstrap.php'=>'<?php',
             'app/src/Update/Runtime.php'=>'<?php','app/vendor/autoload.php'=>'<?php','app/VERSION'=>'1.1.0',
-            'public/index.php'=>'<?php','public/assets/app.css'=>'body {}'];
+            'public/index.php'=>'<?php','public/assets/app.css'=>'body {}','public/assets/ui.js'=>''];
         foreach (glob(dirname(__DIR__,2) . '/migrations/*.sql') as $path) { $files['app/migrations/' . basename($path)]=file_get_contents($path); }
         if ($migration!=='') { $files['app/migrations/0011_update_test.sql']=$migration; }
         $zip=new \ZipArchive(); $path=$root . '/fixture.zip'; $zip->open($path,\ZipArchive::CREATE);
