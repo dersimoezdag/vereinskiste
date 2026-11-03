@@ -1,0 +1,37 @@
+{# Eine Antragserklaerung; auch als Vorschau in den Einstellungen (preview = true). #}
+{% set key = declaration.id %}
+<div class="prose-declaration rich-text mb-4">{{ declaration.content|note }}</div>
+{% if declaration.kind == 'confirmation' %}
+<div class="check mb-4">
+    <input class="check-input{% if errors['declaration_' ~ key] is defined %} is-invalid{% endif %}" type="checkbox" id="declaration-{{ key }}"
+           name="declaration[{{ key }}]" value="1"{% if answer == '1' %} checked{% endif %}{% if preview %} disabled{% else %} required{% endif %}>
+    <label class="check-label font-semibold" for="declaration-{{ key }}">{{ t('declarations.confirm_label') }}</label>
+</div>
+{% elseif declaration.kind == 'consent' %}
+<fieldset class="mb-4 grid gap-2 sm:grid-cols-2">
+    <legend class="sr-only">{{ declaration.title }}</legend>
+    {% for choice in ['yes', 'no'] %}
+    <label class="choice-card{% if errors['declaration_' ~ key] is defined %} is-invalid{% endif %}" for="declaration-{{ key }}-{{ choice }}">
+        <input class="check-input" type="radio" id="declaration-{{ key }}-{{ choice }}" name="declaration[{{ key }}]" value="{{ choice }}"
+               {% if answer == choice %}checked{% endif %}{% if preview %} disabled{% else %} required{% endif %}>
+        <span>{{ t('declarations.consent_' ~ choice) }}</span>
+    </label>
+    {% endfor %}
+</fieldset>
+{% endif %}
+{% if errors['declaration_' ~ key] is defined %}<p class="field-error block" role="alert">{{ t(errors['declaration_' ~ key]) }}</p>{% endif %}
+{% if declaration.signature_required %}
+<div class="signature-pad{% if errors['signature_' ~ key] is defined %} is-invalid{% endif %}" data-signature-pad{% if not preview %} data-signature-required{% endif %}>
+    <span class="label">{{ t('declarations.signature') }}</span>
+    <div class="signature-surface">
+        <canvas class="signature-canvas" role="img" aria-label="{{ t('declarations.signature_hint') }}"></canvas>
+        <span class="signature-hint" aria-hidden="true">{{ t('declarations.signature_hint') }}</span>
+    </div>
+    <input type="hidden" name="signature[{{ key }}]" value="{{ signature }}" data-signature-value{% if preview %} disabled{% endif %}>
+    <div class="mt-2 flex flex-wrap gap-2">
+        <button type="button" class="btn btn-sm" data-signature-clear>{{ t('declarations.signature_clear') }}</button>
+        <button type="button" class="btn btn-sm" data-signature-enlarge>{{ t('declarations.signature_enlarge') }}</button>
+    </div>
+    {% if errors['signature_' ~ key] is defined %}<p class="field-error block" role="alert">{{ t(errors['signature_' ~ key]) }}</p>{% endif %}
+</div>
+{% endif %}

@@ -1,0 +1,39 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<div class="mx-auto w-full max-w-7xl">
+    {% include 'components/settings_tabs.twig' %}
+    <div class="page-header">
+        <p class="text-muted max-w-3xl mb-0">{{ t('declarations.help') }}</p>
+        <a class="btn btn-primary" href="/settings/declarations/new">{{ t('declarations.new') }}</a>
+    </div>
+    <div class="panel overflow-x-auto">
+        <table class="data-table table-cards">
+            <thead><tr><th>{{ t('declarations.field.position') }}</th><th>{{ t('declarations.field.title') }}</th><th>{{ t('declarations.field.kind') }}</th><th>{{ t('declarations.field.signature_required') }}</th><th>{{ t('declarations.field.version') }}</th><th></th></tr></thead>
+            <tbody>
+            {% for d in declarations %}
+            <tr{% if not d.active %} class="text-muted"{% endif %}>
+                <td data-label="{{ t('declarations.field.position') }}">
+                    <form method="post" action="/settings/declarations/{{ d.id }}/move" class="inline-flex gap-1">{{ csrf_field() }}
+                        <button class="btn btn-sm" name="direction" value="up" aria-label="{{ t('declarations.move_up') }}"{% if loop.first %} disabled{% endif %}>↑</button>
+                        <button class="btn btn-sm" name="direction" value="down" aria-label="{{ t('declarations.move_down') }}"{% if loop.last %} disabled{% endif %}>↓</button>
+                    </form>
+                </td>
+                <td data-label="{{ t('declarations.field.title') }}"><a href="/settings/declarations/{{ d.id }}">{{ d.title }}</a>{% if not d.active %} · {{ t('declarations.inactive') }}{% endif %}</td>
+                <td data-label="{{ t('declarations.field.kind') }}">{{ t('declarations.kind.' ~ d.kind) }}</td>
+                <td data-label="{{ t('declarations.field.signature_required') }}">{{ d.signature_required ? t('declarations.yes') : t('declarations.no') }}</td>
+                <td data-label="{{ t('declarations.field.version') }}">{{ d.version }}</td>
+                <td>
+                    <form method="post" action="/settings/declarations/{{ d.id }}/toggle">{{ csrf_field() }}
+                        <input type="hidden" name="active" value="{{ d.active ? '0' : '1' }}">
+                        <button class="btn btn-sm">{{ t(d.active ? 'declarations.deactivate' : 'declarations.activate') }}</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6">{{ t('declarations.none') }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
