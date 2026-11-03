@@ -58,7 +58,8 @@
         ticks: { callback: function (value) { return moneyShort.format(value); } }
     };
 
-    // Einnahmen und Ausgaben je Monat: gruppierte Saeulen, zwei Serien (Legende immer sichtbar).
+    // Einnahmen und Ausgaben je Monat: Einnahmen nach oben, Ausgaben nach unten in derselben Saeule
+    // (Legende immer sichtbar); die Nulllinie ist betont, der Tooltip zeigt Betraege ohne Vorzeichen.
     var monthly = canvas('chart-monthly');
     if (monthly) {
         new Chart(monthly, {
@@ -67,12 +68,12 @@
                 labels: months,
                 datasets: [
                     { label: label.income, data: data.income, backgroundColor: color.income },
-                    { label: label.expense, data: data.expense, backgroundColor: color.expense }
+                    { label: label.expense, data: data.expense.map(function (value) { return -Math.abs(value); }), backgroundColor: color.expense }
                 ].map(function (dataset) {
                     dataset.borderColor = color.surface;
                     dataset.borderWidth = 2;
-                    dataset.borderRadius = { topLeft: 4, topRight: 4 };
-                    dataset.borderSkipped = 'bottom';
+                    dataset.borderRadius = 4;
+                    dataset.borderSkipped = 'start';
                     dataset.maxBarThickness = 28;
                     return dataset;
                 })
@@ -81,10 +82,16 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
-                scales: { x: { grid: { display: false }, border: { color: color.grid } }, y: valueAxis },
+                scales: {
+                    x: { stacked: true, grid: { display: false }, border: { color: color.grid } },
+                    y: Object.assign({}, valueAxis, {
+                        stacked: true,
+                        grid: { color: function (item) { return item.tick && item.tick.value === 0 ? color.muted : color.grid; } }
+                    })
+                },
                 plugins: {
                     legend: { position: 'top', align: 'start', labels: { usePointStyle: true, boxWidth: 8, boxHeight: 8 } },
-                    tooltip: { callbacks: { label: function (item) { return item.dataset.label + ': ' + money.format(item.parsed.y); } } }
+                    tooltip: { callbacks: { label: function (item) { return item.dataset.label + ': ' + money.format(Math.abs(item.parsed.y)); } } }
                 }
             }
         });

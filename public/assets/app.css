@@ -547,6 +547,15 @@ main, .table-cards td {
     color: var(--vk-text-muted);
 }
 
+/* Tabelle ganz oben in einer Karte: Kopfzeile folgt den runden Kartenecken (16px - 1px Rand).
+   clip-path statt overflow, weil Zellen bei border-collapse keinen Radius annehmen; nach unten
+   bleibt der Ausschnitt offen, damit Dropdowns in der Tabelle nicht abgeschnitten werden. */
+.card > .table:first-child,
+.card > .table-responsive:first-child > .table:first-child,
+.card.table-responsive > .table:first-child {
+    clip-path: inset(0 0 -100vh 0 round 15px 15px 0 0);
+}
+
 [data-bs-theme="dark"] .table {
     --tblr-table-hover-bg: rgba(255, 255, 255, 0.04);
     --tblr-table-color: #f4f4f6;
