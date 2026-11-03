@@ -144,4 +144,32 @@ final class MembershipApplicationPagesTest extends TestCase
         $status = $this->pdo->query("SELECT status FROM membership_applications WHERE id = {$appId}")->fetchColumn();
         $this->assertSame('rejected', $status);
     }
+
+    public function test_form_renders_one_step_per_active_declaration(): void
+    {
+        $invite = (new ApplicationRepository($this->pdo))->createInvite(1, 'Wintersemester', 7, null, true);
+        $html = (string) $this->get('/antrag/' . $invite['token'])->getBody();
+        $this->assertStringContainsString('data-application-stepper', $html);
+        $this->assertSame(1 + 1 + 4 + 1, substr_count($html, 'data-step '), 'person, SEPA, 4 declarations, finish');
+        $this->assertSame(3, substr_count($html, 'data-signature-pad'));
+        $this->assertStringContainsString('Ich willige nicht ein', $html);
+        $this->assertStringContainsString('name="signed_place"', $html);
+        $this->assertStringNotContainsString('System-E-Mail-Versand', $html);
+        $this->assertStringNotContainsString('JJJJ-MM-TT', $html);
+        $this->assertStringContainsString('max-w-3xl', $html);
+        $this->assertSame(1, substr_count($html, 'brand-logo-light'), 'only the page logo, none in the card');
+    }
+
+    public function test_server_errors_keep_answers_and_signatures_and_mark_step(): void
+    {
+        $invite = (new ApplicationRepository($this->pdo))->createInvite(1, 'Test', 7);
+        $input = ['first_name' => 'Erika', 'last_name' => 'Muster', 'email' => 'kaputt'] + ApplicationInput::declarations($this->pdo, 'yes');
+        $res = $this->postForm('/antrag/' . $invite['token'], $input);
+        $this->assertSame(422, $res->getStatusCode());
+        $html = (string) $res->getBody();
+        $first = array_key_first($input['signature']);
+        $this->assertStringContainsString('value="' . $input['signature'][$first] . '"', $html);
+        $this->assertMatchesRegularExpression('/id="schritt-1"[^>]*data-step-error/', $html);
+        $this->assertStringContainsString('value="yes"' . "\n" . '               checked', $html);
+    }
 }

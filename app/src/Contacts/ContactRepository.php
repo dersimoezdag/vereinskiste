@@ -13,7 +13,7 @@ use Vereinskiste\Foundation\Conflict;
 
 final class ContactRepository
 {
-    public const FIELDS = ['name' => 200, 'address' => 200, 'zip' => 20, 'city' => 100,
+    public const FIELDS = ['name' => 200, 'address' => 200, 'house_number' => 20, 'zip' => 20, 'city' => 100,
         'country' => 100, 'email' => 254, 'phone' => 50, 'iban' => 50, 'bic' => 11, 'notes' => 1000];
 
     public function __construct(private PDO $pdo) {}

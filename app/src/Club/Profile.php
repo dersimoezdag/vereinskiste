@@ -12,7 +12,7 @@ use Vereinskiste\Foundation\Conflict;
 
 final class Profile
 {
-    public const FIELDS = ['name' => 100, 'address' => 200, 'zip' => 20, 'city' => 100,
+    public const FIELDS = ['name' => 100, 'address' => 200, 'house_number' => 20, 'zip' => 20, 'city' => 100,
         'country' => 100, 'email' => 254, 'phone' => 50, 'website_url' => 1000,
         'constitution_url' => 1000, 'contribution_url' => 1000, 'privacy_url' => 1000,
         'locale' => 5, 'year_start' => 5, 'color' => 7];

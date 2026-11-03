@@ -185,7 +185,7 @@
                         <!-- Anschrift -->
                         {% if a.data.address or a.data.city %}
                         <div class="text-muted text-sm mb-2">
-                            {{ icons.icon('home') }} {{ a.data.address }}, {{ a.data.zip }} {{ a.data.city }} ({{ a.data.country }})
+                            {{ icons.icon('home') }} {{ a.data.address }} {{ a.data.house_number|default('') }}, {{ a.data.zip }} {{ a.data.city }} ({{ a.data.country }})
                         </div>
                         {% endif %}
 

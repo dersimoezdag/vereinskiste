@@ -72,5 +72,7 @@ final class DeclarationsTest extends TestCase
     {
         $this->assertSame('<p>Aufnahme in den A &amp; B e.V.</p>', Declarations::render('<p>Aufnahme in den {verein}</p>', 'A & B e.V.', true));
         $this->assertSame('Antrag A & B e.V.', Declarations::render('Antrag {verein}', 'A & B e.V.', false));
+        $this->assertSame('<p>Aufnahme in den FSI e.V.</p>', Declarations::render('<p>Aufnahme in den {verein}.</p>', 'FSI e.V.', true));
+        $this->assertSame('<p>Aufnahme in den Sportfreunde.</p>', Declarations::render('<p>Aufnahme in den {verein}.</p>', 'Sportfreunde', true));
     }
 }

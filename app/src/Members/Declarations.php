@@ -131,7 +131,12 @@ final class Declarations
 
     public static function render(string $text, string $club, bool $html): string
     {
-        return str_replace('{verein}', $html ? htmlspecialchars($club, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : $club, $text);
+        $name = $html ? htmlspecialchars($club, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : $club;
+        // "{verein}." bei "… e.V." ergaebe sonst einen doppelten Punkt.
+        if (str_ends_with($club, '.')) {
+            $text = str_replace('{verein}.', '{verein}', $text);
+        }
+        return str_replace('{verein}', $name, $text);
     }
 
     private function insertVersion(int $id, int $version, string $title, string $content, string $kind, bool $signature, int $actor): void

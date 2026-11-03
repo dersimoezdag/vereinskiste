@@ -9,7 +9,7 @@ use Vereinskiste\Ledger\Transaction;
 
 final class Consents
 {
-    public const KINDS=['statute','privacy','media','newsletter','sepa'];
+    public const KINDS=['statute','privacy','media','newsletter','sepa','declaration'];
     public function __construct(private PDO $pdo) {}
     public function snapshot(string $kind): array
     {
@@ -39,11 +39,17 @@ final class Consents
         if(!in_array($data['kind'],self::KINDS,true)||!in_array($input['granted']??null,['0','1'],true)) {
             throw new ValidationError(['kind'=>'foundation.invalid']);
         }
-        Transaction::run($this->pdo,function()use($member,$data,$input,$actor):void {
+        $declaration=null;
+        if($data['kind']==='declaration') {
+            $declaration=(new \Vereinskiste\Members\Declarations($this->pdo))->find((int)($input['declaration_id']??0));
+            if($declaration===null||$declaration['kind']!=='consent') { throw new ValidationError(['declaration_id'=>'foundation.invalid']); }
+        }
+        Transaction::run($this->pdo,function()use($member,$data,$input,$actor,$declaration):void {
             $stmt=$this->pdo->prepare('SELECT anonymized_at FROM members WHERE id=? FOR UPDATE');$stmt->execute([$member]);$row=$stmt->fetch();
             if(!$row||$row['anonymized_at']!==null) { throw new ValidationError(['member'=>'foundation.invalid']); }
-            $snapshot=$this->snapshot($data['kind']);$snapshot['version']=$data['document_version'];
-            $this->append($member,null,$data['kind'],$input['granted']==='1',$snapshot,'staff',$actor,$data['reason']);
+            $snapshot=$declaration===null?$this->snapshot($data['kind']):['title'=>$declaration['title'],'content'=>$declaration['content'],'kind'=>'consent','version'=>$declaration['version']];
+            if($declaration===null) {$snapshot['version']=$data['document_version'];}
+            $this->append($member,null,$data['kind'],$input['granted']==='1',$snapshot,'staff',$actor,$data['reason'],$declaration['id']??null);
         });
     }
     public function list(int $member): array

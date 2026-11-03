@@ -119,13 +119,20 @@ final class MembershipApplicationController
         $safe = [];
         $defaults = [
             'country' => 'Deutschland',
-            'consent_statute' => '',
-            'consent_privacy' => '',
             'sepa_mandate_consent' => '',
         ];
         foreach (($input ?? $defaults) as $key => $value) {
             $safe[$key] = (is_string($value) || is_int($value)) && mb_check_encoding((string) $value, 'UTF-8') ? (string) $value : '';
         }
+
+        $pdo = ($this->pdo)();
+        $club = (string) ((new \Vereinskiste\Club\Profile($pdo))->get()['data']['name'] ?? '');
+        $declarations = array_map(static fn(array $d): array => ['title' => \Vereinskiste\Members\Declarations::render($d['title'], $club, false),
+            'content' => \Vereinskiste\Members\Declarations::render($d['content'], $club, true)] + $d,
+            (new \Vereinskiste\Members\Declarations($pdo))->active());
+        $strings = static fn(mixed $values): array => is_array($values) ? array_map(
+            static fn(mixed $v): string => is_string($v) && mb_check_encoding($v, 'UTF-8') ? $v : '',
+            array_filter($values, static fn(mixed $k): bool => is_int($k) || ctype_digit((string) $k), ARRAY_FILTER_USE_KEY)) : [];
 
         return $req->getAttribute('view')->render($res, 'public/membership_application.twig', [
             'invite' => $invite,
@@ -133,7 +140,10 @@ final class MembershipApplicationController
             'input' => $safe,
             'errors' => $errors,
             'document_fingerprint' => (new \Vereinskiste\Privacy\Consents(($this->pdo)()))->fingerprint(),
-            'consent_documents' => ['statute' => (new \Vereinskiste\Privacy\Consents(($this->pdo)()))->snapshot('statute'), 'privacy' => (new \Vereinskiste\Privacy\Consents(($this->pdo)()))->snapshot('privacy')],
+            'declarations' => $declarations,
+            'answers' => $strings($input['declaration'] ?? null),
+            'signatures' => $strings($input['signature'] ?? null),
+            'today' => (new \DateTimeImmutable('today'))->format('d.m.Y'),
         ]);
     }
 

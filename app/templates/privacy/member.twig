@@ -7,7 +7,8 @@
 {% if not member.anonymized_at %}
 <form action="/members/{{ member.id }}/consents" method="post" class="grid-12 gap-2 mb-4">
 {{ csrf_field() }}
-<div class="col-span-12 md:col-span-3"><label class="label" for="consent-kind">{{ t('privacy.field.kind') }}</label><select id="consent-kind" name="kind" class="input">{% for kind in kinds %}<option value="{{ kind }}">{{ t('privacy.consent.' ~ kind) }}</option>{% endfor %}</select></div>
+<div class="col-span-12 md:col-span-3"><label class="label" for="consent-kind">{{ t('privacy.field.kind') }}</label><select id="consent-kind" name="kind" class="input">{% for kind in kinds|filter(k => k != 'declaration') %}<option value="{{ kind }}">{{ t('privacy.consent.' ~ kind) }}</option>{% endfor %}{% if declarations is not empty %}<option value="declaration">{{ t('privacy.consent.declaration') }}</option>{% endif %}</select>
+{% if declarations is not empty %}<label class="label mt-2" for="consent-declaration">{{ t('declarations.title') }}</label><select id="consent-declaration" name="declaration_id" class="input">{% for d in declarations %}<option value="{{ d.id }}">{{ d.title }}</option>{% endfor %}</select>{% endif %}</div>
 <div class="col-span-12 md:col-span-3"><label class="label" for="consent-granted">{{ t('privacy.field.status') }}</label><select id="consent-granted" name="granted" class="input"><option value="1">{{ t('privacy.granted') }}</option><option value="0">{{ t('privacy.withdrawn') }}</option></select></div>
 <div class="col-span-12 md:col-span-3"><label class="label" for="consent-version">{{ t('privacy.field.document_version') }}</label><input id="consent-version" class="input" name="document_version" maxlength="100"></div>
 <div class="col-span-12 md:col-span-3"><label class="label" for="consent-reason">{{ t('bookings.reason') }}</label><input id="consent-reason" class="input" name="reason" maxlength="500" required></div>
@@ -15,7 +16,7 @@
 {% endif %}
 <p class="text-muted">{{ t('privacy.consent.explanation') }}</p>
 <div class="table-scroll"><table class="data-table"><thead><tr><th>{{ t('privacy.field.kind') }}</th><th>{{ t('privacy.field.status') }}</th><th>{{ t('privacy.field.document_version') }}</th><th>{{ t('privacy.field.recorded_at') }}</th></tr></thead><tbody>
-{% for consent in consents %}<tr><td>{{ t('privacy.consent.' ~ consent.kind) }}</td><td>{{ t(consent.granted ? 'privacy.granted' : 'privacy.withdrawn') }}</td><td>{{ consent.document_version }}<details><summary>{{ t('privacy.snapshot') }}</summary><p>{{ consent.snapshot.text|default('') }}</p><p>{{ consent.snapshot.url|default('') }}</p><code>{{ consent.snapshot_hash }}</code></details></td><td>{{ consent.recorded_at|date('d.m.Y H:i') }} · {{ t('privacy.source.' ~ consent.source) }}</td></tr>{% else %}<tr><td colspan="4">{{ t('privacy.no_consents') }}</td></tr>{% endfor %}
+{% for consent in consents %}<tr><td>{{ consent.kind == 'declaration' ? consent.snapshot.title|default(t('privacy.consent.declaration')) : t('privacy.consent.' ~ consent.kind) }}</td><td>{{ t(consent.granted ? 'privacy.granted' : 'privacy.withdrawn') }}</td><td>{{ consent.document_version }}<details><summary>{{ t('privacy.snapshot') }}</summary><p>{{ consent.snapshot.text|default('') }}</p><p>{{ consent.snapshot.url|default('') }}</p><code>{{ consent.snapshot_hash }}</code></details></td><td>{{ consent.recorded_at|date('d.m.Y H:i') }} · {{ t('privacy.source.' ~ consent.source) }}</td></tr>{% else %}<tr><td colspan="4">{{ t('privacy.no_consents') }}</td></tr>{% endfor %}
 </tbody></table></div></div>
 <div class="panel panel-body"><h2>{{ t('privacy.anonymize') }}</h2>
 <p>{{ t('privacy.anonymize.explanation') }}</p>
