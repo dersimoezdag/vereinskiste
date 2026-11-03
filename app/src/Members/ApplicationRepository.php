@@ -17,6 +17,7 @@ final class ApplicationRepository
         'applicant_name' => 200,
         'email' => 254,
         'address' => 200,
+        'house_number' => 20,
         'zip' => 20,
         'city' => 100,
         'country' => 100,
@@ -150,6 +151,7 @@ final class ApplicationRepository
             }
 
             $address = mb_substr(trim((string) ($input['address'] ?? '')), 0, 200);
+            $houseNumber = mb_substr(trim((string) ($input['house_number'] ?? '')), 0, 20);
             $zip = mb_substr(trim((string) ($input['zip'] ?? '')), 0, 20);
             $city = mb_substr(trim((string) ($input['city'] ?? '')), 0, 100);
             $country = mb_substr(trim((string) ($input['country'] ?? 'Deutschland')), 0, 100);
@@ -192,6 +194,7 @@ final class ApplicationRepository
             $data = $names + [
                 'email' => $email,
                 'address' => $address,
+                'house_number' => $houseNumber,
                 'zip' => $zip,
                 'city' => $city,
                 'country' => $country,
@@ -285,6 +288,7 @@ final class ApplicationRepository
             $memberInput = $names + [
                 'email' => $app['email'],
                 'address' => $data['address'] ?? '',
+                'house_number' => $data['house_number'] ?? '',
                 'zip' => $data['zip'] ?? '',
                 'city' => $data['city'] ?? '',
                 'country' => $data['country'] ?? '',

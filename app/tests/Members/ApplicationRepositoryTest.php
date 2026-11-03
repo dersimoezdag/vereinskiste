@@ -187,4 +187,16 @@ final class ApplicationRepositoryTest extends TestCase
             $this->assertArrayHasKey('first_name', $e->errors);
         }
     }
+
+    public function test_house_number_is_stored_and_transferred_to_member(): void
+    {
+        $repo = new ApplicationRepository($this->db);
+        $invite = $repo->createInvite(1, 'Test', 7);
+        $id = $repo->submit($invite['token'], ['first_name' => 'E', 'last_name' => 'M', 'email' => 'e@example.org',
+            'address' => 'Musterstraße', 'house_number' => '12a', 'zip' => '91054', 'city' => 'Erlangen'] + ApplicationInput::declarations($this->db));
+        $this->assertSame('12a', $repo->findApplication($id)['data']['house_number']);
+        $member = $repo->approve($id, 1);
+        $data = json_decode((string) $this->db->query("SELECT data FROM members WHERE id = $member")->fetchColumn(), true);
+        $this->assertSame(['Musterstraße', '12a'], [$data['address'], $data['house_number']]);
+    }
 }
