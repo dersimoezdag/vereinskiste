@@ -6,7 +6,7 @@
 {% if signatures is not empty %}
 <section class="panel panel-body mb-4" aria-labelledby="declarations-heading">
     <h2 id="declarations-heading" class="panel-title">{{ t('declarations.title') }}</h2>
-    <ul class="divide-y divide-line">
+    <ul class="m-0 list-none divide-y divide-line p-0">
     {% for s in signatures %}
         <li class="py-3">
             <div class="flex flex-wrap items-center gap-3">
@@ -20,7 +20,7 @@
                 <span class="text-sm text-muted">{{ t('declarations.place_date') }}: {{ s.signed_place }}, {{ s.signed_at|date('d.m.Y') }}</span>
             </div>
             {% endif %}
-            <details class="mt-2"><summary class="text-sm">{{ t('privacy.snapshot') }}</summary><div class="rich-text text-sm">{{ s.snapshot.content|default('')|note }}</div><code class="text-xs">{{ s.snapshot_hash }}</code></details>
+            <details class="mt-2"><summary class="text-sm">{{ t('declarations.snapshot') }}</summary><div class="rich-text text-sm">{{ s.snapshot.content|default('')|note }}</div><code class="text-xs">{{ s.snapshot_hash }}</code></details>
         </li>
     {% endfor %}
     </ul>

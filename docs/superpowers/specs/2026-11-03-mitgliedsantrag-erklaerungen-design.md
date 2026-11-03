@@ -265,3 +265,16 @@ Bedienung:
   Schritts mit Serverfehler, Zusammenfassung zeigt Wahl und Unterschrift, „Ändern“ springt
   zum Schritt.
 - Screenshots des Formulars bei 400 px und 1300 px Breite (manuell beim Umsetzen).
+
+## Abweichungen in der Umsetzung
+
+- Bestätigungen und Einwilligungen werden schon beim Absenden in `member_consents`
+  geschrieben (wie bisher Satzung/Datenschutz); die Genehmigung überträgt sie per
+  `UPDATE member_consents SET member_id`. Hinweise (`notice`) werden dort nicht erfasst.
+- Links aus dem Vereinsprofil (`constitution_url`, `privacy_url`) werden nicht automatisch in
+  die Standardtexte übernommen; der Vorstand fügt sie im Editor ein.
+- Nach einem Fingerprint-Hinweis bleiben alle gezeichneten Unterschriften im Formular
+  erhalten; die Person sieht den geänderten Text im jeweiligen Schritt erneut.
+- Endet der Vereinsname auf einen Punkt („… e.V.“), wird „{verein}.“ ohne doppelten Punkt
+  ersetzt.
+- Das PDF bildet das Papierformular inhaltlich ab, nicht 1:1 im Layout.

@@ -37,6 +37,7 @@ return [
     'declarations.signature_enlarge' => 'Größer unterschreiben',
     'declarations.signature_apply' => 'Übernehmen',
     'declarations.signature_missing' => 'Keine Unterschrift',
+    'declarations.snapshot' => 'Unterschriebener Text und Prüfsumme',
     'declarations.place' => 'Ort',
     'declarations.date' => 'Datum',
     'declarations.place_date' => 'Ort, Datum',
