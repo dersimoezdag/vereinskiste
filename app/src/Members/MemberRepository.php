@@ -20,11 +20,16 @@ final class MemberRepository
     public function __construct(private PDO $pdo) {}
 
     /** @return list<array<string,mixed>> */
-    public function list(string $search = '', string $state = 'current', int $page = 1): array
+    public function count(string $search = '', string $state = 'current'): int
+    {
+        return (int) $this->matching($search, $state, '', [], 'count(*)')->fetchColumn();
+    }
+
+    public function list(string $search = '', string $state = 'current', int $page = 1, int $perPage = 50): array
     {
         return array_map(self::hydrate(...), $this->matching($search, $state,
-            " ORDER BY lower(COALESCE(m.data->>'last_name', m.name)), lower(COALESCE(m.data->>'first_name', '')), m.id LIMIT 50 OFFSET ?",
-            [(max(1, min($page, 100000)) - 1) * 50])->fetchAll());
+            " ORDER BY lower(COALESCE(m.data->>'last_name', m.name)), lower(COALESCE(m.data->>'first_name', '')), m.id LIMIT " . $perPage . " OFFSET ?",
+            [(max(1, min($page, 100000)) - 1) * $perPage])->fetchAll());
     }
 
     /** All matching members, in bounded keyset batches independent of UI pagination. */
@@ -40,13 +45,13 @@ final class MemberRepository
         } while (count($rows) === 500);
     }
 
-    private function matching(string $search, string $state, string $suffix, array $params): \PDOStatement
+    private function matching(string $search, string $state, string $suffix, array $params, ?string $select = null): \PDOStatement
     {
         $search = mb_substr(trim($search), 0, 200);
         $number = ctype_digit($search) && strlen($search) <= 9 ? (int) $search : null;
         $stmt = $this->pdo->prepare(
-            "SELECT m.*, u.id AS user_id,
-                    EXISTS (SELECT 1 FROM membership_periods p WHERE p.member_id = m.id AND p.end_date IS NULL) AS current
+            'SELECT ' . ($select ?? 'm.*, u.id AS user_id,
+                    EXISTS (SELECT 1 FROM membership_periods p WHERE p.member_id = m.id AND p.end_date IS NULL) AS current') . "
                FROM members m LEFT JOIN users u ON u.member_id = m.id
               WHERE (m.name ILIKE ? OR m.member_no = ?::integer)
                 AND (?::text = 'all'

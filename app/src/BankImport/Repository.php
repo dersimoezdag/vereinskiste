@@ -16,11 +16,15 @@ final class Repository
         $row['settings'] = json_decode($row['settings'], true, 32, JSON_THROW_ON_ERROR);
         return $row;
     }
-    public function list(int $page = 1): array
+    public function count(): int
+    {
+        return (int) $this->db->query('SELECT count(*) FROM bank_imports')->fetchColumn();
+    }
+    public function list(int $page = 1, int $perPage = 50): array
     {
         $stmt = $this->db->prepare('SELECT i.*,a.name AS account_name FROM bank_imports i JOIN accounts a ON a.id=i.account_id
-            ORDER BY i.id DESC LIMIT 50 OFFSET ?');
-        $stmt->execute([max(0, min(100000, $page - 1)) * 50]); return $stmt->fetchAll();
+            ORDER BY i.id DESC LIMIT ' . $perPage . ' OFFSET ?');
+        $stmt->execute([max(0, min(100000, $page - 1)) * $perPage]); return $stmt->fetchAll();
     }
     public function rows(int $id, int $page = 1): array
     {

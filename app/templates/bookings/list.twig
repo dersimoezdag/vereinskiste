@@ -4,18 +4,20 @@
 {% include 'components/finance_tabs.twig' %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <h1 class="mb-0">{{ t('bookings.title') }}</h1>
-    {% if can('bookings.write') %}
     <div class="d-flex flex-wrap gap-2">
+    {% if can('reports.read') %}<a class="btn" href="/reports/bookings.csv{% if export_query %}?{{ export_query }}{% endif %}">{{ t('bookings.export_csv') }}</a>{% endif %}
+    {% if can('bookings.write') %}
         <a class="btn btn-primary" href="/bookings/new">{{ t('bookings.new') }}</a>
         <a class="btn" href="/corrections/new">{{ t('bookings.correction') }}</a>
         <a class="btn" href="/transfers/new">{{ t('bookings.transfer') }}</a>
-    </div>
     {% endif %}
+    </div>
 </div>
 
 <div class="card mb-4">
     <div class="card-body">
         <form method="get" action="/bookings">
+            {% if per_page %}<input type="hidden" name="per_page" value="{{ per_page }}">{% endif %}
             <div class="row g-3">
                 <div class="col-6 col-md-3">
                     <label class="form-label" for="f-from">{{ t('bookings.filter.from') }}</label>
@@ -49,6 +51,24 @@
                         <option value="">{{ t('bookings.filter.all') }}</option>
                         <option value="in"{% if filter.direction == 'in' %} selected{% endif %}>{{ t('bookings.direction.in') }}</option>
                         <option value="out"{% if filter.direction == 'out' %} selected{% endif %}>{{ t('bookings.direction.out') }}</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label" for="f-event">{{ t('events.single') }}</label>
+                    <select id="f-event" name="event_id" class="form-select">
+                        <option value="">{{ t('bookings.filter.all') }}</option>
+                        {% for event in events %}
+                        <option value="{{ event.id }}"{% if filter.event_id == event.id %} selected{% endif %}>{{ event.title }} ({{ event.starts_on|date('d.m.Y') }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label" for="f-funding">{{ t('funding.single') }}</label>
+                    <select id="f-funding" name="funding_id" class="form-select">
+                        <option value="">{{ t('bookings.filter.all') }}</option>
+                        {% for application in funding_applications %}
+                        <option value="{{ application.id }}"{% if filter.funding_id == application.id %} selected{% endif %}>{{ application.title }} ({{ application.funder }})</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="col-6 col-md-3">
@@ -119,13 +139,5 @@
     </div>
 </div>
 
-{% if pages > 1 %}
-<nav class="d-flex flex-wrap justify-content-between align-items-center gap-2" aria-label="{{ t('bookings.pagination') }}">
-    <span class="text-secondary">{{ t('bookings.page') }} {{ page }} / {{ pages }} ({{ total }})</span>
-    <span class="d-flex gap-2">
-        {% if prev_url %}<a class="btn" href="{{ prev_url }}">{{ t('bookings.prev') }}</a>{% endif %}
-        {% if next_url %}<a class="btn" href="{{ next_url }}">{{ t('bookings.next') }}</a>{% endif %}
-    </span>
-</nav>
-{% endif %}
+{% include 'components/pagination.twig' %}
 {% endblock %}

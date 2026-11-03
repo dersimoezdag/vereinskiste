@@ -38,6 +38,18 @@
 
             <dt class="col-sm-4">{{ t('bookings.counterparty') }}</dt>
             <dd class="col-sm-8">{{ booking.counterparty ?? '–' }}</dd>
+            {% if expense %}
+            <dt class="col-sm-4">{{ t('expenses.single') }}</dt>
+            <dd class="col-sm-8"><a href="/expenses/{{ expense.id }}">{{ t('expenses.booking_hint') }}: {{ expense.person }} · {{ expense.purpose }}</a></dd>
+            {% endif %}
+            {% if booking.event_id %}
+            <dt class="col-sm-4">{{ t('events.single') }}</dt>
+            <dd class="col-sm-8">{% if can('events.read') %}<a href="/events/{{ booking.event_id }}">{{ booking.event_title }}</a>{% else %}{{ booking.event_title }}{% endif %}</dd>
+            {% endif %}
+            {% if booking.funding_id %}
+            <dt class="col-sm-4">{{ t('funding.single') }}</dt>
+            <dd class="col-sm-8">{% if can('funding.read') %}<a href="/funding/{{ booking.funding_id }}">{{ booking.funding_title }}</a>{% else %}{{ booking.funding_title }}{% endif %}</dd>
+            {% endif %}
 
             <dt class="col-sm-4">{{ t('bookings.receipt_no') }}</dt>
             <dd class="col-sm-8">{{ booking.receipt_no ?? '–' }}</dd>

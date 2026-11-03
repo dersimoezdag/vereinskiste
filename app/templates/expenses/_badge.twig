@@ -1,0 +1,2 @@
+{# Status einer Auslage. Erwartet: expense #}
+{% if expense.reimbursed %}<span class="badge bg-green-lt">{{ t('expenses.status.reimbursed') }}</span>{% else %}<span class="badge bg-orange-lt">{{ t('expenses.status.open') }}</span>{% endif %}

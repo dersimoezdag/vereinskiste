@@ -10,6 +10,8 @@ final class Catalog
         'finance' => ['label' => 'home.label.finanzen', 'permission' => 'reports.read', 'url' => '/reports/dashboard', 'icon' => 'reports'],
         'invoices' => ['label' => 'home.label.rechnungsentwuerfe', 'permission' => 'invoices.read', 'url' => '/invoices', 'icon' => 'bookings'],
         'contacts' => ['label' => 'home.label.aktive_kontakte', 'permission' => 'contacts.read', 'url' => '/contacts', 'icon' => 'contacts'],
+        'events' => ['label' => 'home.label.kommende_veranstaltungen', 'permission' => 'events.read', 'url' => '/events', 'icon' => 'rocket'],
+        'funding' => ['label' => 'home.label.offene_foerderantraege', 'permission' => 'funding.read', 'url' => '/funding', 'icon' => 'accounts'],
         'operations' => ['label' => 'home.label.e_mail_versand', 'permission' => 'settings.manage', 'url' => '/settings/email', 'icon' => 'mail'],
     ];
     public const SHORTCUTS = [
@@ -19,6 +21,9 @@ final class Catalog
         'invoice-import' => ['label' => 'home.label.rechnung_importieren', 'permission' => 'invoices.write', 'url' => '/invoices/import', 'icon' => 'imports'],
         'bank-import' => ['label' => 'home.label.kontoauszug_importieren', 'permission' => 'imports.write', 'url' => '/imports/bank/new', 'icon' => 'imports'],
         'contact-add' => ['label' => 'home.label.kontakt_hinzufuegen', 'permission' => 'contacts.write', 'url' => '/contacts/new', 'icon' => 'contacts'],
+        'event-add' => ['label' => 'home.label.veranstaltung_anlegen', 'permission' => 'events.write', 'url' => '/events/new', 'icon' => 'rocket'],
+        'funding-add' => ['label' => 'home.label.foerderantrag_anlegen', 'permission' => 'funding.write', 'url' => '/funding/new', 'icon' => 'accounts'],
+        'booking-import' => ['label' => 'home.label.buchungen_importieren', 'permission' => 'bookings.write', 'url' => '/imports/bookings', 'icon' => 'imports'],
         'reports' => ['label' => 'home.label.auswertungen_oeffnen', 'permission' => 'reports.read', 'url' => '/reports/dashboard', 'icon' => 'reports'],
     ];
 

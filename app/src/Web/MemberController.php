@@ -30,16 +30,18 @@ final class MemberController extends AdminController
             $search = '';
         }
         $state = $this->str($query, 'state') ?: 'all';
-        $page = max(1, min(100000, (int) $this->str($query, 'page')));
         $pdo = ($this->pdo)();
-        $members = (new MemberRepository($pdo))->list($search, $state, $page);
+        $repo = new MemberRepository($pdo);
+        $pagination = Pagination::from($query, $repo->count($search, $state), '/members', array_filter(['q' => $search, 'state' => $state]), [50, 100, 200]);
+        $members = $repo->list($search, $state, $pagination->page, $pagination->perPage);
         $pendingCount = (new ApplicationRepository($pdo))->countPending();
 
         return $req->getAttribute('view')->render($res, 'members/index.twig', [
             'members' => $members,
             'search' => $search,
             'state' => $state,
-            'page' => $page,
+            'pagination' => $pagination->view(),
+            'per_page' => $pagination->perPageParam(),
             'pending_count' => $pendingCount,
         ]);
     }
@@ -310,6 +312,7 @@ final class MemberController extends AdminController
         }
 
         return $req->getAttribute('view')->render($res, $member === null ? 'members/form.twig' : 'members/detail.twig', [
+            ...($member !== null && $req->getAttribute('auth')->can('bookings.read') ? ['member_expenses' => (new \Vereinskiste\Expenses\ExpenseRepository(($this->pdo)()))->forMember($member['id'])] : []),
             'member' => $member,
             'input' => $safe,
             'fields' => MemberRepository::FIELDS,

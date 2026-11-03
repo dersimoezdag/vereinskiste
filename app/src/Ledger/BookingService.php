@@ -20,7 +20,7 @@ final class BookingService
 
     /** Ueber `update` aenderbare Felder, in dieser Reihenfolge auch im Verlauf. */
     public const EDITABLE = [
-        'booking_date', 'amount', 'direction', 'account_id', 'category_id', 'description', 'counterparty', 'receipt_no', 'finance_contact_id',
+        'booking_date', 'amount', 'direction', 'account_id', 'category_id', 'description', 'counterparty', 'receipt_no', 'finance_contact_id', 'event_id', 'funding_id',
     ];
 
     private ClosingService $closing;
@@ -107,6 +107,7 @@ final class BookingService
                     SET booking_date = :booking_date, amount = :amount, direction = :direction,
                         account_id = :account_id, category_id = :category_id, description = :description,
                         counterparty = :counterparty, receipt_no = :receipt_no, finance_contact_id = :finance_contact_id,
+                        event_id = :event_id, funding_id = :funding_id,
                         version = version + 1, updated_at = now()
                   WHERE id = :id AND version = :expected'
             );
@@ -323,6 +324,29 @@ final class BookingService
             $errors['receipt_no'] = $error;
         }
 
+        $eventId = null;
+        if ($str('event_id') !== '') {
+            $eventId = $id($str('event_id'));
+            if ($eventId === null || $eventId !== ($current['event_id'] ?? null)) {
+                $stmt = $this->pdo->prepare("SELECT 1 FROM events WHERE id = ? AND kind = 'event' AND status <> 'cancelled'");
+                $stmt->execute([$eventId]);
+                if ($eventId === null || $stmt->fetchColumn() === false) {
+                    $errors['event_id'] = 'foundation.invalid';
+                }
+            }
+        }
+        $fundingId = null;
+        if ($str('funding_id') !== '') {
+            $fundingId = $id($str('funding_id'));
+            if ($fundingId === null || $fundingId !== ($current['funding_id'] ?? null)) {
+                $stmt = $this->pdo->prepare('SELECT 1 FROM funding_applications WHERE id = ?');
+                $stmt->execute([$fundingId]);
+                if ($fundingId === null || $stmt->fetchColumn() === false) {
+                    $errors['funding_id'] = 'foundation.invalid';
+                }
+            }
+        }
+
         return [[
             'booking_date' => $date,
             'amount' => $amount,
@@ -333,6 +357,8 @@ final class BookingService
             'counterparty' => $counterparty === '' ? null : $counterparty,
             'receipt_no' => $receiptNo === '' ? null : $receiptNo,
             'finance_contact_id' => $contactId,
+            'event_id' => $eventId,
+            'funding_id' => $fundingId,
         ], $errors];
     }
 
@@ -371,13 +397,13 @@ final class BookingService
     {
         $stmt = $this->pdo->prepare(
             "INSERT INTO bookings (account_id, booking_date, amount, direction, category_id, description,
-                                   counterparty, receipt_no, finance_contact_id, kind, status, correction_of_id, version, created_by)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, 1, ?) RETURNING id"
+                                   counterparty, receipt_no, finance_contact_id, event_id, funding_id, kind, status, correction_of_id, version, created_by)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, 1, ?) RETURNING id"
         );
         $stmt->execute([
             $values['account_id'], $values['booking_date'], $values['amount'], $values['direction'],
             $values['category_id'], $values['description'], $values['counterparty'], $values['receipt_no'],
-            $values['finance_contact_id'],
+            $values['finance_contact_id'], $values['event_id'], $values['funding_id'],
             $kind, $correctionOfId, $userId,
         ]);
         return (int) $stmt->fetchColumn();

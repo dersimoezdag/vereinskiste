@@ -35,6 +35,7 @@ final class ResponsiveMarkupTest extends TestCase
             '/corrections/new', '/transfers/new', '/reports/summary', '/reports/dashboard', '/settings/closing', '/audit-log',
             '/users', '/users/new', '/users/' . $user . '/edit', '/account/password', '/update', '/settings',
             '/settings/club', '/contacts', '/contacts/new', '/accounts/1/bank', '/imports/bank', '/imports/bank/new', '/settings/auto-update',
+            '/cashbook', '/expenses', '/expenses/new', '/events', '/events/new', '/funding', '/funding/new', '/imports/bookings',
             '/members', '/members/new', '/members/' . $memberId, '/members/applications', '/settings/club-roles', '/antrag/' . $invite['token'], '/antrag/danke'];
         foreach ($paths as $path) {
             $response = $this->get($path);

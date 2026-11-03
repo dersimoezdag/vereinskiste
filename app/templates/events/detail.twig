@@ -1,0 +1,218 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ event.title }}{% endblock %}
+{% block content %}
+{% set writable = can('events.write') %}
+{% set kind = event.kind %}
+<p class="text-secondary mb-1">{{ t(kind == 'template' ? 'events.template' : 'events.single') }}</p>
+<h1>{{ event.title }}</h1>
+{% if errors.delete is defined %}<p class="alert alert-warning" role="alert">{{ t(errors.delete) }}</p>{% endif %}
+{% if errors.version is defined %}<p class="alert alert-warning" role="alert">{{ t(errors.version) }}</p>{% endif %}
+{% if errors.item is defined %}<p class="alert alert-danger" role="alert">{{ t(errors.item) }}</p>{% endif %}
+
+{% if writable %}
+<form method="post" action="/events/{{ event.id }}" class="card card-body mb-3">
+    {{ csrf_field() }}
+    <input type="hidden" name="version" value="{{ event.version }}">
+    {% include 'events/_fields.twig' %}
+    <div><button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button></div>
+</form>
+{% else %}
+<dl class="card card-body mb-3">
+    {% if kind == 'event' %}<dt>{{ t('foundation.field.starts_on') }}</dt><dd>{{ event.starts_on|date('d.m.Y') }}{% if event.ends_on %} – {{ event.ends_on|date('d.m.Y') }}{% endif %}</dd>
+    <dt>{{ t('foundation.field.status') }}</dt><dd>{{ t('events.status.' ~ event.status) }}</dd>{% endif %}
+    <dt>{{ t('foundation.field.location') }}</dt><dd>{{ event.location ?: '–' }}</dd>
+    <dt>{{ t('foundation.field.notes') }}</dt><dd>{% if event.notes %}<div class="document-content">{{ event.notes|note }}</div>{% else %}–{% endif %}</dd>
+</dl>
+{% endif %}
+
+<div class="card mb-3"><div class="card-body">
+    <h2 class="card-title">{{ t('events.budget') }}</h2>
+    <table class="table table-cards"><thead><tr><th>{{ t('events.budget.label') }}</th><th>{{ t('bookings.direction') }}</th><th>{{ t('events.plan') }}</th>{% if writable %}<th>{{ t('events.remove') }}</th>{% endif %}</tr></thead><tbody>
+    {% for item in budget %}<tr>
+        <td data-label="{{ t('events.budget.label') }}">{{ item.label }}</td>
+        <td data-label="{{ t('bookings.direction') }}">{{ t('bookings.direction.' ~ item.direction) }}</td>
+        <td data-label="{{ t('events.plan') }}">{{ item.planned_amount|eur }}</td>
+        {% if writable %}<td data-label="{{ t('events.remove') }}">
+            <details class="mb-1"><summary>{{ t('events.edit') }}</summary>
+                <form method="post" action="/events/{{ event.id }}/budget-save/{{ item.id }}" class="mt-2">
+                    {{ csrf_field() }}
+                    <label class="form-label" for="budget-label-{{ item.id }}">{{ t('events.budget.label') }}</label>
+                    <input class="form-control mb-2" id="budget-label-{{ item.id }}" name="label" maxlength="200" required value="{{ item.label }}">
+                    <label class="form-label" for="budget-direction-{{ item.id }}">{{ t('bookings.direction') }}</label>
+                    <select class="form-select mb-2" id="budget-direction-{{ item.id }}" name="direction">{% for direction in ['out', 'in'] %}<option value="{{ direction }}"{% if item.direction == direction %} selected{% endif %}>{{ t('bookings.direction.' ~ direction) }}</option>{% endfor %}</select>
+                    <label class="form-label" for="budget-amount-{{ item.id }}">{{ t('events.budget.amount') }}</label>
+                    <input class="form-control mb-2" id="budget-amount-{{ item.id }}" name="planned_amount" data-mask="amount" inputmode="decimal" required value="{{ item.planned_amount }}">
+                    <button class="btn btn-outline-primary btn-sm" type="submit">{{ t('foundation.save') }}</button>
+                </form>
+            </details>
+            <form method="post" action="/events/{{ event.id }}/budget-remove/{{ item.id }}">{{ csrf_field() }}<button class="btn btn-link p-0" type="submit">{{ t('events.remove') }}</button></form></td>{% endif %}
+    </tr>{% else %}<tr><td colspan="4">{{ t('foundation.empty') }}</td></tr>{% endfor %}
+    </tbody></table>
+    {% if writable %}
+    <form method="post" action="/events/{{ event.id }}/budget" class="row g-2 mt-2">
+        {{ csrf_field() }}
+        <div class="col-md-5"><label class="form-label" for="budget-label">{{ t('events.budget.label') }}</label>
+            <input class="form-control{% if errors.label is defined %} is-invalid{% endif %}" id="budget-label" name="label" maxlength="200" required></div>
+        <div class="col-md-3"><label class="form-label" for="budget-direction">{{ t('bookings.direction') }}</label>
+            <select class="form-select" id="budget-direction" name="direction"><option value="out">{{ t('bookings.direction.out') }}</option><option value="in">{{ t('bookings.direction.in') }}</option></select></div>
+        <div class="col-md-2"><label class="form-label" for="budget-amount">{{ t('events.budget.amount') }}</label>
+            <input class="form-control{% if errors.planned_amount is defined %} is-invalid{% endif %}" id="budget-amount" name="planned_amount" data-mask="amount" inputmode="decimal" required>
+            {% if errors.planned_amount is defined %}<div class="invalid-feedback">{{ t(errors.planned_amount) }}</div>{% endif %}</div>
+        <div class="col-md-2 d-flex align-items-end"><button class="btn btn-outline-primary w-100" type="submit">{{ t('events.budget.add') }}</button></div>
+    </form>
+    {% endif %}
+    <table class="table table-cards mt-3"><thead><tr><th></th><th>{{ t('events.plan') }}</th>{% if kind == 'event' %}<th>{{ t('events.actual') }}</th>{% endif %}</tr></thead><tbody>
+        <tr><td>{{ t('events.income') }}</td><td data-label="{{ t('events.plan') }}">{{ totals.planned_in|eur }}</td>{% if kind == 'event' %}<td data-label="{{ t('events.actual') }}">{{ totals.actual_in|eur }}</td>{% endif %}</tr>
+        <tr><td>{{ t('events.expense') }}</td><td data-label="{{ t('events.plan') }}">{{ totals.planned_out|eur }}</td>{% if kind == 'event' %}<td data-label="{{ t('events.actual') }}">{{ totals.actual_out|eur }}</td>{% endif %}</tr>
+        <tr><th scope="row">{{ t('events.balance') }}</th><td data-label="{{ t('events.plan') }}">{{ totals.planned_balance|eur }}</td>{% if kind == 'event' %}<td data-label="{{ t('events.actual') }}">{{ totals.actual_balance|eur }}</td>{% endif %}</tr>
+    </tbody></table>
+</div></div>
+
+<div class="card mb-3"><div class="card-body">
+    <h2 class="card-title">{{ t('events.tasks') }}</h2>
+    <table class="table table-cards"><thead><tr><th>{{ t('events.task.title') }}</th><th>{{ t('events.task.member') }}</th><th>{{ t('events.task.due') }}</th><th>{{ t('events.task.done') }}</th>{% if writable %}<th>{{ t('events.remove') }}</th>{% endif %}</tr></thead><tbody>
+    {% for task in tasks %}<tr>
+        <td data-label="{{ t('events.task.title') }}">{{ task.title }}</td>
+        <td data-label="{{ t('events.task.member') }}">{{ task.person ?: '–' }}</td>
+        <td data-label="{{ t('events.task.due') }}">{% if task.due_on %}{{ task.due_on|date('d.m.Y') }}{% elseif task.due_offset_days is not null %}{{ task.due_offset_days }}{% else %}–{% endif %}</td>
+        <td data-label="{{ t('events.task.done') }}">{% if kind == 'event' and writable %}<form method="post" action="/events/{{ event.id }}/task-toggle/{{ task.id }}">{{ csrf_field() }}<button class="btn btn-link p-0" type="submit">{{ t(task.done ? 'events.task.reopen' : 'events.task.complete') }}</button></form>{% else %}{{ task.done ? t('users.roles.allowed') : t('users.roles.denied') }}{% endif %}</td>
+        {% if writable %}<td data-label="{{ t('events.remove') }}">
+            <details class="mb-1"><summary>{{ t('events.edit') }}</summary>
+                <form method="post" action="/events/{{ event.id }}/task-save/{{ task.id }}" class="mt-2">
+                    {{ csrf_field() }}
+                    <label class="form-label" for="task-title-{{ task.id }}">{{ t('events.task.title') }}</label>
+                    <input class="form-control mb-2" id="task-title-{{ task.id }}" name="title" maxlength="200" required value="{{ task.title }}">
+                    <label class="form-label" for="task-member-{{ task.id }}">{{ t('events.task.member') }}</label>
+                    <select class="form-select mb-2" id="task-member-{{ task.id }}" name="member_id"><option value="">{{ t('bookings.choose') }}</option>{% for member in members %}<option value="{{ member.id }}"{% if task.member_id ~ '' == member.id ~ '' %} selected{% endif %}>{{ member.name }}</option>{% endfor %}</select>
+                    <label class="form-label" for="task-person-{{ task.id }}">{{ t('events.task.person') }}</label>
+                    <input class="form-control mb-2" id="task-person-{{ task.id }}" name="person_name" maxlength="200" value="{{ task.person_name }}">
+                    <label class="form-label" for="task-offset-{{ task.id }}">{{ t('events.task.offset') }}</label>
+                    <input class="form-control mb-2" id="task-offset-{{ task.id }}" name="due_offset_days" inputmode="numeric" value="{{ task.due_offset_days }}">
+                    <button class="btn btn-outline-primary btn-sm" type="submit">{{ t('foundation.save') }}</button>
+                </form>
+            </details>
+            <form method="post" action="/events/{{ event.id }}/task-remove/{{ task.id }}">{{ csrf_field() }}<button class="btn btn-link p-0" type="submit">{{ t('events.remove') }}</button></form></td>{% endif %}
+    </tr>{% else %}<tr><td colspan="5">{{ t('foundation.empty') }}</td></tr>{% endfor %}
+    </tbody></table>
+    {% if writable %}
+    <form method="post" action="/events/{{ event.id }}/task" class="row g-2 mt-2">
+        {{ csrf_field() }}
+        <div class="col-md-4"><label class="form-label" for="task-title">{{ t('events.task.title') }}</label>
+            <input class="form-control{% if errors.title is defined %} is-invalid{% endif %}" id="task-title" name="title" maxlength="200" required></div>
+        <div class="col-md-3"><label class="form-label" for="task-member">{{ t('events.task.member') }}</label>
+            <select class="form-select" id="task-member" name="member_id"><option value="">{{ t('bookings.choose') }}</option>{% for member in members %}<option value="{{ member.id }}">{{ member.name }}</option>{% endfor %}</select></div>
+        <div class="col-md-3"><label class="form-label" for="task-person">{{ t('events.task.person') }}</label>
+            <input class="form-control" id="task-person" name="person_name" maxlength="200"></div>
+        <div class="col-md-2"><label class="form-label" for="task-offset">{{ t('events.task.offset') }}</label>
+            <input class="form-control{% if errors.due_offset_days is defined %} is-invalid{% endif %}" id="task-offset" name="due_offset_days" inputmode="numeric"></div>
+        <div class="col-12 form-hint">{{ t('events.task.offset_hint') }}</div>
+        <div class="col-12"><button class="btn btn-outline-primary" type="submit">{{ t('events.task.add') }}</button></div>
+    </form>
+    {% endif %}
+</div></div>
+
+<div class="card mb-3"><div class="card-body">
+    <h2 class="card-title">{{ t('events.lists') }}</h2>
+    {% for list in lists %}
+    <section class="mb-4" aria-labelledby="list-title-{{ list.id }}">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <h3 class="mb-0" id="list-title-{{ list.id }}">{{ list.title }}</h3>
+            <span class="text-secondary">{{ t('events.task.done') }}: {{ list.done_count }} / {{ list.items|length }} · {{ t('events.list.cost_total') }}: {{ list.cost|eur }}</span>
+        </div>
+        <table class="table table-cards"><thead><tr><th>{{ t('events.list.label') }}</th><th>{{ t('events.list.quantity') }}</th><th>{{ t('events.list.cost') }}</th><th>{{ t('events.list.person') }}</th><th>{{ t('events.task.done') }}</th>{% if writable %}<th>{{ t('events.remove') }}</th>{% endif %}</tr></thead><tbody>
+        {% for item in list.items %}<tr>
+            <td data-label="{{ t('events.list.label') }}">{% if item.done %}<s>{{ item.label }}</s>{% else %}{{ item.label }}{% endif %}</td>
+            <td data-label="{{ t('events.list.quantity') }}">{{ item.quantity ?: '–' }}</td>
+            <td data-label="{{ t('events.list.cost') }}">{{ item.estimated_cost is null ? '–' : item.estimated_cost|eur }}</td>
+            <td data-label="{{ t('events.list.person') }}">{{ item.person_name ?: '–' }}</td>
+            <td data-label="{{ t('events.task.done') }}">{% if writable %}<form method="post" action="/events/{{ event.id }}/item-toggle/{{ item.id }}">{{ csrf_field() }}<button class="btn btn-link p-0" type="submit">{{ t(item.done ? 'events.task.reopen' : 'events.task.complete') }}</button></form>{% else %}{{ item.done ? t('users.roles.allowed') : t('users.roles.denied') }}{% endif %}</td>
+            {% if writable %}<td data-label="{{ t('events.remove') }}">
+                <details class="mb-1"><summary>{{ t('events.edit') }}</summary>
+                    <form method="post" action="/events/{{ event.id }}/item-save/{{ item.id }}" class="mt-2">
+                        {{ csrf_field() }}
+                        <label class="form-label" for="item-label-{{ item.id }}">{{ t('events.list.label') }}</label>
+                        <input class="form-control mb-2" id="item-label-{{ item.id }}" name="label" maxlength="200" required value="{{ item.label }}">
+                        <label class="form-label" for="item-quantity-{{ item.id }}">{{ t('events.list.quantity') }}</label>
+                        <input class="form-control mb-2" id="item-quantity-{{ item.id }}" name="quantity" maxlength="50" value="{{ item.quantity }}">
+                        <label class="form-label" for="item-cost-{{ item.id }}">{{ t('events.list.cost') }}</label>
+                        <input class="form-control mb-2" id="item-cost-{{ item.id }}" name="estimated_cost" data-mask="approved_amount" inputmode="decimal" value="{{ item.estimated_cost }}">
+                        <label class="form-label" for="item-person-{{ item.id }}">{{ t('events.list.person') }}</label>
+                        <input class="form-control mb-2" id="item-person-{{ item.id }}" name="person_name" maxlength="200" value="{{ item.person_name }}">
+                        <button class="btn btn-outline-primary btn-sm" type="submit">{{ t('foundation.save') }}</button>
+                    </form>
+                </details>
+                <form method="post" action="/events/{{ event.id }}/item-remove/{{ item.id }}">{{ csrf_field() }}<button class="btn btn-link p-0" type="submit">{{ t('events.remove') }}</button></form></td>{% endif %}
+        </tr>{% else %}<tr><td colspan="6">{{ t('foundation.empty') }}</td></tr>{% endfor %}
+        </tbody></table>
+        {% if writable %}
+        <form method="post" action="/events/{{ event.id }}/list-item/{{ list.id }}" class="row g-2 mt-2">
+            {{ csrf_field() }}
+            <div class="col-md-4"><label class="form-label" for="new-item-{{ list.id }}">{{ t('events.list.label') }}</label><input class="form-control" id="new-item-{{ list.id }}" name="label" maxlength="200" required></div>
+            <div class="col-md-2"><label class="form-label" for="new-quantity-{{ list.id }}">{{ t('events.list.quantity') }}</label><input class="form-control" id="new-quantity-{{ list.id }}" name="quantity" maxlength="50"></div>
+            <div class="col-md-2"><label class="form-label" for="new-cost-{{ list.id }}">{{ t('events.list.cost') }}</label><input class="form-control" id="new-cost-{{ list.id }}" name="estimated_cost" data-mask="approved_amount" inputmode="decimal"></div>
+            <div class="col-md-2"><label class="form-label" for="new-person-{{ list.id }}">{{ t('events.list.person') }}</label><input class="form-control" id="new-person-{{ list.id }}" name="person_name" maxlength="200"></div>
+            <div class="col-md-2 d-flex align-items-end"><button class="btn btn-outline-primary w-100" type="submit">{{ t('events.list.add_item') }}</button></div>
+        </form>
+        <form method="post" action="/events/{{ event.id }}/list-remove/{{ list.id }}" class="mt-2">{{ csrf_field() }}<button class="btn btn-link text-danger p-0" type="submit">{{ t('events.list.remove') }}</button></form>
+        {% endif %}
+    </section>
+    {% else %}<p class="text-secondary">{{ t('events.lists_empty') }}</p>{% endfor %}
+    {% if writable %}
+    <form method="post" action="/events/{{ event.id }}/list" class="row g-2">
+        {{ csrf_field() }}
+        <div class="col-md-6"><label class="form-label" for="list-title">{{ t('events.list.new') }}</label>
+            <input class="form-control{% if errors.list_title is defined %} is-invalid{% endif %}" id="list-title" name="list_title" maxlength="100" required list="list-suggestions">
+            <datalist id="list-suggestions">{% for name in ['events.list.suggest.shopping', 'events.list.suggest.packing', 'events.list.suggest.check'] %}<option value="{{ t(name) }}"></option>{% endfor %}</datalist>
+            {% if errors.list_title is defined %}<div class="invalid-feedback">{{ t(errors.list_title) }}</div>{% endif %}</div>
+        <div class="col-md-3 d-flex align-items-end"><button class="btn btn-outline-primary w-100" type="submit">{{ t('events.list.create') }}</button></div>
+    </form>
+    {% endif %}
+</div></div>
+
+{% if kind == 'event' %}
+{% if can('bookings.read') %}
+<div class="card mb-3"><div class="card-body">
+    <h2 class="card-title">{{ t('events.bookings') }}</h2>
+    <table class="table table-cards"><thead><tr><th>{{ t('bookings.date') }}</th><th>{{ t('bookings.description') }}</th><th>{{ t('bookings.amount_eur') }}</th></tr></thead><tbody>
+    {% for booking in bookings %}<tr>
+        <td data-label="{{ t('bookings.date') }}">{{ booking.booking_date|date('d.m.Y') }}</td>
+        <td data-label="{{ t('bookings.description') }}"><a href="/bookings/{{ booking.id }}">{{ booking.description }}</a></td>
+        <td data-label="{{ t('bookings.amount_eur') }}">{{ booking.direction == 'out' ? '-' : '' }}{{ booking.amount|eur }}</td>
+    </tr>{% else %}<tr><td colspan="3">{{ t('events.bookings_empty') }}</td></tr>{% endfor %}
+    </tbody></table>
+    {% if bookings_total > bookings|length %}<a href="/bookings?event_id={{ event.id }}">{{ t('events.bookings_all') }}</a>{% endif %}
+</div></div>
+{% endif %}
+{% if can('funding.read') %}
+<div class="card mb-3"><div class="card-body">
+    <h2 class="card-title">{{ t('funding.title') }}</h2>
+    <ul class="mb-2">{% for application in funding %}<li><a href="/funding/{{ application.id }}">{{ application.title }}</a> · {{ t('funding.status.' ~ application.status) }} · {{ application.requested_amount|eur }}</li>{% else %}<li>{{ t('foundation.empty') }}</li>{% endfor %}</ul>
+    {% if can('funding.write') %}<a class="btn btn-outline-primary" href="/funding/new?event_id={{ event.id }}">{{ t('events.funding_new') }}</a>{% endif %}
+</div></div>
+{% endif %}
+{% endif %}
+
+{% if writable %}
+<div class="card mb-3"><div class="card-body">
+    <h2 class="card-title">{{ t('events.clone') }}</h2>
+    <p>{{ t('events.clone_hint') }}</p>
+    <form method="post" action="/events/{{ event.id }}/clone" class="row g-2">
+        {{ csrf_field() }}
+        <div class="col-md-4"><label class="form-label" for="clone-title">{{ t('foundation.field.title') }}</label>
+            <input class="form-control" id="clone-title" name="title" maxlength="200" required value="{{ event.title }}"></div>
+        <div class="col-md-2"><label class="form-label" for="clone-kind">{{ t('events.clone.kind') }}</label>
+            <select class="form-select" id="clone-kind" name="kind"><option value="event">{{ t('events.clone.as_event') }}</option><option value="template">{{ t('events.clone.as_template') }}</option></select></div>
+        <div class="col-md-2"><label class="form-label" for="clone-starts">{{ t('foundation.field.starts_on') }}</label>
+            <input class="form-control{% if errors.starts_on is defined %} is-invalid{% endif %}" type="date" id="clone-starts" name="starts_on">
+            {% if errors.starts_on is defined %}<div class="invalid-feedback">{{ t(errors.starts_on) }}</div>{% endif %}</div>
+        <div class="col-md-2"><label class="form-label" for="clone-ends">{{ t('foundation.field.ends_on') }}</label>
+            <input class="form-control" type="date" id="clone-ends" name="ends_on"></div>
+        <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100" type="submit">{{ t('events.clone') }}</button></div>
+    </form>
+</div></div>
+<form method="post" action="/events/{{ event.id }}/delete" class="mb-3">{{ csrf_field() }}<button class="btn btn-outline-danger" type="submit">{{ t('events.delete') }}</button></form>
+{% endif %}
+<a class="btn btn-link" href="/events{% if kind == 'template' %}?view=templates{% endif %}">{{ t('common.back') }}</a>
+{% include 'components/foundation_history.twig' %}
+{% endblock %}
+{% block scripts %}{% if can('events.write') %}<script src="{{ asset('vendor/tinymce/tinymce.min.js') }}"></script><script src="{{ asset('rich-text.js') }}"></script>{% endif %}{% endblock %}

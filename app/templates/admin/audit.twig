@@ -56,13 +56,5 @@
     </div>
 </div>
 
-{% if pages > 1 %}
-<nav class="d-flex flex-wrap justify-content-between align-items-center gap-2" aria-label="{{ t('bookings.pagination') }}">
-    <span class="text-secondary">{{ t('bookings.page') }} {{ page }} / {{ pages }} ({{ total }})</span>
-    <span class="d-flex gap-2">
-        {% if prev_url %}<a class="btn" href="{{ prev_url }}">{{ t('bookings.prev') }}</a>{% endif %}
-        {% if next_url %}<a class="btn" href="{{ next_url }}">{{ t('bookings.next') }}</a>{% endif %}
-    </span>
-</nav>
-{% endif %}
+{% include 'components/pagination.twig' %}
 {% endblock %}

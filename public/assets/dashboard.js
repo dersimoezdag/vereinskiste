@@ -6,6 +6,11 @@
     if (!root || !dataElement || typeof Chart === 'undefined') {
         return;
     }
+    // Die Canvas-Farben werden einmal gelesen; nach dem Themawechsel neu laden.
+    var theme = document.documentElement.getAttribute('data-bs-theme');
+    new MutationObserver(function () {
+        if (document.documentElement.getAttribute('data-bs-theme') !== theme) { window.location.reload(); }
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-bs-theme'] });
     var data = JSON.parse(dataElement.textContent);
     var styles = getComputedStyle(root);
 
@@ -26,7 +31,8 @@
     var label = {
         income: root.dataset.labelIncome,
         expense: root.dataset.labelExpense,
-        cumulative: root.dataset.labelCumulative
+        cumulative: root.dataset.labelCumulative,
+        result: root.dataset.labelResult
     };
     var money = new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' });
     var moneyShort = new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
@@ -58,44 +64,118 @@
         ticks: { callback: function (value) { return moneyShort.format(value); } }
     };
 
-    // Einnahmen und Ausgaben je Monat: Einnahmen nach oben, Ausgaben nach unten in derselben Saeule
-    // (Legende immer sichtbar); die Nulllinie ist betont, der Tooltip zeigt Betraege ohne Vorzeichen.
+    Chart.defaults.plugins.tooltip.backgroundColor = color.surface;
+    Chart.defaults.plugins.tooltip.titleColor = color.ink;
+    Chart.defaults.plugins.tooltip.bodyColor = color.ink;
+    Chart.defaults.plugins.tooltip.footerColor = color.ink;
+    Chart.defaults.plugins.tooltip.borderColor = color.grid;
+    Chart.defaults.plugins.tooltip.borderWidth = 1;
+    Chart.defaults.plugins.tooltip.usePointStyle = true;
+
+    // Sichtbarer Monatsbereich, gesteuert ueber die beiden Regler.
+    var view = { start: 0, end: months.length - 1, type: 'bar' };
+    function slice(values) { return values.slice(view.start, view.end + 1); }
+    function fade(hex) { return hex + '33'; }
+
+    // Fuellt eine Linie mit einem senkrechten Verlauf, wie eine Flaechengrafik.
+    function gradient(hex) {
+        return function (context) {
+            var area = context.chart.chartArea;
+            if (!area) { return fade(hex); }
+            var fill = context.chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+            fill.addColorStop(0, hex + '66');
+            fill.addColorStop(1, hex + '05');
+            return fill;
+        };
+    }
+
+    // Klick auf einen Monat oeffnet dessen Buchungen, auf eine Saeule nur deren Richtung.
+    function openBookings(chart, event) {
+        var row = chart.getElementsAtEventForMode(event, 'index', { intersect: false }, false)[0];
+        if (!row) { return; }
+        var month = data.months[view.start + row.index];
+        var parts = month.split('-');
+        var last = new Date(Number(parts[0]), Number(parts[1]), 0).getDate();
+        var query = new URLSearchParams({ from: month + '-01', to: month + '-' + String(last).padStart(2, '0') });
+        var hit = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false)[0];
+        if (hit && hit.datasetIndex < 2) { query.set('direction', hit.datasetIndex === 0 ? 'in' : 'out'); }
+        if (root.dataset.account) { query.set('account_id', root.dataset.account); }
+        window.location.href = '/bookings?' + query.toString();
+    }
+    function pointerOnHit(event, elements) {
+        event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+    }
+
+    // Einnahmen und Ausgaben je Monat. Als Saeulen gehen Einnahmen nach oben und Ausgaben nach unten
+    // in derselben Saeule; als Linie oder Flaeche bleiben beide positiv, damit sie vergleichbar sind.
+    function monthlyDatasets() {
+        var line = view.type !== 'bar';
+        var area = view.type === 'area';
+        var series = [
+            { label: label.income, data: slice(data.income), hex: color.income },
+            { label: label.expense, data: slice(data.expense).map(function (value) { return line ? value : -Math.abs(value); }), hex: color.expense }
+        ].map(function (item) {
+            return line
+                ? { label: item.label, data: item.data, type: 'line', borderColor: item.hex, backgroundColor: area ? gradient(item.hex) : item.hex,
+                    fill: area ? 'origin' : false, tension: 0.35, borderWidth: 2, pointRadius: 3, pointHoverRadius: 6, pointBackgroundColor: item.hex }
+                : { label: item.label, data: item.data, type: 'bar', backgroundColor: item.hex, borderColor: color.surface, borderWidth: 2,
+                    borderRadius: 4, borderSkipped: 'start', maxBarThickness: 28, order: 2 };
+        });
+        var income = slice(data.income);
+        var expense = slice(data.expense);
+        series.push({ label: label.result, type: 'line', data: income.map(function (value, index) { return Math.round((value - expense[index]) * 100) / 100; }),
+            borderColor: color.ink, backgroundColor: color.ink, borderDash: [5, 4], borderWidth: 2, tension: 0.35, pointRadius: 2, pointHoverRadius: 5, fill: false, order: 1 });
+        return series;
+    }
+
     var monthly = canvas('chart-monthly');
-    if (monthly) {
-        new Chart(monthly, {
+    var monthlyChart = null;
+    function drawMonthly() {
+        if (!monthly) { return; }
+        if (monthlyChart) { monthlyChart.destroy(); }
+        monthlyChart = new Chart(monthly, {
             type: 'bar',
-            data: {
-                labels: months,
-                datasets: [
-                    { label: label.income, data: data.income, backgroundColor: color.income },
-                    { label: label.expense, data: data.expense.map(function (value) { return -Math.abs(value); }), backgroundColor: color.expense }
-                ].map(function (dataset) {
-                    dataset.borderColor = color.surface;
-                    dataset.borderWidth = 2;
-                    dataset.borderRadius = 4;
-                    dataset.borderSkipped = 'start';
-                    dataset.maxBarThickness = 28;
-                    return dataset;
-                })
-            },
+            data: { labels: slice(months), datasets: monthlyDatasets() },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animations: { colors: false },
                 interaction: { mode: 'index', intersect: false },
+                onClick: function (event) { openBookings(monthlyChart, event); },
+                onHover: pointerOnHit,
+                // Nur die Saeulen stapeln (Linien stapelt Chart.js getrennt nach Typ); Nulllinie betont.
                 scales: {
-                    x: { stacked: true, grid: { display: false }, border: { color: color.grid } },
+                    x: { stacked: view.type === 'bar', grid: { display: false }, border: { color: color.grid } },
                     y: Object.assign({}, valueAxis, {
-                        stacked: true,
+                        stacked: view.type === 'bar',
                         grid: { color: function (item) { return item.tick && item.tick.value === 0 ? color.muted : color.grid; } }
                     })
                 },
                 plugins: {
-                    legend: { position: 'top', align: 'start', labels: { usePointStyle: true, boxWidth: 8, boxHeight: 8 } },
-                    tooltip: { callbacks: { label: function (item) { return item.dataset.label + ': ' + money.format(Math.abs(item.parsed.y)); } } }
+                    // Klick auf einen Legendeneintrag blendet die Reihe aus und wieder ein.
+                    legend: { position: 'top', align: 'start', labels: { usePointStyle: true, boxWidth: 8, boxHeight: 8,
+                        sort: function (a, b) { return a.datasetIndex - b.datasetIndex; } } },
+                    // Ausgaben ohne Vorzeichen anzeigen; das Ergebnis behaelt sein Vorzeichen.
+                    tooltip: { itemSort: function (a, b) { return a.datasetIndex - b.datasetIndex; },
+                        callbacks: { label: function (item) {
+                            return item.dataset.label + ': ' + money.format(item.datasetIndex === 1 ? Math.abs(item.parsed.y) : item.parsed.y);
+                        } } }
                 }
             }
         });
     }
+    drawMonthly();
+
+    document.querySelectorAll('[data-chart-type]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            view.type = button.dataset.chartType;
+            document.querySelectorAll('[data-chart-type]').forEach(function (other) {
+                other.classList.toggle('active', other === button);
+                other.setAttribute('aria-pressed', String(other === button));
+            });
+            drawMonthly();
+        });
+    });
 
     // Beschriftet jeden Balken am Ende mit seinem Betrag (direkte Beschriftung statt Zahlenwand).
     var valueLabels = {
@@ -155,22 +235,25 @@
     categoryChart('chart-income-categories', data.incomeByCategory, color.income);
     categoryChart('chart-expense-categories', data.expenseByCategory, color.expense);
 
-    // Kumuliertes Ergebnis: eine Linie (keine Legende, die Ueberschrift benennt sie); Nulllinie betont.
+    // Kumuliertes Ergebnis: Flaeche mit Verlauf (keine Legende, die Ueberschrift benennt sie); Nulllinie betont.
     var cumulative = canvas('chart-cumulative');
+    var cumulativeChart = null;
     if (cumulative) {
-        new Chart(cumulative, {
+        cumulativeChart = new Chart(cumulative, {
             type: 'line',
             data: {
-                labels: months,
+                labels: slice(months),
                 datasets: [{
                     label: label.cumulative,
-                    data: data.cumulative,
-                    borderColor: color.ink,
+                    data: slice(data.cumulative),
+                    borderColor: color.income,
+                    backgroundColor: gradient(color.income),
+                    fill: 'origin',
                     borderWidth: 2,
-                    tension: 0,
-                    pointRadius: months.length > 24 ? 0 : 4,
+                    tension: 0.35,
+                    pointRadius: months.length > 24 ? 0 : 3,
                     pointHoverRadius: 6,
-                    pointBackgroundColor: color.ink,
+                    pointBackgroundColor: color.income,
                     pointBorderColor: color.surface,
                     pointBorderWidth: 2
                 }]
@@ -178,7 +261,9 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animations: { colors: false },
                 interaction: { mode: 'index', intersect: false },
+                onClick: function (event) { openBookings(cumulativeChart, event); },
                 scales: {
                     x: { grid: { display: false }, border: { color: color.grid } },
                     y: {
@@ -193,5 +278,36 @@
                 }
             }
         });
+    }
+
+    // Bereichsregler: grenzt beide Zeitverlaeufe ein, ohne die Seite neu zu laden.
+    var brush = document.querySelector('[data-chart-brush]');
+    if (brush && months.length > 2) {
+        var startInput = brush.querySelector('[data-brush-start]');
+        var endInput = brush.querySelector('[data-brush-end]');
+        var output = brush.querySelector('[data-brush-output]');
+        [startInput, endInput].forEach(function (input) { input.max = String(months.length - 1); });
+        startInput.value = '0';
+        endInput.value = String(months.length - 1);
+        brush.hidden = false;
+        var applyBrush = function (changed) {
+            var start = Number(startInput.value);
+            var end = Number(endInput.value);
+            if (start > end) {
+                if (changed === startInput) { end = start; endInput.value = String(end); } else { start = end; startInput.value = String(start); }
+            }
+            view.start = start;
+            view.end = end;
+            output.textContent = months[start] + ' – ' + months[end];
+            drawMonthly();
+            if (cumulativeChart) {
+                cumulativeChart.data.labels = slice(months);
+                cumulativeChart.data.datasets[0].data = slice(data.cumulative);
+                cumulativeChart.update();
+            }
+        };
+        output.textContent = months[0] + ' – ' + months[months.length - 1];
+        startInput.addEventListener('input', function () { applyBrush(startInput); });
+        endInput.addEventListener('input', function () { applyBrush(endInput); });
     }
 })();

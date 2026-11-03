@@ -24,8 +24,6 @@ use Vereinskiste\Receipts\UploadInput;
 
 final class BookingController extends LedgerController
 {
-    public const PAGE_SIZE = 25;
-
     /** @param Closure():\PDO $pdo */
     public function __construct(Closure $pdo, private string $receiptsDir)
     {
@@ -38,28 +36,22 @@ final class BookingController extends LedgerController
         $query = $req->getQueryParams();
         $filter = BookingRepository::normalizeFilter($query);
 
-        $total = $repo->count($filter);
-        $pages = max(1, (int) ceil($total / self::PAGE_SIZE));
-        $rawPage = $query['page'] ?? '1';
-        $page = is_string($rawPage) && preg_match('/^\d{1,9}\z/', $rawPage) === 1 ? (int) $rawPage : 1;
-        $page = min(max(1, $page), $pages);
-
         $base = http_build_query($filter);
-        $link = static fn (int $n): string => '/bookings?' . $base . ($base === '' ? '' : '&') . 'page=' . $n;
+        $pagination = Pagination::from($query, $repo->count($filter), '/bookings', $filter);
 
         return $req->getAttribute('view')->render($res, 'bookings/list.twig', [
-            'bookings' => $repo->search($filter, self::PAGE_SIZE, ($page - 1) * self::PAGE_SIZE),
+            'bookings' => $repo->search($filter, $pagination->perPage, $pagination->offset()),
             'filter' => $filter + [
                 'from' => '', 'to' => '', 'account_id' => '', 'category_id' => '', 'direction' => '',
-                'kind' => '', 'status' => '', 'q' => '',
+                'kind' => '', 'status' => '', 'q' => '', 'event_id' => '', 'funding_id' => '',
             ],
+            'events' => (new \Vereinskiste\Events\EventRepository(($this->pdo)()))->options($filter['event_id'] ?? null),
+            'funding_applications' => (new \Vereinskiste\Funding\FundingRepository(($this->pdo)()))->options($filter['funding_id'] ?? null),
             'accounts' => (new AccountRepository(($this->pdo)()))->all(),
             'categories' => (new CategoryRepository(($this->pdo)()))->all(),
-            'total' => $total,
-            'page' => $page,
-            'pages' => $pages,
-            'prev_url' => $page > 1 ? $link($page - 1) : null,
-            'next_url' => $page < $pages ? $link($page + 1) : null,
+            'export_query' => $base,
+            'pagination' => $pagination->view(),
+            'per_page' => $pagination->perPageParam(),
         ]);
     }
 
@@ -117,6 +109,9 @@ final class BookingController extends LedgerController
             'receipts' => (new ReceiptStore($pdo, $this->receiptsDir))->forBooking($booking['id']),
             'account_names' => array_column((new AccountRepository($pdo))->all(), 'name', 'id'),
             'category_names' => array_column((new CategoryRepository($pdo))->all(), 'name', 'id'),
+            'expense' => (new \Vereinskiste\Expenses\ExpenseRepository($pdo))->forBooking($booking['id']),
+            'event_names' => $pdo->query('SELECT id, title FROM events')->fetchAll(\PDO::FETCH_KEY_PAIR),
+            'funding_names' => $pdo->query('SELECT id, title FROM funding_applications')->fetchAll(\PDO::FETCH_KEY_PAIR),
             'original' => $booking['correction_of_id'] === null ? null : $repo->find($booking['correction_of_id']),
             'counterparts' => $counterparts,
         ]);

@@ -56,3 +56,56 @@ test('invoice suggestions populate German masks, keep zero tax valid and retain 
         assert.equal(document.querySelector('#invoice-tax').validity.valid,false);
     } finally {w.close();}
 });
+
+test('money fields group while typing, keep the caret and still submit a valid value', async () => {
+    const dom = new JSDOM('<form><input id="m" name="opening_balance" value=""><input id="p" data-mask="amount" name="planned_amount" value="20.50"></form>', {runScripts: 'outside-only'});
+    const w = dom.window;
+    w.vkText = (key) => key;
+    w.eval(require('node:fs').readFileSync(require('node:path').join(__dirname, '../public/assets/input-masks.js'), 'utf8'));
+    const field = w.document.querySelector('#m');
+    const type = (value, caret) => { field.value = value; field.setSelectionRange(caret, caret); field.dispatchEvent(new w.Event('input')); };
+    assert.equal(w.document.querySelector('#p').value, '20,50');
+    type('2227', 4);
+    assert.equal(field.value, '2.227');
+    assert.equal(field.selectionStart, 5);
+    assert.equal(field.validity.valid, true);
+    type('2.227.', 6);
+    assert.equal(field.value, '2.227,');
+    type('2.227,59', 8);
+    field.dispatchEvent(new w.Event('blur'));
+    assert.equal(field.value, '2.227,59');
+    type('12273,5', 2);
+    assert.equal(field.value, '12.273,5');
+    assert.equal(field.selectionStart, 2);
+    type('2.227', 5);
+    field.dispatchEvent(new w.Event('blur'));
+    assert.equal(field.value, '2.227,00');
+});
+
+test('amount sign and direction select keep each other in sync', () => {
+    const dom = new JSDOM('<form><select id="d" name="direction"><option value="in">in</option><option value="out" selected>out</option></select><input id="a" name="amount" data-mask="signed_amount" data-sign-select="d" value="12,50"></form>', {runScripts: 'outside-only'});
+    const w = dom.window;
+    w.vkText = (key) => key;
+    w.eval(readFileSync(require('node:path').join(__dirname, '../public/assets/input-masks.js'), 'utf8'));
+    const field = w.document.querySelector('#a'), select = w.document.querySelector('#d');
+    const type = (value) => { field.value = value; field.setSelectionRange(value.length, value.length); field.dispatchEvent(new w.Event('input')); };
+    assert.equal(field.value, '-12,50');
+    assert.equal(field.classList.contains('amount-negative'), true);
+    select.value = 'in'; select.dispatchEvent(new w.Event('change'));
+    assert.equal(field.value, '12,50');
+    assert.equal(field.classList.contains('amount-negative'), false);
+    type('-12,50');
+    assert.equal(select.value, 'out');
+    type('12,50');
+    assert.equal(select.value, 'in');
+    type('+7');
+    assert.equal(select.value, 'in');
+    assert.equal(field.value, '7');
+    type('');
+    select.value = 'out'; select.dispatchEvent(new w.Event('change'));
+    assert.equal(field.value, '');
+    type('2227');
+    assert.equal(field.value, '-2.227');
+    assert.equal(select.value, 'out');
+    assert.equal(field.validity.valid, true);
+});

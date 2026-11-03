@@ -1,0 +1,30 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('booking_import.title') }}{% endblock %}
+{% block content %}
+{% include 'components/finance_tabs.twig' %}
+<h1>{{ t('booking_import.title') }}</h1>
+<p>{{ t('booking_import.intro') }}</p>
+{% for error in errors %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endfor %}
+{% if can('bookings.write') %}
+<form method="post" action="/imports/bookings" enctype="multipart/form-data" class="card card-body mb-3">
+    {{ csrf_field() }}
+    <label class="form-label" for="import-account">{{ t('booking_import.account') }}</label>
+    <select class="form-select" id="import-account" name="account_id" required><option value="">{{ t('bookings.choose') }}</option>
+        {% for account in accounts %}<option value="{{ account.id }}">{{ account.name }}</option>{% endfor %}</select>
+    <div class="form-hint mb-3">{{ t('booking_import.account_hint') }}</div>
+    <label class="form-label" for="import-file">{{ t('booking_import.file') }}</label>
+    <input class="form-control mb-3" type="file" id="import-file" name="receipt" accept=".xlsx,.csv" required>
+    <div><button class="btn btn-primary" type="submit">{{ t('booking_import.upload') }}</button></div>
+</form>
+{% endif %}
+<h2>{{ t('booking_import.history') }}</h2>
+<p class="form-hint">{{ t('booking_import.draft_hint') }}</p>
+<div class="card"><table class="table table-cards"><thead><tr><th>{{ t('booking_import.file_name') }}</th><th>{{ t('booking_import.account') }}</th><th>{{ t('foundation.field.status') }}</th><th>{{ t('booking_import.count') }}</th></tr></thead><tbody>
+{% for import in imports %}<tr>
+    <td data-label="{{ t('booking_import.file_name') }}"><a href="/imports/bookings/{{ import.id }}">{{ import.file_name }}</a></td>
+    <td data-label="{{ t('booking_import.account') }}">{{ import.account_name }}</td>
+    <td data-label="{{ t('foundation.field.status') }}">{{ t('booking_import.status.' ~ import.status) }}</td>
+    <td data-label="{{ t('booking_import.count') }}">{{ import.created_count }}</td>
+</tr>{% else %}<tr><td colspan="4">{{ t('booking_import.empty') }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

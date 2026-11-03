@@ -16,6 +16,13 @@
         if (!signed && integer === '0' && fraction === '00') { return null; }
         return (integer === '0' && fraction === '00' ? '' : sign) + integer.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',' + fraction;
     }
+    // Tausenderpunkte beim Tippen. Punkte ohne Komma bleiben unberuehrt, ausser sie stammen von hier (grouped):
+    // "12.5" ist sonst eine Dezimalzahl. null: Eingabe bleibt, wie sie ist.
+    function groupMoney(value, grouped) {
+        var match = /^(-?)([\d.]*)(,\d{0,2})?$/.exec(value);
+        if (!match || (!grouped && !match[3] && match[2].includes('.'))) { return null; }
+        return match[1] + match[2].replace(/\./g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.') + (match[3] || '');
+    }
     // Telefon: 0 bzw. 00 wird zu +49 bzw. +, danach Ziffern in Gruppen; null bei unplausibler Laenge.
     function phone(value) {
         var raw = value.trim().replace(/\(0\)/g, '').replace(/[^\d+]/g, '');
@@ -60,7 +67,7 @@
         var date = new Date(iso + 'T00:00:00Z');
         return !isNaN(date.getTime()) && date.toISOString().slice(0, 10) === iso ? iso : null;
     }
-    var api = {phone: phone, money: money, compact: compact, validIban: validIban, germanDate: germanDate, isoDate: isoDate};
+    var api = {phone: phone, money: money, groupMoney: groupMoney, compact: compact, validIban: validIban, germanDate: germanDate, isoDate: isoDate};
     if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
     if (!root.document) { return; }
     var document = root.document;
@@ -71,15 +78,57 @@
         net: {hint: window.vkText('js.nettobetrag_z_b_1_000_00'), error: window.vkText('js.bitte_einen_betrag_ab_0_mit_hochstens_2_nachkommastellen_eingeben')},
         tax: {hint: window.vkText('js.steuerbetrag_z_b_190_00'), error: window.vkText('js.bitte_einen_betrag_ab_0_mit_hochstens_2_nachkommastellen_eingeben')},
         gross: {hint: window.vkText('js.bruttobetrag_z_b_1_190_00'), error: window.vkText('js.bitte_einen_betrag_groer_als_0_mit_hochstens_2_nachkommastellen_eingeben')},
+        approved_amount: {hint: window.vkText('js.betrag_z_b_1_234_56'), error: window.vkText('js.bitte_einen_betrag_ab_0_mit_hochstens_2_nachkommastellen_eingeben')},
+        signed_amount: {hint: window.vkText('js.betrag_mit_vorzeichen'), error: window.vkText('js.bitte_einen_betrag_groer_als_0_mit_hochstens_2_nachkommastellen_eingeben_ma')},
         amount: {hint: window.vkText('js.betrag_z_b_1_234_56'), error: window.vkText('js.bitte_einen_betrag_groer_als_0_mit_hochstens_2_nachkommastellen_eingeben_ma')},
         opening_balance: {hint: window.vkText('js.betrag_z_b_123_45'), error: window.vkText('js.bitte_einen_betrag_mit_hochstens_2_nachkommastellen_eingeben_max_9_999_999_')},
         phone: {hint: window.vkText('js.telefonnummer_mit_vorwahl_z_b_49_30_123456')},
         email: {hint: window.vkText('js.e_mail_z_b_name_example_org')}
     };
+    var moneyTypes = ['amount', 'opening_balance', 'net', 'tax', 'gross', 'approved_amount', 'signed_amount'];
+    // Vorzeichen und Richtungsauswahl (data-sign-select) halten sich gegenseitig aktuell.
+    function signSelect(field) { return field.dataset.signSelect ? document.getElementById(field.dataset.signSelect) : null; }
+    function markSign(field, select) { field.classList.toggle('amount-negative', select.value === 'out'); }
+    function applyDirection(field, select) {
+        var bare = field.value.replace(/^[+-]/, '');
+        field.value = bare === '' ? '' : (select.value === 'out' ? '-' : '') + bare;
+        field.hadMinus = field.value[0] === '-';
+        markSign(field, select);
+    }
+    function applySign(field, select) {
+        var value = field.value;
+        if (value[0] === '+') {
+            select.value = 'in';
+            field.value = value.slice(1);
+        } else if (value[0] === '-') {
+            select.value = 'out';
+        } else if (value !== '') {
+            // Minus geloescht heisst Einnahme; sonst bekommt ein neuer Betrag das Vorzeichen der Auswahl.
+            if (field.hadMinus) { select.value = 'in'; } else if (select.value === 'out') { field.value = '-' + value; }
+        }
+        field.hadMinus = field.value[0] === '-';
+        markSign(field, select);
+    }
+    function liveGroup(field) {
+        var value = field.value;
+        if (field.moneyGrouped && value.slice(-1) === '.' && !value.includes(',')) { value = value.slice(0, -1) + ','; }
+        var next = groupMoney(value, field.moneyGrouped);
+        if (next === null) { return; }
+        var caret = field.selectionStart === null ? value.length : field.selectionStart;
+        var before = value.slice(0, caret).replace(/\./g, '').length;
+        field.moneyGrouped = next.includes('.');
+        field.value = next;
+        var position = 0;
+        for (var seen = 0; position < next.length && seen < before; position++) {
+            if (next[position] !== '.') { seen++; }
+        }
+        field.setSelectionRange(position, position);
+    }
     function kind(field) { return field.dataset.mask || (field.type === 'date' ? 'date' : '') || (specs[field.name] ? field.name : ''); }
     function update(field, format) {
         var type = kind(field), value = field.value, error = '', formatted = value;
         if (!specs[type]) { return; }
+        if (field.moneyGrouped && !value.includes(',')) { value = value.replace(/\./g, ''); }
         if (value.trim() !== '') {
             if (type === 'date') {
                 var iso = isoDate(value);
@@ -94,9 +143,9 @@
             } else if (type === 'bic') {
                 formatted = compact(value);
                 error = /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(formatted) ? '' : specs[type].error;
-            } else if (['amount', 'opening_balance', 'net', 'tax', 'gross'].includes(type)) {
-                var result = money(value, ['opening_balance', 'net', 'tax'].includes(type));
-                error = result === null || (['net', 'tax'].includes(type) && result[0] === '-') ? specs[type].error : '';
+            } else if (moneyTypes.includes(type)) {
+                var result = money(value, ['opening_balance', 'net', 'tax', 'approved_amount', 'signed_amount'].includes(type));
+                error = result === null || (['net', 'tax', 'approved_amount'].includes(type) && result[0] === '-') ? specs[type].error : '';
                 if (result !== null) { formatted = result; }
             } else if (type === 'phone') {
                 var number = phone(value);
@@ -149,7 +198,7 @@
                 field.insertAdjacentElement('afterend', picker);
                 if (!field.disabled && !field.readOnly && typeof picker.showPicker === 'function') {
                     var button = document.createElement('button');
-                    button.type = 'button'; button.className = 'btn btn-sm btn-outline-secondary mt-1';
+                    button.type = 'button'; button.className = 'btn btn-link btn-sm p-0 date-pick-button';
                     button.textContent = window.vkText('js.datum_auswahlen');
                     field.insertAdjacentElement('afterend', button);
                     button.addEventListener('click', function () { picker.value = canonical.value; picker.showPicker(); });
@@ -161,7 +210,7 @@
             }
             if (type === 'phone') { field.type = 'tel'; field.autocomplete = 'tel'; }
             if (type === 'email') { field.type = 'email'; }
-            if (['amount', 'opening_balance', 'net', 'tax', 'gross'].includes(type)) { field.inputMode = 'decimal'; }
+            if (moneyTypes.includes(type)) { field.inputMode = 'decimal'; }
             if (type === 'iban') { field.maxLength = 42; field.spellcheck = false; }
             if (type === 'bic') { field.maxLength = 11; field.spellcheck = false; }
             if (!field.placeholder) { field.placeholder = spec.hint; }
@@ -170,13 +219,31 @@
             feedback.className = 'form-hint';
             feedback.textContent = spec.hint;
             field.insertAdjacentElement('afterend', feedback);
+            if (button) {
+                var meta = document.createElement('div');
+                meta.className = 'date-field-meta';
+                feedback.insertAdjacentElement('beforebegin', meta);
+                meta.append(feedback, button);
+            }
             field.dataset.maskFeedback = feedback.id;
             field.setAttribute('aria-describedby', [field.getAttribute('aria-describedby'), feedback.id].filter(Boolean).join(' '));
-            field.addEventListener('input', function () { if (!field.composing) { update(field, false); } });
+            field.addEventListener('input', function () {
+                if (field.composing) { return; }
+                var select = signSelect(field);
+                if (select) { applySign(field, select); }
+                if (moneyTypes.includes(type)) { liveGroup(field); }
+                update(field, false);
+            });
             field.addEventListener('compositionstart', function () { field.composing = true; });
             field.addEventListener('compositionend', function () { field.composing = false; update(field, false); });
             field.addEventListener('blur', function () { update(field, true); });
-            if (field.disabled || field.readOnly) { update(field, true); }
+            if (field.disabled || field.readOnly || (moneyTypes.includes(type) && field.value !== '')) { update(field, true); }
+            var direction = signSelect(field);
+            if (direction) {
+                applyDirection(field, direction);
+                update(field, true);
+                direction.addEventListener('change', function () { applyDirection(field, direction); update(field, true); });
+            }
         });
     }
     enhance(document);

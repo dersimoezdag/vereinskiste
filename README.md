@@ -28,7 +28,7 @@ Niemals die Tests gegen eine produktive Datenbank ausführen.
 
 ## Installation auf Webhosting (z. B. Hetzner)
 
-Voraussetzungen: PHP ab 8.4 mit `pdo_pgsql`, `mbstring`, `fileinfo`, `gd` und
+Voraussetzungen: PHP ab 8.4 mit `pdo_pgsql`, `mbstring`, `fileinfo`, `gd`, `zip` und
 `openssl`, PostgreSQL ab 15, HTTPS, mindestens 64 MB PHP-Speicher.
 Die Anwendung wird direkt unter einer Domain betrieben, etwa
 `https://verein.example.org`, nicht in einem URL-Unterverzeichnis.

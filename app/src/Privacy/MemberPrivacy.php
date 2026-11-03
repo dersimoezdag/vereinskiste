@@ -21,6 +21,8 @@ final class MemberPrivacy
             'roles'=>'SELECT r.name,r.kind,m.scope,m.start_date,m.end_date FROM member_club_roles m JOIN club_roles r ON r.id=m.role_id WHERE m.member_id=? ORDER BY m.id',
             'applications'=>'SELECT id,status,applicant_name,email,data,rejection_reason,created_at,reviewed_at FROM membership_applications WHERE member_id=? ORDER BY id',
             'history'=>"SELECT at,reason,changes FROM foundation_changes WHERE subject='member' AND subject_id=? ORDER BY id",
+            'event_tasks'=>'SELECT e.title AS event,t.title,t.done FROM event_tasks t JOIN events e ON e.id=t.event_id WHERE t.member_id=? ORDER BY t.id',
+            'expenses'=>'SELECT purpose,amount,spent_on,booking_id FROM member_expenses WHERE member_id=? ORDER BY id',
             'account'=>'SELECT id,name,email,active FROM users WHERE member_id=?',
         ];
         $result=['generated_at'=>(new \DateTimeImmutable())->format(DATE_ATOM),'member'=>$member];

@@ -1,0 +1,23 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('expenses.title') }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="mb-0">{{ t('expenses.title') }}</h1>
+    {% if can('bookings.write') %}<a class="btn btn-primary" href="/expenses/new">{{ t('expenses.new') }}</a>{% endif %}
+</div>
+<p><strong>{{ t('expenses.open_total') }}: {{ open.total|eur }}</strong> ({{ open.count }})</p>
+<nav class="mui-tabs mb-3" aria-label="{{ t('expenses.title') }}">
+    {% for value in ['open', 'reimbursed', 'all'] %}<a class="mui-tab{% if state == value %} active{% endif %}" href="/expenses?state={{ value }}">{{ t('expenses.filter.' ~ value) }}</a>{% endfor %}
+</nav>
+<div class="card"><table class="table table-cards"><thead><tr><th>{{ t('foundation.field.spent_on') }}</th><th>{{ t('expenses.person') }}</th><th>{{ t('foundation.field.purpose') }}</th><th class="text-end">{{ t('bookings.amount_eur') }}</th><th>{{ t('foundation.field.has_receipt') }}</th><th>{{ t('foundation.field.status') }}</th></tr></thead><tbody>
+{% for expense in expenses %}<tr>
+    <td data-label="{{ t('foundation.field.spent_on') }}">{{ expense.spent_on|date('d.m.Y') }}</td>
+    <td data-label="{{ t('expenses.person') }}">{{ expense.person }}</td>
+    <td data-label="{{ t('foundation.field.purpose') }}"><a href="/expenses/{{ expense.id }}">{{ expense.purpose }}</a></td>
+    <td data-label="{{ t('bookings.amount_eur') }}" class="text-end">{{ expense.amount|eur }}</td>
+    <td data-label="{{ t('foundation.field.has_receipt') }}">{{ expense.has_receipt ? t('users.roles.allowed') : t('users.roles.denied') }}</td>
+    <td data-label="{{ t('foundation.field.status') }}">{% include 'expenses/_badge.twig' %}</td>
+</tr>{% else %}<tr><td colspan="6">{{ t('expenses.empty') }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% include 'components/pagination.twig' %}
+{% endblock %}

@@ -21,14 +21,16 @@ final class ClubDocumentController extends AdminController
  private function writer(Request $req): bool { return $req->getAttribute('auth')->can('documents.write'); }
  public function index(Request $req,Response $res,array $args): Response
  {
-  $repo=new Repository(($this->pdo)());$kind=$args['kind'];$writer=$this->writer($req);$page=max(1,min(10000,(int)($req->getQueryParams()['page'] ?? 1)));
+  $repo=new Repository(($this->pdo)());$kind=$args['kind'];$writer=$this->writer($req);
   $root=$kind==='minutes'?null:$repo->root($kind);
-  $rows=$kind==='minutes'?$repo->listing($writer,$page):($root?$repo->history($root,$writer,$page):[]);
+  $total=$kind==='minutes'?$repo->listingCount($writer):($root?$repo->historyCount($root,$writer):0);
+  $pagination=Pagination::from($req->getQueryParams(),$total,'/documents/'.$kind,[],[50,100,200]);
+  $rows=$kind==='minutes'?$repo->listing($writer,$pagination->page,$pagination->perPage):($root?$repo->history($root,$writer,$pagination->page,$pagination->perPage):[]);
   $latest=$root && $writer ? $repo->version($root,null,true):null;
   return $req->getAttribute('view')->render($res,'documents/index.twig',[
    'kind'=>$kind,'root'=>$root,'document'=>$root?$repo->version($root):null,
    'draft'=>$latest && $latest['status']==='draft'?$latest:null,
-   'rows'=>array_slice($rows,0,50),'more'=>count($rows)>50,'page'=>$page,
+   'rows'=>$rows,'pagination'=>$pagination->view(),
   ]);
  }
  public function create(Request $req,Response $res,array $args): Response

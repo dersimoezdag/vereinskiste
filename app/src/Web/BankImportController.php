@@ -21,9 +21,10 @@ final class BankImportController extends AdminController
     public function __construct(private Closure $pdo, private string $directory) {}
     public function index(Request $req, Response $res): Response
     {
-        $page = max(1, min(100000, (int) ($req->getQueryParams()['page'] ?? 1)));
+        $repo = new Repository(($this->pdo)());
+        $pagination = Pagination::from($req->getQueryParams(), $repo->count(), '/imports/bank', [], [50, 100, 200]);
         return $req->getAttribute('view')->render($res, 'imports/bank/index.twig', [
-            'imports' => (new Repository(($this->pdo)()))->list($page), 'page' => $page]);
+            'imports' => $repo->list($pagination->page, $pagination->perPage), 'pagination' => $pagination->view()]);
     }
     public function create(Request $req, Response $res, array $errors = []): Response
     {
@@ -59,7 +60,7 @@ final class BankImportController extends AdminController
             }
         }
         return $req->getAttribute('view')->render($res, 'imports/bank/detail.twig', [
-            'import' => $import, 'rows' => $repo->rows($id, $page), 'summary' => $repo->summary($id),
+            'import' => $import, 'pagination' => Pagination::from($query, min((int) $import['parsed_rows'], 10000), '/imports/bank/' . $id, [], [250])->view(), 'rows' => $repo->rows($id, $page), 'summary' => $repo->summary($id),
             'fields' => CsvMapping::FIELDS, 'profiles' => $repo->profiles(), 'defaults' => $defaults,
             'page' => $page, 'errors' => $errors]);
     }

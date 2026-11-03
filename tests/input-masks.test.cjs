@@ -1,6 +1,6 @@
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
-const {phone, money, compact, validIban, germanDate, isoDate} = require('../public/assets/input-masks.js');
+const {phone, money, groupMoney, compact, validIban, germanDate, isoDate} = require('../public/assets/input-masks.js');
 
 test('money accepts the same decimal/grouping syntax as the server without rounding', () => {
     for (const [input, expected] of [['12', '12,00'], ['12.5', '12,50'], ['1.234,56', '1.234,56'],
@@ -38,4 +38,16 @@ test('phone input supports German national and international numbers and rejects
     assert.equal(phone('0049 (0)30 12345678'), '+49 3012345678');
     assert.equal(phone('+43 664 1234567'), '+43 6641234567');
     for (const value of ['12345', '+49 12', '+49+30 12345678', '+49 1234567890123456']) assert.equal(phone(value),null);
+});
+
+test('groupMoney groups while typing without reading decimal points as separators', () => {
+    assert.equal(groupMoney('2227,59', false), '2.227,59');
+    assert.equal(groupMoney('1234567', false), '1.234.567');
+    assert.equal(groupMoney('-2227', false), '-2.227');
+    assert.equal(groupMoney('123', false), '123');
+    assert.equal(groupMoney('12.5', false), null);
+    assert.equal(groupMoney('1.234', true), '1.234');
+    assert.equal(groupMoney('1.23', true), '123');
+    assert.equal(groupMoney('1.2345,6', false), '12.345,6');
+    assert.equal(groupMoney('abc', false), null);
 });

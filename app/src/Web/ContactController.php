@@ -22,10 +22,11 @@ final class ContactController extends AdminController
         $search = $this->str($query, 'q');
         if (!mb_check_encoding($search, 'UTF-8')) { $search = ''; }
         $state = $this->str($query, 'state') ?: 'active';
-        $page = max(1, min(100000, (int) $this->str($query, 'page')));
+        $repo = new ContactRepository(($this->pdo)());
+        $pagination = Pagination::from($query, $repo->count($search, $state), '/contacts', array_filter(['q' => $search, 'state' => $state]), [50, 100, 200]);
         return $req->getAttribute('view')->render($res, 'contacts/index.twig', [
-            'contacts' => (new ContactRepository(($this->pdo)()))->list($search, $state, $page),
-            'search' => $search, 'state' => $state, 'page' => $page,
+            'contacts' => $repo->list($search, $state, $pagination->page, $pagination->perPage),
+            'search' => $search, 'state' => $state, 'pagination' => $pagination->view(), 'per_page' => $pagination->perPageParam(),
         ]);
     }
 

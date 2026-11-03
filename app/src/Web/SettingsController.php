@@ -13,7 +13,6 @@ use Vereinskiste\Ledger\ValidationError;
 /** Abschluss ("abgeschlossen bis") und Protokoll; beides nur mit `settings.manage` (Vorstand). */
 final class SettingsController extends AdminController
 {
-    public const AUDIT_PAGE_SIZE = 50;
 
     /** @param Closure():\PDO $pdo */
     public function __construct(private Closure $pdo)
@@ -56,24 +55,13 @@ final class SettingsController extends AdminController
         $query = $req->getQueryParams();
         $action = AuditLog::normalizeAction($query['action'] ?? null);
 
-        $total = $log->count($action);
-        $pages = max(1, (int) ceil($total / self::AUDIT_PAGE_SIZE));
-        $rawPage = $query['page'] ?? '1';
-        $page = is_string($rawPage) && preg_match('/^\d{1,9}\z/', $rawPage) === 1 ? (int) $rawPage : 1;
-        $page = min(max(1, $page), $pages);
-
-        $base = $action === null ? '' : 'action=' . rawurlencode($action) . '&';
-        $link = static fn (int $n): string => '/audit-log?' . $base . 'page=' . $n;
+        $pagination = Pagination::from($query, $log->count($action), '/audit-log', $action === null ? [] : ['action' => $action], [50, 100, 200]);
 
         return $req->getAttribute('view')->render($res, 'admin/audit.twig', [
-            'entries' => $log->page($action, self::AUDIT_PAGE_SIZE, ($page - 1) * self::AUDIT_PAGE_SIZE),
+            'entries' => $log->page($action, $pagination->perPage, $pagination->offset()),
             'actions' => AuditLog::ACTIONS,
             'action' => $action,
-            'total' => $total,
-            'page' => $page,
-            'pages' => $pages,
-            'prev_url' => $page > 1 ? $link($page - 1) : null,
-            'next_url' => $page < $pages ? $link($page + 1) : null,
+            'pagination' => $pagination->view(),
         ]);
     }
 

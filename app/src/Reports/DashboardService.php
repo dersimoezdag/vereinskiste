@@ -114,6 +114,20 @@ final class DashboardService
      * @param list<array{name:string,amount:string}> $expense
      * @return array<string,mixed>
      */
+    /** Daten fuer reports/_charts.twig. @return array{income_rows:array,expense_rows:array,charts_json:string} */
+    public static function chartContext(array $summary, array $monthly, ?array $texts = null): array
+    {
+        $texts ??= require dirname(__DIR__) . '/Text/de.php';
+        $uncategorized = $texts['reports.uncategorized'] ?? SummaryService::UNCATEGORIZED;
+        $other = $texts['dashboard.other'] ?? 'Weitere';
+        $income = self::topCategories($summary['byCategory'], 'income', $uncategorized, $other);
+        $expense = self::topCategories($summary['byCategory'], 'expense', $uncategorized, $other);
+        // JSON_HEX_*: Kategorienamen duerfen den <script>-Block nicht verlassen (CSP erlaubt nur Daten, kein Inline-Skript).
+        $json = json_encode(self::chartData($monthly, $income, $expense),
+            JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        return ['income_rows' => $income, 'expense_rows' => $expense, 'charts_json' => $json];
+    }
+
     public static function chartData(array $monthly, array $income, array $expense): array
     {
         $euro = static fn (string $amount): float => self::cents($amount) / 100;
