@@ -3,6 +3,9 @@
     <label class="label" for="field-{{ field }}">{{ t('foundation.field.' ~ field) }}</label>
     {% if field == 'locale' %}
     <select class="input" id="field-locale" name="locale"><option value="de">{{ t('language.de') }}</option></select>
+    {% elseif field == 'timezone' %}
+    {% set zone = input.timezone|default('Europe/Berlin') %}
+    <select class="input{% if errors.timezone is defined %} is-invalid{% endif %}" id="field-timezone" name="timezone">{% for z in timezones() %}<option value="{{ z }}"{% if z == zone %} selected{% endif %}>{{ z }}</option>{% endfor %}</select>
     {% else %}
     <input class="input{% if errors[field] is defined %} is-invalid{% endif %}" id="field-{{ field }}"
            name="{{ field }}" type="{{ field == 'email' ? 'email' : (field == 'phone' ? 'tel' : (field ends with '_url' ? 'url' : 'text')) }}"

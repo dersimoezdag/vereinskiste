@@ -23,7 +23,7 @@ return [
     'foundation.conflict' => 'Der Datensatz wurde inzwischen geändert. Bitte neu laden und Änderungen erneut prüfen.',
     'foundation.iban.invalid' => 'Die IBAN hat ein ungültiges Format oder eine falsche Prüfsumme.',
     'foundation.bank' => 'Bankdaten', 'foundation.logo' => 'Vereinslogo',
-    'foundation.field.name' => 'Name', 'foundation.field.address' => 'Straße', 'foundation.field.house_number' => 'Hausnummer',
+    'foundation.field.name' => 'Name', 'foundation.field.address' => 'Straße', 'foundation.field.house_number' => 'Hausnummer', 'foundation.field.timezone' => 'Zeitzone',
     'foundation.field.zip' => 'Postleitzahl', 'foundation.field.city' => 'Ort',
     'foundation.field.country' => 'Land', 'foundation.field.email' => 'E-Mail-Adresse',
     'foundation.field.phone' => 'Telefon', 'foundation.field.website_url' => 'Website (HTTPS)',

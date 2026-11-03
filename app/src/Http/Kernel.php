@@ -64,6 +64,7 @@ final class Kernel
     public static function create(array $config): App
     {
         $app = AppFactory::create();
+        date_default_timezone_set(\Vereinskiste\Club\ClubTimezone::DEFAULT);
 
         $appDir = $config['app_dir'] ?? dirname(__DIR__, 2);
         $store = $config['session_store'] ?? new NativeSessionStore($appDir . '/storage/sessions');
@@ -116,6 +117,7 @@ final class Kernel
         $env->addFilter(new TwigFilter('eur', [MoneyFormat::class, 'eur']));
         $env->addFilter(new TwigFilter('note', [\Vereinskiste\ClubDocuments\Content::class, 'note'], ['is_safe' => ['html']]));
         $runtime = new \Vereinskiste\Update\Runtime($appDir);
+        $env->addFunction(new TwigFunction('timezones', static fn (): array => \DateTimeZone::listIdentifiers()));
         $env->addFunction(new TwigFunction('interface_texts', static fn (): string => json_encode(array_filter($texts, static fn (string $key): bool => str_starts_with($key, 'js.'), ARRAY_FILTER_USE_KEY), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR)));
         $env->addFunction(new TwigFunction('asset', static fn (string $path): string => $runtime->asset($path)));
         $env->addFunction(new TwigFunction('system_mail_available', static fn (): bool => $mailer->isConfigured()));
@@ -428,14 +430,20 @@ final class Kernel
         $pdo = $config['pdo'] ?? null;
         $db = $config['db'] ?? null;
 
-        return static function () use (&$pdo, $db): PDO {
-            if ($pdo instanceof PDO) {
-                return $pdo;
+        $zoned = false;
+        return static function () use (&$pdo, &$zoned, $db): PDO {
+            if (!$pdo instanceof PDO) {
+                if (!is_array($db)) {
+                    throw new RuntimeException('Keine Datenbankverbindung konfiguriert.');
+                }
+                $pdo = Connection::fromConfig($db);
             }
-            if (!is_array($db)) {
-                throw new RuntimeException('Keine Datenbankverbindung konfiguriert.');
+            if (!$zoned) {
+                // Einmal pro Anfrage: Anzeige und "heute" in der Zeitzone des Vereins.
+                $zoned = true;
+                \Vereinskiste\Club\ClubTimezone::apply($pdo);
             }
-            return $pdo = Connection::fromConfig($db);
+            return $pdo;
         };
     }
 }

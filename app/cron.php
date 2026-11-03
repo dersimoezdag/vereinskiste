@@ -23,6 +23,7 @@ if (!flock($lock, LOCK_EX | LOCK_NB)) { fclose($lock); exit; }
 try {
     $cronStarted=microtime(true);
     $pdo = Vereinskiste\Db\Connection::fromConfig($config['db']);
+    Vereinskiste\Club\ClubTimezone::apply($pdo);
     $cronRuntime=new Vereinskiste\Update\Runtime($instance);
     $updateState=(new Vereinskiste\Update\State($cronRuntime))->load();
     if ($updateState!==null && !in_array($updateState['phase'],[...Vereinskiste\Update\Coordinator::TERMINAL,'recovery_required'],true)) {

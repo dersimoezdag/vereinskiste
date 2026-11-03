@@ -15,7 +15,7 @@ final class Profile
     public const FIELDS = ['name' => 100, 'address' => 200, 'house_number' => 20, 'zip' => 20, 'city' => 100,
         'country' => 100, 'email' => 254, 'phone' => 50, 'website_url' => 1000,
         'constitution_url' => 1000, 'contribution_url' => 1000, 'privacy_url' => 1000,
-        'locale' => 5, 'year_start' => 5, 'color' => 7];
+        'locale' => 5, 'year_start' => 5, 'color' => 7, 'timezone' => 64];
 
     public function __construct(private PDO $pdo) {}
 
@@ -27,7 +27,7 @@ final class Profile
         if (!isset($data['name'])) {
             $data['name'] = $this->pdo->query("SELECT value FROM settings WHERE key = 'club_name'")->fetchColumn() ?: 'Verein';
         }
-        return ['data' => $data + ['locale' => 'de', 'year_start' => '01-01', 'color' => '']
+        return ['data' => $data + ['locale' => 'de', 'year_start' => '01-01', 'color' => '', 'timezone' => ClubTimezone::DEFAULT]
             + array_fill_keys(array_keys(self::FIELDS), ''), 'version' => (int) $row['version'],
             'logo_id' => $row['logo_id'] === null ? null : (int) $row['logo_id']];
     }
@@ -68,6 +68,8 @@ final class Profile
         if ($values['color'] !== '' && !preg_match('/^#[a-fA-F0-9]{6}\z/', $values['color'])) {
             $errors['color'] = 'foundation.invalid';
         }
+        if ($values['timezone'] === '') { $values['timezone'] = ClubTimezone::DEFAULT; }
+        if (!ClubTimezone::valid($values['timezone'])) { $errors['timezone'] = 'foundation.invalid'; }
         if ($errors !== []) { throw new ValidationError($errors); }
         Transaction::run($this->pdo, function () use ($values, $version, $actor, $reason): void {
             $before = $this->get(true);
