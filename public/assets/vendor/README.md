@@ -1,19 +1,12 @@
 # Gebündelte Fremd-Assets
 
-Diese Dateien werden unverändert mit der Anwendung ausgeliefert (kein Build auf dem Server, kein Node im Repository).
+Diese Dateien werden mit der Anwendung ausgeliefert (kein Build auf dem Server).
 
-## Tabler (`tabler/`)
+## Stylesheet und Schriften (`../app.css`, `fonts/`)
 
-- Paket: `@tabler/core` **1.6.1** (MIT-Lizenz, siehe `tabler/LICENSE`)
-- Dateien: `tabler/tabler.min.css`, `tabler/tabler.min.js` (aus `dist/css` bzw. `dist/js`)
-- Quelle: `https://registry.npmjs.org/@tabler/core/-/core-1.6.1.tgz`
-- Release: `https://github.com/tabler/tabler/releases/tag/%40tabler/core%401.6.1`
-- Lizenztext: `https://github.com/tabler/tabler/blob/%40tabler/core%401.6.1/LICENSE`
-- Registry-Integrität (vor Entpacken geprüft): `sha512-lgmR9gcxRp5JlLxcmRi9Rz85JrEvH6Bz71KnlcPVSa97wtwQNjgSs3g3fxwbAlulHyRMghhIV04QUuW3pqDsIg==`
-- SHA-256 CSS: `370a2d4e608ae518351d10528fc7dbe19b354ae5062c51b2a9cb294850d65403`
-- SHA-256 JS: `9d26ca1aa061a0c647305654e32efc2c8838e348b2423e9d1f4593869868e09b`
-
-Aktualisieren: offizielles npm-Paket herunterladen, dessen veröffentlichte Integrität vor dem Entpacken prüfen, Version/Prüfsummen dokumentieren, Lizenz und Oberfläche prüfen. Kein Paketmanager oder Node auf dem Hosting nötig.
+- `public/assets/app.css` wird aus `app/styles/app.css` mit Tailwind CSS **4.3.3** (MIT) erzeugt und nicht versioniert. Bauen: `node scripts/build-css.cjs`, beim Entwickeln `node scripts/build-css.cjs --watch`. `scripts/build-release.sh` baut die Datei vor dem Packen.
+- Schriften Geist und Geist Mono aus `@fontsource-variable/geist` bzw. `@fontsource-variable/geist-mono` **5.3.0** (SIL Open Font License 1.1, Lizenztexte `fonts/*-LICENSE`), selbst gehostet, kein Abruf bei Dritten. `build-css.cjs` kopiert die Dateien nach `fonts/`.
+- Alle Pakete sind in `tests/package-lock.json` exakt versioniert. Auf dem Hosting wird weder Node noch ein Paketmanager gebraucht.
 
 ## Chart.js (`chartjs/`)
 

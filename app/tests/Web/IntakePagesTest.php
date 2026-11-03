@@ -37,7 +37,7 @@ final class IntakePagesTest extends TestCase
         $this->loginAs(['admin']);
         $html=(string)$this->get('/bookings')->getBody();
         $this->assertSame(1,preg_match('/id="cashbook-menu">(.*?)<\/div>/s',$html,$match));
-        $this->assertSame(5,substr_count($match[1],'dropdown-item'));
+        $this->assertSame(5,substr_count($match[1],'nav-sublink'));
         foreach(['/cashbook','/expenses','/bookings','/accounts','/invoices'] as $href) {$this->assertStringContainsString('href="'.$href.'"',$match[1]);}
         $this->assertStringNotContainsString('/receipt-inbox',$match[1]);
         $this->assertStringContainsString('href="/imports/bank"',$html);

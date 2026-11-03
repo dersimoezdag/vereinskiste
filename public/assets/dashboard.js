@@ -7,10 +7,10 @@
         return;
     }
     // Die Canvas-Farben werden einmal gelesen; nach dem Themawechsel neu laden.
-    var theme = document.documentElement.getAttribute('data-bs-theme');
+    var theme = document.documentElement.getAttribute('data-theme');
     new MutationObserver(function () {
-        if (document.documentElement.getAttribute('data-bs-theme') !== theme) { window.location.reload(); }
-    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-bs-theme'] });
+        if (document.documentElement.getAttribute('data-theme') !== theme) { window.location.reload(); }
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     var data = JSON.parse(dataElement.textContent);
     var styles = getComputedStyle(root);
 

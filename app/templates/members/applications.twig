@@ -3,37 +3,37 @@
 {% import 'components/help.twig' as help %}
 
 {% block content %}
-<div class="container-xl">
-    <div class="page-header d-print-none mb-3">
+<div class="mx-auto w-full max-w-7xl">
+    <div class="page-header print:hidden mb-4">
         <h1 class="page-title">{{ t('applications.title') }}</h1>
     </div>
 
     <!-- Navigation Tabs -->
-    <ul class="nav nav-tabs mb-4" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link" href="/members">
+    <ul class="tabs mb-6" role="tablist">
+        <li class="flex">
+            <a class="tab" href="/members">
                 {{ icons.icon('members') }} {{ t('applications.tab_members') }}
             </a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link active" href="/members/applications" aria-current="page">
+        <li class="flex">
+            <a class="tab active" href="/members/applications" aria-current="page">
                 {{ icons.icon('contacts') }} {{ t('applications.tab_applications') }}
                 {% if pending_count > 0 %}
-                <span class="badge bg-danger ms-1">{{ pending_count }}</span>
+                <span class="badge bg-danger text-white ms-1">{{ pending_count }}</span>
                 {% endif %}
             </a>
         </li>
     </ul>
 
-    <div class="row g-4">
+    <div class="grid-12 gap-6">
         <!-- Link-Erstellung und Übersicht -->
-        <div class="col-lg-5 col-12">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h3 class="card-title">{{ t('applications.invites.create') }} {{ help.tip(t('ui.erzeugt_einen_geschuetzten_online_aufnahmelink_fuer_beitrittsinte')) }}</h3>
+        <div class="lg:col-span-5 col-span-12">
+            <div class="panel mb-6">
+                <div class="panel-header">
+                    <h3 class="panel-title">{{ t('applications.invites.create') }} {{ help.tip(t('ui.erzeugt_einen_geschuetzten_online_aufnahmelink_fuer_beitrittsinte')) }}</h3>
                 </div>
-                <div class="card-body">
-                    <p class="text-muted small mb-3">
+                <div class="panel-body">
+                    <p class="text-muted text-sm mb-4">
                         {{ t('applications.invites.description') }}
                     </p>
 
@@ -41,34 +41,34 @@
                     <form method="post" action="/members/invites/new">
                         {{ csrf_field() }}
 
-                        <div class="mb-3">
-                            <label for="invite-title" class="form-label">{{ t('applications.invites.label') }}</label>
-                            <input type="text" id="invite-title" name="title" class="form-control"
+                        <div class="mb-4">
+                            <label for="invite-title" class="label">{{ t('applications.invites.label') }}</label>
+                            <input type="text" id="invite-title" name="title" class="input"
                                    placeholder="{{ t('applications.invites.label_placeholder') }}" maxlength="200">
                         </div>
 
-                        <div class="row g-2 mb-3">
-                            <div class="col-6">
-                                <label for="invite-days" class="form-label">{{ t('applications.invites.validity_days') }} {{ help.tip(t('ui.gueltigkeitsdauer_nach_ablauf_dieser_frist_kann_der_link_nicht_me')) }}</label>
-                                <input type="number" id="invite-days" name="valid_days" value="14" min="1" max="365" class="form-control">
+                        <div class="grid-12 gap-2 mb-4">
+                            <div class="col-span-6">
+                                <label for="invite-days" class="label">{{ t('applications.invites.validity_days') }} {{ help.tip(t('ui.gueltigkeitsdauer_nach_ablauf_dieser_frist_kann_der_link_nicht_me')) }}</label>
+                                <input type="number" id="invite-days" name="valid_days" value="14" min="1" max="365" class="input">
                             </div>
-                            <div class="col-6">
-                                <label for="invite-pwd" class="form-label">{{ t('applications.invites.password') }} {{ help.tip(t('ui.zusaetzlicher_schutz_der_antragsteller_muss_vor_dem_ausfuellen_di')) }}</label>
-                                <input type="text" id="invite-pwd" name="password" class="form-control"
+                            <div class="col-span-6">
+                                <label for="invite-pwd" class="label">{{ t('applications.invites.password') }} {{ help.tip(t('ui.zusaetzlicher_schutz_der_antragsteller_muss_vor_dem_ausfuellen_di')) }}</label>
+                                <input type="text" id="invite-pwd" name="password" class="input"
                                        placeholder="{{ t('applications.invites.password_placeholder') }}" autocomplete="off">
                             </div>
                         </div>
-                        <div class="form-text text-muted mb-3">{{ t('applications.invites.password_hint') }}</div>
+                        <div class="field-hint text-muted mb-4">{{ t('applications.invites.password_hint') }}</div>
 
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" id="require-sepa" name="require_sepa" value="1">
-                            <label class="form-check-label fw-semibold" for="require-sepa">
+                        <div class="check check-switch mb-4">
+                            <input class="check-input" type="checkbox" id="require-sepa" name="require_sepa" value="1">
+                            <label class="check-label font-semibold" for="require-sepa">
                                 {{ t('applications.invites.require_sepa') }} {{ help.tip(t('ui.verpflichtendes_sepa_lastschriftmandat_der_antragsteller_muss_ban')) }}
                             </label>
-                            <div class="form-text text-muted">{{ t('applications.invites.require_sepa_hint') }}</div>
+                            <div class="field-hint text-muted">{{ t('applications.invites.require_sepa_hint') }}</div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100">
+                        <button type="submit" class="btn btn-primary w-full">
                             {{ t('applications.invites.create') }}
                         </button>
                     </form>
@@ -77,12 +77,12 @@
             </div>
 
             <!-- Liste der erstellten Einladungs-Links -->
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">{{ t('applications.invites.title') }}</h3>
+            <div class="panel">
+                <div class="panel-header">
+                    <h3 class="panel-title">{{ t('applications.invites.title') }}</h3>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-vcenter table-hover mb-0">
+                <div class="table-scroll">
+                    <table class="data-table mb-0">
                         <thead>
                             <tr>
                                 <th>{{ t('ui.empfaenger_link') }}</th>
@@ -93,7 +93,7 @@
                         <tbody>
                         {% if invites is empty %}
                             <tr>
-                                <td colspan="3" class="text-center text-muted py-3 small">
+                                <td colspan="3" class="text-center text-muted py-4 text-sm">
                                     {{ t('applications.invites.none') }}
                                 </td>
                             </tr>
@@ -101,34 +101,34 @@
                             {% for inv in invites %}
                             <tr>
                                 <td>
-                                    <div class="fw-semibold">
+                                    <div class="font-semibold">
                                         {{ inv.title ?: 'Einladungs-Link' }}
                                         {% if inv.has_password %}
-                                        <span class="badge bg-warning-subtle text-warning border ms-1" title="{{ t('ui.passwortgeschuetzt') }}">{{ t('ui.pw') }}</span>
+                                        <span class="badge bg-warning-soft text-warning border border-line ms-1" title="{{ t('ui.passwortgeschuetzt') }}">{{ t('ui.pw') }}</span>
                                         {% endif %}
                                         {% if inv.require_sepa %}
-                                        <span class="badge bg-info-subtle text-info border ms-1" title="{{ t('ui.inkl_sepa') }}">{{ t('ui.sepa') }}</span>
+                                        <span class="badge bg-info-soft text-info border border-line ms-1" title="{{ t('ui.inkl_sepa') }}">{{ t('ui.sepa') }}</span>
                                         {% endif %}
                                     </div>
-                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                    <div class="flex items-center gap-2 mt-1">
                                         <input type="text" readonly value="/antrag/{{ inv.token }}" id="inv-link-{{ inv.id }}" aria-label="{{ t('ui.einladungs_link') }}"
-                                               class="form-control form-control-sm font-monospace text-muted py-0 px-1 bg-light border-0" style="max-width: 140px;">
-                                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                               class="input input-sm font-mono text-muted py-0 px-1 bg-subtle border-0" style="max-width: 140px;">
+                                        <button type="button" class="btn btn-sm py-0 px-2"
                                                 data-copy-path="/antrag/{{ inv.token }}" data-copied-label="{{ t('applications.invites.copied') }}">
                                             {{ t('applications.invites.copy_link') }}
                                         </button>
                                     </div>
                                 </td>
-                                <td class="small text-muted">
+                                <td class="text-sm text-muted">
                                     {{ inv.expires_at|date('d.m.Y H:i') }}
                                 </td>
                                 <td>
                                     {% if inv.is_used %}
-                                        <span class="badge bg-success-subtle text-success">{{ t('applications.invites.used') }}</span>
+                                        <span class="badge bg-success-soft text-success">{{ t('applications.invites.used') }}</span>
                                     {% elseif inv.is_expired %}
-                                        <span class="badge bg-secondary-subtle text-secondary">{{ t('applications.invites.expired') }}</span>
+                                        <span class="badge bg-subtle text-muted">{{ t('applications.invites.expired') }}</span>
                                     {% else %}
-                                        <span class="badge bg-primary-subtle text-primary">{{ t('applications.invites.open') }}</span>
+                                        <span class="badge bg-primary-soft text-primary">{{ t('applications.invites.open') }}</span>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -141,30 +141,30 @@
         </div>
 
         <!-- Rechte Spalte: Eingegangene Mitgliedsanträge -->
-        <div class="col-lg-7 col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <h3 class="card-title m-0">{{ t('applications.title') }}</h3>
-                    <div class="d-flex gap-1">
-                        <a href="/members/applications?filter=all" class="btn btn-sm {% if filter == 'all' %}btn-primary{% else %}btn-outline-secondary{% endif %}">{{ t('invoices.status.all') }}</a>
-                        <a href="/members/applications?filter=pending" class="btn btn-sm {% if filter == 'pending' %}btn-primary{% else %}btn-outline-secondary{% endif %}">{{ t('applications.status.pending') }}</a>
-                        <a href="/members/applications?filter=approved" class="btn btn-sm {% if filter == 'approved' %}btn-primary{% else %}btn-outline-secondary{% endif %}">{{ t('applications.status.approved') }}</a>
-                        <a href="/members/applications?filter=rejected" class="btn btn-sm {% if filter == 'rejected' %}btn-primary{% else %}btn-outline-secondary{% endif %}">{{ t('intake.payment.rejected') }}</a>
+        <div class="lg:col-span-7 col-span-12">
+            <div class="panel">
+                <div class="panel-header flex justify-between items-center flex-wrap gap-2">
+                    <h3 class="panel-title m-0">{{ t('applications.title') }}</h3>
+                    <div class="flex gap-1">
+                        <a href="/members/applications?filter=all" class="btn btn-sm {% if filter == 'all' %}btn-primary{% else %}{% endif %}">{{ t('invoices.status.all') }}</a>
+                        <a href="/members/applications?filter=pending" class="btn btn-sm {% if filter == 'pending' %}btn-primary{% else %}{% endif %}">{{ t('applications.status.pending') }}</a>
+                        <a href="/members/applications?filter=approved" class="btn btn-sm {% if filter == 'approved' %}btn-primary{% else %}{% endif %}">{{ t('applications.status.approved') }}</a>
+                        <a href="/members/applications?filter=rejected" class="btn btn-sm {% if filter == 'rejected' %}btn-primary{% else %}{% endif %}">{{ t('intake.payment.rejected') }}</a>
                     </div>
                 </div>
 
                 {% if applications is empty %}
-                <div class="card-body text-center text-muted py-5">
+                <div class="panel-body text-center text-muted py-12">
                     {{ t('applications.none') }}
                 </div>
                 {% else %}
-                <div class="list-group list-group-flush">
+                <div class="list list-flush">
                     {% for a in applications %}
-                    <div class="list-group-item p-3">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="list-item p-4">
+                        <div class="flex justify-between items-start mb-2">
                             <div>
-                                <h4 class="h5 mb-0 fw-semibold">{{ a.applicant_name }}</h4>
-                                <div class="text-muted small">
+                                <h4 class="h5 mb-0 font-semibold">{{ a.applicant_name }}</h4>
+                                <div class="text-muted text-sm">
                                     {{ a.email }}
                                     {% if a.data.phone %} {{ t('ui.tel') }} {{ a.data.phone }}{% endif %}
                                     {% if a.data.birth_date %} {{ t('ui.geb') }} {{ a.data.birth_date|date('d.m.Y') }}{% endif %}
@@ -172,11 +172,11 @@
                             </div>
                             <div>
                                 {% if a.status == 'pending' %}
-                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle">{{ t('applications.status.pending') }}</span>
+                                    <span class="badge bg-warning-soft text-warning border border-warning/30">{{ t('applications.status.pending') }}</span>
                                 {% elseif a.status == 'approved' %}
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle">{{ t('applications.status.approved') }}</span>
+                                    <span class="badge bg-success-soft text-success border border-success/30">{{ t('applications.status.approved') }}</span>
                                 {% else %}
-                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">{{ t('applications.status.rejected') }}</span>
+                                    <span class="badge bg-danger-soft text-danger border border-danger/30">{{ t('applications.status.rejected') }}</span>
                                 {% endif %}
                             </div>
                         </div>
@@ -184,44 +184,44 @@
                         {% if a.status == 'rejected' and can('settings.manage') %}<a class="btn btn-sm mb-2" href="/members/applications/{{ a.id }}/privacy">{{ t('privacy.title') }}</a>{% endif %}
                         <!-- Anschrift -->
                         {% if a.data.address or a.data.city %}
-                        <div class="text-muted small mb-2">
+                        <div class="text-muted text-sm mb-2">
                             {{ icons.icon('home') }} {{ a.data.address }}, {{ a.data.zip }} {{ a.data.city }} ({{ a.data.country }})
                         </div>
                         {% endif %}
 
                         <!-- SEPA Details falls vorhanden -->
                         {% if a.require_sepa and a.data.iban %}
-                        <div class="border rounded p-2 bg-light-subtle small mb-2">
-                            <div class="fw-semibold text-primary mb-1">{{ t('ui.bankverbindung_lastschriftmandat') }}</div>
+                        <div class="border border-line rounded-lg p-2 bg-subtle text-sm mb-2">
+                            <div class="font-semibold text-primary mb-1">{{ t('ui.bankverbindung_lastschriftmandat') }}</div>
                             <div>{{ t('ui.inhaber') }} {{ a.data.account_holder }}</div>
-                            <div class="font-monospace">{{ t('ui.iban') }} {{ a.data.iban }} {% if a.data.bic %}{{ t('ui.bic') }} {{ a.data.bic }}{% endif %}</div>
-                            <div class="text-success small">{{ t('ui.sepa_lastschriftmandat_vom_antragsteller_erteilt') }}</div>
+                            <div class="font-mono">{{ t('ui.iban') }} {{ a.data.iban }} {% if a.data.bic %}{{ t('ui.bic') }} {{ a.data.bic }}{% endif %}</div>
+                            <div class="text-success text-sm">{{ t('ui.sepa_lastschriftmandat_vom_antragsteller_erteilt') }}</div>
                         </div>
                         {% endif %}
 
                         {% if a.data.notes %}
-                        <div class="small fst-italic text-muted mb-2">
+                        <div class="text-sm italic text-muted mb-2">
                             {{ t('ui.notiz_des_antragstellers') }}{{ a.data.notes }}“
                         </div>
                         {% endif %}
 
-                        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
-                            <span class="text-muted small">
+                        <div class="flex justify-between items-center mt-4 pt-2 border-t border-line">
+                            <span class="text-muted text-sm">
                                 {{ t('ui.eingegangen') }} {{ a.created_at|date('d.m.Y H:i') }}
                                 {% if a.reviewer_name %} {{ t('ui.geprueft_von') }} {{ a.reviewer_name }}{% endif %}
                             </span>
 
                             {% if a.status == 'pending' and can('members.write') %}
-                            <div class="d-flex gap-2">
+                            <div class="flex gap-2">
                                 <a class="btn btn-sm btn-success" href="/members/applications/{{ a.id }}/decision?decision=approved">{{ t('applications.approve') }}</a>
-                                <a class="btn btn-sm btn-outline-danger" href="/members/applications/{{ a.id }}/decision?decision=rejected">{{ t('applications.reject') }}</a>
+                                <a class="btn btn-sm btn-danger-soft" href="/members/applications/{{ a.id }}/decision?decision=rejected">{{ t('applications.reject') }}</a>
                             </div>
                             {% elseif a.status == 'approved' and a.member_id %}
-                            <a href="/members/{{ a.member_id }}" class="btn btn-sm btn-outline-primary">
+                            <a href="/members/{{ a.member_id }}" class="btn btn-sm btn-soft">
                                 {{ t('ui.zum_mitglied') }}{{ a.member_no }})
                             </a>
                             {% elseif a.status == 'rejected' and a.rejection_reason %}
-                            <span class="text-danger small">{{ t('ui.grund') }} {{ a.rejection_reason }}</span>
+                            <span class="text-danger text-sm">{{ t('ui.grund') }} {{ a.rejection_reason }}</span>
                             {% endif %}
                         </div>
 
@@ -233,9 +233,9 @@
         </div>
     </div>
 </div>
-<div class="card card-body mt-3"><h2>{{ t('applications.outbox') }}</h2><p>{{ t('applications.outbox.explanation') }}</p>
+<div class="panel panel-body mt-4"><h2>{{ t('applications.outbox') }}</h2><p>{{ t('applications.outbox.explanation') }}</p>
 {% if not system_mail_available() %}<p class="alert alert-warning">{{ t('applications.mail.disabled') }}</p>{% endif %}
-<div class="table-responsive"><table class="table"><thead><tr><th>{{ t('applications.mail.subject') }}</th><th>{{ t('ui.e_mail') }}</th><th>{{ t('privacy.field.status') }}</th><th></th></tr></thead><tbody>
+<div class="table-scroll"><table class="data-table"><thead><tr><th>{{ t('applications.mail.subject') }}</th><th>{{ t('ui.e_mail') }}</th><th>{{ t('privacy.field.status') }}</th><th></th></tr></thead><tbody>
 {% for mail in outbox %}<tr><td>{{ mail.subject }} · #{{ mail.application_id }}</td><td>{{ mail.recipient }}</td><td>{{ t('applications.outbox.' ~ mail.status) }}</td><td>{% if mail.status in ['failed','uncertain'] and can('members.write') %}<form method="post" action="/members/application-mails/{{ mail.id }}/retry">{{ csrf_field() }}<input type="hidden" name="version" value="{{ mail.version }}"><button class="btn btn-sm">{{ t('applications.outbox.retry') }}</button></form>{% endif %}</td></tr>{% endfor %}
 </tbody></table></div></div>
 {% endblock %}

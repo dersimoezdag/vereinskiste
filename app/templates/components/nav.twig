@@ -1,0 +1,2 @@
+{# Eintrag in einer aufklappbaren Gruppe der Seitenleiste #}
+{% macro sub(href, label, active) %}<a class="nav-sublink{% if active %} active{% endif %}" href="{{ href }}"{% if active %} aria-current="page"{% endif %}>{{ label }}</a>{% endmacro %}

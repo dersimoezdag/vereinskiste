@@ -2,9 +2,9 @@
 {% import 'components/help.twig' as help %}
 {% block title %}{{ t('bookings.detail') }} #{{ booking.id }}{% endblock %}
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+<div class="flex flex-wrap justify-between items-center gap-2 mb-6">
     <h1 class="mb-0">{{ t('bookings.detail') }} #{{ booking.id }}</h1>
-    <div class="d-flex flex-wrap gap-2">
+    <div class="flex flex-wrap gap-2">
         {% if can('bookings.write') and booking.kind != 'transfer' and booking.status == 'active' %}
         <a class="btn btn-primary" href="/bookings/{{ booking.id }}/edit">{{ t('bookings.edit') }}</a>
         {% endif %}
@@ -15,78 +15,78 @@
     </div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <dl class="row mb-0">
-            <dt class="col-sm-4">{{ t('bookings.date') }}</dt>
-            <dd class="col-sm-8">{{ booking.booking_date|date('d.m.Y') }}</dd>
+<div class="panel mb-6">
+    <div class="panel-body">
+        <dl class="grid-12 gap-x-6 mb-0">
+            <dt class="col-span-12 sm:col-span-4">{{ t('bookings.date') }}</dt>
+            <dd class="col-span-12 sm:col-span-8">{{ booking.booking_date|date('d.m.Y') }}</dd>
 
-            <dt class="col-sm-4">{{ t('bookings.amount') }}</dt>
-            <dd class="col-sm-8 {{ booking.direction == 'in' ? 'text-success' : 'text-danger' }}">
+            <dt class="col-span-12 sm:col-span-4">{{ t('bookings.amount') }}</dt>
+            <dd class="col-span-12 sm:col-span-8 {{ booking.direction == 'in' ? 'text-success' : 'text-danger' }}">
                 {{ (booking.direction == 'in' ? '+' : '−') ~ (booking.amount|eur) }}
                 ({{ t('bookings.direction.' ~ booking.direction) }})
             </dd>
 
-            <dt class="col-sm-4">{{ t('bookings.description') }}</dt>
-            <dd class="col-sm-8">{{ booking.description }}</dd>
+            <dt class="col-span-12 sm:col-span-4">{{ t('bookings.description') }}</dt>
+            <dd class="col-span-12 sm:col-span-8">{{ booking.description }}</dd>
 
-            <dt class="col-sm-4">{{ t('bookings.account') }}</dt>
-            <dd class="col-sm-8">{{ booking.account_name }}</dd>
+            <dt class="col-span-12 sm:col-span-4">{{ t('bookings.account') }}</dt>
+            <dd class="col-span-12 sm:col-span-8">{{ booking.account_name }}</dd>
 
-            <dt class="col-sm-4">{{ t('bookings.category') }}</dt>
-            <dd class="col-sm-8">{{ booking.category_name ?? '–' }}</dd>
+            <dt class="col-span-12 sm:col-span-4">{{ t('bookings.category') }}</dt>
+            <dd class="col-span-12 sm:col-span-8">{{ booking.category_name ?? '–' }}</dd>
 
-            <dt class="col-sm-4">{{ t('bookings.counterparty') }}</dt>
-            <dd class="col-sm-8">{{ booking.counterparty ?? '–' }}</dd>
+            <dt class="col-span-12 sm:col-span-4">{{ t('bookings.counterparty') }}</dt>
+            <dd class="col-span-12 sm:col-span-8">{{ booking.counterparty ?? '–' }}</dd>
             {% if expense %}
-            <dt class="col-sm-4">{{ t('expenses.single') }}</dt>
-            <dd class="col-sm-8"><a href="/expenses/{{ expense.id }}">{{ t('expenses.booking_hint') }}: {{ expense.person }} · {{ expense.purpose }}</a></dd>
+            <dt class="col-span-12 sm:col-span-4">{{ t('expenses.single') }}</dt>
+            <dd class="col-span-12 sm:col-span-8"><a href="/expenses/{{ expense.id }}">{{ t('expenses.booking_hint') }}: {{ expense.person }} · {{ expense.purpose }}</a></dd>
             {% endif %}
             {% if booking.event_id %}
-            <dt class="col-sm-4">{{ t('events.single') }}</dt>
-            <dd class="col-sm-8">{% if can('events.read') %}<a href="/events/{{ booking.event_id }}">{{ booking.event_title }}</a>{% else %}{{ booking.event_title }}{% endif %}</dd>
+            <dt class="col-span-12 sm:col-span-4">{{ t('events.single') }}</dt>
+            <dd class="col-span-12 sm:col-span-8">{% if can('events.read') %}<a href="/events/{{ booking.event_id }}">{{ booking.event_title }}</a>{% else %}{{ booking.event_title }}{% endif %}</dd>
             {% endif %}
             {% if booking.funding_id %}
-            <dt class="col-sm-4">{{ t('funding.single') }}</dt>
-            <dd class="col-sm-8">{% if can('funding.read') %}<a href="/funding/{{ booking.funding_id }}">{{ booking.funding_title }}</a>{% else %}{{ booking.funding_title }}{% endif %}</dd>
+            <dt class="col-span-12 sm:col-span-4">{{ t('funding.single') }}</dt>
+            <dd class="col-span-12 sm:col-span-8">{% if can('funding.read') %}<a href="/funding/{{ booking.funding_id }}">{{ booking.funding_title }}</a>{% else %}{{ booking.funding_title }}{% endif %}</dd>
             {% endif %}
 
-            <dt class="col-sm-4">{{ t('bookings.receipt_no') }}</dt>
-            <dd class="col-sm-8">{{ booking.receipt_no ?? '–' }}</dd>
+            <dt class="col-span-12 sm:col-span-4">{{ t('bookings.receipt_no') }}</dt>
+            <dd class="col-span-12 sm:col-span-8">{{ booking.receipt_no ?? '–' }}</dd>
 
-            <dt class="col-sm-4">{{ t('bookings.kind') }} {{ help.tip(t('ui.buchungsart_regulaere_buchung_geldtransit_umbuchung_zwischen_kont')) }}</dt>
-            <dd class="col-sm-8">{{ t('bookings.kind.' ~ booking.kind) }}</dd>
+            <dt class="col-span-12 sm:col-span-4">{{ t('bookings.kind') }} {{ help.tip(t('ui.buchungsart_regulaere_buchung_geldtransit_umbuchung_zwischen_kont')) }}</dt>
+            <dd class="col-span-12 sm:col-span-8">{{ t('bookings.kind.' ~ booking.kind) }}</dd>
 
             {% if original %}
-            <dt class="col-sm-4">{{ t('bookings.correction.original') }}</dt>
-            <dd class="col-sm-8"><a href="/bookings/{{ original.id }}">#{{ original.id }} {{ original.description }}</a></dd>
+            <dt class="col-span-12 sm:col-span-4">{{ t('bookings.correction.original') }}</dt>
+            <dd class="col-span-12 sm:col-span-8"><a href="/bookings/{{ original.id }}">#{{ original.id }} {{ original.description }}</a></dd>
             {% endif %}
 
             {% for leg in counterparts %}
-            <dt class="col-sm-4">{{ t('bookings.transfer.counterpart') }}</dt>
-            <dd class="col-sm-8">
+            <dt class="col-span-12 sm:col-span-4">{{ t('bookings.transfer.counterpart') }}</dt>
+            <dd class="col-span-12 sm:col-span-8">
                 <a href="/bookings/{{ leg.id }}">#{{ leg.id }}</a>
                 {{ leg.account_name }} ({{ t('bookings.direction.' ~ leg.direction) }})
             </dd>
             {% endfor %}
 
-            <dt class="col-sm-4">{{ t('bookings.status') }}</dt>
-            <dd class="col-sm-8">{{ t('bookings.status.' ~ booking.status) }}</dd>
+            <dt class="col-span-12 sm:col-span-4">{{ t('bookings.status') }}</dt>
+            <dd class="col-span-12 sm:col-span-8">{{ t('bookings.status.' ~ booking.status) }}</dd>
 
-            <dt class="col-sm-4">{{ t('bookings.created') }}</dt>
-            <dd class="col-sm-8">{{ booking.created_at|date('d.m.Y H:i') }} · {{ booking.created_by_name }}</dd>
+            <dt class="col-span-12 sm:col-span-4">{{ t('bookings.created') }}</dt>
+            <dd class="col-span-12 sm:col-span-8">{{ booking.created_at|date('d.m.Y H:i') }} · {{ booking.created_by_name }}</dd>
 
-            <dt class="col-sm-4">{{ t('bookings.version') }} {{ help.tip(t('ui.revisionsnummer_zur_vermeidung_von_konflikten_bei_gleichzeitiger_')) }}</dt>
-            <dd class="col-sm-8">{{ booking.version }}</dd>
+            <dt class="col-span-12 sm:col-span-4">{{ t('bookings.version') }} {{ help.tip(t('ui.revisionsnummer_zur_vermeidung_von_konflikten_bei_gleichzeitiger_')) }}</dt>
+            <dd class="col-span-12 sm:col-span-8">{{ booking.version }}</dd>
         </dl>
     </div>
 </div>
 
 {% if can('bookings.write') %}
 {% set action = booking.status == 'active' ? 'cancel' : 'restore' %}
-<div class="card mb-4">
-    <div class="card-header"><h2 class="card-title">{{ t('bookings.' ~ action ~ '.title') }} {{ help.tip(t('ui.gobd_storno_buchungen_werden_nicht_geloescht_sondern_revisionssic')) }}</h2></div>
-    <div class="card-body">
+<div class="panel mb-6">
+    <div class="panel-header"><h2 class="panel-title">{{ t('bookings.' ~ action ~ '.title') }} {{ help.tip(t('ui.gobd_storno_buchungen_werden_nicht_geloescht_sondern_revisionssic')) }}</h2></div>
+    <div class="panel-body">
         {% include 'bookings/_status_form.twig' with {action: action, version: booking.version, reason: '', errors: {}} %}
     </div>
 </div>

@@ -87,9 +87,9 @@
 {% elseif path starts with '/account/password' %}
     {% set crumbs = [{'label': t('nav.password')}] %}
 {% endif %}
-<header class="topbar">
-    <div class="container-xl topbar-inner">
-        <nav class="topbar-crumbs" aria-label="{{ t('ui.brotkrumen') }}">
+<header class="border-b border-line bg-surface/85 backdrop-blur lg:sticky lg:top-0 lg:z-20">
+    <div class="mx-auto flex min-h-14 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <nav class="min-w-0 flex-1" aria-label="{{ t('ui.brotkrumen') }}">
             <ol class="breadcrumb">
                 {% if path != '/' %}
                 <li class="breadcrumb-item"><a href="/" aria-label="{{ t('nav.home') }}" title="{{ t('nav.home') }}">{{ icons.icon('home') }}</a></li>

@@ -2,9 +2,9 @@
 {% block title %}{{ t('bookings.title') }}{% endblock %}
 {% block content %}
 {% include 'components/finance_tabs.twig' %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+<div class="flex flex-wrap justify-between items-center gap-2 mb-6">
     <h1 class="mb-0">{{ t('bookings.title') }}</h1>
-    <div class="d-flex flex-wrap gap-2">
+    <div class="flex flex-wrap gap-2">
     {% if can('reports.read') %}<a class="btn" href="/reports/bookings.csv{% if export_query %}?{{ export_query }}{% endif %}">{{ t('bookings.export_csv') }}</a>{% endif %}
     {% if can('bookings.write') %}
         <a class="btn btn-primary" href="/bookings/new">{{ t('bookings.new') }}</a>
@@ -14,87 +14,87 @@
     </div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
+<div class="panel mb-6">
+    <div class="panel-body">
         <form method="get" action="/bookings">
             {% if per_page %}<input type="hidden" name="per_page" value="{{ per_page }}">{% endif %}
-            <div class="row g-3">
-                <div class="col-6 col-md-3">
-                    <label class="form-label" for="f-from">{{ t('bookings.filter.from') }}</label>
-                    <input type="date" id="f-from" name="from" class="form-control" value="{{ filter.from }}">
+            <div class="grid-12 gap-4">
+                <div class="col-span-6 md:col-span-3">
+                    <label class="label" for="f-from">{{ t('bookings.filter.from') }}</label>
+                    <input type="date" id="f-from" name="from" class="input" value="{{ filter.from }}">
                 </div>
-                <div class="col-6 col-md-3">
-                    <label class="form-label" for="f-to">{{ t('bookings.filter.to') }}</label>
-                    <input type="date" id="f-to" name="to" class="form-control" value="{{ filter.to }}">
+                <div class="col-span-6 md:col-span-3">
+                    <label class="label" for="f-to">{{ t('bookings.filter.to') }}</label>
+                    <input type="date" id="f-to" name="to" class="input" value="{{ filter.to }}">
                 </div>
-                <div class="col-12 col-md-3">
-                    <label class="form-label" for="f-account">{{ t('bookings.account') }}</label>
-                    <select id="f-account" name="account_id" class="form-select">
+                <div class="col-span-12 md:col-span-3">
+                    <label class="label" for="f-account">{{ t('bookings.account') }}</label>
+                    <select id="f-account" name="account_id" class="input">
                         <option value="">{{ t('bookings.filter.all') }}</option>
                         {% for account in accounts %}
                         <option value="{{ account.id }}"{% if filter.account_id == account.id %} selected{% endif %}>{{ account.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-12 col-md-3">
-                    <label class="form-label" for="f-category">{{ t('bookings.category') }}</label>
-                    <select id="f-category" name="category_id" class="form-select">
+                <div class="col-span-12 md:col-span-3">
+                    <label class="label" for="f-category">{{ t('bookings.category') }}</label>
+                    <select id="f-category" name="category_id" class="input">
                         <option value="">{{ t('bookings.filter.all') }}</option>
                         {% for category in categories %}
                         <option value="{{ category.id }}"{% if filter.category_id == category.id %} selected{% endif %}>{{ category.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-6 col-md-3">
-                    <label class="form-label" for="f-direction">{{ t('bookings.direction') }}</label>
-                    <select id="f-direction" name="direction" class="form-select">
+                <div class="col-span-6 md:col-span-3">
+                    <label class="label" for="f-direction">{{ t('bookings.direction') }}</label>
+                    <select id="f-direction" name="direction" class="input">
                         <option value="">{{ t('bookings.filter.all') }}</option>
                         <option value="in"{% if filter.direction == 'in' %} selected{% endif %}>{{ t('bookings.direction.in') }}</option>
                         <option value="out"{% if filter.direction == 'out' %} selected{% endif %}>{{ t('bookings.direction.out') }}</option>
                     </select>
                 </div>
-                <div class="col-12 col-md-3">
-                    <label class="form-label" for="f-event">{{ t('events.single') }}</label>
-                    <select id="f-event" name="event_id" class="form-select">
+                <div class="col-span-12 md:col-span-3">
+                    <label class="label" for="f-event">{{ t('events.single') }}</label>
+                    <select id="f-event" name="event_id" class="input">
                         <option value="">{{ t('bookings.filter.all') }}</option>
                         {% for event in events %}
                         <option value="{{ event.id }}"{% if filter.event_id == event.id %} selected{% endif %}>{{ event.title }} ({{ event.starts_on|date('d.m.Y') }})</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-12 col-md-3">
-                    <label class="form-label" for="f-funding">{{ t('funding.single') }}</label>
-                    <select id="f-funding" name="funding_id" class="form-select">
+                <div class="col-span-12 md:col-span-3">
+                    <label class="label" for="f-funding">{{ t('funding.single') }}</label>
+                    <select id="f-funding" name="funding_id" class="input">
                         <option value="">{{ t('bookings.filter.all') }}</option>
                         {% for application in funding_applications %}
                         <option value="{{ application.id }}"{% if filter.funding_id == application.id %} selected{% endif %}>{{ application.title }} ({{ application.funder }})</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-6 col-md-3">
-                    <label class="form-label" for="f-kind">{{ t('bookings.kind') }}</label>
-                    <select id="f-kind" name="kind" class="form-select">
+                <div class="col-span-6 md:col-span-3">
+                    <label class="label" for="f-kind">{{ t('bookings.kind') }}</label>
+                    <select id="f-kind" name="kind" class="input">
                         <option value="">{{ t('bookings.filter.all') }}</option>
                         {% for kind in ['regular', 'correction', 'transfer'] %}
                         <option value="{{ kind }}"{% if filter.kind == kind %} selected{% endif %}>{{ t('bookings.kind.' ~ kind) }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-6 col-md-3">
-                    <label class="form-label" for="f-status">{{ t('bookings.status') }}</label>
-                    <select id="f-status" name="status" class="form-select">
+                <div class="col-span-6 md:col-span-3">
+                    <label class="label" for="f-status">{{ t('bookings.status') }}</label>
+                    <select id="f-status" name="status" class="input">
                         <option value="">{{ t('bookings.filter.all') }}</option>
                         {% for status in ['active', 'cancelled'] %}
                         <option value="{{ status }}"{% if filter.status == status %} selected{% endif %}>{{ t('bookings.status.' ~ status) }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-6 col-md-3">
-                    <label class="form-label" for="f-q">{{ t('bookings.filter.q') }}</label>
-                    <input type="search" id="f-q" name="q" maxlength="100" class="form-control" value="{{ filter.q }}">
+                <div class="col-span-6 md:col-span-3">
+                    <label class="label" for="f-q">{{ t('bookings.filter.q') }}</label>
+                    <input type="search" id="f-q" name="q" maxlength="100" class="input" value="{{ filter.q }}">
                 </div>
             </div>
-            <div class="mt-3 d-flex flex-wrap gap-2">
+            <div class="mt-4 flex flex-wrap gap-2">
                 <button type="submit" class="btn btn-primary">{{ t('bookings.filter.apply') }}</button>
                 <a class="btn" href="/bookings">{{ t('bookings.filter.reset') }}</a>
             </div>
@@ -102,37 +102,37 @@
     </div>
 </div>
 
-<div class="card mb-3">
-    <div class="table-responsive">
-        <table class="table table-vcenter card-table table-cards">
+<div class="panel mb-4">
+    <div class="table-scroll">
+        <table class="data-table table-cards">
             <thead>
                 <tr>
                     <th>{{ t('bookings.date') }}</th>
                     <th>{{ t('bookings.description') }}</th>
                     <th>{{ t('bookings.account') }}</th>
                     <th>{{ t('bookings.category') }}</th>
-                    <th class="text-end">{{ t('bookings.amount') }}</th>
+                    <th class="text-right">{{ t('bookings.amount') }}</th>
                 </tr>
             </thead>
             <tbody>
             {% for b in bookings %}
-                <tr{% if b.status == 'cancelled' %} class="text-secondary"{% endif %}>
+                <tr{% if b.status == 'cancelled' %} class="text-muted"{% endif %}>
                     <td data-label="{{ t('bookings.date') }}">{{ b.booking_date|date('d.m.Y') }}</td>
                     <td data-label="{{ t('bookings.description') }}">
                         <a href="/bookings/{{ b.id }}">{{ b.description }}</a>
-                        {% if b.kind != 'regular' %}<span class="badge bg-azure-lt">{{ t('bookings.kind.' ~ b.kind) }}</span>{% endif %}
-                        {% if b.status == 'cancelled' %}<span class="badge bg-secondary-lt">{{ t('bookings.status.cancelled') }}</span>{% endif %}
-                        {% if b.changed %}<a class="badge bg-yellow-lt touch-target" href="/bookings/{{ b.id }}#history">{{ t('bookings.changed') }}</a>{% endif %}
-                        {% if b.counterparty %}<div class="text-secondary small">{{ b.counterparty }}</div>{% endif %}
+                        {% if b.kind != 'regular' %}<span class="badge bg-info-soft text-info">{{ t('bookings.kind.' ~ b.kind) }}</span>{% endif %}
+                        {% if b.status == 'cancelled' %}<span class="badge bg-subtle text-muted">{{ t('bookings.status.cancelled') }}</span>{% endif %}
+                        {% if b.changed %}<a class="badge bg-warning-soft text-warning touch-target" href="/bookings/{{ b.id }}#history">{{ t('bookings.changed') }}</a>{% endif %}
+                        {% if b.counterparty %}<div class="text-muted text-sm">{{ b.counterparty }}</div>{% endif %}
                     </td>
                     <td data-label="{{ t('bookings.account') }}">{{ b.account_name }}</td>
                     <td data-label="{{ t('bookings.category') }}">{{ b.category_name ?? '–' }}</td>
-                    <td data-label="{{ t('bookings.amount') }}" class="text-end {{ b.direction == 'in' ? 'text-success' : 'text-danger' }}">
+                    <td data-label="{{ t('bookings.amount') }}" class="text-right {{ b.direction == 'in' ? 'text-success' : 'text-danger' }}">
                         {{ (b.direction == 'in' ? '+' : '−') ~ (b.amount|eur) }}
                     </td>
                 </tr>
             {% else %}
-                <tr><td colspan="5" class="text-secondary">{{ t('bookings.empty') }}</td></tr>
+                <tr><td colspan="5" class="text-muted">{{ t('bookings.empty') }}</td></tr>
             {% endfor %}
             </tbody>
         </table>

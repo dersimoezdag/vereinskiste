@@ -1,5 +1,5 @@
 // Eigenes JavaScript der Vereinskiste (bewusst winzig).
-// Die einklappbare Navigation uebernimmt Tabler (data-bs-toggle="collapse").
+// Navigation, Dialoge und Kurzinfos stehen in ui.js.
 // Hier nur: doppeltes Absenden eines Formulars verhindern.
 document.addEventListener('submit', function (event) {
     var form = event.target;
@@ -94,7 +94,7 @@ document.querySelectorAll('[data-dropzone]').forEach(function (zone) {
             if (canCollect) {
                 var remove = document.createElement('button');
                 remove.type = 'button';
-                remove.className = 'btn btn-sm btn-ghost-secondary';
+                remove.className = 'btn btn-sm btn-ghost';
                 remove.textContent = zone.dataset.labelRemove || window.vkText('js.entfernen');
                 remove.setAttribute('aria-label', remove.textContent + ': ' + file.name);
                 remove.addEventListener('click', function () {
@@ -185,52 +185,12 @@ document.addEventListener('click', function (event) {
     if (toggle) {
         var target = document.getElementById(toggle.dataset.toggleTarget);
         if (target) {
-            var hidden = target.classList.toggle('d-none');
+            var hidden = target.classList.toggle('hidden');
             toggle.setAttribute('aria-expanded', hidden ? 'false' : 'true');
         }
     }
 });
 
-// Bootstrap Tooltips (z.B. fuer Info-Buttons/Hilfetexte)
-(function () {
-    function initTooltips(root) {
-        var scope = root || document;
-        if (window.bootstrap && typeof window.bootstrap.Tooltip === 'function') {
-            scope.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
-                if (!window.bootstrap.Tooltip.getInstance(el)) {
-                    new window.bootstrap.Tooltip(el, {
-                        delay: { show: 150, hide: 100 }
-                    });
-                }
-            });
-        }
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () { initTooltips(); });
-    } else {
-        initTooltips();
-    }
-
-    // Klick auf Hilfs-Tooltip fängt das Label-Event ab und toggelt den Tooltip auch bei Touch-Gesten
-    document.addEventListener('click', function (event) {
-        var tip = event.target.closest('.help-tooltip-btn');
-        if (tip) {
-            event.preventDefault();
-            event.stopPropagation();
-            if (window.bootstrap && typeof window.bootstrap.Tooltip === 'function') {
-                var inst = window.bootstrap.Tooltip.getInstance(tip) || new window.bootstrap.Tooltip(tip);
-                if (inst) {
-                    if (tip.getAttribute('aria-describedby')) {
-                        inst.hide();
-                    } else {
-                        inst.show();
-                    }
-                }
-            }
-        }
-    });
-})();
 
 
 

@@ -5,6 +5,7 @@ case "$version" in ''|*[!a-zA-Z0-9._-]*) echo 'Invalid version' >&2; exit 1;; es
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 node "$root/scripts/vendor-browser-ocr.cjs"
 node "$root/scripts/vendor-document-editor.cjs"
+node "$root/scripts/build-css.cjs"
 stage=$(mktemp -d)
 trap 'rm -rf -- "$stage"' EXIT HUP INT TERM
 mkdir -p "$stage/app/config" "$stage/app/storage" "$stage/public" "$root/dist"

@@ -16,17 +16,17 @@
 {% endif %}
 {% include 'imports/bank/_rows.twig' %}
 {% if import.status in ['review','confirming'] and can('imports.write') %}
-<form method="post" action="/imports/bank/{{ import.id }}/confirm" class="card card-body mt-3">
+<form method="post" action="/imports/bank/{{ import.id }}/confirm" class="panel panel-body mt-4">
 {{ csrf_field() }}<input type="hidden" name="version" value="{{ import.version }}">
-<label class="form-check mb-3"><input type="checkbox" class="form-check-input" name="checked" value="1" required>{{ t('ui.alle_vorschlaege_fehler_und_dubletten_geprueft_naechsten_abschnit') }}</label>
+<label class="check mb-4"><input type="checkbox" class="check-input" name="checked" value="1" required>{{ t('ui.alle_vorschlaege_fehler_und_dubletten_geprueft_naechsten_abschnit') }}</label>
 <button class="btn btn-primary" type="submit">{{ t('ui.gepruefte_bankumsaetze_uebernehmen') }}</button></form>{% endif %}
 {% endif %}
 {% if import.status in ['review','failed','cancelled'] and summary.adopted == 0 and can('imports.write') %}
-<form method="post" action="/imports/bank/{{ import.id }}/reset" class="card card-body mt-3">{{ csrf_field() }}
+<form method="post" action="/imports/bank/{{ import.id }}/reset" class="panel panel-body mt-4">{{ csrf_field() }}
 <input type="hidden" name="version" value="{{ import.version }}"><label for="reset-reason">{{ t('ui.begruendung_fuer_die_aenderung_optional') }}</label>
-<input id="reset-reason" name="reason" class="form-control mb-2" maxlength="500">
-<button type="submit" class="btn btn-outline-secondary">{{ t('ui.spalten_neu_zuordnen') }}</button></form>{% endif %}
+<input id="reset-reason" name="reason" class="input mb-2" maxlength="500">
+<button type="submit" class="btn">{{ t('ui.spalten_neu_zuordnen') }}</button></form>{% endif %}
 {% if import.status in ['uploaded','parsing','review','failed'] and summary.adopted == 0 and can('imports.write') %}
-<form method="post" action="/imports/bank/{{ import.id }}/cancel" class="mt-3">{{ csrf_field() }}<input type="hidden" name="version" value="{{ import.version }}"><button type="submit" class="btn btn-outline-danger">{{ t('ui.import_abbrechen') }}</button></form>{% endif %}
+<form method="post" action="/imports/bank/{{ import.id }}/cancel" class="mt-4">{{ csrf_field() }}<input type="hidden" name="version" value="{{ import.version }}"><button type="submit" class="btn btn-danger-soft">{{ t('ui.import_abbrechen') }}</button></form>{% endif %}
 {% endblock %}
 {% block scripts %}{% if import.status == 'parsing' %}<script src="{{ asset('bank-import.js') }}"></script>{% endif %}{% endblock %}

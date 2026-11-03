@@ -15,7 +15,7 @@
     function failed() { if (status) { status.hidden = false; status.textContent = status.dataset.error; } }
     if (!window.tinymce) { failed(); return; }
     var loadingTimer = window.setTimeout(failed, 15000);
-    var dark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
     window.tinymce.init({
         base_url: new URL('.', document.querySelector('script[src*="vendor/tinymce/tinymce.min.js"]').src).href.replace(/\/$/, ''), suffix: '.min',
         target: textarea, license_key: 'gpl', language: 'de',

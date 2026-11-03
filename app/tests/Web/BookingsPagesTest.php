@@ -124,10 +124,10 @@ final class BookingsPagesTest extends TestCase
         $this->assertStringContainsString('/bookings/' . $out . '#history', $html);
         $this->assertStringNotContainsString('/bookings/' . $in . '#history', $html);
         $this->assertStringContainsString('table-cards', $html);
-        // Kennzeichen ist ein Touch-Ziel (>= 44 px, Regel in app.css)
+        // Kennzeichen ist ein Touch-Ziel (>= 44 px = 2.75rem, Regel in app/styles/app.css)
         $this->assertMatchesRegularExpression('/<a class="[^"]*\btouch-target\b[^"]*" href="\/bookings\/' . $out . '#history"/', $html);
-        $css = (string) file_get_contents(dirname(__DIR__, 3) . '/public/assets/app.css');
-        $this->assertMatchesRegularExpression('/\.touch-target\s*\{[^}]*min-height:\s*44px/', $css);
+        $css = (string) file_get_contents(dirname(__DIR__, 2) . '/styles/app.css');
+        $this->assertMatchesRegularExpression('/\.touch-target\s*\{[^}]*min-height:\s*2\.75rem/', $css);
     }
 
     public function test_search_with_invalid_utf8_is_ignored_not_500(): void

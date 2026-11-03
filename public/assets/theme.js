@@ -11,7 +11,7 @@
     var choice = stored();
     function apply() {
         var theme = choice || (media && media.matches ? 'dark' : 'light');
-        document.documentElement.setAttribute('data-bs-theme', theme);
+        document.documentElement.setAttribute('data-theme', theme);
         document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
             var label = theme === 'dark' ? button.dataset.labelToLight : button.dataset.labelToDark;
             button.setAttribute('aria-pressed', String(theme === 'dark'));
@@ -23,7 +23,7 @@
     document.addEventListener('click', function (event) {
         var target = event.target instanceof Element ? event.target.closest('[data-theme-toggle]') : null;
         if (!target) { return; }
-        choice = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+        choice = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         try { window.localStorage.setItem('vk-theme', choice); } catch (error) {}
         apply();
     });

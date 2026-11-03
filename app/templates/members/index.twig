@@ -2,17 +2,17 @@
 {% import 'components/icons.twig' as icons %}
 
 {% block content %}
-<div class="container-xl">
-    <div class="page-header d-print-none mb-3">
-        <div class="row align-items-center">
-            <div class="col">
+<div class="mx-auto w-full max-w-7xl">
+    <div class="page-header print:hidden mb-4">
+        <div class="flex flex-wrap items-center gap-4">
+            <div class="min-w-0 flex-1">
                 <h1 class="page-title">{{ t('members.title') }}</h1>
             </div>
-            <div class="col-auto d-print-none">
-                <a href="/members.csv?state={{ state|url_encode }}&amp;q={{ search|url_encode }}" class="btn btn-outline-secondary">{{ t('members.export.csv') }}</a>
+            <div class="shrink-0 flex flex-wrap gap-2 print:hidden">
+                <a href="/members.csv?state={{ state|url_encode }}&amp;q={{ search|url_encode }}" class="btn">{{ t('members.export.csv') }}</a>
             </div>
             {% if can('members.write') %}
-            <div class="col-auto ms-auto d-print-none">
+            <div class="shrink-0 flex flex-wrap gap-2 ms-auto print:hidden">
                 <a href="/members/new" class="btn btn-primary">
                     {{ t('members.new') }}
                 </a>
@@ -22,17 +22,17 @@
     </div>
 
     <!-- Navigation Tabs zwischen Kartei und Online-Anträgen -->
-    <ul class="nav nav-tabs mb-3" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link active" href="/members" aria-current="page">
+    <ul class="tabs mb-4" role="tablist">
+        <li class="flex">
+            <a class="tab active" href="/members" aria-current="page">
                 {{ icons.icon('members') }} {{ t('applications.tab_members') }}
             </a>
         </li>
-        {% if can('members.write') %}<li class="nav-item">
-            <a class="nav-link" href="/members/applications">
+        {% if can('members.write') %}<li class="flex">
+            <a class="tab" href="/members/applications">
                 {{ icons.icon('contacts') }} {{ t('applications.tab_applications') }}
                 {% if pending_count > 0 %}
-                <span class="badge bg-danger ms-1">{{ pending_count }}</span>
+                <span class="badge bg-danger text-white ms-1">{{ pending_count }}</span>
                 {% endif %}
             </a>
         </li>
@@ -40,29 +40,29 @@
     </ul>
 
     <!-- Filter und Suche -->
-    <div class="card mb-3">
-        <div class="card-body">
-            <form method="get" action="/members" class="row g-2 align-items-center">
+    <div class="panel mb-4">
+        <div class="panel-body">
+            <form method="get" action="/members" class="grid-12 gap-2 items-center">
                 {% if per_page %}<input type="hidden" name="per_page" value="{{ per_page }}">{% endif %}
                 <input type="hidden" name="state" value="{{ state }}">
-                <div class="col-md-6 col-12">
+                <div class="md:col-span-6 col-span-12">
                     <div class="input-group">
-                        <input type="text" name="q" value="{{ search }}" class="form-control"
+                        <input type="text" name="q" value="{{ search }}" class="input"
                                placeholder="{{ t('members.search') }}" aria-label="{{ t('members.search') }}">
-                        <button type="submit" class="btn btn-outline-secondary">{{ t('common.search') }}</button>
+                        <button type="submit" class="btn">{{ t('common.search') }}</button>
                     </div>
                 </div>
-                <div class="col-md-6 col-12 d-flex gap-2 justify-content-md-end">
+                <div class="md:col-span-6 col-span-12 flex gap-2 md:justify-end">
                     <a href="/members?state=current{% if search %}&q={{ search|url_encode }}{% endif %}"
-                       class="btn btn-sm {% if state == 'current' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                       class="btn btn-sm {% if state == 'current' %}btn-primary{% else %}{% endif %}">
                         {{ t('members.state.current') }}
                     </a>
                     <a href="/members?state=left{% if search %}&q={{ search|url_encode }}{% endif %}"
-                       class="btn btn-sm {% if state == 'left' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                       class="btn btn-sm {% if state == 'left' %}btn-primary{% else %}{% endif %}">
                         {{ t('members.state.left') }}
                     </a>
                     <a href="/members?state=all{% if search %}&q={{ search|url_encode }}{% endif %}"
-                       class="btn btn-sm {% if state == 'all' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                       class="btn btn-sm {% if state == 'all' %}btn-primary{% else %}{% endif %}">
                         {{ t('members.state.all') }}
                     </a>
                 </div>
@@ -71,34 +71,34 @@
     </div>
 
     <!-- Mitglieder-Tabelle -->
-    <div class="card">
-        <div class="table-responsive">
-            <table class="table table-vcenter table-cards table-hover mb-0">
+    <div class="panel">
+        <div class="table-scroll">
+            <table class="data-table table-cards mb-0">
                 <thead>
                     <tr>
-                        <th class="w-1">{{ t('members.no') }}</th>
+                        <th class="w-px whitespace-nowrap">{{ t('members.no') }}</th>
                         <th>{{ t('members.field.name') }}</th>
                         <th>{{ t('members.field.email') }}</th>
                         <th>{{ t('privacy.field.status') }}</th>
-                        <th class="w-1 text-center" title="{{ t('members.user.title') }}">{{ icons.icon('users') }}</th>
-                        <th class="w-1 text-end">{{ t('audit.action') }}</th>
+                        <th class="w-px whitespace-nowrap text-center" title="{{ t('members.user.title') }}">{{ icons.icon('users') }}</th>
+                        <th class="w-px whitespace-nowrap text-right">{{ t('audit.action') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                 {% if members is empty %}
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-4">
+                        <td colspan="6" class="text-center text-muted py-6">
                             {{ t('ui.keine_mitglieder_gefunden') }}
                         </td>
                     </tr>
                 {% else %}
                     {% for m in members %}
                     <tr>
-                        <td data-label="{{ t('members.no') }}" class="text-muted font-monospace">
+                        <td data-label="{{ t('members.no') }}" class="text-muted font-mono">
                             #{{ m.member_no }}
                         </td>
                         <td data-label="{{ t('members.field.name') }}">
-                            <a href="/members/{{ m.id }}" class="fw-semibold text-reset">
+                            <a href="/members/{{ m.id }}" class="font-semibold text-inherit">
                                 {{ m.name }}
                             </a>
                         </td>
@@ -107,9 +107,9 @@
                         </td>
                         <td data-label="Status">
                             {% if m.current %}
-                                <span class="badge bg-success-subtle text-success border border-success-subtle">{{ t('bookings.status.active') }}</span>
+                                <span class="badge bg-success-soft text-success border border-success/30">{{ t('bookings.status.active') }}</span>
                             {% else %}
-                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">{{ t('ui.ausgetreten') }}</span>
+                                <span class="badge bg-subtle text-muted border border-line ">{{ t('ui.ausgetreten') }}</span>
                             {% endif %}
                         </td>
                         <td data-label="Benutzerzugang" class="text-center">
@@ -119,8 +119,8 @@
                                 <span class="text-muted opacity-25">–</span>
                             {% endif %}
                         </td>
-                        <td data-label="Aktion" class="text-end">
-                            <a href="/members/{{ m.id }}" class="btn btn-sm btn-outline-secondary">
+                        <td data-label="Aktion" class="text-right">
+                            <a href="/members/{{ m.id }}" class="btn btn-sm">
                                 {{ t('audit.detail') }}
                             </a>
                         </td>

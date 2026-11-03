@@ -3,42 +3,42 @@
 {% block title %}{{ t('accounts.title') }}{% endblock %}
 {% block content %}
 {% include 'components/finance_master_tabs.twig' %}
-<h1 class="mb-4">{{ t('accounts.title') }}</h1>
+<h1 class="mb-6">{{ t('accounts.title') }}</h1>
 
-<div class="card mb-4">
-    <div class="table-responsive">
-        <table class="table table-vcenter card-table table-cards">
+<div class="panel mb-6">
+    <div class="table-scroll">
+        <table class="data-table table-cards">
             <thead>
                 <tr>
                     <th>{{ t('accounts.name') }}</th>
                     <th>{{ t('accounts.type') }}</th>
-                    <th class="text-end">{{ t('accounts.balance') }}</th>
+                    <th class="text-right">{{ t('accounts.balance') }}</th>
                     {% if can('settings.manage') %}<th>{{ t('common.actions') }}</th>{% endif %}
                 </tr>
             </thead>
             <tbody>
             {% for account in accounts %}
-                <tr{% if not account.active %} class="text-secondary"{% endif %}>
+                <tr{% if not account.active %} class="text-muted"{% endif %}>
                     <td data-label="{{ t('accounts.name') }}">
                         {{ account.name }}
-                        {% if not account.active %}<span class="badge bg-secondary-lt">{{ t('common.inactive') }}</span>{% endif %}
-                        <div class="text-secondary small">{{ t('accounts.opening') }}: {{ account.opening_balance|eur }} ({{ account.opening_date|date('d.m.Y') }})</div>
+                        {% if not account.active %}<span class="badge bg-subtle text-muted">{{ t('common.inactive') }}</span>{% endif %}
+                        <div class="text-muted text-sm">{{ t('accounts.opening') }}: {{ account.opening_balance|eur }} ({{ account.opening_date|date('d.m.Y') }})</div>
                     </td>
                     <td data-label="{{ t('accounts.type') }}">{{ t('accounts.type.' ~ account.type) }}</td>
-                    <td data-label="{{ t('accounts.balance') }}" class="text-end">{{ account.balance|eur }}</td>
+                    <td data-label="{{ t('accounts.balance') }}" class="text-right">{{ account.balance|eur }}</td>
                     {% if can('settings.manage') %}
                     <td data-label="{{ t('common.actions') }}">
-                        <div class="d-flex flex-wrap gap-2">
+                        <div class="flex flex-wrap gap-2">
                             <a class="btn" href="/accounts/{{ account.id }}/bank">{{ t('foundation.bank') }}</a>
-                            <form method="post" action="/accounts/{{ account.id }}" class="d-flex gap-2 flex-grow-1">
+                            <form method="post" action="/accounts/{{ account.id }}" class="flex gap-2 grow min-w-0">
                                 {{ csrf_field() }}
-                                <div class="flex-grow-1">
-                                    <label class="visually-hidden" for="account-name-{{ account.id }}">{{ t('accounts.name') }}</label>
+                                <div class="grow min-w-0">
+                                    <label class="sr-only" for="account-name-{{ account.id }}">{{ t('accounts.name') }}</label>
                                     <input type="text" id="account-name-{{ account.id }}" name="name" maxlength="100" required
-                                           class="form-control{% if edit_id == account.id and errors.name is defined %} is-invalid{% endif %}"
+                                           class="input{% if edit_id == account.id and errors.name is defined %} is-invalid{% endif %}"
                                            value="{{ edit_id == account.id ? edit_name : account.name }}">
                                     {% if edit_id == account.id and errors.name is defined %}
-                                    <div class="invalid-feedback">{{ t(errors.name) }}</div>
+                                    <div class="field-error">{{ t(errors.name) }}</div>
                                     {% endif %}
                                 </div>
                                 <button type="submit" class="btn">{{ t('common.rename') }}</button>
@@ -52,7 +52,7 @@
                     {% endif %}
                 </tr>
             {% else %}
-                <tr><td colspan="4" class="text-secondary">{{ t('accounts.empty') }}</td></tr>
+                <tr><td colspan="4" class="text-muted">{{ t('accounts.empty') }}</td></tr>
             {% endfor %}
             </tbody>
         </table>
@@ -60,43 +60,43 @@
 </div>
 
 {% if can('settings.manage') %}
-<div class="card">
-    <div class="card-header"><h2 class="card-title">{{ t('accounts.new') }}</h2></div>
-    <div class="card-body">
+<div class="panel">
+    <div class="panel-header"><h2 class="panel-title">{{ t('accounts.new') }}</h2></div>
+    <div class="panel-body">
         <form method="post" action="/accounts" novalidate>
             {{ csrf_field() }}
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label" for="account-name">{{ t('accounts.name') }}</label>
+            <div class="grid-12 gap-4">
+                <div class="col-span-12 md:col-span-6">
+                    <label class="label" for="account-name">{{ t('accounts.name') }}</label>
                     <input type="text" id="account-name" name="name" maxlength="100" required
-                           class="form-control{% if edit_id is null and errors.name is defined %} is-invalid{% endif %}"
+                           class="input{% if edit_id is null and errors.name is defined %} is-invalid{% endif %}"
                            value="{{ input.name }}">
-                    {% if edit_id is null and errors.name is defined %}<div class="invalid-feedback">{{ t(errors.name) }}</div>{% endif %}
+                    {% if edit_id is null and errors.name is defined %}<div class="field-error">{{ t(errors.name) }}</div>{% endif %}
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label" for="account-type">{{ t('accounts.type') }} {{ help.tip(t('ui.kontoart_girokonten_unterstuetzen_kontoauszugs_importe_und_iban_z')) }}</label>
-                    <select id="account-type" name="type" class="form-select{% if errors.type is defined %} is-invalid{% endif %}">
+                <div class="col-span-12 md:col-span-6">
+                    <label class="label" for="account-type">{{ t('accounts.type') }} {{ help.tip(t('ui.kontoart_girokonten_unterstuetzen_kontoauszugs_importe_und_iban_z')) }}</label>
+                    <select id="account-type" name="type" class="input{% if errors.type is defined %} is-invalid{% endif %}">
                         <option value="cash"{% if input.type == 'cash' %} selected{% endif %}>{{ t('accounts.type.cash') }}</option>
                         <option value="bank"{% if input.type == 'bank' %} selected{% endif %}>{{ t('accounts.type.bank') }}</option>
                     </select>
-                    {% if errors.type is defined %}<div class="invalid-feedback">{{ t(errors.type) }}</div>{% endif %}
+                    {% if errors.type is defined %}<div class="field-error">{{ t(errors.type) }}</div>{% endif %}
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label" for="account-opening-balance">{{ t('accounts.opening_balance') }} {{ help.tip(t('ui.saldovortrag_zum_eroeffnungsdatum_bildet_den_startwert_des_kontos')) }}</label>
+                <div class="col-span-12 md:col-span-6">
+                    <label class="label" for="account-opening-balance">{{ t('accounts.opening_balance') }} {{ help.tip(t('ui.saldovortrag_zum_eroeffnungsdatum_bildet_den_startwert_des_kontos')) }}</label>
                     <input type="text" inputmode="decimal" id="account-opening-balance" name="opening_balance" required
-                           class="form-control{% if errors.opening_balance is defined %} is-invalid{% endif %}"
+                           class="input{% if errors.opening_balance is defined %} is-invalid{% endif %}"
                            value="{{ input.opening_balance }}">
-                    {% if errors.opening_balance is defined %}<div class="invalid-feedback">{{ t(errors.opening_balance) }}</div>{% endif %}
+                    {% if errors.opening_balance is defined %}<div class="field-error">{{ t(errors.opening_balance) }}</div>{% endif %}
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label" for="account-opening-date">{{ t('accounts.opening_date') }}</label>
+                <div class="col-span-12 md:col-span-6">
+                    <label class="label" for="account-opening-date">{{ t('accounts.opening_date') }}</label>
                     <input type="date" id="account-opening-date" name="opening_date" required
-                           class="form-control{% if errors.opening_date is defined %} is-invalid{% endif %}"
+                           class="input{% if errors.opening_date is defined %} is-invalid{% endif %}"
                            value="{{ input.opening_date }}">
-                    {% if errors.opening_date is defined %}<div class="invalid-feedback">{{ t(errors.opening_date) }}</div>{% endif %}
+                    {% if errors.opening_date is defined %}<div class="field-error">{{ t(errors.opening_date) }}</div>{% endif %}
                 </div>
             </div>
-            <div class="mt-4">
+            <div class="mt-6">
                 <button type="submit" class="btn btn-primary">{{ t('accounts.create') }}</button>
             </div>
         </form>
