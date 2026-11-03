@@ -298,4 +298,8 @@ return [
     'home.move_down' => '{label} nach hinten verschieben',
     'home.position' => 'Position: {label}',
     'home.cards' => 'Karten',
+    'js.signature_clear' => 'Löschen',
+    'js.signature_apply' => 'Übernehmen',
+    'js.step_count' => 'Schritt {current} von {total}',
+    'js.declaration_confirmed' => 'Bestätigt',
 ];

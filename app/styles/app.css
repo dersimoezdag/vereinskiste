@@ -249,6 +249,22 @@
     .field-hint { display: block; margin-top: 0.375rem; font-size: 0.8125rem; color: var(--color-muted); }
     .field-error { display: none; margin-top: 0.375rem; font-size: 0.8125rem; color: var(--color-danger); }
     .is-invalid ~ .field-error, .field-error.block, .is-invalid ~ * .field-error { display: block; }
+
+    /* Unterschriftsfeld und Ja/Nein-Wahl im Mitgliedsantrag */
+    .signature-pad { display: block; margin-bottom: 1rem; }
+    .signature-surface { position: relative; border: 1px dashed var(--color-line-strong); border-radius: 0.75rem; background: #fff; }
+    .signature-pad.is-invalid .signature-surface { border-color: var(--color-danger); border-style: solid; }
+    .signature-canvas { display: block; width: 100%; aspect-ratio: 3.75 / 1; touch-action: none; cursor: crosshair; border-radius: 0.75rem; }
+    .signature-hint { position: absolute; left: 1rem; right: 1rem; bottom: 22%; border-top: 1px solid #cbd5e1; padding-top: 0.25rem; color: #64748b; font-size: 0.75rem; pointer-events: none; }
+    .signature-pad.has-signature .signature-hint { color: transparent; }
+    .signature-dialog { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 1rem; background: rgb(0 0 0 / 0.6); }
+    .signature-dialog-body { width: min(100%, 60rem); border-radius: 1rem; background: var(--color-surface); padding: 1rem; }
+    .choice-card { display: flex; align-items: center; gap: 0.75rem; min-height: 2.75rem; border: 1px solid var(--color-line); border-radius: 0.75rem; padding: 0.75rem 1rem; cursor: pointer; }
+    .choice-card:has(input:checked) { border-color: var(--color-primary); background: var(--color-primary-soft); }
+    .choice-card.is-invalid { border-color: var(--color-danger); }
+    .rich-text > * + * { margin-top: 0.75rem; }
+    .rich-text ul { list-style: disc; padding-left: 1.25rem; }
+    .rich-text h3 { font-size: 1rem; font-weight: 600; margin-top: 1.25rem; }
     .check { display: flex; align-items: flex-start; gap: 0.625rem; min-height: 2rem; padding-block: 0.25rem; }
     .check-inline { display: inline-flex; margin-right: 1rem; }
     .check-input {
