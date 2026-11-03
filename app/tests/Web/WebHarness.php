@@ -64,7 +64,7 @@ trait WebHarness
         return $this->app->handle((new ServerRequestFactory())->createServerRequest('GET', $path));
     }
 
-    /** @param array<string,string> $body */
+    /** @param array<string,mixed> $body */
     private function postForm(string $path, array $body): ResponseInterface
     {
         return $this->app->handle(

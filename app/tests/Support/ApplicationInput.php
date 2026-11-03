@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace Vereinskiste\Tests\Support;
 
+use PDO;
+use Vereinskiste\Members\Declarations;
+
 final class ApplicationInput
 {
     /** PNG-Data-URL wie vom Unterschriftsfeld: transparenter Grund, dunkler Strich. */
@@ -20,5 +23,22 @@ final class ApplicationInput
         ob_start();
         imagepng($image);
         return 'data:image/png;base64,' . base64_encode((string) ob_get_clean());
+    }
+
+    /** Gueltige Antworten fuer alle aktiven Erklaerungen. @return array<string,mixed> */
+    public static function declarations(PDO $pdo, string $consent = 'no'): array
+    {
+        $input = ['declaration' => [], 'signature' => [], 'signed_place' => 'Erlangen'];
+        foreach ((new Declarations($pdo))->active() as $d) {
+            if ($d['kind'] === 'confirmation') {
+                $input['declaration'][(string) $d['id']] = '1';
+            } elseif ($d['kind'] === 'consent') {
+                $input['declaration'][(string) $d['id']] = $consent;
+            }
+            if ($d['signature_required']) {
+                $input['signature'][(string) $d['id']] = self::signature();
+            }
+        }
+        return $input;
     }
 }

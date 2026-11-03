@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Vereinskiste\Tests\Members;
 
+use Vereinskiste\Tests\Support\ApplicationInput;
 use PDO;
 use Vereinskiste\Db\Migrator;
 use Vereinskiste\Ledger\ValidationError;
@@ -46,8 +47,7 @@ final class ApplicationRepositoryTest extends TestCase
         $appId = $this->repo->submit($invite['token'], [
             'name' => 'Max Mustermann',
             'email' => 'max@example.org',
-            'consent_statute' => '1',
-            'consent_privacy' => '1',
+            ...ApplicationInput::declarations($this->db),
         ]);
         $this->assertGreaterThan(0, $appId);
 
@@ -56,8 +56,7 @@ final class ApplicationRepositoryTest extends TestCase
         $this->repo->submit($invite['token'], [
             'name' => 'Erika Muster',
             'email' => 'erika@example.org',
-            'consent_statute' => '1',
-            'consent_privacy' => '1',
+            ...ApplicationInput::declarations($this->db),
         ]);
     }
 
@@ -70,8 +69,7 @@ final class ApplicationRepositoryTest extends TestCase
             $this->repo->submit($invite['token'], [
                 'name' => 'Max Mustermann',
                 'email' => 'max@example.org',
-                'consent_statute' => '1',
-                'consent_privacy' => '1',
+                ...ApplicationInput::declarations($this->db),
             ]);
             $this->fail('SEPA details should be required');
         } catch (ValidationError $e) {
@@ -84,8 +82,7 @@ final class ApplicationRepositoryTest extends TestCase
         $appId = $this->repo->submit($invite['token'], [
             'name' => 'Max Mustermann',
             'email' => 'max@example.org',
-            'consent_statute' => '1',
-            'consent_privacy' => '1',
+            ...ApplicationInput::declarations($this->db),
             'account_holder' => 'Max Mustermann',
             'iban' => 'DE89370400440532013000',
             'bic' => 'BYLADEM1001',
@@ -110,8 +107,7 @@ final class ApplicationRepositoryTest extends TestCase
         $this->repo->submit($invite['token'], [
             'name' => 'Max',
             'email' => 'max@example.org',
-            'consent_statute' => '1',
-            'consent_privacy' => '1',
+            ...ApplicationInput::declarations($this->db),
         ]);
     }
 
@@ -122,8 +118,7 @@ final class ApplicationRepositoryTest extends TestCase
             'name' => 'Anna Neumitglied',
             'email' => 'anna@example.org',
             'city' => 'Hamburg',
-            'consent_statute' => '1',
-            'consent_privacy' => '1',
+            ...ApplicationInput::declarations($this->db),
         ]);
 
         $this->assertSame(1, $this->repo->countPending());
@@ -152,8 +147,7 @@ final class ApplicationRepositoryTest extends TestCase
         $appId = $this->repo->submit($invite['token'], [
             'name' => 'Bernd Abgelehnt',
             'email' => 'bernd@example.org',
-            'consent_statute' => '1',
-            'consent_privacy' => '1',
+            ...ApplicationInput::declarations($this->db),
         ]);
 
         $this->repo->reject($appId, 'Aufnahmestopp', 1);
@@ -168,7 +162,7 @@ final class ApplicationRepositoryTest extends TestCase
         $invite = $this->repo->createInvite(1, 'Getrennte Namen', 14, null, false);
         $appId = $this->repo->submit($invite['token'], [
             'salutation' => 'frau', 'title' => 'Dr.', 'first_name' => 'Erika', 'last_name' => 'Muster',
-            'email' => 'erika@example.org', 'consent_statute' => '1', 'consent_privacy' => '1',
+            'email' => 'erika@example.org', ...ApplicationInput::declarations($this->db),
         ]);
         $app = $this->repo->findApplication($appId);
         $this->assertSame('Dr. Erika Muster', $app['applicant_name']);
@@ -186,7 +180,7 @@ final class ApplicationRepositoryTest extends TestCase
         try {
             $this->repo->submit($invite['token'], [
                 'first_name' => '', 'last_name' => 'Muster', 'email' => 'e@example.org',
-                'consent_statute' => '1', 'consent_privacy' => '1',
+                ...ApplicationInput::declarations($this->db),
             ]);
             $this->fail('Vorname fehlt');
         } catch (ValidationError $e) {
