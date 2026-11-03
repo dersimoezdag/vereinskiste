@@ -22,13 +22,16 @@ final class Consents
     }
     public function fingerprint(): string
     {
-        return hash('sha256',json_encode([$this->snapshot('statute'),$this->snapshot('privacy'),$this->snapshot('sepa')],JSON_THROW_ON_ERROR));
+        return hash('sha256',json_encode([(new \Vereinskiste\Members\Declarations($this->pdo))->fingerprint(),$this->snapshot('sepa')],JSON_THROW_ON_ERROR));
     }
     public function fromApplication(int $application,array $input): void
     {
-        foreach(['statute'=>'consent_statute','privacy'=>'consent_privacy','sepa'=>'sepa_mandate_consent'] as $kind=>$field) {
-            if(!empty($input[$field])) { $this->append(null,$application,$kind,true,$this->snapshot($kind),'application',null,''); }
-        }
+        if(!empty($input['sepa_mandate_consent'])) { $this->append(null,$application,'sepa',true,$this->snapshot('sepa'),'application',null,''); }
+    }
+    /** Einwilligungen und Bestaetigungen aus Antragserklaerungen; Hinweise werden nicht erfasst. */
+    public function fromDeclaration(int $application,int $declarationId,bool $granted,array $snapshot): void
+    {
+        $this->append(null,$application,'declaration',$granted,$snapshot,'application',null,'',$declarationId);
     }
     public function record(int $member,array $input,int $actor): void
     {
@@ -48,10 +51,10 @@ final class Consents
         $stmt=$this->pdo->prepare('SELECT * FROM member_consents WHERE member_id=? ORDER BY id DESC');$stmt->execute([$member]);
         return array_map(static function(array $r):array {$r['snapshot']=json_decode($r['snapshot'],true,512,JSON_THROW_ON_ERROR);return $r;},$stmt->fetchAll());
     }
-    private function append(?int $member,?int $application,string $kind,bool $granted,array $snapshot,string $source,?int $actor,string $reason):void
+    private function append(?int $member,?int $application,string $kind,bool $granted,array $snapshot,string $source,?int $actor,string $reason,?int $declaration=null):void
     {
         $json=json_encode($snapshot,JSON_THROW_ON_ERROR);
-        $this->pdo->prepare('INSERT INTO member_consents(member_id,application_id,kind,granted,document_version,snapshot,snapshot_hash,source,recorded_by,reason) VALUES(?,?,?,?,?,?::jsonb,?,?,?,?)')
-            ->execute([$member,$application,$kind,$granted?'true':'false',$snapshot['version'],$json,hash('sha256',$json),$source,$actor,$reason]);
+        $this->pdo->prepare('INSERT INTO member_consents(member_id,application_id,kind,granted,document_version,snapshot,snapshot_hash,source,recorded_by,reason,declaration_id) VALUES(?,?,?,?,?,?::jsonb,?,?,?,?,?)')
+            ->execute([$member,$application,$kind,$granted?'true':'false',(string)($snapshot['version']??''),$json,hash('sha256',$json),$source,$actor,$reason,$declaration]);
     }
 }

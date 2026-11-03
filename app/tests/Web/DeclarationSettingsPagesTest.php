@@ -1,0 +1,60 @@
+<?php
+declare(strict_types=1);
+
+namespace Vereinskiste\Tests\Web;
+
+use PDO;
+use Vereinskiste\Db\Migrator;
+use Vereinskiste\Http\Kernel;
+use Vereinskiste\Http\Session\ArraySessionStore;
+use Vereinskiste\Tests\TestCase;
+
+final class DeclarationSettingsPagesTest extends TestCase
+{
+    use WebHarness;
+
+    private PDO $pdo;
+
+    protected function setUp(): void
+    {
+        $this->pdo = $this->pdo();
+        (new Migrator($this->pdo, dirname(__DIR__, 2) . '/migrations'))->migrate();
+        $this->store = new ArraySessionStore();
+        $this->app = Kernel::create(['pdo' => $this->pdo, 'session_store' => $this->store, 'require_https' => false, 'security_dir' => $this->securityDir()]);
+    }
+
+    public function test_board_creates_edits_moves_and_deactivates_declarations(): void
+    {
+        $this->loginAs(['admin']);
+        $list = (string) $this->get('/settings/declarations')->getBody();
+        $this->assertStringContainsString('Antrag auf Mitgliedschaft', $list);
+        $this->assertStringContainsString('href="/settings/declarations"', $list);
+
+        $this->assertSame(200, $this->get('/settings/declarations/new')->getStatusCode());
+        $res = $this->postForm('/settings/declarations/new', ['title' => 'Beitragsordnung', 'content' => '<p>Ich erkenne die Beitragsordnung an.</p>', 'kind' => 'confirmation', 'signature_required' => '1']);
+        $this->assertSame('/settings/declarations', $res->getHeaderLine('Location'));
+        $id = (int) $this->pdo->query("SELECT declaration_id FROM application_declaration_versions WHERE title = 'Beitragsordnung'")->fetchColumn();
+
+        $edit = (string) $this->get("/settings/declarations/$id")->getBody();
+        $this->assertStringContainsString('data-rich-text', $edit);
+        $this->assertStringContainsString('Ich erkenne die Beitragsordnung an.', $edit);
+        $this->assertStringContainsString('data-signature-pad', $edit, 'preview shows signature field');
+
+        $this->assertSame(422, $this->postForm("/settings/declarations/$id", ['title' => '', 'content' => '', 'kind' => 'confirmation'])->getStatusCode());
+        $this->postForm("/settings/declarations/$id", ['title' => 'Beitragsordnung', 'content' => '<p>Neu</p>', 'kind' => 'consent']);
+        $this->assertSame(2, (int) $this->pdo->query("SELECT current_version FROM application_declarations WHERE id = $id")->fetchColumn());
+
+        $this->postForm("/settings/declarations/$id/move", ['direction' => 'up']);
+        $this->assertSame(4, (int) $this->pdo->query("SELECT position FROM application_declarations WHERE id = $id")->fetchColumn());
+        $this->postForm("/settings/declarations/$id/toggle", ['active' => '0']);
+        $this->assertFalse((bool) $this->pdo->query("SELECT active FROM application_declarations WHERE id = $id")->fetchColumn());
+        $this->assertSame(404, $this->get('/settings/declarations/999')->getStatusCode());
+    }
+
+    public function test_members_role_cannot_manage_declarations(): void
+    {
+        $this->loginAs(['secretary']);
+        $this->assertSame(403, $this->get('/settings/declarations')->getStatusCode());
+        $this->assertSame(403, $this->postForm('/settings/declarations/new', ['title' => 'X', 'kind' => 'notice'])->getStatusCode());
+    }
+}

@@ -20,6 +20,7 @@ final class MemberPrivacy
             'consents'=>'SELECT kind,granted,document_version,snapshot,snapshot_hash,source,recorded_at,reason FROM member_consents WHERE member_id=? ORDER BY id',
             'roles'=>'SELECT r.name,r.kind,m.scope,m.start_date,m.end_date FROM member_club_roles m JOIN club_roles r ON r.id=m.role_id WHERE m.member_id=? ORDER BY m.id',
             'applications'=>'SELECT id,status,applicant_name,email,data,rejection_reason,created_at,reviewed_at FROM membership_applications WHERE member_id=? ORDER BY id',
+            'signatures'=>"SELECT s.application_id,s.declaration_id,s.version,s.granted,s.snapshot,s.snapshot_hash,s.signed_place,s.signed_at,encode(s.signature_png,'base64') AS signature_png FROM application_signatures s JOIN membership_applications a ON a.id=s.application_id WHERE a.member_id=? ORDER BY s.id",
             'history'=>"SELECT at,reason,changes FROM foundation_changes WHERE subject='member' AND subject_id=? ORDER BY id",
             'event_tasks'=>'SELECT e.title AS event,t.title,t.done FROM event_tasks t JOIN events e ON e.id=t.event_id WHERE t.member_id=? ORDER BY t.id',
             'expenses'=>'SELECT purpose,amount,spent_on,booking_id FROM member_expenses WHERE member_id=? ORDER BY id',

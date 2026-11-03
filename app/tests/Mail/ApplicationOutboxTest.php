@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace Vereinskiste\Tests\Mail;
 
+use Vereinskiste\Tests\Support\ApplicationInput;
 use PDO;
 use PHPMailer\PHPMailer\PHPMailer;
 use Vereinskiste\Db\Migrator;
@@ -24,7 +25,7 @@ final class ApplicationOutboxTest extends TestCase
     private function application():int
     {
         $repo=new ApplicationRepository($this->db);$invite=$repo->createInvite(1,'',14,null,true);
-        return $repo->submit($invite['token'],['name'=>'Erika Muster','email'=>'erika@example.org','consent_statute'=>'1','consent_privacy'=>'1','account_holder'=>'Erika','iban'=>'DE89370400440532013000','sepa_mandate_consent'=>'1']);
+        return $repo->submit($invite['token'],['name'=>'Erika Muster','email'=>'erika@example.org',...ApplicationInput::declarations($this->db),'account_holder'=>'Erika','iban'=>'DE89370400440532013000','sepa_mandate_consent'=>'1']);
     }
     public function test_receipt_internal_and_decision_notifications_are_transactional_and_contain_no_bank_data():void
     {
@@ -32,7 +33,7 @@ final class ApplicationOutboxTest extends TestCase
         $outbox=new Outbox($this->db);$this->assertCount(2,$outbox->list($id));
         (new ApplicationRepository($this->db))->approve($id,1,['subject'=>'Willkommen','message'=>'Unsere Zusage']);
         $this->assertCount(3,$outbox->list($id));
-        $this->assertSame(3,(int)$this->db->query('SELECT count(*) FROM member_consents WHERE member_id IS NOT NULL')->fetchColumn());
+        $this->assertSame(4,(int)$this->db->query('SELECT count(*) FROM member_consents WHERE member_id IS NOT NULL')->fetchColumn());
         foreach($this->db->query('SELECT body FROM mail_outbox')->fetchAll(PDO::FETCH_COLUMN) as $body) {$this->assertStringNotContainsString('DE89',$body);}
         $outbox->process(new Mailer());$this->assertSame('pending',$outbox->list($id)[0]['status']);
         $sent=0;$mailer=new Mailer(['host'=>'smtp.example.org','from'=>'noreply@example.org'],function(PHPMailer $mail)use(&$sent):void {$sent++;});
@@ -55,8 +56,8 @@ final class ApplicationOutboxTest extends TestCase
     public function test_changed_document_snapshot_and_invalid_public_text_do_not_consume_the_invite():void
     {
         $repo=new ApplicationRepository($this->db);$invite=$repo->createInvite(1);
-        $old=(new Consents($this->db))->fingerprint();(new Settings($this->db))->save(['privacy_version'=>'2'],1,1);
-        try {$repo->submit($invite['token'],['name'=>'Erika Muster','email'=>'erika@example.org','consent_statute'=>'1','consent_privacy'=>'1','document_fingerprint'=>$old]);$this->fail('stale');}
+        $old=(new Consents($this->db))->fingerprint();$first=(new \Vereinskiste\Members\Declarations($this->db))->active()[0];(new \Vereinskiste\Members\Declarations($this->db))->save($first['id'],['title'=>$first['title'],'content'=>'<p>Neu</p>','kind'=>$first['kind'],'signature_required'=>'1'],1);
+        try {$repo->submit($invite['token'],['name'=>'Erika Muster','email'=>'erika@example.org',...ApplicationInput::declarations($this->db),'document_fingerprint'=>$old]);$this->fail('stale');}
         catch(ValidationError $e) {$this->assertArrayHasKey('document_fingerprint',$e->errors);}
         $this->assertSame(0,(int)$this->db->query('SELECT count(*) FROM membership_applications')->fetchColumn());
         $this->assertSame(0,(int)$this->db->query('SELECT used_count FROM membership_application_invites')->fetchColumn());

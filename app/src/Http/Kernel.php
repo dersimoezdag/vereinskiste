@@ -330,6 +330,14 @@ final class Kernel
         $app->post('/members/applications/{id:[0-9]+}/anonymize', [$privacy, 'anonymizeApplication'])->add(Auth::requires('settings.manage'));
         $app->get('/settings/privacy', [$privacy, 'settings'])->add(Auth::requires('settings.manage'));
         $app->post('/settings/privacy', [$privacy, 'saveSettings'])->add(Auth::requires('settings.manage'));
+        $declarations = new \Vereinskiste\Web\DeclarationController($pdoProvider);
+        $app->get('/settings/declarations', [$declarations, 'index'])->add(Auth::requires('settings.manage'));
+        $app->get('/settings/declarations/new', [$declarations, 'form'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/declarations/new', [$declarations, 'save'])->add(Auth::requires('settings.manage'));
+        $app->get('/settings/declarations/{id:[0-9]+}', [$declarations, 'form'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/declarations/{id:[0-9]+}', [$declarations, 'save'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/declarations/{id:[0-9]+}/move', [$declarations, 'move'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/declarations/{id:[0-9]+}/toggle', [$declarations, 'toggle'])->add(Auth::requires('settings.manage'));
         $app->get('/members/{id:[0-9]+}/privacy', [$privacy, 'member'])->add(Auth::requires('settings.manage'));
         $app->post('/members/{id:[0-9]+}/consents', [$privacy, 'consent'])->add(Auth::requires('settings.manage'));
         $app->get('/members/{id:[0-9]+}/disclosure.json', [$privacy, 'disclosure'])->add(Auth::requires('settings.manage'));

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Vereinskiste\Tests\Web;
 
+use Vereinskiste\Tests\Support\ApplicationInput;
 use PDO;
 use Vereinskiste\Db\Migrator;
 use Vereinskiste\Http\Kernel;
@@ -77,8 +78,7 @@ final class MembershipApplicationPagesTest extends TestCase
             'account_holder' => 'Klaus Neumayer',
             'iban' => 'DE89370400440532013000',
             'sepa_mandate_consent' => '1',
-            'consent_statute' => '1',
-            'consent_privacy' => '1',
+            ...ApplicationInput::declarations($this->pdo),
         ]);
         $this->assertSame(302, $res->getStatusCode());
         $this->assertSame('/antrag/danke', $res->getHeaderLine('Location'));
@@ -118,8 +118,7 @@ final class MembershipApplicationPagesTest extends TestCase
             'name' => 'Spam Bot',
             'email' => 'bot@example.org',
             'website' => 'http://spam.com',
-            'consent_statute' => '1',
-            'consent_privacy' => '1',
+            ...ApplicationInput::declarations($this->pdo),
         ]);
         $this->assertSame('/antrag/danke', $res->getHeaderLine('Location'));
 
@@ -134,8 +133,7 @@ final class MembershipApplicationPagesTest extends TestCase
         $appId = $repo->submit($invite['token'], [
             'name' => 'Antragsteller',
             'email' => 'test@example.org',
-            'consent_statute' => '1',
-            'consent_privacy' => '1',
+            ...ApplicationInput::declarations($this->pdo),
         ]);
 
         $this->loginAs(['admin']);

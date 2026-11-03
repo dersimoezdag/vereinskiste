@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace Vereinskiste\Tests\Privacy;
 
+use Vereinskiste\Tests\Support\ApplicationInput;
 use PDO;
 use PDOException;
 use Vereinskiste\Db\Migrator;
@@ -47,7 +48,7 @@ final class PrivacyTest extends TestCase
     public function test_anonymization_redacts_member_history_applications_consents_and_mail_but_keeps_ids():void
     {
         $repo=new ApplicationRepository($this->db);$invite=$repo->createInvite(1);
-        $app=$repo->submit($invite['token'],['name'=>'Erika Muster','email'=>'erika@example.org','notes'=>'private-note','consent_statute'=>'1','consent_privacy'=>'1']);
+        $app=$repo->submit($invite['token'],['name'=>'Erika Muster','email'=>'erika@example.org','notes'=>'private-note',...ApplicationInput::declarations($this->db),]);
         $id=$repo->approve($app,1);$member=(new MemberRepository($this->db))->find($id);
         $today=(new \DateTimeImmutable('today'))->format('Y-m-d');(new MembershipPeriods($this->db))->leave($id,$today,'Privater Austrittsgrund',1);
         (new Settings($this->db))->save(['member_retention_days'=>'0'],1,1);
@@ -64,14 +65,14 @@ final class PrivacyTest extends TestCase
     public function test_rejected_application_anonymization_removes_invite_and_mail_personal_copies():void
     {
         $repo=new ApplicationRepository($this->db);$invite=$repo->createInvite(1,'Erika Muster Einladung');
-        $app=$repo->submit($invite['token'],['name'=>'Erika Muster','email'=>'erika@example.org','consent_statute'=>'1','consent_privacy'=>'1']);
+        $app=$repo->submit($invite['token'],['name'=>'Erika Muster','email'=>'erika@example.org',...ApplicationInput::declarations($this->db),]);
         $repo->reject($app,'Persönlicher Grund',1);
         (new Settings($this->db))->save(['application_retention_days'=>'0'],1,1);
         $privacy=new \Vereinskiste\Privacy\ApplicationPrivacy($this->db);$preview=$privacy->preview($app);$this->assertSame([],$preview['blocked']);
         $privacy->anonymize($app,(int)$preview['application']['version'],$preview['fingerprint'],'Aufbewahrung geprüft',1);
         $after=$repo->findApplication($app);$this->assertNotNull($after['anonymized_at']);$this->assertSame('redacted@example.invalid',$after['email']);
         $this->assertSame('',$this->db->query('SELECT title FROM membership_application_invites')->fetchColumn());
-        $this->assertSame(2,(int)$this->db->query("SELECT count(*) FROM member_consents WHERE snapshot='{}'::jsonb")->fetchColumn());
+        $this->assertSame(3,(int)$this->db->query("SELECT count(*) FROM member_consents WHERE snapshot='{}'::jsonb")->fetchColumn());
     }
     public function test_stale_preview_cannot_anonymize_and_retention_date_is_checked():void
     {

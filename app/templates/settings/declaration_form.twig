@@ -1,0 +1,38 @@
+{% extends 'layout.twig' %}
+{% block content %}
+<div class="mx-auto w-full max-w-7xl">
+    {% include 'components/settings_tabs.twig' %}
+    <h2 class="h4 mb-4">{{ t(declaration ? 'declarations.edit' : 'declarations.new') }}{% if declaration %} · {{ t('declarations.field.version') }} {{ declaration.version }}{% endif %}</h2>
+    <div class="grid gap-6 lg:grid-cols-2">
+        <form method="post" action="/settings/declarations/{{ declaration ? declaration.id : 'new' }}" class="panel panel-body" novalidate>
+            {{ csrf_field() }}
+            <label class="label required" for="declaration-title">{{ t('declarations.field.title') }}</label>
+            <input class="input mb-1{% if errors.title is defined %} is-invalid{% endif %}" id="declaration-title" name="title" value="{{ values.title }}" maxlength="200" required>
+            {% if errors.title is defined %}<p class="field-error block">{{ t(errors.title) }}</p>{% endif %}
+            <label class="label required mt-4" for="declaration-kind">{{ t('declarations.field.kind') }}</label>
+            <select class="input{% if errors.kind is defined %} is-invalid{% endif %}" id="declaration-kind" name="kind">
+                {% for kind in kinds %}<option value="{{ kind }}"{% if values.kind == kind %} selected{% endif %}>{{ t('declarations.kind.' ~ kind) }}</option>{% endfor %}
+            </select>
+            <div class="check mt-4">
+                <input class="check-input" type="checkbox" id="declaration-signature" name="signature_required" value="1"{% if values.signature_required %} checked{% endif %}>
+                <label class="check-label" for="declaration-signature">{{ t('declarations.field.signature_required') }}</label>
+            </div>
+            <label class="label mt-4" for="declaration-content">{{ t('declarations.field.content') }}</label>
+            <textarea class="input{% if errors.content is defined %} is-invalid{% endif %}" id="declaration-content" name="content" rows="14" data-rich-text>{{ values.content|e }}</textarea>
+            {% if errors.content is defined %}<p class="field-error block">{{ t(errors.content) }}</p>{% endif %}
+            <div class="mt-6 flex gap-2">
+                <button class="btn btn-primary">{{ t('common.save') }}</button>
+                <a class="btn" href="/settings/declarations">{{ t('common.back') }}</a>
+            </div>
+        </form>
+        {% if preview %}
+        <section class="panel panel-body" aria-labelledby="declaration-preview">
+            <h3 id="declaration-preview" class="panel-title">{{ t('declarations.preview') }}</h3>
+            <h4 class="h5">{{ preview.title }}</h4>
+            {% include 'public/_declaration_step.twig' with {declaration: preview, answer: '', signature: '', errors: {}, preview: true} %}
+        </section>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ asset('vendor/tinymce/tinymce.min.js') }}"></script><script src="{{ asset('rich-text.js') }}"></script><script src="{{ asset('signature-pad.js') }}"></script>{% endblock %}

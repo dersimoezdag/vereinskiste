@@ -43,6 +43,7 @@ final class ApplicationPrivacy
     {
         if(!$this->pdo->inTransaction()) {throw new \LogicException('Redaction requires a transaction.');}
         $this->pdo->prepare("UPDATE membership_applications SET applicant_name=?,email='redacted@example.invalid',data='{}'::jsonb,rejection_reason=NULL,anonymized_at=now(),version=version+1 WHERE id=?")->execute([$name,$id]);
+        (new \Vereinskiste\Members\ApplicationSignatures($this->pdo))->redact($id);
         $this->pdo->prepare("UPDATE mail_outbox SET recipient='redacted@example.invalid',subject='',body='',status=CASE WHEN status='sent' THEN 'sent' ELSE 'cancelled' END,version=version+1 WHERE application_id=?")->execute([$id]);
         $this->pdo->prepare("UPDATE member_consents SET snapshot='{}'::jsonb,document_version='',reason='privacy.redacted',snapshot_hash=? WHERE application_id=? AND member_id IS NULL")->execute([hash('sha256','{}'),$id]);
         $this->pdo->prepare("UPDATE membership_application_invites SET title='',password_hash=NULL,expires_at=now() WHERE id IN(SELECT invite_id FROM membership_applications WHERE id=?)")->execute([$id]);

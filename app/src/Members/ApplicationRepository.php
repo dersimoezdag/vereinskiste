@@ -141,16 +141,6 @@ final class ApplicationRepository
                 $errors['email'] = 'validation.email.invalid';
             }
 
-            $consentStatute = ($input['consent_statute'] ?? '') === '1';
-            if (!$consentStatute) {
-                $errors['consent_statute'] = 'foundation.required';
-            }
-
-            $consentPrivacy = ($input['consent_privacy'] ?? '') === '1';
-            if (!$consentPrivacy) {
-                $errors['consent_privacy'] = 'foundation.required';
-            }
-
             $birthDate = trim((string) ($input['birth_date'] ?? ''));
             if ($birthDate !== '') {
                 $parsed = DateTimeImmutable::createFromFormat('!Y-m-d', $birthDate);
@@ -187,6 +177,14 @@ final class ApplicationRepository
                 }
             }
 
+            $declarations = ['place' => '', 'rows' => []];
+            try {
+                $club = (string) ((new \Vereinskiste\Club\Profile($this->pdo))->get()['data']['name'] ?? '');
+                $declarations = (new ApplicationSignatures($this->pdo))->read($input, $club);
+            } catch (ValidationError $e) {
+                $errors += $e->errors;
+            }
+
             if ($errors !== []) {
                 throw new ValidationError($errors);
             }
@@ -200,8 +198,6 @@ final class ApplicationRepository
                 'phone' => $phone,
                 'birth_date' => $birthDate,
                 'notes' => $notes,
-                'consent_statute' => $consentStatute,
-                'consent_privacy' => $consentPrivacy,
                 'account_holder' => $accountHolder,
                 'iban' => $iban,
                 'bic' => $bic,
@@ -220,6 +216,7 @@ final class ApplicationRepository
             $this->pdo->prepare('UPDATE membership_application_invites SET used_count = used_count + 1 WHERE id = ?')
                 ->execute([$invite['id']]);
 
+            (new ApplicationSignatures($this->pdo))->store($appId, $declarations);
             $consents->fromApplication($appId, $data);
             (new ApplicationNotifications($this->pdo))->queue($appId, 'submitted');
             return $appId;
