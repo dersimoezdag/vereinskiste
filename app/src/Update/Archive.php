@@ -24,7 +24,7 @@ final class Archive
                 if ($stat['size']>8388608 || $total>268435456 || (str_ends_with($name,'.php') && $stat['size']>262144)) { throw new Failure('archive_limit'); }
             }
             foreach (['app/bootstrap.php','app/cron.php','app/update-bootstrap.php','app/VERSION','app/vendor/autoload.php',
-                'app/src/Update/Runtime.php','public/index.php','public/assets/app.css'] as $required) {
+                'app/src/Update/Runtime.php','public/index.php','public/assets/app.css','public/assets/ui.js'] as $required) {
                 if ($zip->locateName($required)===false) { throw new Failure('archive'); }
             }
             if (trim((string)$zip->getFromName('app/VERSION'))!==$version) { throw new Failure('manifest'); }

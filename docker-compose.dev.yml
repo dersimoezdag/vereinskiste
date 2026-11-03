@@ -11,6 +11,13 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+  # Baut public/assets/app.css und die Schriften (Tailwind) und baut bei Aenderungen neu.
+  assets:
+    image: node:22
+    working_dir: /work
+    volumes:
+      - .:/work
+    command: sh -c "npm --prefix tests ci --ignore-scripts && node scripts/build-css.cjs --watch"
   php:
     build:
       context: .

@@ -24,10 +24,18 @@ Aufraeumen: `docker compose -f docker-compose.dev.yml down -v`
 Styles: Die Oberflaeche nutzt Tailwind CSS. Quelle ist `app/styles/app.css` (Farben,
 Schriften und wiederkehrende Bausteine wie `btn`, `input`, `panel`, `data-table`);
 Layout und Abstaende stehen als Tailwind-Klassen direkt in den Templates.
-`public/assets/app.css` wird erzeugt und nicht versioniert (Node noetig, Pakete in `tests/`):
+`public/assets/app.css` und `public/assets/vendor/fonts/` werden erzeugt und nicht versioniert.
+Ohne diesen Build erscheinen alle Seiten ungestylt. Im Entwicklungscontainer laeuft der Build samt Neubau bei Aenderungen mit:
 
-    npm --prefix tests ci
+    docker compose -f docker-compose.dev.yml up assets
+
+Alternativ mit lokalem Node 22 (Pakete in `tests/`):
+
+    npm --prefix tests ci --ignore-scripts
     node scripts/build-css.cjs --watch
+
+Das Release-Paket baut `scripts/build-release.sh` immer frisch; `scripts/verify-release.php`
+prueft dabei, dass `app.css` ein Tailwind-Build ist und jede darin eingebundene Schrift im Paket liegt.
 
 Parallele Chats oder Testläufe brauchen jeweils eine eigene Testdatenbank, da
 die Tests das Schema der Testdatenbank zurücksetzen. Eine zusätzliche Datenbank
