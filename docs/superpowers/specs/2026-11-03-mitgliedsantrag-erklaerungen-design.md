@@ -198,8 +198,12 @@ Bedienung:
 - `layout.twig`: öffentliche Antragsseiten (`/antrag/…`) erhalten den Container `max-w-3xl`
   statt der Login-Breite `max-w-md`.
 - Das zweite Logo im Kartenkopf entfällt; der Kopf zeigt Titel und Einladungstitel.
-- Mobil einspaltig; ab `sm` nebeneinander: Vorname/Nachname, PLZ/Ort, IBAN/BIC,
-  E-Mail/Telefon. Kein horizontales Scrollen bei 360 px Breite.
+- Mobil einspaltig; ab `sm` nebeneinander: Vorname/Nachname, Straße/Hausnummer, PLZ/Ort,
+  IBAN/BIC, E-Mail/Telefon. Kein horizontales Scrollen bei 360 px Breite.
+- Straße und Hausnummer sind getrennte Felder – im Antrag und überall sonst in der App
+  (Mitglieder haben `house_number` bereits; Finanzkontakte und Vereinsprofil bekommen es,
+  der Kontakt-Export eine eigene Spalte). Vorhandene Adressen, die eindeutig auf eine
+  Hausnummer enden, werden per Migration aufgeteilt; alle anderen bleiben unverändert.
 - Schritte mit einheitlichem Abstand; „Zurück“/„Weiter“ als Leiste am Ende jedes Schritts,
   mobil in voller Breite.
 - Label Geburtsdatum korrigiert („Geburtsdatum“, Hilfetext „TT.MM.JJJJ“).
