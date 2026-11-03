@@ -106,14 +106,14 @@
         event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
     }
 
-    // Einnahmen und Ausgaben je Monat. Als Saeulen gehen Einnahmen nach oben und Ausgaben nach unten
-    // in derselben Saeule; als Linie oder Flaeche bleiben beide positiv, damit sie vergleichbar sind.
+    // Einnahmen und Ausgaben je Monat: Einnahmen nach oben, Ausgaben nach unten (in jeder Ansicht,
+    // als Saeulen in derselben Saeule); die Ergebnislinie zeigt den Saldo dazwischen.
     function monthlyDatasets() {
         var line = view.type !== 'bar';
         var area = view.type === 'area';
         var series = [
             { label: label.income, data: slice(data.income), hex: color.income },
-            { label: label.expense, data: slice(data.expense).map(function (value) { return line ? value : -Math.abs(value); }), hex: color.expense }
+            { label: label.expense, data: slice(data.expense).map(function (value) { return -Math.abs(value); }), hex: color.expense }
         ].map(function (item) {
             return line
                 ? { label: item.label, data: item.data, type: 'line', borderColor: item.hex, backgroundColor: area ? gradient(item.hex) : item.hex,
