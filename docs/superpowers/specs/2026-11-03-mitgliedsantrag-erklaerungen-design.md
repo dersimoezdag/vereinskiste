@@ -133,17 +133,37 @@ während jemand das Formular ausfüllt, wird der Antrag wie heute mit Hinweis ne
 
 ## Öffentliches Formular
 
-### Aufbau
+### Aufbau als Stepper
 
-1. Persönliche Angaben (wie heute)
-2. Anschrift (wie heute)
-3. SEPA-Lastschriftmandat (nur wenn im Einladungslink gefordert, wie heute)
-4. Bemerkungen (wie heute)
-5. Erklärungen – jede aktive Erklärung als eigener nummerierter Abschnitt in der festgelegten
-   Reihenfolge: Titel, Text, Checkbox bzw. Radio-Buttons je nach Art, darunter das
-   Unterschriftsfeld, falls gefordert
-6. Abschluss: Feld „Ort“ (Pflicht, sobald mindestens eine Erklärung eine Unterschrift
-   verlangt), automatisch gesetztes Datum (Anzeige, Serverzeit beim Absenden), Absenden
+Das Formular ist ein Stepper mit einem Schritt pro Abschnitt. Technisch bleibt es **ein**
+`<form>`: Die Schritte werden per JavaScript (`public/assets/application-stepper.js`) ein- und
+ausgeblendet, es gibt keinen Serverabruf pro Schritt. Die Serverprüfung läuft wie bisher
+einmal beim Absenden.
+
+Schritte:
+
+1. Persönliche Angaben und Anschrift (Felder wie heute)
+2. SEPA-Lastschriftmandat – nur wenn im Einladungslink gefordert (wie heute)
+3. Je aktiver Erklärung ein Schritt in der festgelegten Reihenfolge: Titel, Text aus dem
+   Editor, Checkbox bzw. Radio-Buttons je nach Art, darunter das Unterschriftsfeld, falls
+   gefordert
+4. Abschluss: Bemerkungen, Zusammenfassung aller Erklärungen mit Wahl und verkleinertem
+   Unterschriftsbild sowie „Ändern“-Link je Erklärung, Feld „Ort“ (Pflicht, sobald
+   mindestens eine Erklärung eine Unterschrift verlangt), automatisch gesetztes Datum
+   (Anzeige; gespeichert wird die Serverzeit beim Absenden), Absenden
+
+Bedienung:
+
+- Fortschrittsanzeige oben: „Schritt 3 von 7“ mit Schrittnamen; mobil nur Nummer, Name des
+  aktuellen Schritts und Fortschrittsbalken.
+- „Zurück“ ist immer möglich. „Weiter“ prüft den aktuellen Schritt im Browser (Pflichtfelder,
+  Checkbox bzw. Wahl, Unterschrift nicht leer) und markiert fehlende Angaben, statt weiterzugehen.
+- Beim Schrittwechsel wird zum Anfang des Schritts gescrollt und der Fokus auf dessen
+  Überschrift gesetzt (Barrierefreiheit); der aktuelle Schritt steht in `aria-current`.
+- Zeigt der Server das Formular nach einem Fehler erneut an, öffnet der Stepper den ersten
+  Schritt mit Fehler; alle Fehlermeldungen stehen am jeweiligen Feld bzw. Abschnitt.
+- Die Schrittnummer steht im URL-Fragment (`#schritt-3`), damit die Zurück-Taste des Browsers
+  einen Schritt zurück führt statt die Seite zu verlassen.
 
 ### Unterschriftsfeld (`public/assets/signature-pad.js`)
 
@@ -180,7 +200,8 @@ während jemand das Formular ausfüllt, wird der Antrag wie heute mit Hinweis ne
 - Das zweite Logo im Kartenkopf entfällt; der Kopf zeigt Titel und Einladungstitel.
 - Mobil einspaltig; ab `sm` nebeneinander: Vorname/Nachname, PLZ/Ort, IBAN/BIC,
   E-Mail/Telefon. Kein horizontales Scrollen bei 360 px Breite.
-- Abschnitte als nummerierte Schritte mit einheitlichem Abstand.
+- Schritte mit einheitlichem Abstand; „Zurück“/„Weiter“ als Leiste am Ende jedes Schritts,
+  mobil in voller Breite.
 - Label Geburtsdatum korrigiert („Geburtsdatum“, Hilfetext „TT.MM.JJJJ“).
 - Der interne Hinweis zum deaktivierten E-Mail-Versand erscheint nicht mehr im öffentlichen
   Formular.
@@ -235,4 +256,8 @@ während jemand das Formular ausfüllt, wird der Antrag wie heute mit Hinweis ne
     Berechtigung.
 - jsdom (`tests/signature-pad.test.cjs`): Zeichnen erzeugt PNG im versteckten Feld, Löschen
   leert es, leere Fläche blockiert Absenden, Wiederherstellen nach Neuanzeige.
+- jsdom (`tests/application-stepper.test.cjs`): „Weiter“ blockiert bei unvollständigem
+  Schritt, „Zurück“ immer möglich, Fragment und Fokus beim Wechsel, Öffnen des ersten
+  Schritts mit Serverfehler, Zusammenfassung zeigt Wahl und Unterschrift, „Ändern“ springt
+  zum Schritt.
 - Screenshots des Formulars bei 400 px und 1300 px Breite (manuell beim Umsetzen).
