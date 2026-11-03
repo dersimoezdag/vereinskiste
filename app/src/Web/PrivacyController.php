@@ -76,6 +76,7 @@ final class PrivacyController extends AdminController
         return $req->getAttribute('view')->render($res,'privacy/member.twig',[
             'preview'=>(new MemberPrivacy(($this->pdo)()))->preview($id),'member'=>$member,
             'consents'=>(new Consents(($this->pdo)()))->list($id),'kinds'=>Consents::KINDS,'errors'=>$errors,
+            'declarations'=>array_values(array_filter((new \Vereinskiste\Members\Declarations(($this->pdo)()))->all(),static fn(array $d):bool=>$d['kind']==='consent')),
         ]);
     }
     private function settingsPage(Request $req,Response $res,?array $input=null,array $errors=[]):Response

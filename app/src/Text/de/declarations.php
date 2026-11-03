@@ -53,6 +53,7 @@ return [
     'applications.next' => 'Weiter',
     'applications.javascript_required' => 'Zum Unterschreiben wird JavaScript benötigt. Bitte aktiviere JavaScript in deinem Browser.',
     'applications.pdf' => 'Antrag als PDF herunterladen',
+    'privacy.consent.declaration' => 'Antragserklärung',
     'audit.action.application_declaration_created' => 'Antragserklärung angelegt',
     'audit.action.application_declaration_changed' => 'Antragserklärung geändert',
     'audit.action.application_declaration_toggled' => 'Antragserklärung (de)aktiviert',
