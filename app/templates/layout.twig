@@ -91,7 +91,7 @@
     <div class="flex min-w-0 flex-1 flex-col">
         {% if user %}{% include 'components/topbar.twig' %}{% endif %}
         <main class="flex-1" id="main-content" tabindex="-1">
-            <div class="{% if user %}mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8{% elseif path starts with '/install' and authorized|default(false) %}mx-auto w-full max-w-3xl px-4 py-8{% else %}mx-auto w-full max-w-md px-4 py-10{% endif %}">
+            <div class="{% if user %}mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8{% elseif path starts with '/install' and authorized|default(false) %}mx-auto w-full max-w-3xl px-4 py-8{% elseif path starts with '/antrag/' %}mx-auto w-full max-w-3xl px-4 py-6 sm:py-10{% else %}mx-auto w-full max-w-md px-4 py-10{% endif %}">
                 {% if not user %}
                 <div class="mb-2 flex justify-end">
                     {% include 'components/theme-picker.twig' %}

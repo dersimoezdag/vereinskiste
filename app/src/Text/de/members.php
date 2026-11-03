@@ -28,7 +28,7 @@ return [
     'members.field.country' => 'Land',
     'members.field.email' => 'E-Mail-Adresse',
     'members.field.phone' => 'Telefon',
-    'members.field.birth_date' => 'Geburtsdatum (JJJJ-MM-TT)',
+    'members.field.birth_date' => 'Geburtsdatum',
     'members.field.notes' => 'Notiz',
     'members.period.manage' => 'Eintritt, Austritt und Zeiträume',
     'members.period.title' => 'Mitgliedschaft',
