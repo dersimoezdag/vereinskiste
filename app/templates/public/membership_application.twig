@@ -34,8 +34,8 @@
         {% set n = loop.index %}
         {% set has_error = (step.id == 'person' and errors|keys|filter(k => k in person_fields)|length > 0)
             or (step.id == 'sepa' and errors|keys|filter(k => k in sepa_fields)|length > 0)
-            or (step.declaration is defined and (errors['declaration_' ~ step.declaration.id] is defined or errors['signature_' ~ step.declaration.id] is defined))
-            or (step.id == 'finish' and errors.signed_place is defined) %}
+            or (step.declaration is defined and (errors['declaration_' ~ step.declaration.id] is defined or errors['signature_' ~ step.declaration.id] is defined
+                or errors['place_' ~ step.declaration.id] is defined)) %}
         <section data-step id="schritt-{{ n }}" aria-labelledby="schritt-{{ n }}-title"{% if has_error %} data-step-error{% endif %}>
             <h2 id="schritt-{{ n }}-title" class="h4 mb-4" tabindex="-1"><span class="text-muted">{{ n }}.</span> {{ step.label }}</h2>
 
@@ -78,7 +78,7 @@
                 </div>
 
             {% elseif step.declaration is defined %}
-                {% include 'public/_declaration_step.twig' with {declaration: step.declaration, answer: answers[step.declaration.id]|default(''), signature: signatures[step.declaration.id]|default(''), errors: errors, preview: false} %}
+                {% include 'public/_declaration_step.twig' with {declaration: step.declaration, answer: answers[step.declaration.id]|default(''), signature: signatures[step.declaration.id]|default(''), place: places[step.declaration.id] ?? null, city: input.city|default(''), errors: errors, preview: false} %}
 
             {% else %}
                 <label for="antrag-notes" class="label">{{ t('members.field.notes') }}</label>
@@ -88,21 +88,13 @@
                     {% for d in declarations %}
                     <div class="flex flex-wrap items-center gap-3 px-4 py-3">
                         <dt class="min-w-0 flex-1 font-semibold">{{ d.title }}</dt>
-                        <dd class="m-0 text-sm text-muted" data-summary-choice="{{ d.id }}">{% if d.kind == 'notice' %}{{ t('declarations.noticed') }}{% endif %}</dd>
+                        <dd class="m-0 text-sm text-muted" data-summary-choice="{{ d.id }}">{% if d.kind == 'notice' %}{{ t('declarations.noticed') }}{% elseif d.kind == 'confirmation' and d.signature_required %}{{ t('declarations.confirmed') }}{% endif %}</dd>
                         {% if d.signature_required %}<img class="h-8 w-auto rounded bg-white" alt="{{ t('declarations.signature') }}" data-summary-signature="{{ d.id }}" hidden>{% endif %}
                         <a class="text-sm" href="#schritt-{{ (invite.require_sepa ? 2 : 1) + loop.index }}" data-step-goto="{{ (invite.require_sepa ? 1 : 0) + loop.index }}">{{ t('declarations.change') }}</a>
                     </div>
                     {% endfor %}
                 </dl>
                 {% endif %}
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
-                        <label for="antrag-place" class="label{% if declarations|filter(d => d.signature_required)|length > 0 %} required{% endif %}">{{ t('declarations.place') }}</label>
-                        <input type="text" id="antrag-place" name="signed_place" value="{{ input.signed_place|default('') }}" class="input{% if errors.signed_place is defined %} is-invalid{% endif %}" maxlength="100" autocomplete="address-level2"{% if declarations|filter(d => d.signature_required)|length > 0 %} required{% endif %}>
-                        {% if errors.signed_place is defined %}<p class="field-error block">{{ t(errors.signed_place) }}</p>{% endif %}
-                    </div>
-                    <div><span class="label">{{ t('declarations.date') }}</span><p class="input bg-subtle mb-0">{{ today }}</p></div>
-                </div>
             {% endif %}
 
             <div class="mt-8 flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:justify-between">

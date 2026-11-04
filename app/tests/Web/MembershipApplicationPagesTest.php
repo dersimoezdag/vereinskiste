@@ -42,10 +42,12 @@ final class MembershipApplicationPagesTest extends TestCase
             'password' => 'Verein2026',
             'require_sepa' => '1',
         ]);
-        $this->assertSame('/members/applications', $res->getHeaderLine('Location'));
-
-        $token = (string) $this->pdo->query("SELECT token FROM membership_application_invites WHERE title = 'Familie Neumayer'")->fetchColumn();
+        $invite = $this->pdo->query("SELECT id, token FROM membership_application_invites WHERE title = 'Familie Neumayer'")->fetch();
+        $token = (string) $invite['token'];
         $this->assertNotEmpty($token);
+        $this->assertSame('/members/applications?invite=' . $invite['id'], $res->getHeaderLine('Location'));
+        $this->assertStringContainsString('data-copy-path="/antrag/' . $token . '" data-copied-label="Kopiert!" data-copy-auto',
+            (string) $this->get($res->getHeaderLine('Location'))->getBody());
 
         // 2. Open public form -> asks for password
         $res = $this->get('/antrag/' . $token);
@@ -153,7 +155,7 @@ final class MembershipApplicationPagesTest extends TestCase
         $this->assertSame(1 + 1 + 4 + 1, substr_count($html, 'data-step '), 'person, SEPA, 4 declarations, finish');
         $this->assertSame(3, substr_count($html, 'data-signature-pad'));
         $this->assertStringContainsString('Ich willige nicht ein', $html);
-        $this->assertStringContainsString('name="signed_place"', $html);
+        $this->assertSame(3, substr_count($html, 'name="signed_place['), 'Ort und Datum bei jeder Unterschrift');
         $this->assertStringNotContainsString('System-E-Mail-Versand', $html);
         $this->assertStringNotContainsString('JJJJ-MM-TT', $html);
         $this->assertStringContainsString('max-w-3xl', $html);

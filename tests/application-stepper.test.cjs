@@ -23,6 +23,7 @@ function setup(extra = '') {
     const dom = new JSDOM(html.replace('id="schritt-3"', 'id="schritt-3"' + extra), {runScripts: 'outside-only', url: 'https://verein.example.org/antrag/x'});
     const w = dom.window;
     w.HTMLElement.prototype.scrollIntoView = () => {};
+    w.scrolls = []; w.scrollTo = (x, y) => w.scrolls.push([x, y]);
     require('./browser-texts.cjs')(w);
     w.eval(readFileSync(require.resolve('../public/assets/application-stepper.js'), 'utf8'));
     w.VkApplicationStepper.init();
@@ -47,6 +48,7 @@ test('next blocks incomplete steps including missing signature', () => {
         d.querySelector('#schritt-1 [data-step-next]').click();
         assert.deepEqual(visible(), ['schritt-2']);
         assert.equal(d.activeElement, d.querySelector('#schritt-2 h2'));
+        assert.deepEqual(w.scrolls.at(-1), [0, 0], 'Weiter springt an den Seitenanfang');
         assert.equal(w.location.hash, '#schritt-2');
         d.querySelector('[name="declaration[1]"]').checked = true;
         d.querySelector('#schritt-2 [data-step-next]').click();
@@ -91,5 +93,27 @@ test('submit with an incomplete step jumps there instead of sending', () => {
         d.querySelector('form').dispatchEvent(new w.Event('submit', {bubbles: true, cancelable: true}));
         assert.equal(sent, 0);
         assert.deepEqual(visible(), ['schritt-1']);
+    } finally { w.close(); }
+});
+
+test('signature place follows the city until it is edited by hand', () => {
+    const dom = new JSDOM(`<form novalidate data-application-stepper>
+ <section data-step id="schritt-1"><h2 tabindex="-1">Anschrift</h2><input name="city" value="Erlangen"><button type="button" data-step-next>Weiter</button></section>
+ <section data-step id="schritt-2"><h2 tabindex="-1">Antrag</h2><input name="signed_place[1]" value="" data-signed-place data-auto-place="" required>
+  <button type="button" data-step-prev>Zurück</button></section></form>`, {runScripts: 'outside-only', url: 'https://verein.example.org/antrag/x'});
+    const w = dom.window, d = w.document;
+    try {
+        w.scrollTo = () => {};
+        require('./browser-texts.cjs')(w);
+        w.eval(readFileSync(require.resolve('../public/assets/application-stepper.js'), 'utf8'));
+        w.VkApplicationStepper.init();
+        const city = d.querySelector('[name="city"]'), place = d.querySelector('[data-signed-place]');
+        d.querySelector('[data-step-next]').click();
+        assert.equal(place.value, 'Erlangen');
+        d.querySelector('[data-step-prev]').click(); city.value = 'Nürnberg'; d.querySelector('[data-step-next]').click();
+        assert.equal(place.value, 'Nürnberg');
+        place.value = 'Fürth';
+        d.querySelector('[data-step-prev]').click(); city.value = 'Bamberg'; d.querySelector('[data-step-next]').click();
+        assert.equal(place.value, 'Fürth', 'manuell geaenderter Ort bleibt');
     } finally { w.close(); }
 });

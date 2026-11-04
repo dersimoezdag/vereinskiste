@@ -228,6 +228,7 @@ final class MemberController extends AdminController
             'applications' => $applications,
             'invites' => $invites,
             'filter' => $filter,
+            'new_invite' => (int) ($query['invite'] ?? 0),
             'pending_count' => $pendingCount,
             'outbox' => (new \Vereinskiste\Mail\Outbox($pdo))->list(),
         ]);
@@ -241,7 +242,7 @@ final class MemberController extends AdminController
         $password = $this->str($body, 'password');
         $requireSepa = !empty($body['require_sepa']);
 
-        (new ApplicationRepository(($this->pdo)()))->createInvite(
+        $invite = (new ApplicationRepository(($this->pdo)()))->createInvite(
             $this->userId($req),
             $title,
             $days,
@@ -250,7 +251,8 @@ final class MemberController extends AdminController
         );
 
         $this->flash($req, 'applications.invites.created_success');
-        return $this->redirect('/members/applications');
+        // Die Uebersicht kopiert den Link der neuen Einladung gleich in die Zwischenablage.
+        return $this->redirect('/members/applications?invite=' . $invite['id']);
     }
 
     public function approveApplication(Request $req, Response $res, array $args): Response

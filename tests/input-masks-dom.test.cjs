@@ -109,3 +109,19 @@ test('amount sign and direction select keep each other in sync', () => {
     assert.equal(select.value, 'out');
     assert.equal(field.validity.valid, true);
 });
+
+test('postal code field follows the country field of its form', async () => {
+    const dom = new JSDOM('<form><input id="zip" name="zip"><input id="country" name="country" value="Deutschland"></form>', {runScripts: 'outside-only'});
+    const w = dom.window, document = w.document;
+    try {
+        require('./browser-texts.cjs')(w); w.eval(readFileSync(require.resolve('../public/assets/input-masks.js'), 'utf8'));
+        const zip = document.querySelector('#zip'), country = document.querySelector('#country');
+        assert.equal(zip.placeholder, 'Postleitzahl, z. B. 91054');
+        zip.value = '910 54'; zip.dispatchEvent(new w.Event('blur'));
+        assert.equal(zip.value, '91054'); assert.equal(zip.validity.valid, true);
+        zip.value = '1010'; zip.dispatchEvent(new w.Event('input'));
+        assert.equal(zip.validity.valid, false);
+        country.value = 'Österreich'; country.dispatchEvent(new w.Event('input'));
+        assert.equal(zip.validity.valid, true);
+    } finally { w.close(); }
+});

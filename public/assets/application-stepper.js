@@ -48,11 +48,26 @@
         if (this.status) { this.status.textContent = text('js.step_count', 'Schritt {current} von {total}').replace('{current}', n).replace('{total}', total); }
         if (this.bar) { this.bar.style.width = Math.round(n / total * 100) + '%'; }
         if (index === this.steps.length - 1) { this.summary(); }
+        this.prefillPlaces(this.steps[index]);
         if (push && window.location.hash !== '#schritt-' + n) { window.history.pushState(null, '', '#schritt-' + n); }
         if (!silent) {
             var heading = this.steps[index].querySelector('h2');
-            if (heading) { heading.focus(); if (heading.scrollIntoView) { heading.scrollIntoView({block: 'start'}); } }
+            // Jeder Schrittwechsel beginnt oben auf der Seite (Fortschrittsanzeige sichtbar).
+            if (heading) { heading.focus({preventScroll: true}); }
+            window.scrollTo(0, 0);
         }
+    };
+
+    // Ort der Unterschrift folgt dem Wohnort, solange niemand ihn selbst geaendert hat.
+    Stepper.prototype.prefillPlaces = function (step) {
+        var city = this.form.querySelector('[name="city"]');
+        if (!city) { return; }
+        step.querySelectorAll('[data-signed-place]').forEach(function (field) {
+            var auto = field.getAttribute('data-auto-place');
+            if (field.value !== '' && field.value !== auto) { return; }
+            field.value = city.value.trim();
+            field.setAttribute('data-auto-place', field.value);
+        });
     };
 
     Stepper.prototype.valid = function (index) {

@@ -13,7 +13,7 @@ return [
     'declarations.field.signature_required' => 'Unterschrift erforderlich',
     'declarations.field.version' => 'Version',
     'declarations.field.position' => 'Reihenfolge',
-    'declarations.kind.confirmation' => 'Pflichtbestätigung (Checkbox)',
+    'declarations.kind.confirmation' => 'Pflichtbestätigung (Unterschrift oder, ohne Unterschrift, Checkbox)',
     'declarations.kind.consent' => 'Freiwillige Einwilligung (Ja/Nein)',
     'declarations.kind.notice' => 'Hinweis (nur Text)',
     'declarations.active' => 'Aktiv',

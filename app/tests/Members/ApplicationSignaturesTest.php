@@ -43,7 +43,7 @@ final class ApplicationSignaturesTest extends TestCase
         $this->assertStringContainsString('Aufnahme in den FSI Jura e.V.', $rows[0]['snapshot']['content']);
         $this->assertSame([true, true, null, true], array_column($rows, 'granted'));
         $this->assertSame([true, false, true, true], array_column($rows, 'has_signature'));
-        $this->assertSame('Erlangen', $rows[0]['signed_place']);
+        $this->assertSame(['Erlangen', '', 'Erlangen', 'Erlangen'], array_column($rows, 'signed_place'), 'Ort nur bei Unterschriften');
         // jsonb sortiert Schluessel um; der Hash gilt fuer die beim Absenden verwendete Reihenfolge.
         $snapshot = array_intersect_key($rows[0]['snapshot'], array_flip(['title', 'content', 'kind', 'version']));
         $snapshot = ['title' => $snapshot['title'], 'content' => $snapshot['content'], 'kind' => $snapshot['kind'], 'version' => $snapshot['version']];
@@ -64,18 +64,37 @@ final class ApplicationSignaturesTest extends TestCase
         unset($input['declaration'][(string) $ids[0]], $input['declaration'][(string) $ids[1]]);
         $input['signature'][(string) $ids[2]] = '';
         $input['signature'][(string) $ids[3]] = ApplicationInput::signature(600, 160, false);
-        $input['signed_place'] = ' ';
+        $input['signed_place'][(string) $ids[0]] = ' ';
+        $input['signed_place'][(string) $ids[3]] = str_repeat('x', 101);
         try {
             $this->repo->submit($invite['token'], $input);
             $this->fail('expected ValidationError');
         } catch (ValidationError $e) {
-            $this->assertSame('declarations.error.confirm', $e->errors['declaration_' . $ids[0]]);
+            $this->assertArrayNotHasKey('declaration_' . $ids[0], $e->errors, 'Unterschrift ersetzt die Checkbox');
             $this->assertSame('declarations.error.choose', $e->errors['declaration_' . $ids[1]]);
             $this->assertSame('declarations.error.signature_required', $e->errors['signature_' . $ids[2]]);
             $this->assertSame('declarations.error.signature_invalid', $e->errors['signature_' . $ids[3]]);
-            $this->assertSame('foundation.required', $e->errors['signed_place']);
+            $this->assertSame('foundation.required', $e->errors['place_' . $ids[0]]);
+            $this->assertSame('foundation.invalid', $e->errors['place_' . $ids[3]]);
+            $this->assertArrayNotHasKey('place_' . $ids[1], $e->errors, 'ohne Unterschrift kein Ort');
         }
         $this->assertSame(0, (int) $this->pdo->query('SELECT count(*) FROM membership_applications')->fetchColumn());
+    }
+
+    public function test_confirmation_without_signature_still_needs_the_checkbox(): void
+    {
+        $id = (new Declarations($this->pdo))->active()[0]['id'];
+        (new Declarations($this->pdo))->save($id, ['title' => 'Antrag', 'content' => '<p>Ich beantrage die Aufnahme.</p>', 'kind' => 'confirmation'], 1);
+        $invite = $this->repo->createInvite(1, 'Test', 7);
+        $input = $this->person() + ApplicationInput::declarations($this->pdo);
+        $this->assertSame('1', $input['declaration'][(string) $id]);
+        unset($input['declaration'][(string) $id]);
+        try {
+            $this->repo->submit($invite['token'], $input);
+            $this->fail('expected ValidationError');
+        } catch (ValidationError $e) {
+            $this->assertSame('declarations.error.confirm', $e->errors['declaration_' . $id]);
+        }
     }
 
     public function test_without_active_declarations_no_application_is_possible(): void
@@ -95,7 +114,7 @@ final class ApplicationSignaturesTest extends TestCase
         $this->pdo->exec('UPDATE application_declarations SET active = false WHERE position <> 2');
         $invite = $this->repo->createInvite(1, 'Test', 7);
         $input = $this->person() + ApplicationInput::declarations($this->pdo);
-        $input['signed_place'] = '';
+        $this->assertSame([], $input['signed_place']);
         $this->assertGreaterThan(0, $this->repo->submit($invite['token'], $input));
     }
 

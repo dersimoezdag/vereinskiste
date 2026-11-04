@@ -44,6 +44,12 @@
         var mobile = country === '49' && /^1[5-7]/.test(rest);
         return '+' + country + ' ' + (mobile ? rest.slice(0, 3) + ' ' + rest.slice(3) : rest);
     }
+    // PLZ: in Deutschland (oder ohne Land) genau 5 Ziffern; andere Laender bleiben frei. null: ungueltig.
+    function postalCode(value, country) {
+        if (!/^\s*(de|deu|deutschland|germany)?\s*$/i.test(country || '')) { return value.trim(); }
+        var digits = value.replace(/\s/g, '');
+        return /^\d{5}$/.test(digits) ? digits : null;
+    }
     function compact(value) { return value.replace(/\s/g, '').toUpperCase(); }
     function validIban(value) {
         var iban = compact(value);
@@ -67,7 +73,7 @@
         var date = new Date(iso + 'T00:00:00Z');
         return !isNaN(date.getTime()) && date.toISOString().slice(0, 10) === iso ? iso : null;
     }
-    var api = {phone: phone, money: money, groupMoney: groupMoney, compact: compact, validIban: validIban, germanDate: germanDate, isoDate: isoDate};
+    var api = {phone: phone, postalCode: postalCode, money: money, groupMoney: groupMoney, compact: compact, validIban: validIban, germanDate: germanDate, isoDate: isoDate};
     if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
     if (!root.document) { return; }
     var document = root.document;
@@ -83,6 +89,7 @@
         amount: {hint: window.vkText('js.betrag_z_b_1_234_56'), error: window.vkText('js.bitte_einen_betrag_groer_als_0_mit_hochstens_2_nachkommastellen_eingeben_ma')},
         opening_balance: {hint: window.vkText('js.betrag_z_b_123_45'), error: window.vkText('js.bitte_einen_betrag_mit_hochstens_2_nachkommastellen_eingeben_max_9_999_999_')},
         phone: {hint: window.vkText('js.telefonnummer_mit_vorwahl_z_b_49_30_123456')},
+        zip: {hint: window.vkText('js.postleitzahl_z_b_91054'), error: window.vkText('js.bitte_eine_funfstellige_postleitzahl_eingeben')},
         email: {hint: window.vkText('js.e_mail_z_b_name_example_org')}
     };
     var moneyTypes = ['amount', 'opening_balance', 'net', 'tax', 'gross', 'approved_amount', 'signed_amount'];
@@ -124,6 +131,10 @@
         }
         field.setSelectionRange(position, position);
     }
+    function countryOf(field) {
+        var country = field.form ? field.form.querySelector('[name="country"]') : null;
+        return country ? country.value : '';
+    }
     function kind(field) { return field.dataset.mask || (field.type === 'date' ? 'date' : '') || (specs[field.name] ? field.name : ''); }
     function update(field, format) {
         var type = kind(field), value = field.value, error = '', formatted = value;
@@ -151,6 +162,10 @@
                 var number = phone(value);
                 error = number === null ? window.vkText('js.bitte_eine_gultige_telefonnummer_eingeben') : '';
                 if (number !== null) { formatted = number; }
+            } else if (type === 'zip') {
+                var code = postalCode(value, countryOf(field));
+                error = code === null ? specs.zip.error : '';
+                if (code !== null) { formatted = code; }
             } else {
                 formatted = value.trim();
             }
@@ -213,6 +228,11 @@
             if (moneyTypes.includes(type)) { field.inputMode = 'decimal'; }
             if (type === 'iban') { field.maxLength = 42; field.spellcheck = false; }
             if (type === 'bic') { field.maxLength = 11; field.spellcheck = false; }
+            if (type === 'zip') {
+                field.autocomplete = 'postal-code';
+                var country = field.form ? field.form.querySelector('[name="country"]') : null;
+                if (country) { country.addEventListener('input', function () { update(field, false); }); }
+            }
             if (!field.placeholder) { field.placeholder = spec.hint; }
             var feedback = document.createElement('div');
             feedback.id = 'input-mask-help-' + (++sequence);

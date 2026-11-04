@@ -143,6 +143,7 @@ final class MembershipApplicationController
             'declarations' => $declarations,
             'answers' => $strings($input['declaration'] ?? null),
             'signatures' => $strings($input['signature'] ?? null),
+            'places' => $strings($input['signed_place'] ?? null),
             'today' => (new \DateTimeImmutable('today'))->format('d.m.Y'),
         ]);
     }

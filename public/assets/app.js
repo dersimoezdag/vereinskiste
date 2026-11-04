@@ -194,6 +194,19 @@ document.addEventListener('click', function (event) {
 
 
 
+// Neu erstellter Einladungslink: gleich kopieren. Ohne Klick lehnen manche Browser die
+// Zwischenablage ab; dann bekommt der Kopieren-Knopf den Fokus.
+document.querySelectorAll('[data-copy-auto]').forEach(function (copy) {
+    var url = window.location.origin + copy.dataset.copyPath;
+    var original = copy.textContent;
+    if (window.history.replaceState) { window.history.replaceState(null, '', window.location.pathname); }
+    if (!navigator.clipboard || !window.isSecureContext) { copy.focus(); return; }
+    navigator.clipboard.writeText(url).then(function () {
+        copy.textContent = copy.dataset.copiedLabel || window.vkText('js.kopiert');
+        window.setTimeout(function () { copy.textContent = original; }, 2000);
+    }, function () { copy.focus(); });
+});
+
 // Snackbar: einmalige Meldung blendet sich nach einigen Sekunden aus.
 document.querySelectorAll('[data-snackbar]').forEach(function (bar) {
     window.setTimeout(function () {

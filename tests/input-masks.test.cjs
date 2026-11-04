@@ -51,3 +51,12 @@ test('groupMoney groups while typing without reading decimal points as separator
     assert.equal(groupMoney('1.2345,6', false), '12.345,6');
     assert.equal(groupMoney('abc', false), null);
 });
+
+test('postal codes need five digits in Germany and stay free abroad', () => {
+    const {postalCode} = require('../public/assets/input-masks.js');
+    assert.equal(postalCode(' 910 54 ', 'Deutschland'), '91054');
+    assert.equal(postalCode('01067', ''), '01067');
+    for (const value of ['9105', '910544', 'D-91054', 'abcde']) assert.equal(postalCode(value, 'DE'), null);
+    assert.equal(postalCode(' 1010 ', 'Österreich'), '1010');
+    assert.equal(postalCode('SW1A 1AA', 'Vereinigtes Königreich'), 'SW1A 1AA');
+});

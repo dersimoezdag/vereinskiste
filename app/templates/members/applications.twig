@@ -114,7 +114,7 @@
                                         <input type="text" readonly value="/antrag/{{ inv.token }}" id="inv-link-{{ inv.id }}" aria-label="{{ t('ui.einladungs_link') }}"
                                                class="input input-sm font-mono text-muted py-0 px-1 bg-subtle border-0" style="max-width: 140px;">
                                         <button type="button" class="btn btn-sm py-0 px-2"
-                                                data-copy-path="/antrag/{{ inv.token }}" data-copied-label="{{ t('applications.invites.copied') }}">
+                                                data-copy-path="/antrag/{{ inv.token }}" data-copied-label="{{ t('applications.invites.copied') }}"{% if inv.id == new_invite %} data-copy-auto{% endif %}>
                                             {{ t('applications.invites.copy_link') }}
                                         </button>
                                     </div>

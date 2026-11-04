@@ -13,15 +13,15 @@ final class ApplicationSignatures
 {
     public function __construct(private PDO $pdo) {}
 
-    /** @param array<string,mixed> $input @return array{place:string,rows:list<array<string,mixed>>} */
+    /** @param array<string,mixed> $input @return array{rows:list<array<string,mixed>>} */
     public function read(array $input, string $club): array
     {
         $declarations = (new Declarations($this->pdo))->active();
         $answers = is_array($input['declaration'] ?? null) ? $input['declaration'] : [];
         $signatures = is_array($input['signature'] ?? null) ? $input['signature'] : [];
-        $place = is_string($input['signed_place'] ?? null) ? trim($input['signed_place']) : '';
+        // Ort je Unterschrift; das Datum ist der Zeitpunkt des Absendens (signed_at).
+        $places = is_array($input['signed_place'] ?? null) ? $input['signed_place'] : [];
         $errors = $rows = [];
-        $needsPlace = false;
         if ($declarations === []) {
             $errors['declarations'] = 'declarations.error.none';
         }
@@ -30,15 +30,22 @@ final class ApplicationSignatures
             $answer = $answers[$key] ?? '';
             $granted = null;
             if ($d['kind'] === 'confirmation') {
-                $granted = $answer === '1' ? true : null;
+                // Mit Unterschrift bestaetigt die Unterschrift selbst; die Checkbox entfaellt.
+                $granted = $d['signature_required'] || $answer === '1' ? true : null;
                 if ($granted === null) { $errors['declaration_' . $key] = 'declarations.error.confirm'; }
             } elseif ($d['kind'] === 'consent') {
                 $granted = match ($answer) { 'yes' => true, 'no' => false, default => null };
                 if ($granted === null) { $errors['declaration_' . $key] = 'declarations.error.choose'; }
             }
             $png = null;
+            $place = '';
             if ($d['signature_required']) {
-                $needsPlace = true;
+                $place = is_string($places[$key] ?? null) ? trim($places[$key]) : '';
+                if (mb_strlen($place) > 100) {
+                    $errors['place_' . $key] = 'foundation.invalid';
+                } elseif (TextInput::isBlank($place)) {
+                    $errors['place_' . $key] = 'foundation.required';
+                }
                 $raw = $signatures[$key] ?? '';
                 if (!is_string($raw) || $raw === '') {
                     $errors['signature_' . $key] = 'declarations.error.signature_required';
@@ -50,22 +57,17 @@ final class ApplicationSignatures
                     }
                 }
             }
-            $rows[] = ['declaration_id' => $d['id'], 'version' => $d['version'], 'kind' => $d['kind'], 'granted' => $granted, 'png' => $png,
+            $rows[] = ['declaration_id' => $d['id'], 'version' => $d['version'], 'kind' => $d['kind'], 'granted' => $granted, 'png' => $png, 'place' => $place,
                 'snapshot' => ['title' => Declarations::render($d['title'], $club, false), 'content' => Declarations::render($d['content'], $club, true),
                     'kind' => $d['kind'], 'version' => $d['version']]];
-        }
-        if (mb_strlen($place) > 100) {
-            $errors['signed_place'] = 'foundation.invalid';
-        } elseif ($needsPlace && TextInput::isBlank($place)) {
-            $errors['signed_place'] = 'foundation.required';
         }
         if ($errors !== []) {
             throw new ValidationError($errors);
         }
-        return ['place' => $place, 'rows' => $rows];
+        return ['rows' => $rows];
     }
 
-    /** @param array{place:string,rows:list<array<string,mixed>>} $read */
+    /** @param array{rows:list<array<string,mixed>>} $read */
     public function store(int $applicationId, array $read): void
     {
         $insert = $this->pdo->prepare('INSERT INTO application_signatures
@@ -83,7 +85,7 @@ final class ApplicationSignatures
             $insert->bindValue(6, hash('sha256', $json));
             $insert->bindValue(7, $png, $png === null ? PDO::PARAM_NULL : PDO::PARAM_LOB);
             $insert->bindValue(8, $png === null ? null : hash('sha256', $png), $png === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
-            $insert->bindValue(9, $read['place']);
+            $insert->bindValue(9, $row['place']);
             $insert->execute();
             if ($row['granted'] !== null) {
                 $consents->fromDeclaration($applicationId, $row['declaration_id'], $row['granted'], $row['snapshot']);

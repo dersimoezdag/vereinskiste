@@ -77,3 +77,25 @@ test('enlarge opens a dialog and apply keeps strokes drawn there', () => {
         assert.equal(d.querySelector('[data-signature-value]').value, 'data:image/png;base64,AAAA');
     } finally { w.close(); }
 });
+
+test('cancel, escape and backdrop close the dialog and keep the previous signature', () => {
+    const {w, d} = setup('data:image/png;base64,BBBB');
+    try {
+        const hidden = d.querySelector('[data-signature-value]');
+        const close = [
+            dialog => dialog.querySelector('[data-signature-cancel]').click(),
+            dialog => dialog.dispatchEvent(new w.KeyboardEvent('keydown', {key: 'Escape', bubbles: true})),
+            dialog => dialog.dispatchEvent(new w.MouseEvent('click', {bubbles: true})),
+        ];
+        for (const action of close) {
+            d.querySelector('[data-signature-enlarge]').click();
+            const dialog = d.querySelector('.signature-dialog');
+            dialog.querySelector('[data-signature-dialog-clear]').click();
+            draw(w, dialog.querySelector('canvas'));
+            action(dialog);
+            assert.ok(dialog.hidden);
+            assert.ok(!d.documentElement.classList.contains('overflow-hidden'));
+            assert.equal(hidden.value, 'data:image/png;base64,BBBB');
+        }
+    } finally { w.close(); }
+});

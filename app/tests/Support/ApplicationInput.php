@@ -28,15 +28,16 @@ final class ApplicationInput
     /** Gueltige Antworten fuer alle aktiven Erklaerungen. @return array<string,mixed> */
     public static function declarations(PDO $pdo, string $consent = 'no'): array
     {
-        $input = ['declaration' => [], 'signature' => [], 'signed_place' => 'Erlangen'];
+        $input = ['declaration' => [], 'signature' => [], 'signed_place' => []];
         foreach ((new Declarations($pdo))->active() as $d) {
-            if ($d['kind'] === 'confirmation') {
+            if ($d['kind'] === 'confirmation' && !$d['signature_required']) {
                 $input['declaration'][(string) $d['id']] = '1';
             } elseif ($d['kind'] === 'consent') {
                 $input['declaration'][(string) $d['id']] = $consent;
             }
             if ($d['signature_required']) {
                 $input['signature'][(string) $d['id']] = self::signature();
+                $input['signed_place'][(string) $d['id']] = 'Erlangen';
             }
         }
         return $input;

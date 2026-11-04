@@ -131,22 +131,41 @@
             d.setAttribute('aria-modal', 'true');
             d.innerHTML = '<div class="signature-dialog-body"><div class="signature-surface"><canvas class="signature-canvas"></canvas></div>'
                 + '<div class="mt-3 flex flex-wrap justify-end gap-2"><button type="button" class="btn" data-signature-dialog-clear></button>'
+                + '<button type="button" class="btn" data-signature-cancel></button>'
                 + '<button type="button" class="btn btn-primary" data-signature-apply></button></div></div>';
             d.querySelector('[data-signature-dialog-clear]').textContent = text('js.signature_clear', 'Löschen');
             d.querySelector('[data-signature-apply]').textContent = text('js.signature_apply', 'Übernehmen');
+            d.querySelector('[data-signature-cancel]').textContent = text('js.signature_cancel', 'Abbrechen');
             document.body.appendChild(d);
             this.dialog = d;
             this.bind(d.querySelector('canvas'));
             d.querySelector('[data-signature-dialog-clear]').addEventListener('click', function () {
                 self.strokes = []; self.base = null; self.baseImage = null; self.render(d.querySelector('canvas'));
             });
-            d.querySelector('[data-signature-apply]').addEventListener('click', function () {
-                d.hidden = true; document.documentElement.classList.remove('overflow-hidden'); self.commit();
-            });
+            d.querySelector('[data-signature-apply]').addEventListener('click', function () { self.closeDialog(); self.commit(); });
+            d.querySelector('[data-signature-cancel]').addEventListener('click', function () { self.cancelDialog(); });
+            // Klick auf den abgedunkelten Hintergrund und Escape verwerfen wie Abbrechen.
+            d.addEventListener('click', function (e) { if (e.target === d) { self.cancelDialog(); } });
+            d.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.preventDefault(); self.cancelDialog(); } });
         }
+        this.saved = {strokes: this.strokes.slice(), base: this.base, baseImage: this.baseImage};
         this.dialog.hidden = false;
         document.documentElement.classList.add('overflow-hidden');
         this.render(this.dialog.querySelector('canvas'));
+        this.dialog.querySelector('[data-signature-cancel]').focus();
+    };
+
+    Pad.prototype.closeDialog = function () {
+        this.dialog.hidden = true;
+        document.documentElement.classList.remove('overflow-hidden');
+        if (this.root.querySelector('[data-signature-enlarge]')) { this.root.querySelector('[data-signature-enlarge]').focus(); }
+    };
+
+    // Im Dialog Gezeichnetes verwerfen und den Stand vor dem Oeffnen wiederherstellen.
+    Pad.prototype.cancelDialog = function () {
+        if (this.saved) { this.strokes = this.saved.strokes; this.base = this.saved.base; this.baseImage = this.saved.baseImage; }
+        this.closeDialog();
+        this.render(this.canvas);
     };
 
     function init(root) {

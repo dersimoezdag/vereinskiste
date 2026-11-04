@@ -1,7 +1,7 @@
 {# Eine Antragserklaerung; auch als Vorschau in den Einstellungen (preview = true). #}
 {% set key = declaration.id %}
 <div class="prose-declaration rich-text mb-4">{{ declaration.content|note }}</div>
-{% if declaration.kind == 'confirmation' %}
+{% if declaration.kind == 'confirmation' and not declaration.signature_required %}
 <div class="check mb-4">
     <input class="check-input{% if errors['declaration_' ~ key] is defined %} is-invalid{% endif %}" type="checkbox" id="declaration-{{ key }}"
            name="declaration[{{ key }}]" value="1"{% if answer == '1' %} checked{% endif %}{% if preview %} disabled{% else %} required{% endif %}>
@@ -33,5 +33,17 @@
         <button type="button" class="btn btn-sm" data-signature-enlarge>{{ t('declarations.signature_enlarge') }}</button>
     </div>
     {% if errors['signature_' ~ key] is defined %}<p class="field-error block" role="alert">{{ t(errors['signature_' ~ key]) }}</p>{% endif %}
+</div>
+{# Ort je Unterschrift, vorausgefuellt mit dem Wohnort; der Stepper uebernimmt spaetere Aenderungen am Wohnort. #}
+{% set city = city|default('') %}
+<div class="mt-4 grid gap-4 sm:grid-cols-2">
+    <div>
+        <label for="declaration-{{ key }}-place" class="label required">{{ t('declarations.place') }}</label>
+        <input type="text" id="declaration-{{ key }}-place" name="signed_place[{{ key }}]" value="{{ place ?? city }}" data-signed-place
+               {% if place is null %}data-auto-place="{{ city }}" {% endif %}class="input{% if errors['place_' ~ key] is defined %} is-invalid{% endif %}" maxlength="100"
+               autocomplete="off"{% if preview %} disabled{% else %} required{% endif %}>
+        {% if errors['place_' ~ key] is defined %}<p class="field-error block" role="alert">{{ t(errors['place_' ~ key]) }}</p>{% endif %}
+    </div>
+    <div><span class="label">{{ t('declarations.date') }}</span><p class="input bg-subtle mb-0">{{ today|default('now'|date('d.m.Y')) }}</p></div>
 </div>
 {% endif %}
