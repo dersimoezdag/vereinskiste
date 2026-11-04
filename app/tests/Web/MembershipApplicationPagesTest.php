@@ -67,12 +67,14 @@ final class MembershipApplicationPagesTest extends TestCase
     {
         $this->loginAs(['admin']);
 
+        $settings = new \Vereinskiste\Members\ApplicationSettings($this->pdo);
+        $settings->save(true, $settings->get()['version'], (int) $this->pdo->query("SELECT id FROM users WHERE email='admin@example.org'")->fetchColumn());
+
         // 1. Create password-protected invite with SEPA
         $res = $this->postForm('/members/invites/new', [
             'title' => 'Familie Neumayer',
             'valid_days' => '14',
             'password' => 'Verein2026',
-            'require_sepa' => '1',
         ]);
         $invite = $this->pdo->query("SELECT id, token FROM membership_application_invites WHERE title = 'Familie Neumayer'")->fetch();
         $token = (string) $invite['token'];
