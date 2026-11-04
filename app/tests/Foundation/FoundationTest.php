@@ -49,6 +49,26 @@ final class FoundationTest extends TestCase
         $this->expectException(Conflict::class); $profile->save($input, 1, 1, 'Veraltet');
     }
 
+    public function test_long_club_name_is_saved_in_full_and_limit_is_enforced(): void
+    {
+        $profile = new Profile($this->db);
+        $input = $profile->get()['data'];
+        $name = 'Fachschaftsverein Fachschaftsinitiative zur Wiedereinführung der verfassten Studierendenschaft Jura Erlangen e. V.';
+        $this->assertGreaterThan(100, mb_strlen($name));
+        $input['name'] = $name;
+        $profile->save($input, 1, 1, 'Vollständiger Vereinsname');
+        $this->assertSame($name, $profile->name());
+        $this->assertSame($name, $this->db->query("SELECT value FROM settings WHERE key='club_name'")->fetchColumn());
+        $input['name'] = str_repeat('Ä', Profile::NAME_MAX_LENGTH + 1);
+        try {
+            $profile->save($input, 2, 1, 'Zu lang');
+            $this->fail('Overlong club name accepted');
+        } catch (ValidationError $e) {
+            $this->assertArrayHasKey('name', $e->errors);
+        }
+        $this->assertSame($name, $profile->name());
+    }
+
     public function test_unsupported_locale_cannot_be_saved():void
     {
         $profile=new Profile($this->db);$input=$profile->get()['data'];$input['locale']='en';

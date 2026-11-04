@@ -1,5 +1,6 @@
+<div class="grid grid-cols-12 gap-x-4">
 {% for field, limit in fields %}
-<div class="mb-4">
+<div class="mb-4 {% if field == 'address' and fields.house_number is defined %}col-span-9{% elseif field == 'house_number' and fields.address is defined %}col-span-3{% else %}col-span-12{% endif %}">
     <label class="label" for="field-{{ field }}">{{ t('foundation.field.' ~ field) }}</label>
     {% if field == 'locale' %}
     <select class="input" id="field-locale" name="locale"><option value="de">{{ t('language.de') }}</option></select>
@@ -14,6 +15,7 @@
     {% if errors[field] is defined %}<div class="field-error">{{ t(errors[field]) }}</div>{% endif %}
 </div>
 {% endfor %}
+</div>
 {% if reason_required|default(true) %}
 <div class="mb-4">
     <label class="label" for="change-reason">{{ t('bookings.reason') }}</label>

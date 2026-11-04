@@ -43,7 +43,7 @@ final class Installer
         $clubName = trim($club['name'] ?? '');
         $baseUrl = rtrim($club['base_url'] ?? '', '/');
         $url = parse_url($baseUrl);
-        if ($name === '' || $clubName === '' || mb_strlen($name) > 100 || mb_strlen($clubName) > 100
+        if ($name === '' || $clubName === '' || mb_strlen($name) > 100 || mb_strlen($clubName) > \Vereinskiste\Club\Profile::NAME_MAX_LENGTH
             || !UserRepository::isStorableText($name) || !UserRepository::isStorableText($clubName)
             || filter_var($email, FILTER_VALIDATE_EMAIL) === false
             || PasswordPolicy::check($admin['password'] ?? '', $email, $name) !== null
