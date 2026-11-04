@@ -21,24 +21,6 @@
         </div>
     </div>
 
-    <!-- Navigation Tabs zwischen Kartei und Online-Anträgen -->
-    <ul class="tabs mb-4" role="tablist">
-        <li class="flex">
-            <a class="tab active" href="/members" aria-current="page">
-                {{ icons.icon('members') }} {{ t('applications.tab_members') }}
-            </a>
-        </li>
-        {% if can('members.write') %}<li class="flex">
-            <a class="tab" href="/members/applications">
-                {{ icons.icon('contacts') }} {{ t('applications.tab_applications') }}
-                {% if pending_count > 0 %}
-                <span class="badge bg-danger text-white ms-1">{{ pending_count }}</span>
-                {% endif %}
-            </a>
-        </li>
-        {% endif %}
-    </ul>
-
     <!-- Filter und Suche -->
     <div class="panel mb-4">
         <div class="panel-body">

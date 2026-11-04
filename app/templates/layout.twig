@@ -46,11 +46,12 @@
                         {% if pendingApps > 0 %}<span class="badge bg-primary text-on-primary ms-auto" title="{{ pendingApps }} offene Anträge">{{ pendingApps }}</span>{% endif %}
                         <span class="nav-chevron{% if pendingApps > 0 %} ms-0{% endif %}">{{ icons.icon('chevron-up') }}</span></summary>
                     <div class="flex flex-col pb-1" id="members-menu">
-                        {{ nav.sub('/members', t('members.list'), path == '/members' or (path starts with '/members/' and not (path starts with '/members/applications'))) }}
+                        {{ nav.sub('/members', t('members.list'), path == '/members' or (path starts with '/members/' and not (path starts with '/members/applications') and not (path starts with '/members/invites'))) }}
                         <a class="nav-sublink{% if path starts with '/members/applications' %} active{% endif %}" href="/members/applications"{% if path starts with '/members/applications' %} aria-current="page"{% endif %}>
-                            <span>{{ t('applications.tab_applications') }}</span>
+                            <span>{{ t('applications.title') }}</span>
                             {% if pendingApps > 0 %}<span class="badge bg-primary-soft text-primary">{{ pendingApps }}</span>{% endif %}
                         </a>
+                        {% if can('members.write') %}{{ nav.sub('/members/invites', t('applications.invites.title'), path starts with '/members/invites') }}{% endif %}
                         {% if can('settings.manage') %}{{ nav.sub('/settings/club-roles', t('nav.club_roles'), path == '/settings/club-roles') }}{% endif %}
                     </div>
                 </details>

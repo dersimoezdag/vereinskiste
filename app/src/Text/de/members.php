@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 return [
+    'applications.invites.max_uses' => 'Gültig für (Anträge)',
+    'applications.invites.usage' => '{used} von {total} Anträgen eingereicht',
     'audit.action.membership_invite_revoked' => 'Einladungslink widerrufen',
     'applications.link_revoked' => 'Dieser Antrags-Link wurde widerrufen.',
     'applications.invites.revoke' => 'Widerrufen',
@@ -120,8 +122,6 @@ return [
     'applications.reject' => 'Antrag ablehnen',
     'applications.reject_reason' => 'Ablehnungsgrund (optional)',
     'applications.none' => 'Keine Mitgliedsanträge vorhanden.',
-    'applications.tab_members' => 'Mitgliederkartei',
-    'applications.tab_applications' => 'Online-Anträge',
     'applications.badge_pending' => 'neu',
     'applications.submitted_at' => 'Eingegangen am',
     'applications.approved_success' => 'Antrag angenommen und Mitglied angelegt.',
@@ -130,7 +130,7 @@ return [
     // Einladungslinks & Einmal-Links
     'applications.invites.title' => 'Einladungs-Links',
     'applications.invites.create' => 'Neuen Antrags-Link erstellen',
-    'applications.invites.description' => 'Erstelle personalisierte oder zeitlich begrenzte Einmal-Links, über die Interessenten ihren Mitgliedsantrag direkt online ausfüllen können.',
+    'applications.invites.description' => 'Erstelle zeitlich begrenzte Links und lege fest, wie viele Mitgliedsanträge darüber eingereicht werden können.',
     'applications.invites.label' => 'Bezeichnung / Empfänger (optional)',
     'applications.invites.label_placeholder' => 'z. B. Max Mustermann oder Sommerfest-Aktion',
     'applications.invites.validity' => 'Gültigkeit',
@@ -161,7 +161,7 @@ return [
     // Link-Statusmeldungen
     'applications.link_invalid' => 'Dieser Antrags-Link ist ungültig.',
     'applications.link_expired' => 'Dieser Antrags-Link ist leider abgelaufen.',
-    'applications.link_used' => 'Dieser Einmal-Link wurde bereits für einen Mitgliedsantrag eingelöst.',
+    'applications.link_used' => 'Die maximale Anzahl an Mitgliedsanträgen für diesen Link wurde erreicht.',
 
     // SEPA & Bankverbindung
     'applications.sepa.section_title' => 'Bankverbindung & SEPA-Lastschriftmandat',

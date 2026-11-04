@@ -16,7 +16,7 @@ final class Catalog
     ];
     public const SHORTCUTS = [
         'member-add' => ['label' => 'home.label.mitglied_hinzufuegen', 'permission' => 'members.write', 'url' => '/members/new', 'icon' => 'members'],
-        'member-invite' => ['label' => 'home.label.mitglied_einladen', 'permission' => 'members.write', 'url' => '/members/applications#invite-title', 'icon' => 'mail'],
+        'member-invite' => ['label' => 'home.label.mitglied_einladen', 'permission' => 'members.write', 'url' => '/members/invites#invite-title', 'icon' => 'mail'],
         'booking-add' => ['label' => 'home.label.buchung_erfassen', 'permission' => 'bookings.write', 'url' => '/bookings/new', 'icon' => 'bookings'],
         'invoice-import' => ['label' => 'home.label.rechnung_importieren', 'permission' => 'invoices.write', 'url' => '/invoices/import', 'icon' => 'imports'],
         'bank-import' => ['label' => 'home.label.kontoauszug_importieren', 'permission' => 'imports.write', 'url' => '/imports/bank/new', 'icon' => 'imports'],

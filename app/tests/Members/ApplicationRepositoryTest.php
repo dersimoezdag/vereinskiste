@@ -49,6 +49,21 @@ final class ApplicationRepositoryTest extends TestCase
         $this->assertSame(0, (int) $this->db->query('SELECT count(*) FROM membership_applications')->fetchColumn());
     }
 
+    public function test_multi_use_invite_stops_after_configured_number_of_applications(): void
+    {
+        $invite = $this->repo->createInvite(1, 'Two applications', 14, null, false, false, 2);
+        $this->assertSame(2, $invite['max_uses']);
+        for ($i = 0; $i < 2; $i++) {
+            $this->assertTrue($this->repo->findInviteByToken($invite['token'])['is_valid']);
+            $this->repo->submit($invite['token'], ['name' => 'Example Person', 'email' => "person$i@example.org", ...ApplicationInput::declarations($this->db)]);
+        }
+        $found = $this->repo->findInviteByToken($invite['token']);
+        $this->assertSame(2, $found['used_count']);
+        $this->assertFalse($found['is_valid']);
+        $this->expectException(ValidationError::class);
+        $this->repo->submit($invite['token'], []);
+    }
+
     public function test_create_invite_and_verify_password(): void
     {
         $invite = $this->repo->createInvite(1, 'Interessent A', 7, 'Geheim123', true);

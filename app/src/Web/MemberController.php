@@ -221,18 +221,23 @@ final class MemberController extends AdminController
         $pdo = ($this->pdo)();
         $appRepo = new ApplicationRepository($pdo);
         $applications = $appRepo->listApplications($filter);
-        $includeInactive = ($query['invite_status'] ?? '') === 'all';
-        $invites = $appRepo->listInvites($includeInactive);
-        $pendingCount = $appRepo->countPending();
 
         return $req->getAttribute('view')->render($res, 'members/applications.twig', [
             'applications' => $applications,
-            'invites' => $invites,
-            'invite_status' => $includeInactive ? 'all' : 'current',
             'filter' => $filter,
-            'new_invite' => (int) ($query['invite'] ?? 0),
-            'pending_count' => $pendingCount,
             'outbox' => (new \Vereinskiste\Mail\Outbox($pdo))->list(),
+        ]);
+    }
+
+    public function invites(Request $req, Response $res, array $input = [], array $errors = []): Response
+    {
+        $query = $req->getQueryParams();
+        $includeInactive = ($query['invite_status'] ?? '') === 'all';
+        return $req->getAttribute('view')->render($res, 'members/invites.twig', [
+            'invites' => (new ApplicationRepository(($this->pdo)()))->listInvites($includeInactive),
+            'invite_status' => $includeInactive ? 'all' : 'current',
+            'new_invite' => (int) ($query['invite'] ?? 0),
+            'input' => $input, 'errors' => $errors,
         ]);
     }
 
@@ -243,11 +248,7 @@ final class MemberController extends AdminController
         }
         $this->flash($req, 'applications.invites.revoked_success');
         $body = $this->body($req);
-        $filter = $this->str($body, 'filter');
-        if (!in_array($filter, ['all', 'pending', 'approved', 'rejected'], true)) { $filter = 'all'; }
-        $query = ['filter' => $filter];
-        if (($body['invite_status'] ?? '') === 'all') { $query['invite_status'] = 'all'; }
-        return $this->redirect('/members/applications?' . http_build_query($query));
+        return $this->redirect('/members/invites' . (($body['invite_status'] ?? '') === 'all' ? '?invite_status=all' : ''));
     }
 
     public function createInvite(Request $req, Response $res): Response
@@ -259,18 +260,23 @@ final class MemberController extends AdminController
         $isTest = ($body['is_test'] ?? '') === '1';
         $requireSepa = (new \Vereinskiste\Members\ApplicationSettings(($this->pdo)()))->get()['require_sepa'];
 
+        $maxUses = $body['max_uses'] ?? '1';
+        if (!is_string($maxUses) || !preg_match('/^[1-9][0-9]{0,6}$/D', $maxUses) || (int) $maxUses > 1000000) {
+            return $this->invites($req, $res->withStatus(422), $body, ['max_uses' => 'foundation.invalid']);
+        }
         $invite = (new ApplicationRepository(($this->pdo)()))->createInvite(
             $this->userId($req),
             $title,
             $days,
             $password === '' ? null : $password,
             $requireSepa,
-            $isTest
+            $isTest,
+            (int) $maxUses
         );
 
         $this->flash($req, 'applications.invites.created_success');
         // Die Uebersicht kopiert den Link der neuen Einladung gleich in die Zwischenablage.
-        return $this->redirect('/members/applications?invite=' . $invite['id']);
+        return $this->redirect('/members/invites?invite=' . $invite['id']);
     }
 
     public function approveApplication(Request $req, Response $res, array $args): Response

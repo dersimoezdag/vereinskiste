@@ -60,8 +60,10 @@
     {% set crumbs = [{'label': t('nav.reports'), 'url': '/reports/summary'}, {'label': path == '/reports/dashboard' ? t('reports.tab.dashboard') : t('reports.tab.summary')}] %}
 {% elseif path == '/members' %}
     {% set crumbs = [members_group, {'label': t('members.list')}] %}
+{% elseif path starts with '/members/invites' %}
+    {% set crumbs = [members_group, {'label': t('applications.invites.title')}] %}
 {% elseif path == '/members/applications' %}
-    {% set crumbs = [members_group, {'label': t('applications.tab_applications')}] %}
+    {% set crumbs = [members_group, {'label': t('applications.title')}] %}
 {% elseif path starts with '/members' %}
     {% set crumbs = [members_group, {'label': path == '/members/new' ? t('ui.breadcrumb_neu') : t('ui.breadcrumb_mitglied')}] %}
 {% elseif path == '/settings/club-roles' %}

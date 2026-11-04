@@ -32,12 +32,13 @@ final class ApplicationRepository
     public function __construct(private PDO $pdo) {}
 
     /**
-     * Erstellt einen neuen Einladungs-Link (Einmal-Link).
+     * Erstellt einen Einladungs-Link mit begrenzter Anzahl an Anträgen.
      *
-     * @return array{id:int,token:string,title:string,require_sepa:bool,expires_at:string,has_password:bool}
+     * @return array{id:int,token:string,title:string,require_sepa:bool,expires_at:string,has_password:bool,max_uses:int}
      */
-    public function createInvite(int $createdBy, string $title = '', int $validDays = 14, ?string $password = null, bool $requireSepa = false, bool $isTest = false): array
+    public function createInvite(int $createdBy, string $title = '', int $validDays = 14, ?string $password = null, bool $requireSepa = false, bool $isTest = false, int $maxUses = 1): array
     {
+        if ($maxUses < 1 || $maxUses > 1000000) { throw new ValidationError(['max_uses' => 'foundation.invalid']); }
         $title = mb_substr(trim($title), 0, 200);
         $validDays = max(1, min($validDays, 365));
         $token = bin2hex(random_bytes(24));
@@ -45,10 +46,10 @@ final class ApplicationRepository
         $pwdHash = $password !== null && trim($password) !== '' ? password_hash(trim($password), PASSWORD_DEFAULT) : null;
 
         $stmt = $this->pdo->prepare(
-            'INSERT INTO membership_application_invites (token, title, require_sepa, password_hash, expires_at, created_by, is_test)
-             VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id'
+            'INSERT INTO membership_application_invites (token, title, require_sepa, password_hash, expires_at, created_by, is_test, max_uses)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id'
         );
-        $stmt->execute([$token, $title, $requireSepa ? 'true' : 'false', $pwdHash, $expiresAt, $createdBy, $isTest ? 'true' : 'false']);
+        $stmt->execute([$token, $title, $requireSepa ? 'true' : 'false', $pwdHash, $expiresAt, $createdBy, $isTest ? 'true' : 'false', $maxUses]);
         $id = (int) $stmt->fetchColumn();
 
         return [
@@ -59,6 +60,7 @@ final class ApplicationRepository
             'is_test' => $isTest,
             'expires_at' => $expiresAt,
             'has_password' => $pwdHash !== null,
+            'max_uses' => $maxUses,
         ];
     }
 

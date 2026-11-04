@@ -366,6 +366,7 @@ final class Kernel
         $members = new \Vereinskiste\Web\MemberController($pdoProvider);
         $app->get('/members', [$members, 'index'])->add(Auth::requires('members.read'));
         $app->get('/members.csv', [$members, 'csv'])->add(Auth::requires('members.read'));
+        $app->get('/members/invites', [$members, 'invites'])->add(Auth::requires('members.write'));
         $app->get('/members/applications', [$members, 'applications'])->add(Auth::requires('members.write'));
         $app->post('/members/invites/{id:[0-9]+}/revoke', [$members, 'revokeInvite'])->add(Auth::requires('members.write'));
         $app->post('/members/invites/new', [$members, 'createInvite'])->add(Auth::requires('members.write'));

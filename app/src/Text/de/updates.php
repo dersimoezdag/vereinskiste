@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 return [
+    'settings.manufacturer.title' => 'Hersteller & Entwicklung',
+    'settings.manufacturer.description' => 'Entwicklung der Vereinskiste.',
+    'settings.manufacturer.profile' => 'GitHub-Profil',
+    'settings.manufacturer.repository' => 'Quellcode auf GitHub',
+
     'update.maintenance.running_title' => 'Wir aktualisieren die Vereinskiste',
     'update.maintenance.running_text' => 'Die Anwendung ist während der Aktualisierung kurzzeitig nicht verfügbar. Bitte versuche es in wenigen Minuten erneut.',
     'update.maintenance.admin_login' => 'Anmeldung für Administratoren',

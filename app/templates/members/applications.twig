@@ -1,261 +1,99 @@
 {% extends 'layout.twig' %}
-{% import 'components/icons.twig' as icons %}
-{% import 'components/help.twig' as help %}
-
 {% block content %}
 <div class="mx-auto w-full max-w-7xl">
-    <div class="page-header print:hidden mb-4 flex justify-between items-center gap-2">
-        <h1 class="page-title">{{ t('applications.title') }}</h1>
-        {% if can('members.write') %}
-        <details class="relative">
-            <summary class="btn btn-sm list-none" aria-label="{{ t('applications.actions') }}"><span aria-hidden="true">⋮</span></summary>
-            <div class="absolute right-0 z-20 mt-2 w-64 panel panel-body">
-                <form method="post" action="/members/invites/new">
-                    {{ csrf_field() }}
-                    <input type="hidden" name="is_test" value="1">
-                    <button type="submit" class="btn w-full">{{ t('applications.test.create') }}</button>
-                </form>
+    <h1 class="page-title mb-4">{{ t('applications.title') }}</h1>
+    <div class="panel">
+        <div class="panel-header flex justify-between items-center flex-wrap gap-2">
+            <h3 class="panel-title m-0">{{ t('applications.title') }}</h3>
+            <div class="flex gap-1">
+                <a href="/members/applications?filter=all" class="btn btn-sm {% if filter == 'all' %}btn-primary{% else %}{% endif %}">{{ t('invoices.status.all') }}</a>
+                <a href="/members/applications?filter=pending" class="btn btn-sm {% if filter == 'pending' %}btn-primary{% else %}{% endif %}">{{ t('applications.status.pending') }}</a>
+                <a href="/members/applications?filter=approved" class="btn btn-sm {% if filter == 'approved' %}btn-primary{% else %}{% endif %}">{{ t('applications.status.approved') }}</a>
+                <a href="/members/applications?filter=rejected" class="btn btn-sm {% if filter == 'rejected' %}btn-primary{% else %}{% endif %}">{{ t('intake.payment.rejected') }}</a>
             </div>
-        </details>
-        {% endif %}
-    </div>
+        </div>
 
-    <!-- Navigation Tabs -->
-    <ul class="tabs mb-6" role="tablist">
-        <li class="flex">
-            <a class="tab" href="/members">
-                {{ icons.icon('members') }} {{ t('applications.tab_members') }}
-            </a>
-        </li>
-        <li class="flex">
-            <a class="tab active" href="/members/applications" aria-current="page">
-                {{ icons.icon('contacts') }} {{ t('applications.tab_applications') }}
-                {% if pending_count > 0 %}
-                <span class="badge bg-danger text-white ms-1">{{ pending_count }}</span>
-                {% endif %}
-            </a>
-        </li>
-    </ul>
-
-    <div class="grid-12 gap-6">
-        <!-- Link-Erstellung und Übersicht -->
-        <div class="lg:col-span-5 col-span-12">
-            <div class="panel mb-6">
-                <div class="panel-header">
-                    <h3 class="panel-title">{{ t('applications.invites.create') }} {{ help.tip(t('ui.erzeugt_einen_geschuetzten_online_aufnahmelink_fuer_beitrittsinte')) }}</h3>
+        {% if applications is empty %}
+        <div class="panel-body text-center text-muted py-12">
+            {{ t('applications.none') }}
+        </div>
+        {% else %}
+        <div class="list list-flush">
+            {% for a in applications %}
+            <div class="list-item p-4">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <h4 class="h5 mb-0 font-semibold">{{ a.applicant_name }}</h4>
+                        <div class="text-muted text-sm">
+                            {{ a.email }}
+                            {% if a.data.phone %} {{ t('ui.tel') }} {{ a.data.phone }}{% endif %}
+                            {% if a.data.birth_date %} {{ t('ui.geb') }} {{ a.data.birth_date|date('d.m.Y') }}{% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        {% if a.status == 'pending' %}
+                            <span class="badge bg-warning-soft text-warning border border-warning/30">{{ t('applications.status.pending') }}</span>
+                        {% elseif a.status == 'approved' %}
+                            <span class="badge bg-success-soft text-success border border-success/30">{{ t('applications.status.approved') }}</span>
+                        {% else %}
+                            <span class="badge bg-danger-soft text-danger border border-danger/30">{{ t('applications.status.rejected') }}</span>
+                        {% endif %}
+                    </div>
                 </div>
-                <div class="panel-body">
-                    <p class="text-muted text-sm mb-4">
-                        {{ t('applications.invites.description') }}
-                    </p>
 
-                    {% if can('members.write') %}
-                    <form method="post" action="/members/invites/new">
-                        {{ csrf_field() }}
+                {% if a.status == 'rejected' and can('settings.manage') %}<a class="btn btn-sm mb-2" href="/members/applications/{{ a.id }}/privacy">{{ t('privacy.title') }}</a>{% endif %}
+                <!-- Anschrift -->
+                {% if a.data.address or a.data.city %}
+                <div class="text-muted text-sm mb-2">
+                    {{ icons.icon('home') }} {{ a.data.address }} {{ a.data.house_number|default('') }}, {{ a.data.zip }} {{ a.data.city }} ({{ a.data.country }})
+                </div>
+                {% endif %}
 
-                        <div class="mb-4">
-                            <label for="invite-title" class="label">{{ t('applications.invites.label') }}</label>
-                            <input type="text" id="invite-title" name="title" class="input"
-                                   placeholder="{{ t('applications.invites.label_placeholder') }}" maxlength="200">
-                        </div>
+                <!-- SEPA Details falls vorhanden -->
+                {% if a.require_sepa and a.data.iban %}
+                <div class="border border-line rounded-lg p-2 bg-subtle text-sm mb-2">
+                    <div class="font-semibold text-primary mb-1">{{ t('ui.bankverbindung_lastschriftmandat') }}</div>
+                    <div>{{ t('ui.inhaber') }} {{ a.data.account_holder }}</div>
+                    <div class="font-mono">{{ t('ui.iban') }} {{ a.data.iban }} {% if a.data.bic %}{{ t('ui.bic') }} {{ a.data.bic }}{% endif %}</div>
+                    <div class="text-success text-sm">{{ t('ui.sepa_lastschriftmandat_vom_antragsteller_erteilt') }}</div>
+                </div>
+                {% endif %}
 
-                        <div class="grid-12 gap-2 mb-4">
-                            <div class="col-span-6">
-                                <label for="invite-days" class="label">{{ t('applications.invites.validity_days') }} {{ help.tip(t('ui.gueltigkeitsdauer_nach_ablauf_dieser_frist_kann_der_link_nicht_me')) }}</label>
-                                <input type="number" id="invite-days" name="valid_days" value="14" min="1" max="365" class="input">
-                            </div>
-                            <div class="col-span-6">
-                                <label for="invite-pwd" class="label">{{ t('applications.invites.password') }} {{ help.tip(t('ui.zusaetzlicher_schutz_der_antragsteller_muss_vor_dem_ausfuellen_di')) }}</label>
-                                <input type="text" id="invite-pwd" name="password" class="input"
-                                       placeholder="{{ t('applications.invites.password_placeholder') }}" autocomplete="off">
-                            </div>
-                        </div>
-                        <div class="field-hint text-muted mb-4">{{ t('applications.invites.password_hint') }}</div>
+                {% if a.data.notes %}
+                <div class="text-sm italic text-muted mb-2">
+                    {{ t('ui.notiz_des_antragstellers') }}{{ a.data.notes }}“
+                </div>
+                {% endif %}
 
-                        <p class="field-hint mb-4">Die SEPA-Vorgabe wird in den administrativen <a href="/settings/declarations">Antragsbuilder</a> festgelegt und gilt auch für Testlinks.</p>
+                <div class="flex justify-between items-center mt-4 pt-2 border-t border-line">
+                    <span class="text-muted text-sm">
+                        {{ t('ui.eingegangen') }} {{ a.created_at|date('d.m.Y H:i') }}
+                        {% if a.reviewer_name %} {{ t('ui.geprueft_von') }} {{ a.reviewer_name }}{% endif %}
+                    </span>
 
-                        <button type="submit" class="btn btn-primary w-full">
-                            {{ t('applications.invites.create') }}
-                        </button>
-                    </form>
+                    {% if a.status == 'pending' and can('members.write') %}
+                    <div class="flex gap-2">
+                        <a class="btn btn-sm btn-success" href="/members/applications/{{ a.id }}/decision?decision=approved">{{ t('applications.approve') }}</a>
+                        <a class="btn btn-sm btn-danger-soft" href="/members/applications/{{ a.id }}/decision?decision=rejected">{{ t('applications.reject') }}</a>
+                    </div>
+                    {% elseif a.status == 'approved' and a.member_id %}
+                    <a href="/members/{{ a.member_id }}" class="btn btn-sm btn-soft">
+                        {{ t('ui.zum_mitglied') }}{{ a.member_no }})
+                    </a>
+                    {% elseif a.status == 'rejected' and a.rejection_reason %}
+                    <span class="text-danger text-sm">{{ t('ui.grund') }} {{ a.rejection_reason }}</span>
                     {% endif %}
                 </div>
-            </div>
 
-            <!-- Liste der erstellten Einladungs-Links -->
-            <div class="panel">
-                <div class="panel-header">
-                    <h3 class="panel-title">{{ t('applications.invites.title') }}</h3>
-                    <a class="text-sm" href="/members/applications?filter={{ filter|url_encode }}{% if invite_status != 'all' %}&amp;invite_status=all{% endif %}">{{ t(invite_status == 'all' ? 'applications.invites.show_current' : 'applications.invites.show_all') }}</a>
-                </div>
-                <div class="table-scroll">
-                    <table class="data-table mb-0">
-                        <thead>
-                            <tr>
-                                <th>{{ t('ui.empfaenger_link') }}</th>
-                                <th>{{ t('applications.invites.expires_at') }}</th>
-                                <th>{{ t('privacy.field.status') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        {% if invites is empty %}
-                            <tr>
-                                <td colspan="3" class="text-center text-muted py-4 text-sm">
-                                    {{ t('applications.invites.none') }}
-                                </td>
-                            </tr>
-                        {% else %}
-                            {% for inv in invites %}
-                            <tr>
-                                <td>
-                                    <div class="font-semibold">
-                                        {{ inv.title ?: 'Einladungs-Link' }}
-                                        {% if inv.is_test %}<span class="badge bg-warning-soft text-warning ms-1">{{ t('applications.test.badge') }}</span>{% endif %}
-                                        {% if inv.has_password %}
-                                        <span class="badge bg-warning-soft text-warning border border-line ms-1" title="{{ t('ui.passwortgeschuetzt') }}">{{ t('ui.pw') }}</span>
-                                        {% endif %}
-                                        {% if inv.require_sepa %}
-                                        <span class="badge bg-info-soft text-info border border-line ms-1" title="{{ t('ui.inkl_sepa') }}">{{ t('ui.sepa') }}</span>
-                                        {% endif %}
-                                    </div>
-                                    {% if inv.is_valid %}
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <input type="text" readonly value="/antrag/{{ inv.token }}" id="inv-link-{{ inv.id }}" aria-label="{{ t('ui.einladungs_link') }}"
-                                               class="input input-sm font-mono text-muted py-0 px-1 bg-subtle border-0" style="max-width: 140px;">
-                                        <button type="button" class="btn btn-sm py-0 px-2"
-                                                data-copy-path="/antrag/{{ inv.token }}" data-copied-label="{{ t('applications.invites.copied') }}"{% if inv.id == new_invite %} data-copy-auto{% endif %}>
-                                            {{ t('applications.invites.copy_link') }}
-                                        </button>
-                                    </div>
-                                    {% endif %}
-                                </td>
-                                <td class="text-sm text-muted">
-                                    {{ inv.expires_at|date('d.m.Y H:i') }}
-                                </td>
-                                <td>
-                                    {% if inv.is_revoked %}
-                                        <span class="badge bg-subtle text-muted">{{ t('applications.invites.revoked') }}</span>
-                                    {% elseif inv.is_used %}
-                                        <span class="badge bg-success-soft text-success">{{ t('applications.invites.used') }}</span>
-                                    {% elseif inv.is_expired %}
-                                        <span class="badge bg-subtle text-muted">{{ t('applications.invites.expired') }}</span>
-                                    {% else %}
-                                        <span class="badge bg-primary-soft text-primary">{{ t('applications.invites.open') }}</span>
-                                    {% endif %}
-                                    {% if can('members.write') and inv.is_valid %}
-                                    <form method="post" action="/members/invites/{{ inv.id }}/revoke" class="mt-2">
-                                        {{ csrf_field() }}
-                                        <input type="hidden" name="filter" value="{{ filter }}">
-                                        <input type="hidden" name="invite_status" value="{{ invite_status }}">
-                                        <button class="btn btn-sm">{{ t('applications.invites.revoke') }}</button>
-                                    </form>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        {% endif %}
-                        </tbody>
-                    </table>
-                </div>
             </div>
+            {% endfor %}
         </div>
-
-        <!-- Rechte Spalte: Eingegangene Mitgliedsanträge -->
-        <div class="lg:col-span-7 col-span-12">
-            <div class="panel">
-                <div class="panel-header flex justify-between items-center flex-wrap gap-2">
-                    <h3 class="panel-title m-0">{{ t('applications.title') }}</h3>
-                    <div class="flex gap-1">
-                        <a href="/members/applications?filter=all{% if invite_status == 'all' %}&amp;invite_status=all{% endif %}" class="btn btn-sm {% if filter == 'all' %}btn-primary{% else %}{% endif %}">{{ t('invoices.status.all') }}</a>
-                        <a href="/members/applications?filter=pending{% if invite_status == 'all' %}&amp;invite_status=all{% endif %}" class="btn btn-sm {% if filter == 'pending' %}btn-primary{% else %}{% endif %}">{{ t('applications.status.pending') }}</a>
-                        <a href="/members/applications?filter=approved{% if invite_status == 'all' %}&amp;invite_status=all{% endif %}" class="btn btn-sm {% if filter == 'approved' %}btn-primary{% else %}{% endif %}">{{ t('applications.status.approved') }}</a>
-                        <a href="/members/applications?filter=rejected{% if invite_status == 'all' %}&amp;invite_status=all{% endif %}" class="btn btn-sm {% if filter == 'rejected' %}btn-primary{% else %}{% endif %}">{{ t('intake.payment.rejected') }}</a>
-                    </div>
-                </div>
-
-                {% if applications is empty %}
-                <div class="panel-body text-center text-muted py-12">
-                    {{ t('applications.none') }}
-                </div>
-                {% else %}
-                <div class="list list-flush">
-                    {% for a in applications %}
-                    <div class="list-item p-4">
-                        <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <h4 class="h5 mb-0 font-semibold">{{ a.applicant_name }}</h4>
-                                <div class="text-muted text-sm">
-                                    {{ a.email }}
-                                    {% if a.data.phone %} {{ t('ui.tel') }} {{ a.data.phone }}{% endif %}
-                                    {% if a.data.birth_date %} {{ t('ui.geb') }} {{ a.data.birth_date|date('d.m.Y') }}{% endif %}
-                                </div>
-                            </div>
-                            <div>
-                                {% if a.status == 'pending' %}
-                                    <span class="badge bg-warning-soft text-warning border border-warning/30">{{ t('applications.status.pending') }}</span>
-                                {% elseif a.status == 'approved' %}
-                                    <span class="badge bg-success-soft text-success border border-success/30">{{ t('applications.status.approved') }}</span>
-                                {% else %}
-                                    <span class="badge bg-danger-soft text-danger border border-danger/30">{{ t('applications.status.rejected') }}</span>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        {% if a.status == 'rejected' and can('settings.manage') %}<a class="btn btn-sm mb-2" href="/members/applications/{{ a.id }}/privacy">{{ t('privacy.title') }}</a>{% endif %}
-                        <!-- Anschrift -->
-                        {% if a.data.address or a.data.city %}
-                        <div class="text-muted text-sm mb-2">
-                            {{ icons.icon('home') }} {{ a.data.address }} {{ a.data.house_number|default('') }}, {{ a.data.zip }} {{ a.data.city }} ({{ a.data.country }})
-                        </div>
-                        {% endif %}
-
-                        <!-- SEPA Details falls vorhanden -->
-                        {% if a.require_sepa and a.data.iban %}
-                        <div class="border border-line rounded-lg p-2 bg-subtle text-sm mb-2">
-                            <div class="font-semibold text-primary mb-1">{{ t('ui.bankverbindung_lastschriftmandat') }}</div>
-                            <div>{{ t('ui.inhaber') }} {{ a.data.account_holder }}</div>
-                            <div class="font-mono">{{ t('ui.iban') }} {{ a.data.iban }} {% if a.data.bic %}{{ t('ui.bic') }} {{ a.data.bic }}{% endif %}</div>
-                            <div class="text-success text-sm">{{ t('ui.sepa_lastschriftmandat_vom_antragsteller_erteilt') }}</div>
-                        </div>
-                        {% endif %}
-
-                        {% if a.data.notes %}
-                        <div class="text-sm italic text-muted mb-2">
-                            {{ t('ui.notiz_des_antragstellers') }}{{ a.data.notes }}“
-                        </div>
-                        {% endif %}
-
-                        <div class="flex justify-between items-center mt-4 pt-2 border-t border-line">
-                            <span class="text-muted text-sm">
-                                {{ t('ui.eingegangen') }} {{ a.created_at|date('d.m.Y H:i') }}
-                                {% if a.reviewer_name %} {{ t('ui.geprueft_von') }} {{ a.reviewer_name }}{% endif %}
-                            </span>
-
-                            {% if a.status == 'pending' and can('members.write') %}
-                            <div class="flex gap-2">
-                                <a class="btn btn-sm btn-success" href="/members/applications/{{ a.id }}/decision?decision=approved">{{ t('applications.approve') }}</a>
-                                <a class="btn btn-sm btn-danger-soft" href="/members/applications/{{ a.id }}/decision?decision=rejected">{{ t('applications.reject') }}</a>
-                            </div>
-                            {% elseif a.status == 'approved' and a.member_id %}
-                            <a href="/members/{{ a.member_id }}" class="btn btn-sm btn-soft">
-                                {{ t('ui.zum_mitglied') }}{{ a.member_no }})
-                            </a>
-                            {% elseif a.status == 'rejected' and a.rejection_reason %}
-                            <span class="text-danger text-sm">{{ t('ui.grund') }} {{ a.rejection_reason }}</span>
-                            {% endif %}
-                        </div>
-
-                    </div>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-        </div>
+        {% endif %}
     </div>
-</div>
 <div class="panel panel-body mt-4"><h2>{{ t('applications.outbox') }}</h2><p>{{ t('applications.outbox.explanation') }}</p>
 {% if not system_mail_available() %}<p class="alert alert-warning">{{ t('applications.mail.disabled') }}</p>{% endif %}
 <div class="table-scroll"><table class="data-table"><thead><tr><th>{{ t('applications.mail.subject') }}</th><th>{{ t('ui.e_mail') }}</th><th>{{ t('privacy.field.status') }}</th><th></th></tr></thead><tbody>
 {% for mail in outbox %}<tr><td>{{ mail.subject }} · #{{ mail.application_id }}</td><td>{{ mail.recipient }}</td><td>{{ t('applications.outbox.' ~ mail.status) }}</td><td>{% if mail.status in ['failed','uncertain'] and can('members.write') %}<form method="post" action="/members/application-mails/{{ mail.id }}/retry">{{ csrf_field() }}<input type="hidden" name="version" value="{{ mail.version }}"><button class="btn btn-sm">{{ t('applications.outbox.retry') }}</button></form>{% endif %}</td></tr>{% endfor %}
 </tbody></table></div></div>
+</div>
 {% endblock %}

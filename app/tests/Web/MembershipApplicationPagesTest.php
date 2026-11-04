@@ -37,7 +37,7 @@ final class MembershipApplicationPagesTest extends TestCase
         $response = $this->postForm('/members/invites/new', ['is_test' => '1']);
         $invite = $this->pdo->query('SELECT * FROM membership_application_invites ORDER BY id DESC LIMIT 1')->fetch();
         $this->assertTrue($invite['is_test']);
-        $this->assertSame('/members/applications?invite=' . $invite['id'], $response->getHeaderLine('Location'));
+        $this->assertSame('/members/invites?invite=' . $invite['id'], $response->getHeaderLine('Location'));
         $path = '/antrag/' . $invite['token'];
         $this->assertStringContainsString('Testdurchlauf', (string) $this->get($path)->getBody());
         $this->assertSame(422, $this->postForm($path, ['email' => 'invalid'])->getStatusCode());
@@ -79,7 +79,7 @@ final class MembershipApplicationPagesTest extends TestCase
         $invite = $this->pdo->query("SELECT id, token FROM membership_application_invites WHERE title = 'Familie Neumayer'")->fetch();
         $token = (string) $invite['token'];
         $this->assertNotEmpty($token);
-        $this->assertSame('/members/applications?invite=' . $invite['id'], $res->getHeaderLine('Location'));
+        $this->assertSame('/members/invites?invite=' . $invite['id'], $res->getHeaderLine('Location'));
         $this->assertStringContainsString('data-copy-path="/antrag/' . $token . '" data-copied-label="Kopiert!" data-copy-auto',
             (string) $this->get($res->getHeaderLine('Location'))->getBody());
 
@@ -128,7 +128,7 @@ final class MembershipApplicationPagesTest extends TestCase
         // 6. Token is one-time: opening again shows link used
         $res = $this->get('/antrag/' . $token);
         $this->assertSame(410, $res->getStatusCode());
-        $this->assertStringContainsString('bereits für einen Mitgliedsantrag eingelöst', (string) $res->getBody());
+        $this->assertStringContainsString('Die maximale Anzahl an Mitgliedsanträgen', (string) $res->getBody());
 
         // 7. Admin sees application and approves it
         $appId = (int) $this->pdo->query("SELECT id FROM membership_applications WHERE email = 'klaus@example.org'")->fetchColumn();

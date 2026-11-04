@@ -167,4 +167,18 @@
         </div>
     </div>
 </section>
+<section class="panel panel-body mt-6" aria-labelledby="manufacturer-title">
+    <div class="flex flex-wrap items-center gap-4">
+        <div class="avatar avatar-lg bg-primary-soft text-primary rounded-full shrink-0" aria-hidden="true">DÖ</div>
+        <div class="min-w-0 flex-1">
+            <h2 class="panel-title text-sm text-muted mb-1" id="manufacturer-title">{{ t('settings.manufacturer.title') }}</h2>
+            <p class="text-lg font-semibold mb-1">Dersim Özdag</p>
+            <p class="text-sm text-muted mb-0">{{ t('settings.manufacturer.description') }}</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <a class="btn btn-sm" href="https://github.com/dersimoezdag" target="_blank" rel="noopener noreferrer">{{ t('settings.manufacturer.profile') }}</a>
+            <a class="btn btn-sm" href="https://github.com/dersimoezdag/vereinskiste" target="_blank" rel="noopener noreferrer">{{ t('settings.manufacturer.repository') }}</a>
+        </div>
+    </div>
+</section>
 {% endblock %}

@@ -29,12 +29,12 @@ final class InviteRevocationPagesTest extends TestCase
         $path = '/antrag/' . $invite['token'];
         $this->postForm($path . '/unlock', ['password' => 'secret']);
         $this->assertSame(200, $this->get($path)->getStatusCode());
-        $list = (string) $this->get('/members/applications')->getBody();
+        $list = (string) $this->get('/members/invites')->getBody();
         $this->assertStringContainsString('/members/invites/' . $invite['id'] . '/revoke', $list);
         $res = $this->postForm('/members/invites/' . $invite['id'] . '/revoke', ['filter' => 'pending', 'invite_status' => 'all']);
-        $this->assertSame('/members/applications?filter=pending&invite_status=all', $res->getHeaderLine('Location'));
-        $this->assertStringNotContainsString('Revocation example', (string) $this->get('/members/applications')->getBody());
-        $history = (string) $this->get('/members/applications?invite_status=all')->getBody();
+        $this->assertSame('/members/invites?invite_status=all', $res->getHeaderLine('Location'));
+        $this->assertStringNotContainsString('Revocation example', (string) $this->get('/members/invites')->getBody());
+        $history = (string) $this->get('/members/invites?invite_status=all')->getBody();
         $this->assertStringContainsString('Revocation example', $history);
         $this->assertStringNotContainsString('action="/members/invites/' . $invite['id'] . '/revoke"', $history);
         $this->assertSame(404, $this->postForm('/members/invites/' . $invite['id'] . '/revoke', [])->getStatusCode());

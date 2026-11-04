@@ -1,0 +1,134 @@
+{% extends 'layout.twig' %}
+{% import 'components/help.twig' as help %}
+{% block content %}
+<div class="mx-auto w-full max-w-7xl">
+    <div class="page-header mb-4 flex justify-between items-center gap-2">
+        <h1 class="page-title">{{ t('applications.invites.title') }}</h1>
+        <form method="post" action="/members/invites/new">{{ csrf_field() }}<input type="hidden" name="is_test" value="1"><button class="btn btn-sm">{{ t('applications.test.create') }}</button></form>
+    </div>
+    <div class="panel mb-6">
+        <div class="panel-header">
+            <h3 class="panel-title">{{ t('applications.invites.create') }} {{ help.tip(t('ui.erzeugt_einen_geschuetzten_online_aufnahmelink_fuer_beitrittsinte')) }}</h3>
+        </div>
+        <div class="panel-body">
+            <p class="text-muted text-sm mb-4">
+                {{ t('applications.invites.description') }}
+            </p>
+
+            {% if can('members.write') %}
+            <form method="post" action="/members/invites/new">
+                {{ csrf_field() }}
+
+                <div class="mb-4">
+                    <label for="invite-title" class="label">{{ t('applications.invites.label') }}</label>
+                    <input type="text" id="invite-title" name="title" class="input" value="{{ input.title|default('') }}"
+                           placeholder="{{ t('applications.invites.label_placeholder') }}" maxlength="200">
+                </div>
+
+                <div class="grid-12 gap-2 mb-4">
+                    <div class="col-span-6">
+                        <label for="invite-days" class="label">{{ t('applications.invites.validity_days') }} {{ help.tip(t('ui.gueltigkeitsdauer_nach_ablauf_dieser_frist_kann_der_link_nicht_me')) }}</label>
+                        <input type="number" id="invite-days" name="valid_days" value="{{ input.valid_days|default(14) }}" min="1" max="365" class="input">
+                    </div>
+                    <div class="col-span-6">
+                        <label for="invite-pwd" class="label">{{ t('applications.invites.password') }} {{ help.tip(t('ui.zusaetzlicher_schutz_der_antragsteller_muss_vor_dem_ausfuellen_di')) }}</label>
+                        <input type="text" id="invite-pwd" name="password" class="input"
+                               placeholder="{{ t('applications.invites.password_placeholder') }}" autocomplete="off">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="label" for="invite-max-uses">{{ t('applications.invites.max_uses') }}</label>
+                    <input class="input" type="number" id="invite-max-uses" name="max_uses" value="{{ input.max_uses|default('1') }}" min="1" max="1000000" required>
+                    {% if errors.max_uses %}<p class="text-danger" role="alert">{{ t(errors.max_uses) }}</p>{% endif %}
+                </div>
+                <div class="field-hint text-muted mb-4">{{ t('applications.invites.password_hint') }}</div>
+
+                <p class="field-hint mb-4">Die SEPA-Vorgabe wird in den administrativen <a href="/settings/declarations">Antragsbuilder</a> festgelegt und gilt auch für Testlinks.</p>
+
+                <button type="submit" class="btn btn-primary w-full">
+                    {{ t('applications.invites.create') }}
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Liste der erstellten Einladungs-Links -->
+    <div class="panel">
+        <div class="panel-header">
+            <h3 class="panel-title">{{ t('applications.invites.title') }}</h3>
+            <a class="text-sm" href="/members/invites{% if invite_status != 'all' %}?invite_status=all{% endif %}">{{ t(invite_status == 'all' ? 'applications.invites.show_current' : 'applications.invites.show_all') }}</a>
+        </div>
+        <div class="table-scroll">
+            <table class="data-table mb-0">
+                <thead>
+                    <tr>
+                        <th>{{ t('ui.empfaenger_link') }}</th>
+                        <th>{{ t('applications.invites.expires_at') }}</th>
+                        <th>{{ t('privacy.field.status') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% if invites is empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4 text-sm">
+                            {{ t('applications.invites.none') }}
+                        </td>
+                    </tr>
+                {% else %}
+                    {% for inv in invites %}
+                    <tr>
+                        <td>
+                            <div class="font-semibold">
+                                {{ inv.title ?: 'Einladungs-Link' }}
+                                {% if inv.is_test %}<span class="badge bg-warning-soft text-warning ms-1">{{ t('applications.test.badge') }}</span>{% endif %}
+                                {% if inv.has_password %}
+                                <span class="badge bg-warning-soft text-warning border border-line ms-1" title="{{ t('ui.passwortgeschuetzt') }}">{{ t('ui.pw') }}</span>
+                                {% endif %}
+                                {% if inv.require_sepa %}
+                                <span class="badge bg-info-soft text-info border border-line ms-1" title="{{ t('ui.inkl_sepa') }}">{{ t('ui.sepa') }}</span>
+                                {% endif %}
+                            </div>
+                            {% if inv.is_valid %}
+                            <div class="flex items-center gap-2 mt-1">
+                                <input type="text" readonly value="/antrag/{{ inv.token }}" id="inv-link-{{ inv.id }}" aria-label="{{ t('ui.einladungs_link') }}"
+                                       class="input input-sm font-mono text-muted py-0 px-1 bg-subtle border-0" style="max-width: 140px;">
+                                <button type="button" class="btn btn-sm py-0 px-2"
+                                        data-copy-path="/antrag/{{ inv.token }}" data-copied-label="{{ t('applications.invites.copied') }}"{% if inv.id == new_invite %} data-copy-auto{% endif %}>
+                                    {{ t('applications.invites.copy_link') }}
+                                </button>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td class="text-sm text-muted">
+                            {{ inv.expires_at|date('d.m.Y H:i') }}
+                            <div>{{ t('applications.invites.usage')|replace({'{used}': inv.used_count, '{total}': inv.max_uses}) }}</div>
+                        </td>
+                        <td>
+                            {% if inv.is_revoked %}
+                                <span class="badge bg-subtle text-muted">{{ t('applications.invites.revoked') }}</span>
+                            {% elseif inv.is_used %}
+                                <span class="badge bg-success-soft text-success">{{ t('applications.invites.used') }}</span>
+                            {% elseif inv.is_expired %}
+                                <span class="badge bg-subtle text-muted">{{ t('applications.invites.expired') }}</span>
+                            {% else %}
+                                <span class="badge bg-primary-soft text-primary">{{ t('applications.invites.open') }}</span>
+                            {% endif %}
+                            {% if can('members.write') and inv.is_valid %}
+                            <form method="post" action="/members/invites/{{ inv.id }}/revoke" class="mt-2">
+                                {{ csrf_field() }}
+                                
+                                <input type="hidden" name="invite_status" value="{{ invite_status }}">
+                                <button class="btn btn-sm">{{ t('applications.invites.revoke') }}</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
