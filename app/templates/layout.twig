@@ -18,17 +18,18 @@
 {% set path = current_path() %}
 <div class="min-h-screen lg:flex">
     {% if user %}
-    <aside class="border-b border-line bg-surface lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col lg:border-r lg:border-b-0" aria-label="{{ t('nav.main') }}">
+    <aside class="sticky top-0 z-30 border-b border-line bg-surface lg:z-auto lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col lg:border-r lg:border-b-0" aria-label="{{ t('nav.main') }}">
         <div class="flex items-center justify-between gap-2 px-4 py-3 lg:px-5 lg:pt-5 lg:pb-4">
             <a href="/" class="flex items-center gap-2.5 text-ink no-underline hover:no-underline">
                 {% include 'components/logo.twig' with {size: 32, class: 'size-8 shrink-0'} %}
                 <span class="text-base font-semibold tracking-tight">{{ t('app.name') }}</span>
             </a>
-            <button class="btn btn-ghost btn-icon lg:hidden" type="button" data-nav-toggle aria-controls="sidebar-menu" aria-expanded="false" aria-label="{{ t('nav.toggle') }}">
-                <svg viewBox="0 0 24 24" class="size-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            <button class="group btn btn-ghost btn-icon lg:hidden" type="button" data-nav-toggle aria-controls="sidebar-menu" aria-expanded="false" aria-label="{{ t('nav.toggle') }}">
+                <svg viewBox="0 0 24 24" class="size-6 group-aria-expanded:hidden" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+                <svg viewBox="0 0 24 24" class="hidden size-6 group-aria-expanded:block" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
             </button>
         </div>
-        <div class="hidden flex-col gap-4 px-3 pb-3 [&.is-open]:flex lg:flex lg:min-h-0 lg:flex-1" id="sidebar-menu">
+        <div class="sidebar-menu hidden flex-col gap-4 px-3 pb-3 [&.is-open]:flex lg:flex lg:min-h-0 lg:flex-1" id="sidebar-menu">
             <nav class="flex flex-col lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
                 <a class="nav-link{% if path == '/' or path starts with '/dashboard/preferences' %} active{% endif %}" href="/">{{ icons.icon('home') }}<span>{{ t('nav.home') }}</span></a>
                 {% set documentsActive = path starts with '/documents' %}

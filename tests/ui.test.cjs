@@ -68,3 +68,21 @@ test('menus work without the Popover API', () => {
     assert.ok(!menu.classList.contains('is-open'));
     window.close();
 });
+
+test('mobile nav locks page scrolling and closes on escape or link choice', () => {
+    const {window,document}=setup('<button data-nav-toggle aria-controls="sidebar-menu" aria-expanded="false">Menue</button><div id="sidebar-menu"><a href="#x">Link</a></div>');
+    const button=document.querySelector('[data-nav-toggle]'), menu=document.getElementById('sidebar-menu'), html=document.documentElement;
+    button.click();
+    assert.ok(menu.classList.contains('is-open'));
+    assert.ok(html.classList.contains('nav-open'));
+    assert.equal(button.getAttribute('aria-expanded'),'true');
+    document.dispatchEvent(new window.KeyboardEvent('keydown',{key:'Escape'}));
+    assert.ok(!menu.classList.contains('is-open'));
+    assert.ok(!html.classList.contains('nav-open'));
+    assert.equal(document.activeElement,button);
+    button.click();
+    menu.querySelector('a').click();
+    assert.ok(!html.classList.contains('nav-open'));
+    assert.equal(button.getAttribute('aria-expanded'),'false');
+    window.close();
+});

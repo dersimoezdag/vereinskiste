@@ -40,14 +40,27 @@
         }
     });
 
-    // Mobile Seitenleiste ein- und ausklappen.
+    // Mobile Seitenleiste: oeffnet als Flaeche unter der App-Leiste und sperrt das Scrollen der Seite.
+    // Schliesst per Knopf, Escape, Linkauswahl oder wenn die Ansicht auf Desktop-Breite wechselt.
     document.querySelectorAll('[data-nav-toggle]').forEach(function (button) {
         var menu = document.getElementById(button.getAttribute('aria-controls'));
         if (!menu) { return; }
-        button.addEventListener('click', function () {
-            var open = menu.classList.toggle('is-open');
+        function setOpen(open) {
+            menu.classList.toggle('is-open', open);
+            document.documentElement.classList.toggle('nav-open', open);
             button.setAttribute('aria-expanded', String(open));
+        }
+        button.addEventListener('click', function () { setOpen(!menu.classList.contains('is-open')); });
+        menu.addEventListener('click', function (event) {
+            if (event.target instanceof Element && event.target.closest('a[href]')) { setOpen(false); }
         });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && menu.classList.contains('is-open')) { setOpen(false); button.focus(); }
+        });
+        var desktop = window.matchMedia ? window.matchMedia('(min-width: 62rem)') : null;
+        if (desktop && desktop.addEventListener) {
+            desktop.addEventListener('change', function (event) { if (event.matches) { setOpen(false); } });
+        }
     });
 
     // Aufklappmenues: neben dem ausloesenden Knopf positionieren (oberhalb, wenn unten kein Platz ist).
