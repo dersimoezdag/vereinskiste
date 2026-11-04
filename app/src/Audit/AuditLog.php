@@ -23,7 +23,7 @@ final class AuditLog
         'booking_import_confirmed', 'bank_import_uploaded', 'bank_import_reviewed', 'bank_import_confirmed', 'bank_import_cancelled', 'bank_import_reset',
         'auto_update_started', 'auto_update_completed', 'auto_update_rolled_back',
         'member_user_linked', 'member_user_unlinked',
-        'membership_application_approved', 'membership_application_rejected',
+        'membership_invite_revoked', 'membership_application_approved', 'membership_application_rejected',
         'backup_created', 'backup_restored', 'data_exported',
     ];
 

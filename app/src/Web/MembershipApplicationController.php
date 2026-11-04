@@ -27,6 +27,12 @@ final class MembershipApplicationController
             ]);
         }
 
+        if ($invite['is_revoked']) {
+            return $req->getAttribute('view')->render($res->withStatus(410), 'public/membership_application_invalid.twig', [
+                'reason' => 'revoked',
+            ]);
+        }
+
         if ($invite['is_expired']) {
             return $req->getAttribute('view')->render($res->withStatus(410), 'public/membership_application_invalid.twig', [
                 'reason' => 'expired',

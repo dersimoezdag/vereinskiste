@@ -367,6 +367,7 @@ final class Kernel
         $app->get('/members', [$members, 'index'])->add(Auth::requires('members.read'));
         $app->get('/members.csv', [$members, 'csv'])->add(Auth::requires('members.read'));
         $app->get('/members/applications', [$members, 'applications'])->add(Auth::requires('members.write'));
+        $app->post('/members/invites/{id:[0-9]+}/revoke', [$members, 'revokeInvite'])->add(Auth::requires('members.write'));
         $app->post('/members/invites/new', [$members, 'createInvite'])->add(Auth::requires('members.write'));
         $app->post('/members/applications/{id:[0-9]+}/approve', [$members, 'approveApplication'])->add(Auth::requires('members.write'));
         $app->post('/members/applications/{id:[0-9]+}/reject', [$members, 'rejectApplication'])->add(Auth::requires('members.write'));

@@ -221,17 +221,33 @@ final class MemberController extends AdminController
         $pdo = ($this->pdo)();
         $appRepo = new ApplicationRepository($pdo);
         $applications = $appRepo->listApplications($filter);
-        $invites = $appRepo->listInvites();
+        $includeInactive = ($query['invite_status'] ?? '') === 'all';
+        $invites = $appRepo->listInvites($includeInactive);
         $pendingCount = $appRepo->countPending();
 
         return $req->getAttribute('view')->render($res, 'members/applications.twig', [
             'applications' => $applications,
             'invites' => $invites,
+            'invite_status' => $includeInactive ? 'all' : 'current',
             'filter' => $filter,
             'new_invite' => (int) ($query['invite'] ?? 0),
             'pending_count' => $pendingCount,
             'outbox' => (new \Vereinskiste\Mail\Outbox($pdo))->list(),
         ]);
+    }
+
+    public function revokeInvite(Request $req, Response $res, array $args): Response
+    {
+        if (!(new ApplicationRepository(($this->pdo)()))->revokeInvite((int) $args['id'], $this->userId($req))) {
+            return $this->notFound($req);
+        }
+        $this->flash($req, 'applications.invites.revoked_success');
+        $body = $this->body($req);
+        $filter = $this->str($body, 'filter');
+        if (!in_array($filter, ['all', 'pending', 'approved', 'rejected'], true)) { $filter = 'all'; }
+        $query = ['filter' => $filter];
+        if (($body['invite_status'] ?? '') === 'all') { $query['invite_status'] = 'all'; }
+        return $this->redirect('/members/applications?' . http_build_query($query));
     }
 
     public function createInvite(Request $req, Response $res): Response

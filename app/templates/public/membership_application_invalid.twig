@@ -11,7 +11,9 @@
                 </div>
                 <h1 class="h3 font-semibold mb-2">{{ t('ui.mitgliedsantrag') }}</h1>
                 <div class="alert alert-warning my-4">
-                    {% if reason == 'expired' %}
+                    {% if reason == 'revoked' %}
+                        {{ t('applications.link_revoked') }}
+                    {% elseif reason == 'expired' %}
                         {{ t('applications.link_expired') }}
                     {% elseif reason == 'used' %}
                         {{ t('applications.link_used') }}

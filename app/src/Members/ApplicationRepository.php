@@ -63,15 +63,27 @@ final class ApplicationRepository
     }
 
     /** @return list<array<string,mixed>> */
-    public function listInvites(): array
+    public function listInvites(bool $includeInactive = false): array
     {
         $stmt = $this->pdo->query(
             'SELECT i.*, u.name AS creator_name
                FROM membership_application_invites i
                JOIN users u ON u.id = i.created_by
-              ORDER BY i.created_at DESC'
+              ' . ($includeInactive ? '' : 'WHERE i.revoked_at IS NULL AND i.expires_at > CURRENT_TIMESTAMP') . '
+              ORDER BY i.created_at DESC, i.id DESC'
         );
         return array_map(self::hydrateInvite(...), $stmt->fetchAll());
+    }
+
+    public function revokeInvite(int $id, int $actor): bool
+    {
+        return Transaction::run($this->pdo, function () use ($id, $actor): bool {
+            $stmt = $this->pdo->prepare('UPDATE membership_application_invites SET revoked_at=CURRENT_TIMESTAMP WHERE id=? AND revoked_at IS NULL');
+            $stmt->execute([$id]);
+            if ($stmt->rowCount() !== 1) { return false; }
+            (new AuditLog($this->pdo))->record('membership_invite_revoked', $actor, ['invite_id' => $id]);
+            return true;
+        });
     }
 
     public function findInviteByToken(string $token): ?array
@@ -112,6 +124,9 @@ final class ApplicationRepository
                 throw new ValidationError(['token' => 'applications.link_invalid']);
             }
             $invite = self::hydrateInvite($row);
+            if ($invite['is_revoked']) {
+                throw new ValidationError(['token' => 'applications.link_revoked']);
+            }
             if ($invite['is_expired']) {
                 throw new ValidationError(['token' => 'applications.link_expired']);
             }
@@ -357,7 +372,8 @@ final class ApplicationRepository
     {
         $expiresAt = new DateTimeImmutable($row['expires_at']);
         $now = new DateTimeImmutable();
-        $isExpired = $expiresAt < $now;
+        $isExpired = $expiresAt <= $now;
+        $isRevoked = $row['revoked_at'] !== null;
         $isUsed = (int) $row['used_count'] >= (int) $row['max_uses'];
 
         return [
@@ -375,7 +391,8 @@ final class ApplicationRepository
             'created_at' => $row['created_at'],
             'is_expired' => $isExpired,
             'is_used' => $isUsed,
-            'is_valid' => !$isExpired && !$isUsed,
+            'is_revoked' => $isRevoked,
+            'is_valid' => !$isRevoked && !$isExpired && !$isUsed,
         ];
     }
 

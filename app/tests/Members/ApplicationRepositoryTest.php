@@ -25,6 +25,30 @@ final class ApplicationRepositoryTest extends TestCase
         $this->repo = new ApplicationRepository($this->db);
     }
 
+    public function test_revoked_links_are_hidden_and_cannot_be_submitted(): void
+    {
+        $open = $this->repo->createInvite(1, 'Open');
+        $expired = $this->repo->createInvite(1, 'Expired');
+        $revoked = $this->repo->createInvite(1, 'Revoked', 14, 'secret', false, true);
+        $this->db->prepare("UPDATE membership_application_invites SET expires_at=CURRENT_TIMESTAMP - INTERVAL '1 day' WHERE id=?")->execute([$expired['id']]);
+        $this->assertTrue($this->repo->revokeInvite($revoked['id'], 1));
+        $this->assertFalse($this->repo->revokeInvite($revoked['id'], 1));
+        $this->assertFalse($this->repo->revokeInvite(999999, 1));
+        $this->assertSame([$open['id']], array_column($this->repo->listInvites(), 'id'));
+        $this->assertCount(3, $this->repo->listInvites(true));
+        $invite = $this->repo->findInviteByToken($revoked['token']);
+        $this->assertTrue($invite['is_revoked']);
+        $this->assertFalse($invite['is_valid']);
+        $this->assertSame(1, (int) $this->db->query("SELECT count(*) FROM audit_log WHERE action='membership_invite_revoked'")->fetchColumn());
+        try {
+            $this->repo->submit($revoked['token'], []);
+            $this->fail('Revoked invite accepted');
+        } catch (ValidationError $e) {
+            $this->assertSame('applications.link_revoked', $e->errors['token']);
+        }
+        $this->assertSame(0, (int) $this->db->query('SELECT count(*) FROM membership_applications')->fetchColumn());
+    }
+
     public function test_create_invite_and_verify_password(): void
     {
         $invite = $this->repo->createInvite(1, 'Interessent A', 7, 'Geheim123', true);

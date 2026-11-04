@@ -2,6 +2,14 @@
 declare(strict_types=1);
 
 return [
+    'audit.action.membership_invite_revoked' => 'Einladungslink widerrufen',
+    'applications.link_revoked' => 'Dieser Antrags-Link wurde widerrufen.',
+    'applications.invites.revoke' => 'Widerrufen',
+    'applications.invites.revoked' => 'Widerrufen',
+    'applications.invites.revoked_success' => 'Der Einladungslink ist widerrufen.',
+    'applications.invites.show_all' => 'Abgelaufene und widerrufene anzeigen',
+    'applications.invites.show_current' => 'Abgelaufene und widerrufene ausblenden',
+
     'applications.settings.title' => 'Antragseinstellungen',
     'applications.settings.sepa_hint' => 'Gilt für neue Antragslinks und Testlinks. Bereits erstellte Links behalten ihre SEPA-Vorgabe.',
     'applications.actions' => 'Aktionen für Mitgliedsanträge',
