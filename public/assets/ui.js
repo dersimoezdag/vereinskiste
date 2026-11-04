@@ -40,14 +40,33 @@
         }
     });
 
-    // Mobile Seitenleiste ein- und ausklappen.
+    // Mobile Seitenleiste: oeffnet als Flaeche unter der App-Leiste und sperrt das Scrollen der Seite.
+    // Schliesst per Knopf, Escape, Linkauswahl oder wenn die Ansicht auf Desktop-Breite wechselt.
     document.querySelectorAll('[data-nav-toggle]').forEach(function (button) {
         var menu = document.getElementById(button.getAttribute('aria-controls'));
         if (!menu) { return; }
-        button.addEventListener('click', function () {
-            var open = menu.classList.toggle('is-open');
+        function sync() {
+            var open = menu.classList.contains('is-open');
+            document.documentElement.classList.toggle('nav-open', open);
             button.setAttribute('aria-expanded', String(open));
+        }
+        function setOpen(open) { menu.classList.toggle('is-open', open); sync(); }
+        // Auch andere Skripte (settings-navigation.js) oeffnen das Menue ueber die Klasse: Sperre und aria-Zustand mitziehen.
+        if (typeof MutationObserver === 'function') { new MutationObserver(sync).observe(menu, { attributes: true, attributeFilter: ['class'] }); }
+        sync();
+        button.addEventListener('click', function () { setOpen(!menu.classList.contains('is-open')); });
+        // Wechsel zwischen Anwendung und Einstellungen behaelt das Menue offen (settings-navigation.js merkt sich den Zustand).
+        menu.addEventListener('click', function (event) {
+            var link = event.target instanceof Element ? event.target.closest('a[href]') : null;
+            if (link && !link.matches('[data-settings-entry], [data-application-return]')) { setOpen(false); }
         });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && menu.classList.contains('is-open')) { setOpen(false); button.focus(); }
+        });
+        var desktop = window.matchMedia ? window.matchMedia('(min-width: 62rem)') : null;
+        if (desktop && desktop.addEventListener) {
+            desktop.addEventListener('change', function (event) { if (event.matches) { setOpen(false); } });
+        }
     });
 
     // Aufklappmenues: neben dem ausloesenden Knopf positionieren (oberhalb, wenn unten kein Platz ist).

@@ -68,3 +68,38 @@ test('menus work without the Popover API', () => {
     assert.ok(!menu.classList.contains('is-open'));
     window.close();
 });
+
+test('mobile nav locks page scrolling and closes on escape or link choice', () => {
+    const {window,document}=setup('<button data-nav-toggle aria-controls="sidebar-menu" aria-expanded="false">Menue</button><div id="sidebar-menu"><a href="#x">Link</a></div>');
+    const button=document.querySelector('[data-nav-toggle]'), menu=document.getElementById('sidebar-menu'), html=document.documentElement;
+    button.click();
+    assert.ok(menu.classList.contains('is-open'));
+    assert.ok(html.classList.contains('nav-open'));
+    assert.equal(button.getAttribute('aria-expanded'),'true');
+    document.dispatchEvent(new window.KeyboardEvent('keydown',{key:'Escape'}));
+    assert.ok(!menu.classList.contains('is-open'));
+    assert.ok(!html.classList.contains('nav-open'));
+    assert.equal(document.activeElement,button);
+    button.click();
+    menu.querySelector('a').click();
+    assert.ok(!html.classList.contains('nav-open'));
+    assert.equal(button.getAttribute('aria-expanded'),'false');
+    window.close();
+});
+
+test('mobile nav keeps the menu open for the settings transition and follows class changes from other scripts', async () => {
+    const {window,document}=setup('<button data-nav-toggle aria-controls="sidebar-menu" aria-expanded="false">Menue</button><div id="sidebar-menu"><a href="/settings" data-settings-entry>Einstellungen</a></div>');
+    const button=document.querySelector('[data-nav-toggle]'), menu=document.getElementById('sidebar-menu'), html=document.documentElement;
+    button.click();
+    menu.querySelector('a').addEventListener('click',event=>event.preventDefault());
+    menu.querySelector('a').click();
+    assert.ok(menu.classList.contains('is-open'),'settings entry keeps menu open');
+    menu.classList.remove('is-open');
+    await new Promise(resolve=>setTimeout(resolve,0));
+    assert.ok(!html.classList.contains('nav-open'));
+    menu.classList.add('is-open');
+    await new Promise(resolve=>setTimeout(resolve,0));
+    assert.ok(html.classList.contains('nav-open'),'lock follows external open');
+    assert.equal(button.getAttribute('aria-expanded'),'true');
+    window.close();
+});
