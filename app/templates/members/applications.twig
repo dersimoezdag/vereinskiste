@@ -72,13 +72,7 @@
                         </div>
                         <div class="field-hint text-muted mb-4">{{ t('applications.invites.password_hint') }}</div>
 
-                        <div class="check check-switch mb-4">
-                            <input class="check-input" type="checkbox" id="require-sepa" name="require_sepa" value="1">
-                            <label class="check-label font-semibold" for="require-sepa">
-                                {{ t('applications.invites.require_sepa') }} {{ help.tip(t('ui.verpflichtendes_sepa_lastschriftmandat_der_antragsteller_muss_ban')) }}
-                            </label>
-                            <div class="field-hint text-muted">{{ t('applications.invites.require_sepa_hint') }}</div>
-                        </div>
+                        <p class="field-hint mb-4">Die SEPA-Vorgabe wird in den administrativen <a href="/settings/declarations">Antragsbuilder</a> festgelegt und gilt auch für Testlinks.</p>
 
                         <button type="submit" class="btn btn-primary w-full">
                             {{ t('applications.invites.create') }}

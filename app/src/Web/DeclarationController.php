@@ -17,8 +17,26 @@ final class DeclarationController extends AdminController
     public function index(Request $req, Response $res): Response
     {
         return $req->getAttribute('view')->render($res, 'settings/declarations.twig', [
+            'application_settings' => (new \Vereinskiste\Members\ApplicationSettings(($this->pdo)()))->get(),
+            'settings_conflict' => $res->getStatusCode() === 409,
             'declarations' => (new Declarations(($this->pdo)()))->all(),
         ]);
+    }
+
+    public function saveSettings(Request $req, Response $res): Response
+    {
+        $input = $this->body($req);
+        try {
+            (new \Vereinskiste\Members\ApplicationSettings(($this->pdo)()))->save(
+                ($input['require_sepa'] ?? '') === '1',
+                \Vereinskiste\Foundation\Fields::version($input['version'] ?? null),
+                $this->userId($req)
+            );
+        } catch (\Vereinskiste\Foundation\Conflict) {
+            return $this->index($req, $res->withStatus(409));
+        }
+        $this->flash($req, 'foundation.saved');
+        return $this->redirect('/settings/declarations');
     }
 
     public function form(Request $req, Response $res, array $args): Response

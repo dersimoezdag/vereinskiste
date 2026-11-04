@@ -128,3 +128,20 @@ test('postal code field follows the country field of its form', async () => {
         assert.equal(zip.inputMode, 'text');
     } finally { w.close(); }
 });
+
+ test('bank masks format during input and preserve cursor position', () => {
+    const dom = new JSDOM('<form><input name="iban"><input name="bic"></form>', {runScripts: 'outside-only'});
+    const w = dom.window;
+    try {
+        require('./browser-texts.cjs')(w);
+        w.eval(readFileSync(require.resolve('../public/assets/input-masks.js'), 'utf8'));
+        const iban = w.document.querySelector('[name="iban"]'), bic = w.document.querySelector('[name="bic"]');
+        iban.value = 'de89370400440532013000'; iban.dispatchEvent(new w.Event('input'));
+        assert.equal(iban.value, 'DE89 3704 0044 0532 0130 00');
+        assert.equal(iban.selectionStart, iban.value.length);
+        bic.value = 'byladem1'; bic.dispatchEvent(new w.Event('input'));
+        assert.equal(bic.value, 'BYLADEM1');
+        iban.value = '   '; iban.dispatchEvent(new w.Event('blur'));
+        assert.equal(iban.value, '   ');
+    } finally { w.close(); }
+});

@@ -51,10 +51,41 @@ final class DeclarationSettingsPagesTest extends TestCase
         $this->assertSame(404, $this->get('/settings/declarations/999')->getStatusCode());
     }
 
+    public function test_builder_saves_sepa_and_rejects_stale_updates(): void
+    {
+        $this->loginAs(['admin']);
+        $settings = new \Vereinskiste\Members\ApplicationSettings($this->pdo);
+        $version = $settings->get()['version'];
+        $page = (string) $this->get('/settings/declarations')->getBody();
+        $this->assertStringContainsString('name="require_sepa"', $page);
+        $privacy = (string) $this->get('/settings/privacy')->getBody();
+        $this->assertStringNotContainsString('name="application_require_sepa"', $privacy);
+
+        $res = $this->postForm('/settings/declarations/settings', ['version' => (string) $version, 'require_sepa' => '1']);
+        $this->assertSame('/settings/declarations', $res->getHeaderLine('Location'));
+        $this->assertTrue($settings->get()['require_sepa']);
+        $this->assertSame(409, $this->postForm('/settings/declarations/settings', ['version' => (string) $version])->getStatusCode());
+        $this->assertTrue($settings->get()['require_sepa']);
+
+        foreach ([false, true] as $isTest) {
+            $this->postForm('/members/invites/new', ['is_test' => $isTest ? '1' : '0']);
+            $invite = $this->pdo->query('SELECT require_sepa FROM membership_application_invites ORDER BY id DESC LIMIT 1')->fetch();
+            $this->assertTrue((bool) $invite['require_sepa']);
+        }
+        $this->postForm('/settings/declarations/settings', ['version' => (string) $settings->get()['version']]);
+        $this->assertFalse($settings->get()['require_sepa']);
+        foreach ([false, true] as $isTest) {
+            $this->postForm('/members/invites/new', ['is_test' => $isTest ? '1' : '0', 'require_sepa' => '1']);
+            $invite = $this->pdo->query('SELECT require_sepa FROM membership_application_invites ORDER BY id DESC LIMIT 1')->fetch();
+            $this->assertFalse((bool) $invite['require_sepa']);
+        }
+    }
+
     public function test_members_role_cannot_manage_declarations(): void
     {
         $this->loginAs(['secretary']);
         $this->assertSame(403, $this->get('/settings/declarations')->getStatusCode());
+        $this->assertSame(403, $this->postForm('/settings/declarations/settings', ['version' => '1', 'require_sepa' => '1'])->getStatusCode());
         $this->assertSame(403, $this->postForm('/settings/declarations/new', ['title' => 'X', 'kind' => 'notice'])->getStatusCode());
     }
 }

@@ -155,7 +155,7 @@
                 if (iso) { formatted = germanDate(iso); }
             } else if (type === 'iban') {
                 error = validIban(value) ? '' : specs[type].error;
-                formatted = compact(value).match(/.{1,4}/g).join(' ');
+                formatted = (compact(value).match(/.{1,4}/g) || []).join(' ');
             } else if (type === 'bic') {
                 formatted = compact(value);
                 error = /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(formatted) ? '' : specs[type].error;
@@ -259,7 +259,13 @@
                 var select = signSelect(field);
                 if (select) { applySign(field, select); }
                 if (moneyTypes.includes(type)) { liveGroup(field); }
-                update(field, false);
+                if (type === 'iban' || type === 'bic') {
+                    var caret = field.selectionStart, before = compact(field.value.slice(0, caret)).length;
+                    update(field, true);
+                    var position = 0;
+                    for (var seen = 0; position < field.value.length && seen < before; position++) { if (field.value[position] !== ' ') { seen++; } }
+                    field.setSelectionRange(position, position);
+                } else { update(field, false); }
             });
             field.addEventListener('compositionstart', function () { field.composing = true; });
             field.addEventListener('compositionend', function () { field.composing = false; update(field, false); });

@@ -8,7 +8,7 @@ function setup(fetch) {
     const dom = new JSDOM('<form><input name="zip"><input name="city"><input name="country" value="Deutschland"></form>', {runScripts: 'outside-only'});
     const w = dom.window;
     require('./browser-texts.cjs')(w);
-    w.fetch = fetch; w.eval(script);
+    w.fetch = fetch; w.eval(readFileSync(require.resolve('../public/assets/suggestions.js'), 'utf8')); w.eval(script);
     return {w, zip: w.document.querySelector('[name="zip"]'), city: w.document.querySelector('[name="city"]'), country: w.document.querySelector('[name="country"]')};
 }
 test('postcode lookup debounces, filters and deduplicates results, caches and leaves city untouched', async () => {
@@ -27,7 +27,7 @@ test('postcode lookup debounces, filters and deduplicates results, caches and le
         for (const value of ['0', '0106', '01067']) { zip.value = value; zip.dispatchEvent(new w.Event('input')); }
         await wait();
         assert.equal(calls.length, 1); assert.match(calls[0], /q=01067/);
-        assert.deepEqual(Array.from(w.document.querySelectorAll('option'), option => option.value), ['Dresden']);
+        assert.deepEqual(Array.from(w.document.querySelectorAll('[role="option"]'), option => option.textContent), ['Dresden']);
         assert.equal(city.value, 'Eigener Ort');
         zip.dispatchEvent(new w.Event('blur')); await wait(); assert.equal(calls.length, 1);
     } finally { w.close(); }
@@ -50,7 +50,7 @@ test('lookup failure preserves manual entry and country change discards stale re
         country.value = 'Österreich'; country.dispatchEvent(new w.Event('change'));
         resolve({ok: true, json: async () => ({features: [{properties: {countrycode: 'DE', postcode: '91054', city: 'Erlangen'}}]})});
         await new Promise(done => setTimeout(done, 10));
-        assert.equal(w.document.querySelectorAll('option').length, 0);
+        assert.equal(w.document.querySelectorAll('[role="option"]').length, 0);
         w.fetch = async () => { throw new Error('offline'); };
         country.value = 'Deutschland'; country.dispatchEvent(new w.Event('change'));
         zip.value = '01067'; zip.dispatchEvent(new w.Event('input')); await wait();
@@ -71,6 +71,6 @@ test('real Photon postcode area shapes resolve city names and use reverse lookup
     try {
         zip.value = '91054'; zip.dispatchEvent(new w.Event('input')); await wait();
         assert.equal(calls.length, 2);
-        assert.deepEqual(Array.from(w.document.querySelectorAll('option'), option => option.value), ['Erlangen']);
+        assert.deepEqual(Array.from(w.document.querySelectorAll('[role="option"]'), option => option.textContent), ['Erlangen']);
     } finally { w.close(); }
 });

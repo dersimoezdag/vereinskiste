@@ -241,7 +241,7 @@ final class MemberController extends AdminController
         $days = (int) ($body['valid_days'] ?? 14);
         $password = $this->str($body, 'password');
         $isTest = ($body['is_test'] ?? '') === '1';
-        $requireSepa = $isTest || !empty($body['require_sepa']);
+        $requireSepa = (new \Vereinskiste\Members\ApplicationSettings(($this->pdo)()))->get()['require_sepa'];
 
         $invite = (new ApplicationRepository(($this->pdo)()))->createInvite(
             $this->userId($req),

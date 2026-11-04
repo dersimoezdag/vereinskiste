@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 return [
+    'applications.settings.title' => 'Antragseinstellungen',
+    'applications.settings.sepa_hint' => 'Gilt für neue Antragslinks und Testlinks. Bereits erstellte Links behalten ihre SEPA-Vorgabe.',
     'applications.actions' => 'Aktionen für Mitgliedsanträge',
     'applications.test.create' => 'Testantragslink erstellen',
     'applications.test.badge' => 'Testdurchlauf',

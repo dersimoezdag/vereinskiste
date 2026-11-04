@@ -1,7 +1,7 @@
 /* Postal place suggestions: only a complete German postcode is sent to Photon. */
 (function () {
     'use strict';
-    var cache = new Map(), sequence = 0;
+    var cache = new Map();
     function enhance() {
         if (typeof document === 'undefined') { return; }
         document.querySelectorAll('input[name="zip"]').forEach(function (zip) {
@@ -9,36 +9,23 @@
             if (!city || zip.dataset.placesReady || zip.disabled || zip.readOnly) { return; }
             zip.dataset.placesReady = '1';
             var country = form.querySelector('[name="country"]');
-            var list = document.createElement('datalist');
-            list.id = 'postal-places-' + (++sequence);
-            city.setAttribute('list', list.id);
-            city.insertAdjacentElement('afterend', list);
+            var list = window.vkSuggestions(city);
             var note = document.createElement('div');
-            note.className = 'field-hint';
-            note.setAttribute('role', 'status');
-            var message = document.createElement('span');
-            message.textContent = window.vkText('js.postal_places_hint');
-            var credit = document.createElement('a');
-            credit.href = 'https://photon.komoot.io/'; credit.textContent = 'Photon / OpenStreetMap';
-            credit.target = '_blank'; credit.rel = 'noopener noreferrer';
-            note.append(message, credit);
+            note.className = 'field-hint'; note.setAttribute('role', 'status');
             zip.insertAdjacentElement('afterend', note);
+            var message = note;
             var timer, controller, revision = 0;
             function valid() {
                 return /^\d{5}$/.test(zip.value) && /^\s*(de|deu|deutschland|germany)?\s*$/i.test(country ? country.value : '');
             }
             function show(places) {
-                list.replaceChildren();
-                places.forEach(function (place) {
-                    var option = document.createElement('option');
-                    option.value = place; list.append(option);
-                });
+                list.set(places);
                 message.textContent = places.length ? window.vkText('js.postal_places_ready') : window.vkText('js.postal_places_empty');
             }
             function schedule() {
                 clearTimeout(timer); revision++;
                 if (controller) { controller.abort(); }
-                list.replaceChildren();
+                list.set([]);
                 message.textContent = window.vkText('js.postal_places_hint');
                 if (!valid()) { return; }
                 var code = zip.value, current = revision;
