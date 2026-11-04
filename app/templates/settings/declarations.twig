@@ -6,18 +6,6 @@
         <p class="text-muted max-w-3xl mb-0">{{ t('declarations.help') }}</p>
         <a class="btn btn-primary" href="/settings/declarations/new">{{ t('declarations.new') }}</a>
     </div>
-    <form method="post" action="/settings/declarations/settings" class="panel panel-body mb-6">
-        {{ csrf_field() }}
-        <input type="hidden" name="version" value="{{ application_settings.version }}">
-        <h2 class="panel-title mb-4">{{ t('applications.settings.title') }}</h2>
-        <div class="check check-switch mb-4">
-            <input class="check-input" type="checkbox" id="application-require-sepa" name="require_sepa" value="1"{% if application_settings.require_sepa %} checked{% endif %}>
-            <label class="check-label" for="application-require-sepa">{{ t('applications.invites.require_sepa') }}</label>
-        </div>
-        <p class="field-hint mb-4">{{ t('applications.settings.sepa_hint') }}</p>
-        {% if settings_conflict %}<p class="text-danger" role="alert">{{ t('foundation.conflict') }}</p>{% endif %}
-        <button class="btn btn-primary">{{ t('common.save') }}</button>
-    </form>
     <div class="panel overflow-x-auto">
         <table class="data-table table-cards">
             <thead><tr><th>{{ t('declarations.field.position') }}</th><th>{{ t('declarations.field.title') }}</th><th>{{ t('declarations.field.kind') }}</th><th>{{ t('declarations.field.signature_required') }}</th><th>{{ t('declarations.field.version') }}</th><th></th></tr></thead>

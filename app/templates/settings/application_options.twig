@@ -1,0 +1,16 @@
+{% extends 'layout.twig' %}
+{% block content %}
+{% include 'components/settings_tabs.twig' %}
+    <form method="post" action="/settings/declarations/settings" class="panel panel-body mb-6">
+        {{ csrf_field() }}
+        <input type="hidden" name="version" value="{{ application_settings.version }}">
+        <h2 class="panel-title mb-4">{{ t('applications.settings.title') }}</h2>
+        <div class="check check-switch mb-4">
+            <input class="check-input" type="checkbox" id="application-require-sepa" name="require_sepa" value="1"{% if application_settings.require_sepa %} checked{% endif %}>
+            <label class="check-label" for="application-require-sepa">{{ t('applications.invites.require_sepa') }}</label>
+        </div>
+        <p class="field-hint mb-4">{{ t('applications.settings.sepa_hint') }}</p>
+        {% if settings_conflict %}<p class="text-danger" role="alert">{{ t('foundation.conflict') }}</p>{% endif %}
+        <button class="btn btn-primary">{{ t('common.save') }}</button>
+    </form>
+{% endblock %}

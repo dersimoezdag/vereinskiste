@@ -84,6 +84,7 @@ final class Kernel
         $state = new RequestState();
         $view = Twig::create($templates, ['cache' => false, 'autoescape' => 'html']);
         $env = $view->getEnvironment();
+        $env->addFunction(new TwigFunction('settings_navigation', SettingsNavigation::forPath(...)));
         $env->addFunction(new TwigFunction(
             't',
             static fn (string $key): string => Message::resolve($texts, $key)
@@ -336,6 +337,7 @@ final class Kernel
         $app->post('/settings/privacy', [$privacy, 'saveSettings'])->add(Auth::requires('settings.manage'));
         $declarations = new \Vereinskiste\Web\DeclarationController($pdoProvider);
         $app->get('/settings/declarations', [$declarations, 'index'])->add(Auth::requires('settings.manage'));
+        $app->get('/settings/declarations/options', [$declarations, 'options'])->add(Auth::requires('settings.manage'));
         $app->post('/settings/declarations/settings', [$declarations, 'saveSettings'])->add(Auth::requires('settings.manage'));
         $app->get('/settings/declarations/new', [$declarations, 'form'])->add(Auth::requires('settings.manage'));
         $app->post('/settings/declarations/new', [$declarations, 'save'])->add(Auth::requires('settings.manage'));

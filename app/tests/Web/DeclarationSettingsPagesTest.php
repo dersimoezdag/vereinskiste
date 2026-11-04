@@ -56,13 +56,13 @@ final class DeclarationSettingsPagesTest extends TestCase
         $this->loginAs(['admin']);
         $settings = new \Vereinskiste\Members\ApplicationSettings($this->pdo);
         $version = $settings->get()['version'];
-        $page = (string) $this->get('/settings/declarations')->getBody();
+        $page = (string) $this->get('/settings/declarations/options')->getBody();
         $this->assertStringContainsString('name="require_sepa"', $page);
         $privacy = (string) $this->get('/settings/privacy')->getBody();
         $this->assertStringNotContainsString('name="application_require_sepa"', $privacy);
 
         $res = $this->postForm('/settings/declarations/settings', ['version' => (string) $version, 'require_sepa' => '1']);
-        $this->assertSame('/settings/declarations', $res->getHeaderLine('Location'));
+        $this->assertSame('/settings/declarations/options', $res->getHeaderLine('Location'));
         $this->assertTrue($settings->get()['require_sepa']);
         $this->assertSame(409, $this->postForm('/settings/declarations/settings', ['version' => (string) $version])->getStatusCode());
         $this->assertTrue($settings->get()['require_sepa']);

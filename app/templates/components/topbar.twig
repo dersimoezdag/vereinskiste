@@ -54,8 +54,6 @@
     {% set crumbs = [cash, {'label': t('foundation.contacts')}] %}
 {% elseif path starts with '/contacts' %}
     {% set crumbs = [cash, {'label': t('foundation.contacts'), 'url': '/contacts'}, {'label': path == '/contacts/new' ? t('ui.breadcrumb_neu') : t('ui.breadcrumb_kontakt')}] %}
-{% elseif path starts with '/settings/closing' %}
-    {% set crumbs = [settings, {'label': t('nav.closing')}] %}
 {% elseif path starts with '/reports' %}
     {% set crumbs = [{'label': t('nav.reports'), 'url': '/reports/summary'}, {'label': path == '/reports/dashboard' ? t('reports.tab.dashboard') : t('reports.tab.summary')}] %}
 {% elseif path == '/members' %}
@@ -66,28 +64,17 @@
     {% set crumbs = [members_group, {'label': t('applications.title')}] %}
 {% elseif path starts with '/members' %}
     {% set crumbs = [members_group, {'label': path == '/members/new' ? t('ui.breadcrumb_neu') : t('ui.breadcrumb_mitglied')}] %}
-{% elseif path == '/settings/club-roles' %}
-    {% set crumbs = [members_group, {'label': t('nav.club_roles')}] %}
-{% elseif path == '/settings' %}
-    {% set crumbs = [{'label': t('nav.settings')}] %}
-{% elseif path == '/settings/email' %}
-    {% set crumbs = [settings, {'label': t('mail.settings.title')}] %}
-{% elseif path == '/settings/club' %}
-    {% set crumbs = [settings, {'label': t('foundation.club')}] %}
-{% elseif path starts with '/settings/backup' %}
-    {% set crumbs = [settings, {'label': t('settings.backup')}] %}
-{% elseif path == '/audit-log' %}
-    {% set crumbs = [settings, {'label': t('nav.audit')}] %}
-{% elseif path == '/update' %}
-    {% set crumbs = [settings, {'label': t('ui.breadcrumb_aktualisierung')}] %}
-{% elseif path == '/users' %}
-    {% set crumbs = [settings, {'label': t('settings.users')}] %}
-{% elseif path starts with '/users' %}
-    {% set crumbs = [settings, {'label': t('settings.users'), 'url': '/users'}, {'label': path ends with '/new' ? t('ui.breadcrumb_neu') : t('ui.breadcrumb_bearbeiten')}] %}
-{% elseif path starts with '/settings' %}
-    {% set crumbs = [{'label': t('nav.settings')}] %}
+{% elseif settings_navigation.is_settings %}
+    {% set crumbs = [settings] %}
 {% elseif path starts with '/account/password' %}
     {% set crumbs = [{'label': t('nav.password')}] %}
+{% endif %}
+{% if settings_navigation.is_settings and settings_navigation.current %}
+    {% set selected = settings_navigation.current.tabs|filter(tab => tab.active)|first %}
+    {% set crumbs = [settings, {'label': t(settings_navigation.current.label)}] %}
+    {% if selected and selected.label != settings_navigation.current.label %}
+        {% set crumbs = crumbs|merge([{'label': t(selected.label)}]) %}
+    {% endif %}
 {% endif %}
 <header class="border-b border-line bg-surface/85 backdrop-blur lg:sticky lg:top-0 lg:z-20">
     <div class="mx-auto flex min-h-14 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">

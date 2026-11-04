@@ -1,0 +1,6 @@
+{% for group in settings_navigation.groups %}
+    {% set visible_tabs = group.tabs|filter(tab => can(tab.right)) %}
+    {% if visible_tabs|length %}
+        <a class="nav-link{% if group.active %} active{% endif %}" href="{{ (visible_tabs|first).url }}"{% if group.active %} aria-current="true"{% endif %}>{{ t(group.label) }}</a>
+    {% endif %}
+{% endfor %}

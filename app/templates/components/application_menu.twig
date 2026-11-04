@@ -1,0 +1,51 @@
+{% import 'components/icons.twig' as icons %}
+{% import 'components/nav.twig' as nav %}
+
+<a class="nav-link{% if path == '/' or path starts with '/dashboard/preferences' %} active{% endif %}" href="/">{{ icons.icon('home') }}<span>{{ t('nav.home') }}</span></a>
+{% set documentsActive = path starts with '/documents' %}
+<details class="nav-group"{% if documentsActive %} open{% endif %}>
+    <summary class="nav-link">{{ icons.icon('audit') }}<span>{{ t('documents.title') }}</span><span class="nav-chevron">{{ icons.icon('chevron-up') }}</span></summary>
+    <div class="flex flex-col pb-1" id="documents-menu">
+        {% for kind in ['minutes','constitution','rules'] %}{{ nav.sub('/documents/' ~ kind, t('documents.kind.' ~ kind), path starts with '/documents/' ~ kind) }}{% endfor %}
+    </div>
+</details>
+{% if can('members.read') %}
+{% set membersActive = path starts with '/members' or path == '/settings/club-roles' %}
+{% set pendingApps = pending_applications_count() %}
+<details class="nav-group"{% if membersActive %} open{% endif %}>
+    <summary class="nav-link">{{ icons.icon('members') }}<span>{{ t('nav.members') }}</span>
+        {% if pendingApps > 0 %}<span class="badge bg-primary text-on-primary ms-auto" title="{{ pendingApps }} offene Anträge">{{ pendingApps }}</span>{% endif %}
+        <span class="nav-chevron{% if pendingApps > 0 %} ms-0{% endif %}">{{ icons.icon('chevron-up') }}</span></summary>
+    <div class="flex flex-col pb-1" id="members-menu">
+        {{ nav.sub('/members', t('members.list'), path == '/members' or (path starts with '/members/' and not (path starts with '/members/applications') and not (path starts with '/members/invites'))) }}
+        <a class="nav-sublink{% if path starts with '/members/applications' %} active{% endif %}" href="/members/applications"{% if path starts with '/members/applications' %} aria-current="page"{% endif %}>
+            <span>{{ t('applications.title') }}</span>
+            {% if pendingApps > 0 %}<span class="badge bg-primary-soft text-primary">{{ pendingApps }}</span>{% endif %}
+        </a>
+        {% if can('members.write') %}{{ nav.sub('/members/invites', t('applications.invites.title'), path starts with '/members/invites') }}{% endif %}
+    </div>
+</details>
+{% endif %}
+{% if can('bookings.read') %}
+{% set cashActive = path == '/cashbook' or path starts with '/expenses' or path starts with '/bookings' or path starts with '/accounts' or path starts with '/categories' or path starts with '/imports' or path starts with '/invoices' or path starts with '/contacts' or path == '/receipt-inbox'  or path starts with '/transfers' or path starts with '/corrections' %}
+<details class="nav-group"{% if cashActive %} open{% endif %}>
+    <summary class="nav-link">{{ icons.icon('bookings') }}<span>{{ t('nav.cashbook') }}</span><span class="nav-chevron">{{ icons.icon('chevron-up') }}</span></summary>
+    <div class="flex flex-col pb-1" id="cashbook-menu">
+        {{ nav.sub('/cashbook', t('cashbook.overview'), path == '/cashbook') }}
+        {{ nav.sub('/expenses', t('expenses.title'), path starts with '/expenses') }}
+        {{ nav.sub('/bookings', t('nav.bookings'), path starts with '/bookings' or path starts with '/transfers' or path starts with '/corrections' or path starts with '/imports') }}
+        {{ nav.sub('/accounts', t('finance.master_data'), path starts with '/accounts' or path starts with '/categories' or path starts with '/contacts') }}
+        {% if can('invoices.read') %}{{ nav.sub('/invoices', t('finance.documents'), path starts with '/invoices') }}{% endif %}
+    </div>
+</details>
+{% endif %}
+{% if can('events.read') %}
+<a class="nav-link{% if path starts with '/events' %} active{% endif %}" href="/events">{{ icons.icon('rocket') }}<span>{{ t('events.title') }}</span></a>
+{% endif %}
+{% if can('funding.read') %}
+<a class="nav-link{% if path starts with '/funding' %} active{% endif %}" href="/funding">{{ icons.icon('accounts') }}<span>{{ t('funding.title') }}</span></a>
+{% endif %}
+{% if can('reports.read') %}
+<a class="nav-link{% if path starts with '/reports' %} active{% endif %}" href="/reports/summary">{{ icons.icon('reports') }}<span>{{ t('nav.reports') }}</span></a>
+{% endif %}
+            

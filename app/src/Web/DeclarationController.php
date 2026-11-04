@@ -17,9 +17,15 @@ final class DeclarationController extends AdminController
     public function index(Request $req, Response $res): Response
     {
         return $req->getAttribute('view')->render($res, 'settings/declarations.twig', [
+            'declarations' => (new Declarations(($this->pdo)()))->all(),
+        ]);
+    }
+
+    public function options(Request $req, Response $res): Response
+    {
+        return $req->getAttribute('view')->render($res, 'settings/application_options.twig', [
             'application_settings' => (new \Vereinskiste\Members\ApplicationSettings(($this->pdo)()))->get(),
             'settings_conflict' => $res->getStatusCode() === 409,
-            'declarations' => (new Declarations(($this->pdo)()))->all(),
         ]);
     }
 
@@ -33,10 +39,10 @@ final class DeclarationController extends AdminController
                 $this->userId($req)
             );
         } catch (\Vereinskiste\Foundation\Conflict) {
-            return $this->index($req, $res->withStatus(409));
+            return $this->options($req, $res->withStatus(409));
         }
         $this->flash($req, 'foundation.saved');
-        return $this->redirect('/settings/declarations');
+        return $this->redirect('/settings/declarations/options');
     }
 
     public function form(Request $req, Response $res, array $args): Response

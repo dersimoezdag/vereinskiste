@@ -1,6 +1,13 @@
 <?php
 declare(strict_types=1);
 return [
+    'settings.back_to_application' => 'Zurück zur Anwendung',
+    'settings.section.system' => 'System',
+    'settings.section.club' => 'Verein',
+    'settings.section.email' => 'E-Mail',
+    'settings.section.finance' => 'Finanzen',
+    'settings.section.access' => 'Zugriff & Protokoll',
+
     'settings.manufacturer.title' => 'Hersteller & Entwicklung',
     'settings.manufacturer.description' => 'Entwicklung der Vereinskiste.',
     'settings.manufacturer.profile' => 'GitHub-Profil',
