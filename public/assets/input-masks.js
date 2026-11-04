@@ -139,6 +139,11 @@
     function update(field, format) {
         var type = kind(field), value = field.value, error = '', formatted = value;
         if (!specs[type]) { return; }
+        if (type === 'zip') {
+            var german = /^\s*(de|deu|deutschland|germany)?\s*$/i.test(countryOf(field));
+            field.maxLength = german ? 5 : 20;
+            field.inputMode = german ? 'numeric' : 'text';
+        }
         if (field.moneyGrouped && !value.includes(',')) { value = value.replace(/\./g, ''); }
         if (value.trim() !== '') {
             if (type === 'date') {
@@ -231,7 +236,9 @@
             if (type === 'zip') {
                 field.autocomplete = 'postal-code';
                 var country = field.form ? field.form.querySelector('[name="country"]') : null;
-                if (country) { country.addEventListener('input', function () { update(field, false); }); }
+                if (country) {
+                    ['input', 'change'].forEach(function (event) { country.addEventListener(event, function () { update(field, false); }); });
+                }
             }
             if (!field.placeholder) { field.placeholder = spec.hint; }
             var feedback = document.createElement('div');
@@ -257,7 +264,7 @@
             field.addEventListener('compositionstart', function () { field.composing = true; });
             field.addEventListener('compositionend', function () { field.composing = false; update(field, false); });
             field.addEventListener('blur', function () { update(field, true); });
-            if (field.disabled || field.readOnly || (moneyTypes.includes(type) && field.value !== '')) { update(field, true); }
+            if (type === 'zip' || field.disabled || field.readOnly || (moneyTypes.includes(type) && field.value !== '')) { update(field, true); }
             var direction = signSelect(field);
             if (direction) {
                 applyDirection(field, direction);

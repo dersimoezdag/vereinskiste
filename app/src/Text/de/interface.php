@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
 return [
+    'js.postal_places_hint' => 'Ortsvorschläge nach Eingabe der PLZ. PLZ-Abfrage bei ',
+    'js.postal_places_ready' => 'Ortsvorschläge im Feld Ort verfügbar. Quelle: ',
+    'js.postal_places_empty' => 'Keine Ortsvorschläge gefunden. Ort bitte selbst eingeben. Quelle: ',
+    'js.postal_places_loading' => 'Ortsvorschläge werden geladen. Quelle: ',
+    'js.postal_places_failed' => 'Ortssuche nicht verfügbar. Ort bitte selbst eingeben. Quelle: ',
+
     'js.dashboard_saving' => 'Übersicht wird gespeichert …',
     'js.dashboard_saved' => 'Übersicht gespeichert.',
     'js.dashboard_changed' => 'Übersicht geändert. Bitte speichern.',

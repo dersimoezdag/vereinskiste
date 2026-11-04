@@ -30,6 +30,11 @@ final class Fields
             }
             $values[$key] = $value;
         }
+        if (isset($values['zip']) && $values['zip'] !== ''
+            && preg_match('/^(de|deu|deutschland|germany)?$/i', $values['country'] ?? '')
+            && !preg_match('/^[0-9]{5}$/D', $values['zip'])) {
+            $errors['zip'] = 'foundation.invalid';
+        }
         if ($errors !== []) { throw new ValidationError($errors); }
         return $values;
     }

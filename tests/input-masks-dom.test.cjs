@@ -117,11 +117,14 @@ test('postal code field follows the country field of its form', async () => {
         require('./browser-texts.cjs')(w); w.eval(readFileSync(require.resolve('../public/assets/input-masks.js'), 'utf8'));
         const zip = document.querySelector('#zip'), country = document.querySelector('#country');
         assert.equal(zip.placeholder, 'Postleitzahl, z. B. 91054');
+        assert.equal(zip.maxLength, 5);
         zip.value = '910 54'; zip.dispatchEvent(new w.Event('blur'));
         assert.equal(zip.value, '91054'); assert.equal(zip.validity.valid, true);
         zip.value = '1010'; zip.dispatchEvent(new w.Event('input'));
         assert.equal(zip.validity.valid, false);
         country.value = 'Österreich'; country.dispatchEvent(new w.Event('input'));
         assert.equal(zip.validity.valid, true);
+        assert.equal(zip.maxLength, 20);
+        assert.equal(zip.inputMode, 'text');
     } finally { w.close(); }
 });
