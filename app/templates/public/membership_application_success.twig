@@ -15,9 +15,9 @@
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                 </div>
-                <h1 class="h2 font-semibold text-success mb-2">{{ t('applications.success_title') }}</h1>
+                <h1 class="h2 font-semibold text-success mb-2">{{ t(is_test ? 'applications.test.success_title' : 'applications.success_title') }}</h1>
                 <p class="text-lg text-muted mb-6">
-                    {{ t('applications.success_message') }}
+                    {{ t(is_test ? 'applications.test.notice' : 'applications.success_message') }}
                 </p>
                 <div>
                     <a href="/" class="btn btn-primary px-6">{{ t('applications.back_home') }}</a>

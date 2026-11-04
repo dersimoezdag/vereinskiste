@@ -240,14 +240,16 @@ final class MemberController extends AdminController
         $title = $this->str($body, 'title');
         $days = (int) ($body['valid_days'] ?? 14);
         $password = $this->str($body, 'password');
-        $requireSepa = !empty($body['require_sepa']);
+        $isTest = ($body['is_test'] ?? '') === '1';
+        $requireSepa = $isTest || !empty($body['require_sepa']);
 
         $invite = (new ApplicationRepository(($this->pdo)()))->createInvite(
             $this->userId($req),
             $title,
             $days,
             $password === '' ? null : $password,
-            $requireSepa
+            $requireSepa,
+            $isTest
         );
 
         $this->flash($req, 'applications.invites.created_success');

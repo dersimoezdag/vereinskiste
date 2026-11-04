@@ -36,7 +36,7 @@ final class ApplicationRepository
      *
      * @return array{id:int,token:string,title:string,require_sepa:bool,expires_at:string,has_password:bool}
      */
-    public function createInvite(int $createdBy, string $title = '', int $validDays = 14, ?string $password = null, bool $requireSepa = false): array
+    public function createInvite(int $createdBy, string $title = '', int $validDays = 14, ?string $password = null, bool $requireSepa = false, bool $isTest = false): array
     {
         $title = mb_substr(trim($title), 0, 200);
         $validDays = max(1, min($validDays, 365));
@@ -45,10 +45,10 @@ final class ApplicationRepository
         $pwdHash = $password !== null && trim($password) !== '' ? password_hash(trim($password), PASSWORD_DEFAULT) : null;
 
         $stmt = $this->pdo->prepare(
-            'INSERT INTO membership_application_invites (token, title, require_sepa, password_hash, expires_at, created_by)
-             VALUES (?, ?, ?, ?, ?, ?) RETURNING id'
+            'INSERT INTO membership_application_invites (token, title, require_sepa, password_hash, expires_at, created_by, is_test)
+             VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id'
         );
-        $stmt->execute([$token, $title, $requireSepa ? 'true' : 'false', $pwdHash, $expiresAt, $createdBy]);
+        $stmt->execute([$token, $title, $requireSepa ? 'true' : 'false', $pwdHash, $expiresAt, $createdBy, $isTest ? 'true' : 'false']);
         $id = (int) $stmt->fetchColumn();
 
         return [
@@ -56,6 +56,7 @@ final class ApplicationRepository
             'token' => $token,
             'title' => $title,
             'require_sepa' => $requireSepa,
+            'is_test' => $isTest,
             'expires_at' => $expiresAt,
             'has_password' => $pwdHash !== null,
         ];
@@ -206,6 +207,11 @@ final class ApplicationRepository
                 'bic' => $bic,
                 'sepa_mandate_consent' => $sepaConsent,
             ];
+
+            // Test links run all validation without persisting applicant data or sending mail.
+            if ($invite['is_test']) {
+                return 0;
+            }
 
             // Antrag speichern
             $insert = $this->pdo->prepare(
@@ -359,6 +365,7 @@ final class ApplicationRepository
             'token' => $row['token'],
             'title' => (string) $row['title'],
             'require_sepa' => (bool) $row['require_sepa'],
+            'is_test' => (bool) $row['is_test'],
             'has_password' => $row['password_hash'] !== null,
             'expires_at' => $row['expires_at'],
             'max_uses' => (int) $row['max_uses'],

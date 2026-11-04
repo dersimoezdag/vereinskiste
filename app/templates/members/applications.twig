@@ -4,8 +4,20 @@
 
 {% block content %}
 <div class="mx-auto w-full max-w-7xl">
-    <div class="page-header print:hidden mb-4">
+    <div class="page-header print:hidden mb-4 flex justify-between items-center gap-2">
         <h1 class="page-title">{{ t('applications.title') }}</h1>
+        {% if can('members.write') %}
+        <details class="relative">
+            <summary class="btn btn-sm list-none" aria-label="{{ t('applications.actions') }}"><span aria-hidden="true">⋮</span></summary>
+            <div class="absolute right-0 z-20 mt-2 w-64 panel panel-body">
+                <form method="post" action="/members/invites/new">
+                    {{ csrf_field() }}
+                    <input type="hidden" name="is_test" value="1">
+                    <button type="submit" class="btn w-full">{{ t('applications.test.create') }}</button>
+                </form>
+            </div>
+        </details>
+        {% endif %}
     </div>
 
     <!-- Navigation Tabs -->
@@ -103,6 +115,7 @@
                                 <td>
                                     <div class="font-semibold">
                                         {{ inv.title ?: 'Einladungs-Link' }}
+                                        {% if inv.is_test %}<span class="badge bg-warning-soft text-warning ms-1">{{ t('applications.test.badge') }}</span>{% endif %}
                                         {% if inv.has_password %}
                                         <span class="badge bg-warning-soft text-warning border border-line ms-1" title="{{ t('ui.passwortgeschuetzt') }}">{{ t('ui.pw') }}</span>
                                         {% endif %}

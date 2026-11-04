@@ -31,6 +31,38 @@ final class MembershipApplicationPagesTest extends TestCase
         $this->webUser('admin@example.org', ['admin']);
     }
 
+    public function test_test_link_validates_without_creating_records_and_is_reusable(): void
+    {
+        $this->loginAs(['admin']);
+        $response = $this->postForm('/members/invites/new', ['is_test' => '1']);
+        $invite = $this->pdo->query('SELECT * FROM membership_application_invites ORDER BY id DESC LIMIT 1')->fetch();
+        $this->assertTrue($invite['is_test']);
+        $this->assertSame('/members/applications?invite=' . $invite['id'], $response->getHeaderLine('Location'));
+        $path = '/antrag/' . $invite['token'];
+        $this->assertStringContainsString('Testdurchlauf', (string) $this->get($path)->getBody());
+        $this->assertSame(422, $this->postForm($path, ['email' => 'invalid'])->getStatusCode());
+        $tables = ['membership_applications', 'members', 'mail_outbox'];
+        $counts = [];
+        foreach ($tables as $table) {
+            $counts[$table] = (int) $this->pdo->query('SELECT count(*) FROM ' . $table)->fetchColumn();
+        }
+        $input = [
+            'name' => 'Test Person', 'email' => 'test@example.org',
+            'account_holder' => 'Test Person', 'iban' => 'DE89370400440532013000',
+            'sepa_mandate_consent' => '1', ...ApplicationInput::declarations($this->pdo),
+        ];
+        for ($run = 0; $run < 2; $run++) {
+            $response = $this->postForm($path, $input);
+            $this->assertSame('/antrag/danke?test=1', $response->getHeaderLine('Location'));
+            $this->assertSame(200, $this->get($path)->getStatusCode());
+        }
+        $this->assertStringContainsString('Testdurchlauf erfolgreich', (string) $this->get('/antrag/danke?test=1')->getBody());
+        foreach ($counts as $table => $count) {
+            $this->assertSame($count, (int) $this->pdo->query('SELECT count(*) FROM ' . $table)->fetchColumn(), $table);
+        }
+        $this->assertSame(0, (int) $this->pdo->query('SELECT used_count FROM membership_application_invites WHERE id = ' . (int) $invite['id'])->fetchColumn());
+    }
+
     public function test_public_application_with_password_and_sepa(): void
     {
         $this->loginAs(['admin']);

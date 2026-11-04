@@ -106,12 +106,14 @@ final class MembershipApplicationController
             return $this->renderForm($req, $res->withStatus(422), $invite, $body, $e->errors);
         }
 
-        return (new SlimResponse())->withStatus(302)->withHeader('Location', '/antrag/danke');
+        return (new SlimResponse())->withStatus(302)->withHeader('Location', '/antrag/danke' . ($invite['is_test'] ? '?test=1' : ''));
     }
 
     public function thankYou(Request $req, Response $res): Response
     {
-        return $req->getAttribute('view')->render($res, 'public/membership_application_success.twig');
+        return $req->getAttribute('view')->render($res, 'public/membership_application_success.twig', [
+            'is_test' => ($req->getQueryParams()['test'] ?? '') === '1',
+        ]);
     }
 
     private function renderForm(Request $req, Response $res, array $invite, ?array $input = null, array $errors = []): Response

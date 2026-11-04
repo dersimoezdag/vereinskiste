@@ -2,6 +2,11 @@
 declare(strict_types=1);
 
 return [
+    'applications.actions' => 'Aktionen für Mitgliedsanträge',
+    'applications.test.create' => 'Testantragslink erstellen',
+    'applications.test.badge' => 'Testdurchlauf',
+    'applications.test.notice' => 'Testdurchlauf ohne Anlage: Es werden kein Antrag und kein Mitglied angelegt und keine E-Mails versendet.',
+    'applications.test.success_title' => 'Testdurchlauf erfolgreich abgeschlossen',
     'members.list' => 'Mitgliederverzeichnis',
     'nav.members' => 'Mitglieder',
     'members.title' => 'Mitglieder',

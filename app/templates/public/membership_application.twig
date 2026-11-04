@@ -9,6 +9,7 @@
 {% set sepa_fields = ['account_holder','iban','bic','sepa_mandate_consent'] %}
 
 <div class="panel overflow-hidden">
+    {% if invite.is_test %}<div class="alert alert-warning m-4" role="status"><span class="badge bg-warning-soft text-warning">{{ t('applications.test.badge') }}</span> {{ t('applications.test.notice') }}</div>{% endif %}
     <header class="border-b border-line px-5 py-5 sm:px-8">
         <h1 class="h3 mb-1">{{ t('applications.public_title') }}</h1>
         <p class="mb-0 text-muted">{% if invite.title %}{{ t('ui.mitgliedsantrag_fuer') }} <strong class="text-ink">{{ invite.title }}</strong>{% else %}{{ t('applications.public_subtitle') }}{% endif %}</p>
