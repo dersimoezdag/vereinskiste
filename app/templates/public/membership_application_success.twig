@@ -2,14 +2,15 @@
 {% import 'components/icons.twig' as icons %}
 
 {% block content %}
-<div class="mx-auto w-full max-w-7xl py-12">
-    <div class="grid-12 gap-x-6 justify-center">
-        <div class="md:col-span-7 col-span-12">
-            <div class="panel shadow-panel border-0 text-center p-12">
+<canvas class="pointer-events-none fixed inset-0 z-50 h-full w-full" data-confetti aria-hidden="true"></canvas>
+<div class="mx-auto flex min-h-[70vh] w-full max-w-xl items-center py-12">
+    <div class="w-full">
+        <div>
+            <div class="panel shadow-panel border-0 text-center p-6 sm:p-12">
                 <div class="mb-4">
                     {% include 'components/logo.twig' with {size: 64, alt: 'Vereinskiste Logo'} %}
                 </div>
-                <div class="badge bg-success-soft text-success p-4 rounded-full inline-block mx-auto mb-4" style="width: 60px; height: 60px;">
+                <div class="badge bg-success-soft text-success p-4 rounded-full mx-auto mb-4 flex items-center justify-center" style="width: 60px; height: 60px;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
@@ -26,3 +27,4 @@
     </div>
 </div>
 {% endblock %}
+{% block scripts %}<script src="{{ asset('confetti.js') }}"></script>{% endblock %}

@@ -86,7 +86,10 @@ final class MembershipApplicationPagesTest extends TestCase
         $this->assertSame('/antrag/danke', $res->getHeaderLine('Location'));
 
         // Thank you page
-        $this->assertSame(200, $this->get('/antrag/danke')->getStatusCode());
+        $thanks = $this->get('/antrag/danke');
+        $this->assertSame(200, $thanks->getStatusCode());
+        $this->assertStringContainsString('data-confetti', (string) $thanks->getBody());
+        $this->assertStringContainsString('confetti.js', (string) $thanks->getBody());
 
         // 6. Token is one-time: opening again shows link used
         $res = $this->get('/antrag/' . $token);
