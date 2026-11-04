@@ -3,7 +3,7 @@
 {% import 'components/stepper.twig' as stepper %}
 {% block title %}{{ t('auto_update.title') }}{% endblock %}
 {% block content %}
-<div class="grid-12 gap-x-6"><div class="col-span-12 lg:col-span-8 mx-auto py-4">
+<div class="mx-auto w-full max-w-4xl py-4">
     <div class="text-center mb-6">
         <span class="avatar avatar-xl bg-primary-soft text-primary rounded-full mb-4">
             {{ icons.icon('sync') }}
@@ -46,7 +46,7 @@
 
         <div class="panel-body p-6 text-center">
             <!-- Animated Progress Bar -->
-            <div class="progress progress-sm mb-6" aria-hidden="true">
+            <div class="progress mb-6" aria-hidden="true">
                 {% if operation.phase == 'done' %}
                 <div class="progress-bar w-full bg-success text-white" id="automatic-progress"></div>
                 {% elseif operation.phase in ['failed', 'cancelled', 'rolled_back'] %}
@@ -69,7 +69,7 @@
                 </p>
                 {% set measureMax = inBackup ? operation.backup_tables|default(0) : (inDownload ? operation.size|default(0) : 0) %}
                 {% set measureValue = inBackup ? operation.backup_table|default(0) : (inDownload ? operation.downloaded|default(0) : 0) %}
-                <progress id="automatic-measure" class="progress progress-sm mt-2" max="{{ measureMax }}" value="{{ measureValue }}" aria-label="{{ inBackup ? t('auto_update.step.backup') : t('auto_update.step.download') }}"{% if not measureMax %} hidden{% endif %}></progress>
+                <progress id="automatic-measure" class="progress mt-2" max="{{ measureMax }}" value="{{ measureValue }}" aria-label="{{ inBackup ? t('auto_update.step.backup') : t('auto_update.step.download') }}"{% if not measureMax %} hidden{% endif %}></progress>
             </div>
 
             <!-- Error Box -->
@@ -156,6 +156,6 @@
         <span data-error="{{ reason }}">{{ t('auto_update.error.' ~ reason) }}</span>
         {% endfor %}
     </div>
-</div></div>
+</div>
 {% endblock %}
 {% block scripts %}<script src="{{ asset('auto-update.js') }}"></script>{% endblock %}
