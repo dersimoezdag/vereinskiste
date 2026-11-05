@@ -1,4 +1,5 @@
 {% extends 'layout.twig' %}
+{% block title %}{{ t('privacy.application.title') ~ ' #' ~ preview.application.id }}{% endblock %}
 {% block content %}
 <h1>{{ t('privacy.application.title') }} #{{ preview.application.id }}</h1>
 <p>{{ preview.application.applicant_name }} · {{ preview.application.email }}</p>

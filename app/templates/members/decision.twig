@@ -1,4 +1,5 @@
 {% extends 'layout.twig' %}
+{% block title %}{{ t('applications.decision.title') ~ ' | ' ~ application.applicant_name }}{% endblock %}
 {% block content %}
 <h1>{{ t('applications.decision.title') }} · {{ application.applicant_name }}</h1>
 <p>{{ application.email }}</p>

@@ -1,4 +1,5 @@
 {% extends 'layout.twig' %}
+{% block title %}{{ t('privacy.title') ~ ' | ' ~ member.name }}{% endblock %}
 {% block content %}
 <h1>{{ member.name }} · {{ t('privacy.title') }}</h1>
 <div class="mb-4 flex gap-2"><a class="btn" href="/members/{{ member.id }}">{{ t('common.back') }}</a><a class="btn btn-primary" href="/members/{{ member.id }}/disclosure.json">{{ t('privacy.disclosure') }}</a></div>

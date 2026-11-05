@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}{{ t('app.name') }}{% endblock %} – {{ t('app.name') }}</title>
+    <title>{% block document_title %}{{ t('app.name') }} | {% block title %}{{ t('nav.home') }}{% endblock %}{% endblock %}</title>
     <link rel="icon" href="{{ asset('logo.svg') }}" type="image/svg+xml" media="(prefers-color-scheme: light)">
     <link rel="icon" href="{{ asset('logo-dark.svg') }}" type="image/svg+xml" media="(prefers-color-scheme: dark)">
     <link rel="stylesheet" href="{{ asset('app.css') }}">

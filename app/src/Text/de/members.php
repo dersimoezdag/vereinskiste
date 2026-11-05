@@ -107,6 +107,7 @@ return [
 
     // Online-Mitgliedsantrag
     'applications.title' => 'Mitgliedsanträge',
+    'applications.document_title' => 'Mitgliedschaftsantrag',
     'applications.public_title' => 'Mitgliedsantrag online stellen',
     'applications.public_subtitle' => 'Werde Teil unseres Vereins! Fülle einfach das Formular aus.',
     'applications.submit' => 'Mitgliedsantrag verbindlich absenden',

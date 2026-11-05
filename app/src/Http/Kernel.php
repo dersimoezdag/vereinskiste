@@ -85,6 +85,9 @@ final class Kernel
         $view = Twig::create($templates, ['cache' => false, 'autoescape' => 'html']);
         $env = $view->getEnvironment();
         $env->addFunction(new TwigFunction('settings_navigation', SettingsNavigation::forPath(...)));
+        $env->addFunction(new TwigFunction('club_name', static fn (): string =>
+            (new \Vereinskiste\Club\Profile($pdoProvider()))->name()
+        ));
         $env->addFunction(new TwigFunction(
             't',
             static fn (string $key): string => Message::resolve($texts, $key)

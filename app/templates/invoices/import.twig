@@ -1,4 +1,5 @@
 {% extends 'layout.twig' %}
+{% block title %}{{ t('invoices.import') }}{% endblock %}
 {% block content %}
 <h1>{{ t('invoices.import') }}</h1><p>{{ t('invoices.import.explanation') }}</p>
 {% for error in errors %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endfor %}

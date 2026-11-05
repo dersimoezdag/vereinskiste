@@ -1,4 +1,5 @@
 {% extends 'layout.twig' %}
+{% block title %}{{ t('finance.documents') }}{% endblock %}
 {% block content %}
 <h1>{{ t('finance.documents') }}</h1>
 {% if can('invoices.write') %}<div class="flex gap-2 mb-4"><a class="btn btn-primary" href="/invoices/import">{{ t('finance.document_upload') }}</a><a class="btn" href="/invoices/new">{{ t('finance.document_manual') }}</a></div>{% endif %}

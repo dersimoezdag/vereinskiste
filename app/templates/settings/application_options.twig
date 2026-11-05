@@ -1,4 +1,5 @@
 {% extends 'layout.twig' %}
+{% block title %}{{ t('applications.settings.title') }}{% endblock %}
 {% block content %}
 {% include 'components/settings_tabs.twig' %}
     <form method="post" action="/settings/declarations/settings" class="panel panel-body mb-6">

@@ -1,4 +1,5 @@
 {% extends 'layout.twig' %}
+{% block title %}{{ invoice ? t('invoices.title') ~ ' #' ~ invoice.id : t('invoices.new') }}{% endblock %}
 {% block content %}
 <h1>{{ invoice ? t('invoices.title') ~ ' #' ~ invoice.id : t('invoices.new') }}</h1>
 <p>{{ t('ui.beleg_pruefen_zahlung_freigeben_und_anschliessend_mit_einer_tatsa') }}</p>

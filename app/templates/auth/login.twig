@@ -10,7 +10,7 @@
             {{ csrf_field() }}
             <div class="mb-4">
                 <label class="label" for="email">{{ t('auth.login.email') }}</label>
-                <input type="email" class="input" id="email" name="email" value="{{ email }}" autocomplete="username" required>
+                <input type="email" class="input" id="email" name="email" value="{{ email }}" autocomplete="username" data-mask="none" required>
             </div>
             <div class="mb-4">
                 <label class="label" for="password">{{ t('auth.login.password') }}</label>
