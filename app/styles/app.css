@@ -1,6 +1,7 @@
 /* Styles der Vereinskiste: Tailwind (Utilities am Element) plus wenige eigene Komponenten.
    Quelle fuer public/assets/app.css; bauen mit `node scripts/build-css.cjs` (--watch beim Entwickeln). */
 @import "../../tests/node_modules/tailwindcss/index.css";
+@import "./data-grid.css";
 
 @source "../templates";
 @source "../../public/assets/*.js";

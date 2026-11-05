@@ -1,0 +1,62 @@
+{# rows, columns: [{key, label, sort_key?, sortable?, actions?}], label, empty_text.
+   Override cell for custom contents and filters for additional filter controls.
+   Search and pagination operate on the rows supplied by the caller. #}
+<section class="panel data-grid" data-grid aria-label="{{ label }}">
+    <div class="panel-header flex flex-wrap items-center justify-between gap-3">
+        <label class="flex flex-wrap items-center gap-2 text-sm" data-grid-search-control hidden>
+            <span>{{ t('grid.search') }}</span>
+            <input type="search" class="input input-sm" data-grid-search placeholder="{{ t('grid.search_placeholder') }}">
+        </label>
+        {% block filters %}{% endblock %}
+    </div>
+    <div class="table-scroll">
+        <table class="data-table table-cards mb-0">
+            <caption class="sr-only">{{ label }}</caption>
+            <thead><tr>
+                {% for column in columns %}
+                <th scope="col"{% if column.actions|default(false) %} class="data-grid-actions"{% endif %}>
+                    {% if column.sortable|default(true) and not column.actions|default(false) %}
+                    <button type="button" class="data-grid-sort" data-grid-sort="{{ loop.index0 }}">{{ column.label }} <span aria-hidden="true" data-grid-sort-icon>↕</span></button>
+                    {% else %}{{ column.label }}{% endif %}
+                </th>
+                {% endfor %}
+            </tr></thead>
+            <tbody data-grid-body>
+                {% for row in rows %}
+                <tr data-grid-row>
+                    {% for column in columns %}
+                    {% set sort_value = attribute(row, column.sort_key|default(column.key))|default('') %}
+                    {% if column.type|default('text') == 'date' and sort_value %}{% set sort_value = sort_value|date('U') %}{% endif %}
+                    {% if column.type|default('text') == 'badge' %}{% set sort_value = column.values[sort_value].label|default(sort_value) %}{% endif %}
+                    {% set sort_value = column.sort_values[sort_value]|default(sort_value) %}
+                    <td data-label="{{ column.label }}" data-grid-value="{{ sort_value }}" data-grid-type="{{ column.type|default('text') in ['date', 'money'] ? 'number' : 'text' }}"{% if column.actions|default(false) %} class="data-grid-actions"{% endif %}>
+                        <div class="min-w-0">{% block cell %}
+                            {% set value = attribute(row, column.key)|default('') %}
+                            {% if column.type|default('text') == 'date' and value %}
+                            <div class="whitespace-nowrap">{{ value|date('d.m.Y') }}<div class="text-sm text-muted">{{ value|date('H:i') }}</div></div>
+                            {% elseif column.type|default('text') == 'badge' %}
+                            {% set badge = column.values[value]|default({label: value, tone: 'bg-subtle text-muted'}) %}
+                            <span class="badge {{ badge.tone }}">{{ badge.label }}</span>
+                            {% elseif column.type|default('text') == 'money' and value is not same as('') %}
+                            <span class="num">{{ value|eur }}</span>
+                            {% else %}<span class="break-words">{{ value is same as('') ? '–' : value }}</span>{% endif %}
+                        {% endblock %}</div>
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+                <tr data-grid-empty{% if rows is not empty %} hidden{% endif %}><td colspan="{{ columns|length }}" class="text-center text-muted py-12">{{ empty_text }}</td></tr>
+                <tr data-grid-no-results hidden><td colspan="{{ columns|length }}" class="text-center text-muted py-12">{{ t('grid.no_results') }}</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="panel-body flex flex-wrap items-center justify-between gap-3 border-t border-line" data-grid-controls hidden>
+        <span class="text-sm text-muted" role="status" data-grid-count></span>
+        <div class="flex flex-wrap items-center gap-2">
+            <label class="flex items-center gap-2 text-sm">{{ t('grid.page_size') }} <select class="input input-sm" data-grid-page-size><option>10</option><option selected>25</option><option>50</option><option value="all">{{ t('grid.all') }}</option></select></label>
+            <button type="button" class="btn btn-sm" data-grid-prev>{{ t('grid.previous') }}</button>
+            <span class="text-sm num" data-grid-page></span>
+            <button type="button" class="btn btn-sm" data-grid-next>{{ t('grid.next') }}</button>
+        </div>
+    </div>
+</section>

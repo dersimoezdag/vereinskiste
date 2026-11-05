@@ -1,0 +1,9 @@
+.data-grid [hidden] { display: none !important; }
+.data-grid-sort { display: inline-flex; align-items: center; gap: .5rem; cursor: pointer; text-align: inherit; font: inherit; color: inherit; }
+.data-grid-sort [data-grid-sort-icon] { color: var(--color-muted); }
+.data-grid-sort:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 4px; border-radius: .125rem; }
+.data-grid [data-grid-search] { width: min(100%, 18rem); }
+.data-grid td { vertical-align: top; }
+.data-grid-actions { position: sticky; right: 0; background: var(--color-surface); text-align: right; }
+.data-grid thead .data-grid-actions { background: var(--color-subtle); }
+@media (max-width: 47.99rem) { .data-grid-actions { position: static; } }
