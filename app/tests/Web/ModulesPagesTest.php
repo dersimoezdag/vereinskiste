@@ -55,16 +55,53 @@ final class ModulesPagesTest extends TestCase
         $this->assertSame(302,$this->postForm('/members/'.$id.'/anonymize',['version'=>'1','fingerprint'=>$m[1],'reason'=>'Aufbewahrung geprüft','confirmed'=>'1'])->getStatusCode());
         $this->assertStringNotContainsString('Erika',(string)$this->get('/members/'.$id)->getBody());
     }
-    public function test_application_decision_preview_does_not_apply_or_send_until_confirmation():void
+    public function test_application_decision_page_shows_data_steps_and_both_templates():void
+    {
+        [$repo,$id]=$this->pendingApplication();
+        $html=(string)$this->get('/members/applications/'.$id.'/decision')->getBody();
+        $this->assertStringContainsString('data-stepper',$html);
+        $this->assertStringContainsString('Erlangen',$html);
+        $this->assertStringContainsString('name="join_date"',$html);
+        $this->assertStringContainsString('Passives Mitglied',$html);
+        $this->assertStringNotContainsString('Ehemaliges Mitglied',$html);
+        $this->assertStringContainsString('data-template-approved-subject=',$html);
+        $this->assertStringContainsString('data-template-rejected-message=',$html);
+        $this->assertSame('pending',$repo->findApplication($id)['status']);
+    }
+    public function test_application_approval_uses_join_date_type_and_custom_message():void
+    {
+        [$repo,$id]=$this->pendingApplication();
+        $passive=(string)$this->pdo->query("SELECT id FROM club_roles WHERE system_key='passive_member'")->fetchColumn();
+        $input=['decision'=>'approved','subject'=>'Willkommen','message'=>'Geprüfte Nachricht','join_date'=>'2026-12-01','membership_type_id'=>$passive];
+        $res=$this->postForm('/members/applications/'.$id.'/decision',$input);$this->assertSame(302,$res->getStatusCode(),(string)$res->getBody());
+        $app=$repo->findApplication($id);$this->assertSame('approved',$app['status']);
+        $this->assertSame('2026-12-01',$this->pdo->query('SELECT start_date FROM membership_periods WHERE member_id='.(int)$app['member_id'])->fetchColumn());
+        $this->assertSame('Geprüfte Nachricht',$this->pdo->query("SELECT body FROM mail_outbox ORDER BY id DESC LIMIT 1")->fetchColumn());
+        $this->assertSame(422,$this->postForm('/members/applications/'.$id.'/decision',$input)->getStatusCode());
+    }
+    public function test_invalid_approval_reopens_decision_step_and_keeps_application_pending():void
+    {
+        [$repo,$id]=$this->pendingApplication();
+        $former=(string)$this->pdo->query("SELECT id FROM club_roles WHERE system_key='former_member'")->fetchColumn();
+        foreach ([['join_date'=>'2026-12-01','membership_type_id'=>$former],['join_date'=>'31.12.2026','membership_type_id'=>'1'],['join_date'=>'2026-12-01']] as $extra) {
+            $res=$this->postForm('/members/applications/'.$id.'/decision',['decision'=>'approved','subject'=>'S','message'=>'M']+$extra);
+            $this->assertSame(422,$res->getStatusCode());$this->assertStringContainsString('data-start-step="1"',(string)$res->getBody());
+        }
+        $res=$this->postForm('/members/applications/'.$id.'/decision',['decision'=>'approved','subject'=>'','message'=>'M','join_date'=>'2026-12-01','membership_type_id'=>'1']);
+        $this->assertSame(422,$res->getStatusCode());$this->assertStringContainsString('data-start-step="2"',(string)$res->getBody());
+        $this->assertSame('pending',$repo->findApplication($id)['status']);
+    }
+    public function test_application_rejection_ignores_approval_fields():void
+    {
+        [$repo,$id]=$this->pendingApplication();
+        $res=$this->postForm('/members/applications/'.$id.'/decision',['decision'=>'rejected','subject'=>'Entscheidung','message'=>'Leider nein','reason'=>'Aufnahmestopp','join_date'=>'kaputt','membership_type_id'=>'x']);
+        $this->assertSame(302,$res->getStatusCode(),(string)$res->getBody());
+        $app=$repo->findApplication($id);$this->assertSame('rejected',$app['status']);$this->assertSame('Aufnahmestopp',$app['rejection_reason']);
+    }
+    private function pendingApplication():array
     {
         $actor=$this->loginAs(['secretary']);$repo=new ApplicationRepository($this->pdo);$invite=$repo->createInvite($actor);
-        $id=$repo->submit($invite['token'],['name'=>'Erika Muster','email'=>'erika@example.org',...ApplicationInput::defaults($this->pdo),]);
-        $this->assertSame(200,$this->get('/members/applications/'.$id.'/decision')->getStatusCode());
-        $input=['decision'=>'approved','subject'=>'Willkommen','message'=>'Geprüfte Nachricht','reason'=>'','stage'=>'preview'];
-        $res=$this->postForm('/members/applications/'.$id.'/decision',$input);$this->assertSame(200,$res->getStatusCode(),(string)$res->getBody());
-        $this->assertSame('pending',$repo->findApplication($id)['status']);$this->assertSame(1,(int)$this->pdo->query('SELECT count(*) FROM mail_outbox')->fetchColumn());
-        $input['stage']='confirm';$this->assertSame(302,$this->postForm('/members/applications/'.$id.'/decision',$input)->getStatusCode());
-        $this->assertSame('approved',$repo->findApplication($id)['status']);$this->assertSame(2,(int)$this->pdo->query('SELECT count(*) FROM mail_outbox')->fetchColumn());
-        $this->assertSame(422,$this->postForm('/members/applications/'.$id.'/decision',$input)->getStatusCode());
+        $id=$repo->submit($invite['token'],['name'=>'Erika Muster','email'=>'erika@example.org','city'=>'Erlangen',...ApplicationInput::defaults($this->pdo),]);
+        return [$repo,$id];
     }
 }

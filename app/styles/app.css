@@ -534,6 +534,22 @@
     .stepper-actions { display: flex; gap: 0.5rem; }
     form:not(.is-stepper) .stepper { display: none; }
 
+    /* Auswahlkarten (z. B. Antrag annehmen/ablehnen): ganze Karte ist das Label des Radio-Buttons. */
+    .choice-card { --choice: var(--color-primary); --choice-soft: var(--color-primary-soft); position: relative; display: flex; align-items: flex-start; gap: 0.75rem; padding: 1rem; border: 2px solid var(--color-line); border-radius: 0.875rem; background: var(--color-surface); cursor: pointer; transition: border-color .15s ease, background-color .15s ease; }
+    .choice-card-success { --choice: var(--color-success); --choice-soft: var(--color-success-soft); }
+    .choice-card-danger { --choice: var(--color-danger); --choice-soft: var(--color-danger-soft); }
+    .choice-card > input { position: absolute; opacity: 0; pointer-events: none; }
+    .choice-card:hover { border-color: var(--choice); }
+    .choice-card:has(> input:checked) { border-color: var(--choice); background: var(--choice-soft); }
+    .choice-card:has(> input:focus-visible) { outline: 2px solid var(--choice); outline-offset: 2px; }
+    .choice-card-icon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; background: var(--choice-soft); color: var(--choice); }
+    .choice-card:has(> input:checked) .choice-card-icon { background: var(--choice); color: #fff; }
+    .choice-card-title { display: block; font-weight: 600; color: var(--color-ink); }
+    .choice-card-text { display: block; margin-top: 0.125rem; font-size: 0.875rem; color: var(--color-muted); }
+    .decision-summary { padding: 1rem; border-left: 4px solid var(--color-line-strong); border-radius: 0.5rem; background: var(--color-canvas); }
+    .decision-summary.is-approved { border-left-color: var(--color-success); background: var(--color-success-soft); }
+    .decision-summary.is-rejected { border-left-color: var(--color-danger); background: var(--color-danger-soft); }
+
     /* Beleg-Dropzone */
     .dropzone { position: relative; border: 2px dashed var(--color-line-strong); border-radius: 0.875rem; background: var(--color-canvas); transition: border-color .15s ease, background-color .15s ease; }
     .dropzone-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }

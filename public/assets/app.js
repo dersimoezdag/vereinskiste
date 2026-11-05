@@ -40,12 +40,12 @@ document.querySelectorAll('form[data-stepper]').forEach(function (form) {
         next.hidden = last;
         next.disabled = index === 0 && !checksOk;
         submit.hidden = !last;
-        var focus = panels[index].querySelector('input, select');
+        var focus = panels[index].querySelector('input:not([type="hidden"]), select, textarea');
         if (focus && index > 0) { focus.focus(); }
     }
 
     function valid(index) {
-        return Array.prototype.every.call(panels[index].querySelectorAll('input, select'), function (field) {
+        return Array.prototype.every.call(panels[index].querySelectorAll('input, select, textarea'), function (field) {
             return field.reportValidity();
         });
     }
@@ -63,8 +63,9 @@ document.querySelectorAll('form[data-stepper]').forEach(function (form) {
         var index = panels.indexOf(event.target.closest('[data-step]'));
         if (index !== -1 && index !== current) { show(index); }
     }, true);
-    // Nach einem Serverfehler direkt zum letzten Schritt: die Eingaben sind erhalten, nur Passwoerter muessen neu eingegeben werden.
-    show(form.hasAttribute('data-start-last') ? panels.length - 1 : 0);
+    // Nach einem Serverfehler direkt zum letzten bzw. zum genannten Schritt: die Eingaben sind erhalten.
+    var start = form.hasAttribute('data-start-last') ? panels.length - 1 : parseInt(form.dataset.startStep || '0', 10);
+    show(Math.min(Math.max(start || 0, 0), panels.length - 1));
 });
 
 // Beleg-Dropzone: Dateien hineinziehen oder anklicken; alle gesammelten Dateien gehen mit dem Formular ab.

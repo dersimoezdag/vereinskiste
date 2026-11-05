@@ -1,0 +1,14 @@
+{# Antragsdaten als Definitionsliste. layout: 'stack' (Tabelle) oder 'grid' (Entscheidungsseite). #}
+<dl class="{{ layout|default('stack') == 'grid' ? 'm-0 grid gap-x-6 gap-y-3 sm:grid-cols-2' : 'mt-2 space-y-2 text-muted' }}">
+    {% if layout|default('stack') == 'grid' %}<div><dt class="font-medium">{{ t('members.field.email') }}</dt><dd class="break-all">{{ a.email }}</dd></div>{% endif %}
+    {% if a.data.phone %}<div><dt class="font-medium">{{ t('members.field.phone') }}</dt><dd>{{ a.data.phone }}</dd></div>{% endif %}
+    {% if a.data.birth_date %}<div><dt class="font-medium">{{ t('members.field.birth_date') }}</dt><dd>{{ a.data.birth_date|date('d.m.Y') }}</dd></div>{% endif %}
+    {% if a.data.address or a.data.city %}
+    <div><dt class="font-medium">{{ t('members.field.address') }}</dt><dd>{{ a.data.address }} {{ a.data.house_number|default('') }}<br>{{ a.data.zip }} {{ a.data.city }}{% if a.data.country %}<br>{{ a.data.country }}{% endif %}</dd></div>
+    {% endif %}
+    {% if a.require_sepa and a.data.iban %}
+    <div><dt class="font-medium">{{ t('ui.bankverbindung_lastschriftmandat') }}</dt><dd>{{ a.data.account_holder }}<br><span class="num break-all">{{ a.data.iban }}</span>{% if a.data.bic %}<br>{{ a.data.bic }}{% endif %}<br>{{ t('ui.sepa_lastschriftmandat_vom_antragsteller_erteilt') }}</dd></div>
+    {% endif %}
+    {% if a.data.notes %}<div class="sm:col-span-2"><dt class="font-medium">{{ t('members.field.notes') }}</dt><dd class="whitespace-pre-wrap break-words">{{ a.data.notes }}</dd></div>{% endif %}
+    {% if a.rejection_reason %}<div><dt class="font-medium">{{ t('ui.grund') }}</dt><dd class="text-danger break-words">{{ a.rejection_reason }}</dd></div>{% endif %}
+</dl>

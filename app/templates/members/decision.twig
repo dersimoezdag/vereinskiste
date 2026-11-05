@@ -1,12 +1,40 @@
 {% extends 'layout.twig' %}
+{% import 'components/stepper.twig' as stepper %}
+{% import 'components/icons.twig' as icons %}
 {% block title %}{{ t('applications.decision.title') ~ ' | ' ~ application.applicant_name }}{% endblock %}
 {% block content %}
-<h1>{{ t('applications.decision.title') }} · {{ application.applicant_name }}</h1>
-<p>{{ application.email }}</p>
-<p><a class="btn" href="/members/applications/{{ application.id }}/pdf">{{ t('applications.pdf') }}</a></p>
-{% if signatures is not empty %}
-<section class="panel panel-body mb-4" aria-labelledby="declarations-heading">
-    <h2 id="declarations-heading" class="panel-title">{{ t('declarations.title') }}</h2>
+{% set a = application %}
+<header class="mb-6 flex flex-wrap items-start justify-between gap-4">
+    <div class="min-w-0">
+        <h1 class="mb-1">{{ a.applicant_name }} <span class="font-normal text-muted">#{{ a.id }}</span></h1>
+        <p class="m-0 text-sm text-muted">{{ a.email }} · {{ t('applications.received_at') }} {{ a.created_at|date('d.m.Y') }}</p>
+    </div>
+    <a class="btn inline-flex items-center gap-1" href="/members/applications/{{ a.id }}/pdf">{{ icons.icon('download') }}<span>{{ t('applications.pdf') }}</span></a>
+</header>
+
+{% if not system_mail_available() %}<p class="alert alert-warning">{{ t('applications.mail.disabled') }}</p>{% endif %}
+{% if errors.application is defined %}<p class="alert alert-danger" role="alert">{{ t(errors.application) }}</p>{% endif %}
+
+{% if a.status != 'pending' %}
+<p class="alert alert-info">{{ t('applications.status.' ~ a.status) }}</p>
+{% else %}
+{% set approved = input.decision == 'approved' %}
+<form action="/members/applications/{{ a.id }}/decision" method="post" data-stepper data-checks-ok="1" data-start-step="{{ start_step }}" data-application-decision
+      data-template-approved-subject="{{ templates.approved.subject }}" data-template-approved-message="{{ templates.approved.message }}"
+      data-template-rejected-subject="{{ templates.rejected.subject }}" data-template-rejected-message="{{ templates.rejected.message }}">
+{{ csrf_field() }}
+{{ stepper.steps([
+    {title: t('applications.decision.step_review')},
+    {title: t('applications.decision.step_decide')},
+    {title: t('applications.decision.step_confirm')}
+], t('applications.decision.title'), true) }}
+
+{# Schritt 1: Antrag pruefen #}
+<fieldset class="panel panel-body mb-4" data-step="0">
+    <legend class="panel-title">{{ t('applications.decision.step_review') }}</legend>
+    {% include 'members/_application_data.twig' with {a: a, layout: 'grid'} %}
+    {% if signatures is not empty %}
+    <h3 class="h5 mt-6 mb-2">{{ t('declarations.title') }}</h3>
     <ul class="m-0 list-none divide-y divide-line p-0">
     {% for s in signatures %}
         <li class="py-3">
@@ -17,7 +45,7 @@
             </div>
             {% if s.has_signature %}
             <div class="mt-2 flex flex-wrap items-end gap-4">
-                <img class="h-16 w-auto rounded border border-line bg-white" src="/members/applications/{{ application.id }}/signatures/{{ s.id }}.png" alt="{{ t('declarations.signature') }}">
+                <img class="h-16 w-auto rounded border border-line bg-white" src="/members/applications/{{ a.id }}/signatures/{{ s.id }}.png" alt="{{ t('declarations.signature') }}">
                 <span class="text-sm text-muted">{{ t('declarations.place_date') }}: {{ s.signed_place }}, {{ s.signed_at|date('d.m.Y') }}</span>
             </div>
             {% endif %}
@@ -25,24 +53,80 @@
         </li>
     {% endfor %}
     </ul>
-</section>
+    {% endif %}
+</fieldset>
+
+{# Schritt 2: Entscheiden #}
+<fieldset class="panel panel-body mb-4" data-step="1">
+    <legend class="panel-title">{{ t('applications.decision.step_decide') }}</legend>
+    <div class="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="{{ t('applications.decision.title') }}">
+        <label class="choice-card choice-card-success">
+            <input type="radio" name="decision" value="approved"{% if approved %} checked{% endif %} required>
+            <span class="choice-card-icon">{{ icons.icon('check') }}</span>
+            <span><span class="choice-card-title">{{ t('applications.approve') }}</span><span class="choice-card-text">{{ t('applications.decision.approve_hint') }}</span></span>
+        </label>
+        <label class="choice-card choice-card-danger">
+            <input type="radio" name="decision" value="rejected"{% if not approved %} checked{% endif %}>
+            <span class="choice-card-icon">{{ icons.icon('error') }}</span>
+            <span><span class="choice-card-title">{{ t('applications.reject') }}</span><span class="choice-card-text">{{ t('applications.decision.reject_hint') }}</span></span>
+        </label>
+    </div>
+    {% if errors.decision is defined %}<div class="field-error">{{ t(errors.decision) }}</div>{% endif %}
+
+    <div class="mt-4 grid gap-4 sm:grid-cols-2" data-decision-fields="approved"{% if not approved %} hidden{% endif %}>
+        <div>
+            <label class="label" for="decision-join-date">{{ t('applications.decision.join_date') }}</label>
+            <input type="date" class="input{% if errors.join_date is defined %} is-invalid{% endif %}" id="decision-join-date" name="join_date" value="{{ input.join_date }}" required{% if not approved %} disabled{% endif %}>
+            {% if errors.join_date is defined %}<div class="field-error">{{ t(errors.join_date) }}</div>{% endif %}
+        </div>
+        <div>
+            <label class="label" for="decision-type">{{ t('applications.decision.membership_type') }}</label>
+            <select class="input{% if errors.membership_type_id is defined %} is-invalid{% endif %}" id="decision-type" name="membership_type_id" required{% if not approved %} disabled{% endif %}>
+                {% for type in membership_types %}<option value="{{ type.id }}"{% if input.membership_type_id == type.id ~ '' %} selected{% endif %}>{{ type.name }}</option>{% endfor %}
+            </select>
+            {% if errors.membership_type_id is defined %}<div class="field-error">{{ t(errors.membership_type_id) }}</div>{% endif %}
+        </div>
+    </div>
+    <div class="mt-4" data-decision-fields="rejected"{% if approved %} hidden{% endif %}>
+        <label class="label" for="decision-reason">{{ t('applications.reject_reason') }}</label>
+        <input class="input{% if errors.reason is defined %} is-invalid{% endif %}" id="decision-reason" name="reason" value="{{ input.reason }}" maxlength="500"{% if approved %} disabled{% endif %}>
+        <div class="field-hint">{{ t('applications.decision.reason_internal') }}</div>
+        {% if errors.reason is defined %}<div class="field-error">{{ t(errors.reason) }}</div>{% endif %}
+    </div>
+</fieldset>
+
+{# Schritt 3: Nachricht und Bestaetigung #}
+<fieldset class="panel panel-body mb-4" data-step="2">
+    <legend class="panel-title">{{ t('applications.decision.step_confirm') }}</legend>
+    <p class="alert alert-warning" data-template-notice hidden>
+        <span>{{ t('applications.decision.template_changed') }}</span>
+        <button type="button" class="btn btn-sm ms-2" data-template-apply>{{ t('applications.decision.template_apply') }}</button>
+    </p>
+    <label class="label" for="decision-subject">{{ t('applications.mail.subject') }}</label>
+    <input class="input mb-4{% if errors.subject is defined %} is-invalid{% endif %}" id="decision-subject" name="subject" value="{{ input.subject }}" maxlength="200" required>
+    {% if errors.subject is defined %}<div class="field-error">{{ t(errors.subject) }}</div>{% endif %}
+    <label class="label" for="decision-message">{{ t('applications.mail.message') }}</label>
+    <textarea class="input mb-4{% if errors.message is defined %} is-invalid{% endif %}" id="decision-message" name="message" rows="8" maxlength="10000" required>{{ input.message }}</textarea>
+    {% if errors.message is defined %}<div class="field-error">{{ t(errors.message) }}</div>{% endif %}
+
+    <div class="decision-summary" data-decision-summary
+         data-text-approved="{{ t('applications.decision.summary_approved') }}" data-text-rejected="{{ t('applications.decision.summary_rejected') }}"
+         data-name="{{ a.applicant_name }}" data-email="{{ a.email }}">
+        <strong class="block mb-1">{{ t('applications.decision.summary') }}</strong>
+        <span data-summary-text></span>
+    </div>
+</fieldset>
+
+<div class="stepper-actions flex flex-wrap items-center gap-2">
+    <a class="btn btn-ghost" href="/members/applications">{{ t('applications.decision.cancel') }}</a>
+    <button class="btn ms-auto inline-flex items-center gap-1" type="button" data-step-prev hidden>{{ icons.icon('arrow-back') }}<span>{{ t('install.back') }}</span></button>
+    <button class="btn btn-primary inline-flex items-center gap-1" type="button" data-step-next>{{ t('install.next') }}{{ icons.icon('arrow-forward') }}</button>
+    <button class="btn {{ approved ? 'btn-success' : 'btn-danger' }} inline-flex items-center gap-1" type="submit" data-step-submit
+            data-label-approved="{{ t('applications.decision.submit_approved') }}" data-label-rejected="{{ t('applications.decision.submit_rejected') }}">
+        {{ icons.icon('check') }}<span data-submit-label>{{ t(approved ? 'applications.decision.submit_approved' : 'applications.decision.submit_rejected') }}</span>
+    </button>
+</div>
+</form>
 {% endif %}
-{% for error in errors %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endfor %}
-{% if not system_mail_available() %}<p class="alert alert-warning">{{ t('applications.mail.disabled') }}</p>{% endif %}
-{% if application.status == 'pending' %}
-<form action="/members/applications/{{ application.id }}/decision" method="post" class="panel panel-body">
-{{ csrf_field() }}
-{% if preview %}
-<h2>{{ t('applications.decision.preview') }}</h2><p>{{ t('applications.status.' ~ input.decision) }}</p><h3>{{ input.subject }}</h3><pre class="text-wrap">{{ input.message }}</pre><p>{{ input.reason }}</p>
-{% for key in ['decision','subject','message','reason'] %}<input type="hidden" name="{{ key }}" value="{{ input[key] }}">{% endfor %}
-<button class="btn btn-primary mb-2" name="stage" value="confirm">{{ t('applications.decision.confirm') }}</button><button class="btn" name="stage" value="edit">{{ t('applications.decision.edit') }}</button>
-{% else %}
-<label class="label" for="decision">{{ t('applications.decision.title') }}</label><select id="decision" class="input mb-4" name="decision"><option value="approved"{% if input.decision=='approved' %} selected{% endif %}>{{ t('applications.approve') }}</option><option value="rejected"{% if input.decision=='rejected' %} selected{% endif %}>{{ t('applications.reject') }}</option></select>
-<label class="label" for="decision-subject">{{ t('applications.mail.subject') }}</label><input class="input mb-4" id="decision-subject" name="subject" value="{{ input.subject }}" maxlength="200" required>
-<label class="label" for="decision-message">{{ t('applications.mail.message') }}</label><textarea class="input mb-4" id="decision-message" name="message" rows="8" maxlength="10000" required>{{ input.message }}</textarea>
-<label class="label" for="decision-reason">{{ t('applications.reject_reason') }}</label><input class="input mb-4" id="decision-reason" name="reason" value="{{ input.reason }}" maxlength="500">
-<button class="btn btn-primary" name="stage" value="preview">{{ t('applications.decision.preview') }}</button>
-{% endif %}
-</form>{% endif %}
-<a class="btn mt-4" href="/members/applications">{{ t('common.back') }}</a>
 {% endblock %}
+{% block scripts %}<script src="{{ asset('application-decision.js') }}"></script>{% endblock %}
