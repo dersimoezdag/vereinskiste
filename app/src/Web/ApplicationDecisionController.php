@@ -22,12 +22,14 @@ final class ApplicationDecisionController extends AdminController
             $mail=Fields::read($input,['subject'=>200,'message'=>10000,'reason'=>500],['subject','message']);
             if(!in_array($input['decision']??null,['approved','rejected'],true)) {throw new ValidationError(['decision'=>'foundation.invalid']);}
             if($app['status']!=='pending') {throw new ValidationError(['application'=>'foundation.invalid']);}
-            if(($input['stage']??'')==='edit') {return $this->page($req,$res,$id,$input);}
-            if(($input['stage']??'')!=='confirm') {return $this->page($req,$res,$id,$input,[],true);}
-            if(($input['decision']??'')==='approved') {$repo->approve($id,$this->userId($req),$mail);}
-            else {$repo->reject($id,$mail['reason'],$this->userId($req),$mail);}
+            if($input['decision']==='approved') {
+                $type=$input['membership_type_id']??'';
+                if(!is_string($type)||!ctype_digit($type)) {throw new ValidationError(['membership_type_id'=>'foundation.invalid']);}
+                $date=is_string($input['join_date']??null)?trim($input['join_date']):'';
+                $repo->approve($id,$this->userId($req),$mail,$date,(int)$type);
+            } else {$repo->reject($id,$mail['reason'],$this->userId($req),$mail);}
         } catch(ValidationError $e) {return $this->page($req,$res->withStatus(422),$id,$input,$e->errors);}
-        $this->flash($req,'foundation.saved');return $this->redirect('/members/applications');
+        $this->flash($req,$input['decision']==='approved'?'applications.approved_success':'applications.rejected_success');return $this->redirect('/members/applications');
     }
     public function retry(Request $req,Response $res,array $args):Response
     {
@@ -36,14 +38,24 @@ final class ApplicationDecisionController extends AdminController
         catch(\Vereinskiste\Foundation\Conflict) {return \Vereinskiste\Http\ErrorPage::render($req->getAttribute('view'),409,'applications.title','foundation.conflict','/members/applications?tab=messages');}
         $this->flash($req,'foundation.saved');return $this->redirect('/members/applications?tab=messages');
     }
-    private function page(Request $req,Response $res,int $id,?array $input=null,array $errors=[],bool $preview=false):Response
+    private function page(Request $req,Response $res,int $id,?array $input=null,array $errors=[]):Response
     {
-        $app=(new ApplicationRepository(($this->pdo)()))->findApplication($id);if(!$app) {return $this->notFound($req);}
+        $pdo=($this->pdo)();$repo=new ApplicationRepository($pdo);$app=$repo->findApplication($id);if(!$app) {return $this->notFound($req);}
+        $notifications=new ApplicationNotifications($pdo);
+        $templates=['approved'=>$notifications->defaults('approved'),'rejected'=>$notifications->defaults('rejected')];
+        $types=$repo->membershipTypes();
+        $defaultType=(string)($types[array_search('active_member',array_column($types,'system_key'),true)]['id']??($types[0]['id']??''));
         $decision=$input['decision']??($req->getQueryParams()['decision']??'approved');
         if(!in_array($decision,['approved','rejected'],true)) {$decision='approved';}
-        $values=$input??((new ApplicationNotifications(($this->pdo)()))->defaults($decision)+['reason'=>'','decision'=>$decision]);$safe=[];
+        $values=$input??($templates[$decision]+['reason'=>'','decision'=>$decision]);
+        $values+=['join_date'=>(new \DateTimeImmutable())->format('Y-m-d'),'membership_type_id'=>$defaultType,'reason'=>''];$safe=[];
         foreach($values as $key=>$value) {$safe[$key]=is_string($value)&&mb_check_encoding($value,'UTF-8')?$value:'';}
-        return $req->getAttribute('view')->render($res,'members/decision.twig',['application'=>$app,'input'=>$safe,'errors'=>$errors,'preview'=>$preview,'signatures'=>(new \Vereinskiste\Members\ApplicationSignatures(($this->pdo)()))->forApplication($id),'mail_configured'=>$req->getAttribute('mail_configured',false)]);
+        $safe['decision']=in_array($safe['decision']??'',['approved','rejected'],true)?$safe['decision']:'approved';
+        // Nach einem Fehler den Schritt oeffnen, der das fehlerhafte Feld enthaelt.
+        $step=array_intersect_key($errors,array_flip(['subject','message']))?2:(array_intersect_key($errors,array_flip(['decision','join_date','membership_type_id','reason']))?1:0);
+        return $req->getAttribute('view')->render($res,'members/decision.twig',['application'=>$app,'input'=>$safe,'errors'=>$errors,'start_step'=>$step,
+            'templates'=>$templates,'membership_types'=>$types,
+            'signatures'=>(new \Vereinskiste\Members\ApplicationSignatures($pdo))->forApplication($id),'mail_configured'=>$req->getAttribute('mail_configured',false)]);
     }
     public function signature(Request $req,Response $res,array $args):Response
     {

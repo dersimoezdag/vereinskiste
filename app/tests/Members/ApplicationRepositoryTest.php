@@ -55,7 +55,7 @@ final class ApplicationRepositoryTest extends TestCase
         $this->assertSame(2, $invite['max_uses']);
         for ($i = 0; $i < 2; $i++) {
             $this->assertTrue($this->repo->findInviteByToken($invite['token'])['is_valid']);
-            $this->repo->submit($invite['token'], ['name' => 'Example Person', 'email' => "person$i@example.org", ...ApplicationInput::declarations($this->db)]);
+            $this->repo->submit($invite['token'], ['name' => 'Example Person', 'email' => "person$i@example.org", ...ApplicationInput::defaults($this->db)]);
         }
         $found = $this->repo->findInviteByToken($invite['token']);
         $this->assertSame(2, $found['used_count']);
@@ -86,7 +86,7 @@ final class ApplicationRepositoryTest extends TestCase
         $appId = $this->repo->submit($invite['token'], [
             'name' => 'Max Mustermann',
             'email' => 'max@example.org',
-            ...ApplicationInput::declarations($this->db),
+            ...ApplicationInput::defaults($this->db),
         ]);
         $this->assertGreaterThan(0, $appId);
 
@@ -95,7 +95,7 @@ final class ApplicationRepositoryTest extends TestCase
         $this->repo->submit($invite['token'], [
             'name' => 'Erika Muster',
             'email' => 'erika@example.org',
-            ...ApplicationInput::declarations($this->db),
+            ...ApplicationInput::defaults($this->db),
         ]);
     }
 
@@ -108,7 +108,7 @@ final class ApplicationRepositoryTest extends TestCase
             $this->repo->submit($invite['token'], [
                 'name' => 'Max Mustermann',
                 'email' => 'max@example.org',
-                ...ApplicationInput::declarations($this->db),
+                ...ApplicationInput::defaults($this->db),
             ]);
             $this->fail('SEPA details should be required');
         } catch (ValidationError $e) {
@@ -121,7 +121,7 @@ final class ApplicationRepositoryTest extends TestCase
         $appId = $this->repo->submit($invite['token'], [
             'name' => 'Max Mustermann',
             'email' => 'max@example.org',
-            ...ApplicationInput::declarations($this->db),
+            ...ApplicationInput::defaults($this->db),
             'account_holder' => 'Max Mustermann',
             'iban' => 'DE89370400440532013000',
             'bic' => 'BYLADEM1001',
@@ -146,7 +146,7 @@ final class ApplicationRepositoryTest extends TestCase
         $this->repo->submit($invite['token'], [
             'name' => 'Max',
             'email' => 'max@example.org',
-            ...ApplicationInput::declarations($this->db),
+            ...ApplicationInput::defaults($this->db),
         ]);
     }
 
@@ -154,10 +154,10 @@ final class ApplicationRepositoryTest extends TestCase
     {
         $invite = $this->repo->createInvite(1, 'Antrag 1', 14, null, false);
         $appId = $this->repo->submit($invite['token'], [
+            ...ApplicationInput::defaults($this->db),
             'name' => 'Anna Neumitglied',
             'email' => 'anna@example.org',
             'city' => 'Hamburg',
-            ...ApplicationInput::declarations($this->db),
         ]);
 
         $this->assertSame(1, $this->repo->countPending());
@@ -180,13 +180,57 @@ final class ApplicationRepositoryTest extends TestCase
         $this->assertSame(0, $this->repo->countPending());
     }
 
+    public function test_approve_uses_chosen_join_date_and_membership_type(): void
+    {
+        $invite = $this->repo->createInvite(1, 'Antrag Passiv', 14, null, false);
+        $appId = $this->repo->submit($invite['token'], [...ApplicationInput::defaults($this->db), 'name' => 'Paula Passiv', 'email' => 'paula@example.org']);
+        $passive = (int) $this->db->query("SELECT id FROM club_roles WHERE system_key='passive_member'")->fetchColumn();
+
+        $memberId = $this->repo->approve($appId, 1, null, '2026-12-01', $passive);
+
+        $this->assertSame('2026-12-01', $this->db->query("SELECT start_date FROM membership_periods WHERE member_id=$memberId")->fetchColumn());
+        $assignments = (new MemberRoleAssignments($this->db))->forMember($memberId);
+        $this->assertCount(1, $assignments);
+        $this->assertSame('Passives Mitglied', $assignments[0]['role_name']);
+        $this->assertSame('2026-12-01', $assignments[0]['start_date']);
+    }
+
+    public function test_approve_rejects_former_function_and_unknown_types_and_invalid_dates(): void
+    {
+        $invite = $this->repo->createInvite(1, 'Antrag Falsch', 14, null, false);
+        $appId = $this->repo->submit($invite['token'], [...ApplicationInput::defaults($this->db), 'name' => 'Falk Falsch', 'email' => 'falk@example.org']);
+        $former = (int) $this->db->query("SELECT id FROM club_roles WHERE system_key='former_member'")->fetchColumn();
+        $function = (int) $this->db->query("SELECT id FROM club_roles WHERE kind='function' LIMIT 1")->fetchColumn();
+        $cases = [['2026-12-01', $former, 'membership_type_id'], ['2026-12-01', $function, 'membership_type_id'],
+            ['2026-12-01', 999999, 'membership_type_id'], ['2026-02-30', null, 'join_date'], ['morgen', null, 'join_date']];
+        foreach ($cases as [$date, $type, $field]) {
+            try {
+                $this->repo->approve($appId, 1, null, $date, $type);
+                $this->fail("$date/$type akzeptiert");
+            } catch (ValidationError $e) {
+                $this->assertArrayHasKey($field, $e->errors);
+            }
+        }
+        $this->assertSame('pending', $this->repo->findApplication($appId)['status']);
+        $this->assertSame(0, (int) $this->db->query('SELECT count(*) FROM members')->fetchColumn());
+    }
+
+    public function test_selectable_membership_types_exclude_former_and_functions(): void
+    {
+        $names = array_column($this->repo->membershipTypes(), 'name');
+        $this->assertContains('Aktives Mitglied', $names);
+        $this->assertContains('Passives Mitglied', $names);
+        $this->assertNotContains('Ehemaliges Mitglied', $names);
+        $this->assertNotContains('Ehrenmitglied', $names);
+    }
+
     public function test_reject_records_reason(): void
     {
         $invite = $this->repo->createInvite(1, 'Antrag 2', 14, null, false);
         $appId = $this->repo->submit($invite['token'], [
             'name' => 'Bernd Abgelehnt',
             'email' => 'bernd@example.org',
-            ...ApplicationInput::declarations($this->db),
+            ...ApplicationInput::defaults($this->db),
         ]);
 
         $this->repo->reject($appId, 'Aufnahmestopp', 1);
@@ -201,7 +245,7 @@ final class ApplicationRepositoryTest extends TestCase
         $invite = $this->repo->createInvite(1, 'Getrennte Namen', 14, null, false);
         $appId = $this->repo->submit($invite['token'], [
             'salutation' => 'frau', 'title' => 'Dr.', 'first_name' => 'Erika', 'last_name' => 'Muster',
-            'email' => 'erika@example.org', ...ApplicationInput::declarations($this->db),
+            'email' => 'erika@example.org', ...ApplicationInput::defaults($this->db),
         ]);
         $app = $this->repo->findApplication($appId);
         $this->assertSame('Dr. Erika Muster', $app['applicant_name']);
@@ -219,7 +263,7 @@ final class ApplicationRepositoryTest extends TestCase
         try {
             $this->repo->submit($invite['token'], [
                 'first_name' => '', 'last_name' => 'Muster', 'email' => 'e@example.org',
-                ...ApplicationInput::declarations($this->db),
+                ...ApplicationInput::defaults($this->db),
             ]);
             $this->fail('Vorname fehlt');
         } catch (ValidationError $e) {
@@ -232,7 +276,7 @@ final class ApplicationRepositoryTest extends TestCase
         $repo = new ApplicationRepository($this->db);
         $invite = $repo->createInvite(1, 'Test', 7);
         $id = $repo->submit($invite['token'], ['first_name' => 'E', 'last_name' => 'M', 'email' => 'e@example.org',
-            'address' => 'Musterstraße', 'house_number' => '12a', 'zip' => '91054', 'city' => 'Erlangen'] + ApplicationInput::declarations($this->db));
+            'address' => 'Musterstraße', 'house_number' => '12a', 'zip' => '91054', 'city' => 'Erlangen'] + ApplicationInput::defaults($this->db));
         $this->assertSame('12a', $repo->findApplication($id)['data']['house_number']);
         $member = $repo->approve($id, 1);
         $data = json_decode((string) $this->db->query("SELECT data FROM members WHERE id = $member")->fetchColumn(), true);

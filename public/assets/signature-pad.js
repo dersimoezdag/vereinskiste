@@ -14,13 +14,22 @@
         this.input = root.querySelector('[data-signature-value]');
         this.strokes = [];
         this.base = null; // wiederhergestellte Unterschrift (Data-URL)
+        if (window.ResizeObserver) {
+            var pad = this;
+            this.resizeObserver = new ResizeObserver(function (entries) {
+                entries.forEach(function (entry) { pad.render(entry.target); });
+            });
+        }
         if (this.input.value) { this.base = this.input.value; this.loadBase(); }
         this.bind(this.canvas);
         var self = this;
         root.querySelector('[data-signature-clear]').addEventListener('click', function () { self.clear(); });
         var enlarge = root.querySelector('[data-signature-enlarge]');
         if (enlarge) { enlarge.addEventListener('click', function () { self.openDialog(); }); }
-        window.addEventListener('resize', function () { self.render(self.canvas); });
+        window.addEventListener('resize', function () {
+            self.render(self.canvas);
+            if (self.dialog && !self.dialog.hidden) { self.render(self.dialog.querySelector('canvas')); }
+        });
         this.render(this.canvas);
         this.mark();
     }
@@ -43,7 +52,6 @@
         var dpr = exportSize ? 1 : (window.devicePixelRatio || 1);
         canvas.width = Math.round(size.width * dpr);
         canvas.height = Math.round(size.height * dpr);
-        if (!exportSize) { canvas.style.height = size.height + 'px'; }
         var ctx = canvas.getContext('2d');
         if (!ctx) { return; }
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -69,6 +77,7 @@
 
     Pad.prototype.bind = function (canvas) {
         var self = this, current = null;
+        if (this.resizeObserver) { this.resizeObserver.observe(canvas); }
         function point(e) {
             var rect = canvas.getBoundingClientRect();
             var w = rect.width || 1, h = rect.height || w / RATIO;

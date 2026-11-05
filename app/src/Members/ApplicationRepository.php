@@ -137,7 +137,7 @@ final class ApplicationRepository
             }
 
             // Validate bounded text before accessing public values.
-            Fields::read($input, self::FIELDS);
+            Fields::read($input, self::FIELDS, ['address', 'house_number', 'zip', 'city', 'country']);
             (new \Vereinskiste\Privacy\Settings($this->pdo))->get(true);
             (new \Vereinskiste\Club\Profile($this->pdo))->get(true);
             $consents = new \Vereinskiste\Privacy\Consents($this->pdo);
@@ -290,9 +290,29 @@ final class ApplicationRepository
     /**
      * Nimmt einen Antrag an: legt das Mitglied an, startet die Mitgliedschaft ab heute, weist die aktive Mitgliedsart zu.
      */
-    public function approve(int $id, int $actor, ?array $mail = null): int
+    /** Mitgliedsarten, die bei der Annahme eines Antrags gewaehlt werden koennen (aktiv, ohne "Ehemalig"). */
+    public function membershipTypes(): array
     {
-        return Transaction::run($this->pdo, function () use ($id, $actor, $mail): int {
+        return $this->pdo->query("SELECT id, name, system_key FROM club_roles
+            WHERE kind = 'membership_type' AND active AND system_key IS DISTINCT FROM 'former_member' ORDER BY lower(name)")
+            ->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Nimmt einen Antrag an und legt das Mitglied an.
+     * Ohne $joinDate beginnt die Mitgliedschaft heute, ohne $typeId gilt die Standard-Mitgliedsart (Aktiv).
+     */
+    public function approve(int $id, int $actor, ?array $mail = null, ?string $joinDate = null, ?int $typeId = null): int
+    {
+        $joinDate ??= (new DateTimeImmutable())->format('Y-m-d');
+        $parsed = DateTimeImmutable::createFromFormat('!Y-m-d', $joinDate);
+        if ($parsed === false || $parsed->format('Y-m-d') !== $joinDate) {
+            throw new ValidationError(['join_date' => 'foundation.invalid']);
+        }
+        if ($typeId !== null && !in_array($typeId, array_map('intval', array_column($this->membershipTypes(), 'id')), true)) {
+            throw new ValidationError(['membership_type_id' => 'foundation.invalid']);
+        }
+        return Transaction::run($this->pdo, function () use ($id, $actor, $mail, $joinDate, $typeId): int {
             $stmt = $this->pdo->prepare('SELECT * FROM membership_applications WHERE id = ? FOR UPDATE');
             $stmt->execute([$id]);
             $row = $stmt->fetch();
@@ -321,10 +341,11 @@ final class ApplicationRepository
             ];
             $memberId = $memberRepo->save(null, $memberInput, 0, $actor, 'Online-Mitgliedsantrag #' . $id);
 
-            // Eintritt per heute starten (dies setzt via MembershipTypeSync automatisch 'active_member')
-            $periods = new MembershipPeriods($this->pdo);
-            $today = (new DateTimeImmutable())->format('Y-m-d');
-            $periods->join($memberId, $today, $actor);
+            // Gewaehlte Mitgliedsart vor dem Eintritt setzen; ohne Wahl vergibt MembershipTypeSync 'active_member'.
+            if ($typeId !== null) {
+                (new MemberRoleAssignments($this->pdo))->assign($memberId, $typeId, '', $joinDate, $actor);
+            }
+            (new MembershipPeriods($this->pdo))->join($memberId, $joinDate, $actor);
 
             // Antrag aktualisieren
             $this->pdo->prepare(

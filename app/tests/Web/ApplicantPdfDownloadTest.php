@@ -29,7 +29,7 @@ final class ApplicantPdfDownloadTest extends TestCase
     private function input(): array
     {
         return ['first_name' => 'Erika', 'last_name' => 'Muster', 'email' => 'erika@example.org']
-            + ApplicationInput::declarations($this->pdo, 'yes');
+            + ApplicationInput::defaults($this->pdo, 'yes');
     }
 
     public function test_applicant_can_download_signed_pdf_only_in_submitting_session(): void

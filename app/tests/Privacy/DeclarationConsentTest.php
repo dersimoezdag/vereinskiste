@@ -27,7 +27,7 @@ final class DeclarationConsentTest extends TestCase
     {
         $repo = new ApplicationRepository($this->pdo);
         $invite = $repo->createInvite(1, 'Test', 7);
-        $member = $repo->approve($repo->submit($invite['token'], ['first_name' => 'E', 'last_name' => 'M', 'email' => 'e@example.org'] + ApplicationInput::declarations($this->pdo, 'yes')), 1);
+        $member = $repo->approve($repo->submit($invite['token'], ['first_name' => 'E', 'last_name' => 'M', 'email' => 'e@example.org'] + ApplicationInput::defaults($this->pdo, 'yes')), 1);
         $photo = (new Declarations($this->pdo))->all()[3];
 
         (new Consents($this->pdo))->record($member, ['kind' => 'declaration', 'declaration_id' => (string) $photo['id'], 'granted' => '0', 'reason' => 'Widerruf per E-Mail'], 1);

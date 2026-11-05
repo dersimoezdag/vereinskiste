@@ -27,7 +27,7 @@ final class ApplicationSignaturePrivacyTest extends TestCase
     {
         $repo = new ApplicationRepository($this->pdo);
         $invite = $repo->createInvite(1, 'Test', 7);
-        return $repo->submit($invite['token'], ['first_name' => 'Erika', 'last_name' => 'Muster', 'email' => 'e@example.org'] + ApplicationInput::declarations($this->pdo));
+        return $repo->submit($invite['token'], ['first_name' => 'Erika', 'last_name' => 'Muster', 'email' => 'e@example.org'] + ApplicationInput::defaults($this->pdo));
     }
 
     public function test_redaction_removes_signatures_and_snapshots(): void

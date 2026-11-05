@@ -35,7 +35,7 @@ final class ApplicationSignaturesTest extends TestCase
     public function test_submit_stores_snapshots_signatures_and_consents(): void
     {
         $invite = $this->repo->createInvite(1, 'Test', 7);
-        $id = $this->repo->submit($invite['token'], $this->person() + ApplicationInput::declarations($this->pdo, 'yes'));
+        $id = $this->repo->submit($invite['token'], $this->person() + ApplicationInput::defaults($this->pdo, 'yes'));
 
         $rows = (new ApplicationSignatures($this->pdo))->forApplication($id);
         $this->assertCount(4, $rows);
@@ -60,7 +60,7 @@ final class ApplicationSignaturesTest extends TestCase
     {
         $invite = $this->repo->createInvite(1, 'Test', 7);
         $ids = array_column((new Declarations($this->pdo))->active(), 'id');
-        $input = $this->person() + ApplicationInput::declarations($this->pdo);
+        $input = $this->person() + ApplicationInput::defaults($this->pdo);
         unset($input['declaration'][(string) $ids[0]], $input['declaration'][(string) $ids[1]]);
         $input['signature'][(string) $ids[2]] = '';
         $input['signature'][(string) $ids[3]] = ApplicationInput::signature(600, 160, false);
@@ -86,7 +86,7 @@ final class ApplicationSignaturesTest extends TestCase
         $id = (new Declarations($this->pdo))->active()[0]['id'];
         (new Declarations($this->pdo))->save($id, ['title' => 'Antrag', 'content' => '<p>Ich beantrage die Aufnahme.</p>', 'kind' => 'confirmation'], 1);
         $invite = $this->repo->createInvite(1, 'Test', 7);
-        $input = $this->person() + ApplicationInput::declarations($this->pdo);
+        $input = $this->person() + ApplicationInput::defaults($this->pdo);
         $this->assertSame('1', $input['declaration'][(string) $id]);
         unset($input['declaration'][(string) $id]);
         try {
@@ -102,7 +102,7 @@ final class ApplicationSignaturesTest extends TestCase
         $this->pdo->exec('UPDATE application_declarations SET active = false');
         $invite = $this->repo->createInvite(1, 'Test', 7);
         try {
-            $this->repo->submit($invite['token'], $this->person());
+            $this->repo->submit($invite['token'], $this->person() + ApplicationInput::defaults($this->pdo));
             $this->fail('expected ValidationError');
         } catch (ValidationError $e) {
             $this->assertSame('declarations.error.none', $e->errors['declarations']);
@@ -113,7 +113,7 @@ final class ApplicationSignaturesTest extends TestCase
     {
         $this->pdo->exec('UPDATE application_declarations SET active = false WHERE position <> 2');
         $invite = $this->repo->createInvite(1, 'Test', 7);
-        $input = $this->person() + ApplicationInput::declarations($this->pdo);
+        $input = $this->person() + ApplicationInput::defaults($this->pdo);
         $this->assertSame([], $input['signed_place']);
         $this->assertGreaterThan(0, $this->repo->submit($invite['token'], $input));
     }

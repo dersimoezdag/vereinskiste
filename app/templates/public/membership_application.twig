@@ -60,11 +60,24 @@
                 </div>
                 <h3 class="h6 mt-6 mb-3">{{ t('applications.step.address') }}</h3>
                 <div class="grid gap-4 sm:grid-cols-6">
-                    <div class="sm:col-span-4"><label for="antrag-address" class="label">{{ t('members.field.address') }}</label><input type="text" id="antrag-address" name="address" value="{{ input.address|default('') }}" class="input" maxlength="200" autocomplete="address-line1"></div>
-                    <div class="sm:col-span-2"><label for="antrag-house-number" class="label">{{ t('members.field.house_number') }}</label><input type="text" id="antrag-house-number" name="house_number" value="{{ input.house_number|default('') }}" class="input" maxlength="20"></div>
-                    <div class="sm:col-span-2"><label for="antrag-zip" class="label">{{ t('members.field.zip') }}</label><input type="text" id="antrag-zip" name="zip" value="{{ input.zip|default('') }}" class="input" maxlength="20" inputmode="numeric" autocomplete="postal-code"></div>
-                    <div class="sm:col-span-4"><label for="antrag-city" class="label">{{ t('members.field.city') }}</label><input type="text" id="antrag-city" name="city" value="{{ input.city|default('') }}" class="input" maxlength="100" autocomplete="address-level2"></div>
-                    <div class="sm:col-span-6"><label for="antrag-country" class="label">{{ t('members.field.country') }}</label><input type="text" id="antrag-country" name="country" value="{{ input.country|default('Deutschland') }}" class="input" maxlength="100" autocomplete="country-name"></div>
+                    {% for field, spec in {
+                        address: {span: 'sm:col-span-4', max: 200, autocomplete: 'address-line1'},
+                        house_number: {span: 'sm:col-span-2', max: 20},
+                        zip: {span: 'sm:col-span-2', max: 20, autocomplete: 'postal-code'},
+                        city: {span: 'sm:col-span-4', max: 100, autocomplete: 'address-level2'},
+                        country: {span: 'sm:col-span-6', max: 100, autocomplete: 'country-name'}
+                    } %}
+                    {% set field_id = 'antrag-' ~ field|replace({'_': '-'}) %}
+                    <div class="{{ spec.span }}">
+                        <label for="{{ field_id }}" class="label required">{{ t('members.field.' ~ field) }}</label>
+                        <input type="text" id="{{ field_id }}" name="{{ field }}" value="{{ attribute(input, field)|default('') }}"
+                               class="input{% if errors[field] %} is-invalid{% endif %}" maxlength="{{ spec.max }}" required
+                               {% if spec.autocomplete is defined %}autocomplete="{{ spec.autocomplete }}"{% endif %}
+                               {% if field == 'zip' %}inputmode="numeric"{% endif %}
+                               {% if errors[field] %}aria-invalid="true" aria-describedby="{{ field_id }}-error"{% endif %}>
+                        {% if errors[field] %}<p id="{{ field_id }}-error" class="field-error block">{{ t(errors[field]) }}</p>{% endif %}
+                    </div>
+                    {% endfor %}
                 </div>
 
             {% elseif step.id == 'sepa' %}
@@ -87,11 +100,15 @@
                 {% if declarations is not empty %}
                 <dl class="divide-y divide-line rounded-xl border border-line mb-6">
                     {% for d in declarations %}
-                    <div class="flex flex-wrap items-center gap-3 px-4 py-3">
-                        <dt class="min-w-0 flex-1 font-semibold">{{ d.title }}</dt>
-                        <dd class="m-0 text-sm text-muted" data-summary-choice="{{ d.id }}">{% if d.kind == 'notice' %}{{ t('declarations.noticed') }}{% elseif d.kind == 'confirmation' and d.signature_required %}{{ t('declarations.confirmed') }}{% endif %}</dd>
-                        {% if d.signature_required %}<img class="h-8 w-auto rounded bg-white" alt="{{ t('declarations.signature') }}" data-summary-signature="{{ d.id }}" hidden>{% endif %}
-                        <a class="text-sm" href="#schritt-{{ (invite.require_sepa ? 2 : 1) + loop.index }}" data-step-goto="{{ (invite.require_sepa ? 1 : 0) + loop.index }}">{{ t('declarations.change') }}</a>
+                    <div class="min-w-0 px-4 py-3">
+                        <dt class="mb-2 break-words font-semibold">{{ d.title }}</dt>
+                        <dd class="m-0 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="min-w-0">
+                                <span class="block break-words text-sm text-muted" data-summary-choice="{{ d.id }}">{% if d.kind == 'notice' %}{{ t('declarations.noticed') }}{% elseif d.kind == 'confirmation' and d.signature_required %}{{ t('declarations.confirmed') }}{% endif %}</span>
+                                {% if d.signature_required %}<img class="mt-2 h-8 w-auto max-w-full object-contain rounded bg-white" alt="{{ t('declarations.signature') }}" data-summary-signature="{{ d.id }}" hidden>{% endif %}
+                            </div>
+                            <a class="self-start shrink-0 text-sm" href="#schritt-{{ (invite.require_sepa ? 2 : 1) + loop.index }}" data-step-goto="{{ (invite.require_sepa ? 1 : 0) + loop.index }}">{{ t('declarations.change') }}</a>
+                        </dd>
                     </div>
                     {% endfor %}
                 </dl>

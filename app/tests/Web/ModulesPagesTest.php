@@ -58,7 +58,7 @@ final class ModulesPagesTest extends TestCase
     public function test_application_decision_preview_does_not_apply_or_send_until_confirmation():void
     {
         $actor=$this->loginAs(['secretary']);$repo=new ApplicationRepository($this->pdo);$invite=$repo->createInvite($actor);
-        $id=$repo->submit($invite['token'],['name'=>'Erika Muster','email'=>'erika@example.org',...ApplicationInput::declarations($this->pdo),]);
+        $id=$repo->submit($invite['token'],['name'=>'Erika Muster','email'=>'erika@example.org',...ApplicationInput::defaults($this->pdo),]);
         $this->assertSame(200,$this->get('/members/applications/'.$id.'/decision')->getStatusCode());
         $input=['decision'=>'approved','subject'=>'Willkommen','message'=>'Geprüfte Nachricht','reason'=>'','stage'=>'preview'];
         $res=$this->postForm('/members/applications/'.$id.'/decision',$input);$this->assertSame(200,$res->getStatusCode(),(string)$res->getBody());

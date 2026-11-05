@@ -29,7 +29,7 @@ final class ApplicationSignaturePagesTest extends TestCase
         $repo = new ApplicationRepository($this->pdo);
         $invite = $repo->createInvite(1, 'Test', 7);
         $this->application = $repo->submit($invite['token'], ['first_name' => 'Erika', 'last_name' => 'Muster', 'email' => 'erika@example.org']
-            + ApplicationInput::declarations($this->pdo, 'yes'));
+            + ApplicationInput::defaults($this->pdo, 'yes'));
     }
 
     public function test_decision_page_lists_declarations_with_signatures(): void

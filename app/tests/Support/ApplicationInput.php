@@ -25,10 +25,11 @@ final class ApplicationInput
         return 'data:image/png;base64,' . base64_encode((string) ob_get_clean());
     }
 
-    /** Gueltige Antworten fuer alle aktiven Erklaerungen. @return array<string,mixed> */
-    public static function declarations(PDO $pdo, string $consent = 'no'): array
+    /** Gueltige Pflichtanschrift und Antworten fuer alle aktiven Erklaerungen. @return array<string,mixed> */
+    public static function defaults(PDO $pdo, string $consent = 'no'): array
     {
-        $input = ['declaration' => [], 'signature' => [], 'signed_place' => []];
+        $input = ['address' => 'Musterstraße', 'house_number' => '12a', 'zip' => '91054', 'city' => 'Erlangen',
+            'country' => 'Deutschland', 'declaration' => [], 'signature' => [], 'signed_place' => []];
         foreach ((new Declarations($pdo))->active() as $d) {
             if ($d['kind'] === 'confirmation' && !$d['signature_required']) {
                 $input['declaration'][(string) $d['id']] = '1';

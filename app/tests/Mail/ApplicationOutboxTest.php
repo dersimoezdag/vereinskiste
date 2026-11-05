@@ -25,7 +25,7 @@ final class ApplicationOutboxTest extends TestCase
     private function application():int
     {
         $repo=new ApplicationRepository($this->db);$invite=$repo->createInvite(1,'',14,null,true);
-        return $repo->submit($invite['token'],['name'=>'Erika Muster','email'=>'erika@example.org',...ApplicationInput::declarations($this->db),'account_holder'=>'Erika','iban'=>'DE89370400440532013000','sepa_mandate_consent'=>'1']);
+        return $repo->submit($invite['token'],['name'=>'Erika Muster','email'=>'erika@example.org',...ApplicationInput::defaults($this->db),'account_holder'=>'Erika','iban'=>'DE89370400440532013000','sepa_mandate_consent'=>'1']);
     }
     public function test_receipt_internal_and_decision_notifications_are_transactional_and_contain_no_bank_data():void
     {
@@ -57,7 +57,7 @@ final class ApplicationOutboxTest extends TestCase
     {
         $repo=new ApplicationRepository($this->db);$invite=$repo->createInvite(1);
         $old=(new Consents($this->db))->fingerprint();$first=(new \Vereinskiste\Members\Declarations($this->db))->active()[0];(new \Vereinskiste\Members\Declarations($this->db))->save($first['id'],['title'=>$first['title'],'content'=>'<p>Neu</p>','kind'=>$first['kind'],'signature_required'=>'1'],1);
-        try {$repo->submit($invite['token'],['name'=>'Erika Muster','email'=>'erika@example.org',...ApplicationInput::declarations($this->db),'document_fingerprint'=>$old]);$this->fail('stale');}
+        try {$repo->submit($invite['token'],['name'=>'Erika Muster','email'=>'erika@example.org',...ApplicationInput::defaults($this->db),'document_fingerprint'=>$old]);$this->fail('stale');}
         catch(ValidationError $e) {$this->assertArrayHasKey('document_fingerprint',$e->errors);}
         $this->assertSame(0,(int)$this->db->query('SELECT count(*) FROM membership_applications')->fetchColumn());
         $this->assertSame(0,(int)$this->db->query('SELECT used_count FROM membership_application_invites')->fetchColumn());

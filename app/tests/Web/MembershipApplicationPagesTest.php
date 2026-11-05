@@ -31,6 +31,28 @@ final class MembershipApplicationPagesTest extends TestCase
         $this->webUser('admin@example.org', ['admin']);
     }
 
+    public function test_address_fields_are_required_and_server_errors_preserve_input(): void
+    {
+        $invite = (new ApplicationRepository($this->pdo))->createInvite(1, 'Anschrift', 7);
+        $path = '/antrag/' . $invite['token'];
+        $html = (string) $this->get($path)->getBody();
+        $document = new \DOMDocument();
+        @$document->loadHTML($html);
+        $xpath = new \DOMXPath($document);
+        foreach (['address', 'house_number', 'zip', 'city', 'country'] as $field) {
+            $this->assertSame(1, $xpath->query('//input[@name="' . $field . '" and @required]')->length);
+        }
+        $this->assertSame('Deutschland', $xpath->query('//input[@name="country"]')->item(0)->getAttribute('value'));
+        $response = $this->postForm($path, ['first_name' => 'Erika', 'last_name' => 'Muster', 'email' => 'erika@example.org',
+            'address' => '', 'house_number' => '', 'zip' => '', 'city' => 'Erlangen', 'country' => 'Deutschland']);
+        $this->assertSame(422, $response->getStatusCode());
+        $body = (string) $response->getBody();
+        $this->assertStringContainsString('data-step-error', $body);
+        $this->assertStringContainsString('id="antrag-address-error"', $body);
+        $this->assertStringContainsString('id="antrag-house-number-error"', $body);
+        $this->assertStringContainsString('name="city" value="Erlangen"', $body);
+    }
+
     public function test_test_link_validates_without_creating_records_and_is_reusable(): void
     {
         $this->loginAs(['admin']);
@@ -49,7 +71,7 @@ final class MembershipApplicationPagesTest extends TestCase
         $input = [
             'name' => 'Test Person', 'email' => 'test@example.org',
             'account_holder' => 'Test Person', 'iban' => 'DE89370400440532013000',
-            'sepa_mandate_consent' => '1', ...ApplicationInput::declarations($this->pdo),
+            'sepa_mandate_consent' => '1', ...ApplicationInput::defaults($this->pdo),
         ];
         for ($run = 0; $run < 2; $run++) {
             $response = $this->postForm($path, $input);
@@ -105,16 +127,17 @@ final class MembershipApplicationPagesTest extends TestCase
 
         // 5. Submit form
         $res = $this->postForm('/antrag/' . $token, [
+            ...ApplicationInput::defaults($this->pdo),
             'name' => 'Klaus Neumayer',
             'email' => 'klaus@example.org',
-            'address' => 'Hauptstraße 1',
+            'address' => 'Hauptstraße',
+            'house_number' => '1',
             'zip' => '80331',
             'city' => 'München',
             'birth_date' => '1990-05-15',
             'account_holder' => 'Klaus Neumayer',
             'iban' => 'DE89370400440532013000',
             'sepa_mandate_consent' => '1',
-            ...ApplicationInput::declarations($this->pdo),
         ]);
         $this->assertSame(302, $res->getStatusCode());
         $this->assertSame('/antrag/danke', $res->getHeaderLine('Location'));
@@ -157,7 +180,7 @@ final class MembershipApplicationPagesTest extends TestCase
             'name' => 'Spam Bot',
             'email' => 'bot@example.org',
             'website' => 'http://spam.com',
-            ...ApplicationInput::declarations($this->pdo),
+            ...ApplicationInput::defaults($this->pdo),
         ]);
         $this->assertSame('/antrag/danke', $res->getHeaderLine('Location'));
 
@@ -172,7 +195,7 @@ final class MembershipApplicationPagesTest extends TestCase
         $appId = $repo->submit($invite['token'], [
             'name' => 'Antragsteller',
             'email' => 'test@example.org',
-            ...ApplicationInput::declarations($this->pdo),
+            ...ApplicationInput::defaults($this->pdo),
         ]);
 
         $this->loginAs(['admin']);
@@ -202,7 +225,7 @@ final class MembershipApplicationPagesTest extends TestCase
     public function test_server_errors_keep_answers_and_signatures_and_mark_step(): void
     {
         $invite = (new ApplicationRepository($this->pdo))->createInvite(1, 'Test', 7);
-        $input = ['first_name' => 'Erika', 'last_name' => 'Muster', 'email' => 'kaputt'] + ApplicationInput::declarations($this->pdo, 'yes');
+        $input = ['first_name' => 'Erika', 'last_name' => 'Muster', 'email' => 'kaputt'] + ApplicationInput::defaults($this->pdo, 'yes');
         $res = $this->postForm('/antrag/' . $invite['token'], $input);
         $this->assertSame(422, $res->getStatusCode());
         $html = (string) $res->getBody();
