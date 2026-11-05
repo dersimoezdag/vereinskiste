@@ -57,12 +57,6 @@ final class ApplicationDecisionController extends AdminController
         $pdo=($this->pdo)();$id=(int)$args['id'];
         $app=(new ApplicationRepository($pdo))->findApplication($id);
         if(!$app) {return $this->notFound($req);}
-        $signatures=new \Vereinskiste\Members\ApplicationSignatures($pdo);$rows=$signatures->forApplication($id);$pngs=[];
-        foreach($rows as $row) {if($row['has_signature']) {$pngs[$row['id']]=(string)$signatures->png($id,$row['id']);}}
-        $club=(string)((new \Vereinskiste\Club\Profile($pdo))->get()['data']['name']??'');
-        $body=\Vereinskiste\Members\ApplicationPdf::render($app,$rows,$pngs,$club);
-        (new \Vereinskiste\Audit\AuditLog($pdo))->record('application_pdf_downloaded',$this->userId($req),['application_id'=>$id]);
-        $res->getBody()->write($body);
-        return $res->withHeader('Content-Type','application/pdf')->withHeader('Content-Disposition','attachment; filename="mitgliedsantrag-'.$id.'.pdf"')->withHeader('Cache-Control','no-store');
+        return ApplicationPdfDownload::respond($pdo, $res, $app, $this->userId($req));
     }
 }

@@ -101,25 +101,51 @@ final class MembershipApplicationController
         if (!$this->budget($req, 'application', $token)) { return $res->withStatus(429)->withHeader('Retry-After', '60'); }
         $body = (array) $req->getParsedBody();
 
+        $session = $req->getAttribute('session');
+        $session?->remove('application_pdf');
+
         // Honeypot check: Bots fuellen oft versteckte Felder aus
         if (!empty($body['website'])) {
             return (new SlimResponse())->withStatus(302)->withHeader('Location', '/antrag/danke');
         }
 
         try {
-            $appRepo->submit($token, $body);
+            $applicationId = $appRepo->submit($token, $body);
         } catch (ValidationError $e) {
             return $this->renderForm($req, $res->withStatus(422), $invite, $body, $e->errors);
         }
 
+        if ($applicationId > 0) {
+            $session?->set('application_pdf', ['id' => $applicationId, 'expires' => time() + 3600]);
+        }
         return (new SlimResponse())->withStatus(302)->withHeader('Location', '/antrag/danke' . ($invite['is_test'] ? '?test=1' : ''));
     }
 
     public function thankYou(Request $req, Response $res): Response
     {
-        return $req->getAttribute('view')->render($res, 'public/membership_application_success.twig', [
+        return $req->getAttribute('view')->render($res->withHeader('Cache-Control', 'no-store'), 'public/membership_application_success.twig', [
             'is_test' => ($req->getQueryParams()['test'] ?? '') === '1',
+            'pdf_available' => $this->submittedApplication($req) !== null,
         ]);
+    }
+
+    public function pdf(Request $req, Response $res): Response
+    {
+        $application = $this->submittedApplication($req);
+        if ($application === null) {
+            return $res->withStatus(404)->withHeader('Cache-Control', 'no-store');
+        }
+        return ApplicationPdfDownload::respond(($this->pdo)(), $res, $application, null);
+    }
+
+    private function submittedApplication(Request $req): ?array
+    {
+        $grant = $req->getAttribute('session')?->get('application_pdf');
+        if (!is_array($grant) || ($grant['expires'] ?? 0) <= time() || !is_int($grant['id'] ?? null)) {
+            return null;
+        }
+        $application = (new ApplicationRepository(($this->pdo)()))->findApplication($grant['id']);
+        return $application && empty($application['anonymized_at']) ? $application : null;
     }
 
     private function renderForm(Request $req, Response $res, array $invite, ?array $input = null, array $errors = []): Response

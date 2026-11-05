@@ -217,7 +217,7 @@ final class MemberController extends AdminController
     public function applications(Request $req, Response $res): Response
     {
         $query = $req->getQueryParams();
-        $filter = $this->str($query, 'filter') ?: 'all';
+        $filter = $this->str($query, 'filter') ?: 'pending';
         $pdo = ($this->pdo)();
         $appRepo = new ApplicationRepository($pdo);
         $applications = $appRepo->listApplications($filter);

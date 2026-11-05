@@ -19,7 +19,10 @@
                 <p class="text-lg text-muted mb-6">
                     {{ t(is_test ? 'applications.test.notice' : 'applications.success_message') }}
                 </p>
-                <div>
+                <div class="flex flex-wrap justify-center gap-2">
+                    {% if pdf_available %}
+                    <a href="/antrag/pdf" class="btn px-6">{{ t('applications.download_pdf') }}</a>
+                    {% endif %}
                     <a href="/" class="btn btn-primary px-6">{{ t('applications.back_home') }}</a>
                 </div>
             </div>

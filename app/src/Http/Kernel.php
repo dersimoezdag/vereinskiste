@@ -325,6 +325,7 @@ final class Kernel
 
         $onlineApp = new \Vereinskiste\Web\MembershipApplicationController($pdoProvider, $limiter);
         $app->get('/antrag/danke', [$onlineApp, 'thankYou']);
+        $app->get('/antrag/pdf', [$onlineApp, 'pdf']);
         $app->get('/antrag/{token}', [$onlineApp, 'show']);
         $app->post('/antrag/{token}/unlock', [$onlineApp, 'unlock']);
         $app->post('/antrag/{token}', [$onlineApp, 'submit']);
