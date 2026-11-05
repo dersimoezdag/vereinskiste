@@ -218,14 +218,16 @@ final class MemberController extends AdminController
     {
         $query = $req->getQueryParams();
         $filter = $this->str($query, 'filter') ?: 'pending';
+        $tab = $this->str($query, 'tab') === 'messages' ? 'messages' : 'applications';
         $pdo = ($this->pdo)();
         $appRepo = new ApplicationRepository($pdo);
-        $applications = $appRepo->listApplications($filter);
+        $applications = $tab === 'applications' ? $appRepo->listApplications($filter) : [];
 
         return $req->getAttribute('view')->render($res, 'members/applications.twig', [
             'applications' => $applications,
             'filter' => $filter,
-            'outbox' => (new \Vereinskiste\Mail\Outbox($pdo))->list(),
+            'tab' => $tab,
+            'outbox' => $tab === 'messages' ? (new \Vereinskiste\Mail\Outbox($pdo))->list() : [],
         ]);
     }
 

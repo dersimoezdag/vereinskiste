@@ -3,6 +3,11 @@
 {% block content %}
 <div class="mx-auto w-full max-w-7xl">
     <h1 class="page-title mb-4">{{ t('applications.title') }}</h1>
+    <nav class="tabs" aria-label="{{ t('applications.title') }}">
+        <a class="tab{% if tab == 'applications' %} active{% endif %}" href="/members/applications?filter={{ filter|url_encode }}"{% if tab == 'applications' %} aria-current="page"{% endif %}>{{ t('applications.tabs.applications') }}</a>
+        <a class="tab{% if tab == 'messages' %} active{% endif %}" href="/members/applications?tab=messages&amp;filter={{ filter|url_encode }}"{% if tab == 'messages' %} aria-current="page"{% endif %}>{{ t('applications.tabs.messages') }}</a>
+    </nav>
+    {% if tab == 'applications' %}
     <div class="panel">
         <div class="panel-header flex justify-between items-center flex-wrap gap-2">
             <h3 class="panel-title m-0">{{ t('applications.title') }}</h3>
@@ -91,10 +96,12 @@
         </div>
         {% endif %}
     </div>
-<div class="panel panel-body mt-4"><h2>{{ t('applications.outbox') }}</h2><p>{{ t('applications.outbox.explanation') }}</p>
+    {% else %}
+<div class="panel panel-body"><h2>{{ t('applications.outbox') }}</h2><p>{{ t('applications.outbox.explanation') }}</p>
 {% if not system_mail_available() %}<p class="alert alert-warning">{{ t('applications.mail.disabled') }}</p>{% endif %}
 <div class="table-scroll"><table class="data-table"><thead><tr><th>{{ t('applications.mail.subject') }}</th><th>{{ t('ui.e_mail') }}</th><th>{{ t('privacy.field.status') }}</th><th></th></tr></thead><tbody>
 {% for mail in outbox %}<tr><td>{{ mail.subject }} · #{{ mail.application_id }}</td><td>{{ mail.recipient }}</td><td>{{ t('applications.outbox.' ~ mail.status) }}</td><td>{% if mail.status in ['failed','uncertain'] and can('members.write') %}<form method="post" action="/members/application-mails/{{ mail.id }}/retry">{{ csrf_field() }}<input type="hidden" name="version" value="{{ mail.version }}"><button class="btn btn-sm">{{ t('applications.outbox.retry') }}</button></form>{% endif %}</td></tr>{% endfor %}
 </tbody></table></div></div>
+    {% endif %}
 </div>
 {% endblock %}

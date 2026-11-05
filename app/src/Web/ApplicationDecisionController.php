@@ -33,8 +33,8 @@ final class ApplicationDecisionController extends AdminController
     {
         $input=$this->body($req);
         try {(new \Vereinskiste\Mail\Outbox(($this->pdo)()))->retry((int)$args['id'],Fields::version($input['version']??null),$this->userId($req));}
-        catch(\Vereinskiste\Foundation\Conflict) {return \Vereinskiste\Http\ErrorPage::render($req->getAttribute('view'),409,'applications.title','foundation.conflict','/members/applications');}
-        $this->flash($req,'foundation.saved');return $this->redirect('/members/applications');
+        catch(\Vereinskiste\Foundation\Conflict) {return \Vereinskiste\Http\ErrorPage::render($req->getAttribute('view'),409,'applications.title','foundation.conflict','/members/applications?tab=messages');}
+        $this->flash($req,'foundation.saved');return $this->redirect('/members/applications?tab=messages');
     }
     private function page(Request $req,Response $res,int $id,?array $input=null,array $errors=[],bool $preview=false):Response
     {
