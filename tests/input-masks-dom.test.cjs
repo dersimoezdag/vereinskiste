@@ -3,6 +3,43 @@ const assert = require('node:assert/strict');
 const {readFileSync} = require('node:fs');
 const {JSDOM} = require('jsdom');
 
+test('date mask inserts dots while typing and supports deletion, paste and clearing', () => {
+    const dom = new JSDOM('<form><input id="date" type="date" name="date"></form>', {runScripts: 'outside-only'});
+    const w = dom.window;
+    try {
+        require('./browser-texts.cjs')(w);
+        w.eval(readFileSync(require.resolve('../public/assets/input-masks.js'), 'utf8'));
+        const field = w.document.querySelector('#date');
+        const input = (value, inputType = 'insertText', caret = value.length) => {
+            field.value = value;
+            field.setSelectionRange(caret, caret);
+            field.dispatchEvent(new w.InputEvent('input', {inputType}));
+        };
+        assert.equal(field.placeholder, 'TT.MM.JJJJ');
+        for (const [value, expected] of [['1', '1'], ['13', '13.'], ['13.1', '13.1'], ['13.10', '13.10.'], ['13.10.2026', '13.10.2026']]) {
+            input(value);
+            assert.equal(field.value, expected);
+            assert.equal(field.selectionStart, expected.length);
+        }
+        assert.equal(new w.FormData(field.form).get('date'), '2026-10-13');
+        input('13.10', 'deleteContentBackward');
+        assert.equal(field.value, '13.10');
+        input('13.1', 'deleteContentBackward');
+        assert.equal(field.value, '13.1');
+        input('29102026', 'insertFromPaste');
+        assert.equal(field.value, '29.10.2026');
+        assert.equal(new w.FormData(field.form).get('date'), '2026-10-29');
+        input('19.10.2026', 'insertText', 1);
+        assert.equal(field.selectionStart, 1);
+        input('31042026', 'insertFromPaste');
+        assert.equal(field.validity.valid, false);
+        input('', 'deleteContentBackward');
+        assert.equal(field.value, '');
+        assert.equal(field.validity.valid, true);
+        assert.equal(new w.FormData(field.form).get('date'), '');
+    } finally { w.close(); }
+});
+
 test('German date fields retain canonical form values, block invalid submit and support dynamic forms', async () => {
     const dom = new JSDOM('<form novalidate><input id="date" type="date" name="date" value="2026-10-13" min="2026-01-01" required><input id="money" name="amount" value="1234.56"><input id="iban" name="iban"><button>Save</button></form>', {runScripts: 'outside-only'});
     const w = dom.window, document = w.document;

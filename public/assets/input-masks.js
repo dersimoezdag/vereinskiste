@@ -1,5 +1,5 @@
 /* Shared progressive input masks. Invalid input is retained for correction.
- * Dates use the browser's native date mask; international phone/postal formats stay flexible. */
+ * Dates insert German separators; international phone/postal formats stay flexible. */
 (function (root) {
     'use strict';
     function money(value, signed) {
@@ -135,6 +135,25 @@
         var country = field.form ? field.form.querySelector('[name="country"]') : null;
         return country ? country.value : '';
     }
+    function maskDate(field, event) {
+        var value = field.value;
+        // Keep malformed pasted values visible so validation can explain the error.
+        if (!/^[\d.]*$/.test(value)) { return; }
+        var caret = field.selectionStart === null ? value.length : field.selectionStart;
+        var before = value.slice(0, caret).replace(/\./g, '').length;
+        var digits = value.replace(/\./g, '').slice(0, 8);
+        var deleting = event && /^delete/.test(event.inputType || '');
+        var next = digits.slice(0, 2);
+        if (digits.length > 2 || (digits.length === 2 && !deleting)) { next += '.' + digits.slice(2, 4); }
+        if (digits.length > 4 || (digits.length === 4 && !deleting)) { next += '.' + digits.slice(4); }
+        field.value = next;
+        var position = 0;
+        for (var seen = 0; position < next.length && seen < before; position++) {
+            if (next[position] !== '.') { seen++; }
+        }
+        if (!deleting && next[position] === '.') { position++; }
+        field.setSelectionRange(position, position);
+    }
     function kind(field) { return field.dataset.mask || (field.type === 'date' ? 'date' : '') || (specs[field.name] ? field.name : ''); }
     function update(field, format) {
         var type = kind(field), value = field.value, error = '', formatted = value;
@@ -208,6 +227,7 @@
                 field.removeAttribute('name');
                 field.type = 'text'; field.value = germanDate(initial); field.inputMode = 'numeric';
                 field.maxLength = 10;
+                field.placeholder = 'TT.MM.JJJJ';
                 var picker = document.createElement('input');
                 picker.type = 'date'; picker.value = initial; picker.dataset.maskReady = 'picker';
                 field.defaultValue = germanDate(initial); canonical.defaultValue = initial; picker.defaultValue = initial;
@@ -254,8 +274,9 @@
             }
             field.dataset.maskFeedback = feedback.id;
             field.setAttribute('aria-describedby', [field.getAttribute('aria-describedby'), feedback.id].filter(Boolean).join(' '));
-            field.addEventListener('input', function () {
+            field.addEventListener('input', function (event) {
                 if (field.composing) { return; }
+                if (type === 'date') { maskDate(field, event); }
                 var select = signSelect(field);
                 if (select) { applySign(field, select); }
                 if (moneyTypes.includes(type)) { liveGroup(field); }
