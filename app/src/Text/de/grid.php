@@ -2,6 +2,10 @@
 declare(strict_types=1);
 
 return [
+    'grid.sort' => 'Sortierung',
+    'grid.original_order' => 'Ursprüngliche Reihenfolge',
+    'grid.ascending' => 'aufsteigend',
+    'grid.descending' => 'absteigend',
     'grid.search' => 'Suche',
     'grid.search_placeholder' => 'Geladene Einträge durchsuchen …',
     'grid.no_results' => 'Keine passenden Einträge gefunden.',

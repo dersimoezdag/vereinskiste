@@ -121,3 +121,23 @@ test('server-paged lists keep every loaded row and leave search and pagination t
     assert.equal(visible(doc)[0].cells[0].dataset.gridValue, 'Person 1');
     dom.window.close();
 });
+
+
+test('mobile sorting shares desktop order and can restore original order', () => {
+    const control = '<label data-grid-mobile-sort-control hidden><select data-grid-mobile-sort><option value="">Original</option><option value="0:1">Name aufsteigend</option><option value="0:-1">Name absteigend</option></select></label>';
+    const dom = new JSDOM(markup([['Zoe', '2026-01-01'], ['Anna', '2026-02-01']]).replace('<section data-grid>', '<section data-grid>' + control), {runScripts: 'outside-only'});
+    dom.window.vkText = () => '{start}–{end} von {filtered} Treffern · {total} geladen';
+    dom.window.eval(script);
+    dom.window.document.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+    const doc = dom.window.document;
+    assert.equal(doc.querySelector('[data-grid-mobile-sort-control]').hidden, false);
+    change(dom, '[data-grid-mobile-sort]', '0:1', 'change');
+    assert.equal(visible(doc)[0].cells[0].dataset.gridValue, 'Anna');
+    assert.equal(doc.querySelector('th').getAttribute('aria-sort'), 'ascending');
+    doc.querySelector('[data-grid-sort="0"]').click();
+    assert.equal(doc.querySelector('[data-grid-mobile-sort]').value, '0:-1');
+    change(dom, '[data-grid-mobile-sort]', '', 'change');
+    assert.equal(visible(doc)[0].cells[0].dataset.gridValue, 'Zoe');
+    assert.equal(doc.querySelector('th').hasAttribute('aria-sort'), false);
+    dom.window.close();
+});

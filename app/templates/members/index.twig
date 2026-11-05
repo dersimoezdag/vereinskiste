@@ -34,7 +34,7 @@
                         <button type="submit" class="btn">{{ t('common.search') }}</button>
                     </div>
                 </div>
-                <div class="md:col-span-6 col-span-12 flex gap-2 md:justify-end">
+                <div class="md:col-span-6 col-span-12 flex flex-wrap gap-2 md:justify-end">
                     <a href="/members?state=current{% if search %}&q={{ search|url_encode }}{% endif %}"
                        class="btn btn-sm {% if state == 'current' %}btn-primary{% else %}{% endif %}">
                         {{ t('members.state.current') }}

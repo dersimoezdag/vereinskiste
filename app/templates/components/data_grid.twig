@@ -10,6 +10,18 @@
         </label>
         {% block filters %}{% endblock %}
     </div>
+    <label class="data-grid-mobile-sort panel-body" data-grid-mobile-sort-control hidden>
+        <span>{{ t('grid.sort') }}</span>
+        <select class="input" data-grid-mobile-sort>
+            <option value="">{{ t('grid.original_order') }}</option>
+            {% for column in columns %}
+                {% if (column.sortable ?? true) and not column.actions|default(false) %}
+                <option value="{{ loop.index0 }}:1">{{ column.label }} – {{ t('grid.ascending') }}</option>
+                <option value="{{ loop.index0 }}:-1">{{ column.label }} – {{ t('grid.descending') }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    </label>
     <div class="table-scroll">
         <table class="data-table table-cards mb-0">
             <caption class="sr-only">{{ label }}</caption>

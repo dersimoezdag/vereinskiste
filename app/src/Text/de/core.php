@@ -90,7 +90,7 @@ return [
     'update.backup_required' => 'Bitte bestätige zuerst das aktuelle Backup.',
     'update.failed' => 'Das Update ist fehlgeschlagen. Die Datenbankänderungen wurden zurückgerollt. Bitte prüfe die Installation.',
     'update.done' => 'Die Aktualisierung wurde erfolgreich abgeschlossen.',
-    'update.current' => 'Die Datenbank ist auf dem aktuellen Stand.',
+    'update.current' => 'Die Anwendung ist auf dem aktuellen Stand.',
     'update.run' => 'Update ausführen',
     'reset.title' => 'Passwort vergessen?',
     'reset.instructions' => 'Gib deine E-Mail-Adresse ein. Du erhältst einen Link zum Setzen eines neuen Passworts.',

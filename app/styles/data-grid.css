@@ -6,4 +6,15 @@
 .data-grid td { vertical-align: top; }
 .data-grid-actions { position: sticky; right: 0; background: var(--color-surface); text-align: right; }
 .data-grid thead .data-grid-actions { background: var(--color-subtle); }
-@media (max-width: 47.99rem) { .data-grid-actions { position: static; } }
+.data-grid-mobile-sort { display: none; }
+@media (max-width: 47.99rem) {
+    .data-grid-actions { position: static; }
+    .data-grid-mobile-sort { display: grid; gap: .5rem; border-bottom: 1px solid var(--color-line); }
+    .data-grid .input, .data-grid .btn { min-height: 2.75rem; }
+    .data-grid .input { font-size: 1rem; }
+    .data-grid [data-grid-search-control], .data-grid [data-grid-search] { width: 100%; }
+    .data-grid [data-grid-controls] > div { width: 100%; }
+    .data-grid [data-grid-controls] label { width: 100%; justify-content: space-between; }
+    .data-grid table.table-cards td > div { max-width: 100%; overflow-wrap: anywhere; }
+    .data-grid table.table-cards td::before { overflow-wrap: anywhere; }
+}

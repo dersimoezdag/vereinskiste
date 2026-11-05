@@ -12,6 +12,7 @@
         var previous = grid.querySelector('[data-grid-prev]');
         var next = grid.querySelector('[data-grid-next]');
         var buttons = Array.from(grid.querySelectorAll('[data-grid-sort]'));
+        var mobileSort = grid.querySelector('[data-grid-mobile-sort]');
         var serverPaged = grid.hasAttribute('data-grid-server-paged');
         var page = 0, sortColumn = null, direction = 1;
         var indexed = rows.map(function (row, index) {
@@ -21,6 +22,7 @@
             return value.toLocaleLowerCase('de').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         }
         function render() {
+            if (mobileSort) { mobileSort.value = sortColumn === null ? '' : sortColumn + ':' + direction; }
             var terms = normalize(search.value).trim().split(/\s+/).filter(Boolean);
             var matches = indexed.filter(function (row) {
                 return terms.every(function (term) { return row.text.includes(term); });
@@ -34,6 +36,7 @@
                     return direction * comparison || a.index - b.index;
                 });
             }
+            else { matches.sort(function (a, b) { return a.index - b.index; }); }
             var limit = serverPaged || size.value === 'all' ? Math.max(1, matches.length) : Number(size.value);
             var pages = Math.max(1, Math.ceil(matches.length / limit));
             page = Math.min(page, pages - 1);
@@ -56,6 +59,15 @@
                 if (active) { button.closest('th').setAttribute('aria-sort', direction === 1 ? 'ascending' : 'descending'); }
                 else { button.closest('th').removeAttribute('aria-sort'); }
                 button.querySelector('[data-grid-sort-icon]').textContent = active ? (direction === 1 ? '↑' : '↓') : '↕';
+            });
+        }
+        if (mobileSort) {
+            grid.querySelector('[data-grid-mobile-sort-control]').hidden = buttons.length === 0;
+            mobileSort.addEventListener('change', function () {
+                var selected = mobileSort.value.split(':');
+                sortColumn = mobileSort.value === '' ? null : Number(selected[0]);
+                direction = Number(selected[1]) || 1;
+                page = 0; render();
             });
         }
         search.addEventListener('input', function () { page = 0; render(); });
