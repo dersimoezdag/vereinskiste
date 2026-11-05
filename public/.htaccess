@@ -5,6 +5,8 @@ Options -Indexes
 </IfModule>
 DirectoryIndex index.php
 RewriteEngine On
+# Preserve Bearer credentials for PHP/FastCGI API and MCP authentication.
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.php [QSA,L]

@@ -1,0 +1,8 @@
+{% extends 'layout.twig' %}
+{% block content %}
+{% include 'components/settings_tabs.twig' %}
+<p class="text-muted mb-4">{{ t('integrations.activity_help') }}</p>
+<div class="panel"><div class="table-scroll"><table class="data-table"><thead><tr><th>{{ t('integrations.time') }}</th><th>{{ t('integrations.name') }}</th><th>{{ t('integrations.operation') }}</th><th>{{ t('integrations.protocols') }}</th><th>{{ t('integrations.status') }}</th></tr></thead><tbody>
+{% for row in activity %}<tr><td>{{ row.at|date('d.m.Y H:i:s') }}</td><td>{{ row.name }}</td><td class="font-mono">{{ row.operation }}</td><td>{{ row.protocol|upper }}</td><td>{{ row.status }}</td></tr>{% else %}<tr><td colspan="5" class="text-muted">{{ t('integrations.activity_empty') }}</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

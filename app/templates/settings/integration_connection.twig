@@ -1,0 +1,24 @@
+{% extends 'layout.twig' %}
+{% block content %}
+{% include 'components/settings_tabs.twig' %}
+<section class="panel panel-body mb-6">
+    <h2 class="panel-title mb-3">{{ t('integrations.authentication') }}</h2>
+    <p class="mb-3">{{ t('integrations.authentication_help') }}</p>
+    <pre class="bg-subtle p-4 rounded overflow-x-auto mb-4"><code>Authorization: Bearer &lt;TOKEN&gt;</code></pre>
+    <h3 class="font-semibold mb-2">API</h3>
+    <p class="font-mono mb-3 break-all">{{ origin }}/api/v1</p>
+    <p class="mb-2">{{ t('integrations.capabilities') }}:</p>
+    <pre class="bg-subtle p-4 rounded overflow-x-auto mb-4"><code>GET {{ origin }}/api/v1/capabilities
+GET {{ origin }}/api/v1/openapi.json</code></pre>
+    <h3 class="font-semibold mb-2">MCP</h3>
+    <p class="font-mono mb-3 break-all">{{ origin }}/mcp</p>
+    <p class="mb-3">{{ t('integrations.mcp_help') }}</p>
+    <pre class="bg-subtle p-4 rounded overflow-x-auto"><code>Accept: application/json, text/event-stream
+Content-Type: application/json
+MCP-Protocol-Version: 2025-11-25</code></pre>
+</section>
+<section class="panel mb-6"><div class="table-scroll"><table class="data-table"><thead><tr><th>{{ t('integrations.operation') }}</th><th>API</th><th>{{ t('integrations.scopes') }}</th></tr></thead><tbody>
+{% for name,operation in operations %}<tr><td class="font-mono">{{ name }}</td><td class="font-mono">{{ operation.method }} {{ operation.path }}</td><td>{{ operation.scope }}</td></tr>{% endfor %}
+</tbody></table></div></section>
+<section class="panel panel-body"><p class="mb-3">{{ t('integrations.retry_help') }}</p><p>{{ t('integrations.users_help') }}</p></section>
+{% endblock %}

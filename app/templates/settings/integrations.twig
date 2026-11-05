@@ -1,0 +1,54 @@
+{% extends 'layout.twig' %}
+{% block content %}
+{% include 'components/settings_tabs.twig' %}
+<p class="text-muted mb-6">{{ t('integrations.intro') }}</p>
+{% if secret %}
+<section class="panel panel-body border-primary mb-6" aria-labelledby="new-token-title">
+    <h2 class="panel-title mb-2" id="new-token-title">{{ secret.name }} · {{ t('integrations.token') }}</h2>
+    <p class="mb-4">{{ t('integrations.token_once') }}</p>
+    <label class="label" for="integration-token">{{ t('integrations.token') }}</label>
+    <input id="integration-token" class="input font-mono" value="{{ secret.token }}" readonly autocomplete="off" spellcheck="false">
+</section>
+{% endif %}
+<div class="grid-12 gap-6">
+    <section class="panel panel-body col-span-12 lg:col-span-5">
+        <h2 class="panel-title mb-4">{{ t('integrations.new') }}</h2>
+        {% for field,error in errors %}<p class="text-danger mb-2" role="alert">{{ t(error) }}</p>{% endfor %}
+        <form method="post" action="/settings/integrations">
+            {{ csrf_field() }}
+            <label class="label required" for="integration-name">{{ t('integrations.name') }}</label>
+            <input class="input mb-4" id="integration-name" name="name" value="{{ input.name }}" maxlength="100" required>
+            <label class="label required" for="integration-days">{{ t('integrations.valid_days') }}</label>
+            <input class="input mb-4" id="integration-days" type="number" name="valid_days" value="{{ input.valid_days }}" min="1" max="365" required>
+            <fieldset class="mb-4"><legend class="label">{{ t('integrations.protocols') }}</legend>
+                {% for protocol in ['api','mcp'] %}<label class="check mb-2"><input class="check-input" type="checkbox" name="protocols[]" value="{{ protocol }}"{% if protocol in input.protocols %} checked{% endif %}><span class="check-label">{{ protocol|upper }}</span></label>{% endfor %}
+            </fieldset>
+            <fieldset class="mb-4"><legend class="label">{{ t('integrations.scopes') }}</legend>
+                {% for key,scope in scopes %}<label class="check mb-2"><input class="check-input" type="checkbox" name="scopes[]" value="{{ key }}"{% if key in input.scopes %} checked{% endif %}><span class="check-label">{{ scope.label }}</span></label>{% endfor %}
+            </fieldset>
+            <fieldset class="mb-4"><legend class="label">{{ t('integrations.roles') }}</legend>
+                <p class="field-hint mb-3">{{ t('integrations.roles_hint') }}</p>
+                {% for role in roles %}<label class="check mb-2"><input class="check-input" type="checkbox" name="allowed_roles[]" value="{{ role }}"{% if role in input.allowed_roles %} checked{% endif %}><span class="check-label">{{ t('users.role.' ~ role) }}</span></label>{% endfor %}
+            </fieldset>
+            <button class="btn btn-primary">{{ t('integrations.new') }}</button>
+        </form>
+    </section>
+    <section class="panel col-span-12 lg:col-span-7">
+        <div class="panel-header"><h2 class="panel-title">{{ t('integrations.access') }}</h2></div>
+        {% if clients is empty %}<div class="panel-body text-muted">{{ t('integrations.none') }}</div>{% endif %}
+        <div class="list list-flush">
+        {% for client in clients %}
+            <div class="list-item p-4">
+                <div class="flex flex-wrap justify-between gap-2 mb-2"><h3 class="font-semibold">{{ client.name }}</h3><span class="badge bg-subtle text-muted">{{ t(client.revoked_at ? 'integrations.revoked' : (client.expired ? 'integrations.expired' : 'integrations.active')) }}</span></div>
+                <p class="font-mono text-sm text-muted mb-2">{{ client.token_prefix }}… · {{ client.protocols|join(' / ')|upper }}</p>
+                <ul class="text-sm mb-3">{% for scope in client.scopes %}<li>{{ scopes[scope].label|default(scope) }}</li>{% endfor %}</ul>
+                {% if client.allowed_roles %}<p class="text-sm mb-2">{{ t('integrations.roles') }}: {% for role in client.allowed_roles %}{{ t('users.role.' ~ role) }}{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+                <p class="text-sm text-muted">{{ t('integrations.expires') }}: {{ client.expires_at|date('d.m.Y H:i') }}</p>
+                <p class="text-sm text-muted mb-3">{{ t('integrations.last_used') }}: {{ client.last_used_at ? client.last_used_at|date('d.m.Y H:i') : t('integrations.never_used') }}</p>
+                {% if not client.revoked_at %}<form method="post" action="/settings/integrations/{{ client.id }}/revoke">{{ csrf_field() }}<button class="btn btn-sm btn-danger-soft">{{ t('integrations.revoke') }}</button></form>{% endif %}
+            </div>
+        {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

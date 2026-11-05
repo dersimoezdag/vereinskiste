@@ -31,6 +31,11 @@ final class SettingsNavigation
                 ['/settings/payments', 'intake.payment.settings', ['/settings/payments']],
                 ['/settings/closing', 'nav.closing', ['/settings/closing']],
             ]],
+            ['label' => 'integrations.title', 'tabs' => [
+                ['/settings/integrations', 'integrations.access', ['/settings/integrations']],
+                ['/settings/integrations/connection', 'integrations.connection', ['/settings/integrations/connection']],
+                ['/settings/integrations/activity', 'integrations.activity', ['/settings/integrations/activity']],
+            ]],
             ['label' => 'settings.section.access', 'tabs' => [
                 ['/users', 'settings.users', ['/users'], 'users.manage'],
                 ['/audit-log', 'nav.audit', ['/audit-log']],

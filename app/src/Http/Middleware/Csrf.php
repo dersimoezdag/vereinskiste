@@ -33,6 +33,8 @@ final class Csrf implements MiddlewareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
+        // Set only by the bearer gateway before parsing. API credentials never use session cookies.
+        if ($request->getAttribute('integration') !== null) { return $handler->handle($request); }
         if (in_array(strtoupper($request->getMethod()), self::SAFE_METHODS, true)) {
             return $handler->handle($request);
         }

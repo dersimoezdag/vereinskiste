@@ -1,0 +1,14 @@
+{% if integration_reviews %}
+<section class="panel mb-6">
+    <div class="panel-header"><h2 class="panel-title">{{ t('integrations.reviews') }}</h2></div>
+    <div class="panel-body"><p class="text-muted mb-4">{{ t('integrations.reviews_help') }}</p>
+    {% for review in integration_reviews %}
+        <article class="border-t border-line py-3">
+            <div class="flex flex-wrap gap-2 items-center mb-2"><strong>{{ review.client_name }}</strong><span class="badge bg-subtle">{{ t('integrations.review.' ~ review.status) }}</span>{% if review.booking_version != booking.version %}<span class="badge bg-warning-soft text-warning">{{ t('integrations.review.stale') }}</span>{% endif %}</div>
+            <p class="text-sm text-muted mb-2">{{ t('integrations.version') }} {{ review.booking_version }} · {{ review.created_at|date('d.m.Y H:i') }}</p>
+            <p class="whitespace-pre-wrap break-words">{{ review.note }}</p>
+        </article>
+    {% endfor %}
+    </div>
+</section>
+{% endif %}

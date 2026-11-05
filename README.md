@@ -176,3 +176,7 @@ Die Freigabe führt keine Überweisung aus. Nach Auszahlung eine tatsächliche A
 Bei neuer Zuweisung der Benutzerrolle **Vorstand** wird die Rolle **Admin** ausdrücklich mit gespeichert. Danach lassen sich beide Rollen unabhängig verwalten: Admin kann entzogen werden, obwohl Vorstand bestehen bleibt. Beim Entfernen von Vorstand fragt das Formular, ob Admin ebenfalls entfernt werden soll. Zusätzliche Fachrollen gelten weiterhin. Mindestens ein aktiver Administrator muss bestehen bleiben. Vereinsämter beim Mitglied ändern diese Benutzerrollen nicht.
 
 Die Migration `0016_vorstand_admin_assignment.sql` ergänzt bei vorhandenen Vorstandskonten einmalig Admin, damit bisherige Vollrechte erhalten bleiben. Ein späterer manueller Entzug wird nicht automatisch rückgängig gemacht.
+
+## API & MCP
+
+Granulare Zugänge für Add-ons und Agenten: [Einrichtung, REST-/MCP-Endpunkte und WordPress-Beispiel](docs/api-mcp.md).

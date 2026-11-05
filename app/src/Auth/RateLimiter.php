@@ -21,6 +21,7 @@ final class RateLimiter
             'application' => [10, 30, 120],
             'application_unlock' => [5, 30, 120],
             'setup' => [5, 10, 30],
+            'integration' => [120, 600, 3000],
             default => throw new \InvalidArgumentException('Unbekanntes Versuchsbudget.'),
         };
         if (!is_dir($this->directory) && !mkdir($this->directory, 0700, true) && !is_dir($this->directory)) {

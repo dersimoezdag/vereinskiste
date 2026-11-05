@@ -152,6 +152,7 @@ final class Kernel
         }
         $app->add(new Csrf($store, $view));
         $app->addBodyParsingMiddleware();
+        if (!$installerMode) { $app->add(new \Vereinskiste\Integrations\Gateway($pdoProvider, $limiter, $config['base_url'] ?? '')); }
         $app->add(function (Request $req, Handler $next) use ($state, $store, $view, $pdoProvider, $installerMode, $limiter): Response {
             $auth = $installerMode ? null : new AuthService(new UserRepository($pdoProvider), $store, null, $limiter);
             $state->auth = $auth;
@@ -180,6 +181,7 @@ final class Kernel
         }
         $versionFile = ($config['code_dir'] ?? $appDir) . '/VERSION';
         $version = is_file($versionFile) ? trim((string) file_get_contents($versionFile)) : '–';
+        \Vereinskiste\Integrations\Routes::register($app, $pdoProvider, $version, $config['base_url'] ?? '');
         $updater = new UpdateController($pdoProvider, $migrationDir, $version,
             $config['release_checker'] ?? new \Vereinskiste\Install\GitHubReleases());
         $automatic=new \Vereinskiste\Web\AutoUpdateController($pdoProvider,$runtime,$version,$migrationDir,
