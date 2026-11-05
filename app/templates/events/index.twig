@@ -11,20 +11,24 @@
     <a class="btn btn-primary" href="/events/new{% if kind == 'template' %}?kind=template{% endif %}">{{ t(kind == 'template' ? 'events.new_template' : 'events.new') }}</a>
 </div>
 {% endif %}
-<div class="panel"><table class="data-table table-cards"><thead><tr>
-    <th>{{ t('foundation.field.title') }}</th>
-    {% if kind == 'event' %}<th>{{ t('foundation.field.starts_on') }}</th><th>{{ t('foundation.field.status') }}</th>{% endif %}
-    <th>{{ t('foundation.field.location') }}</th><th>{{ t('events.tasks_progress') }}</th>
-</tr></thead><tbody>
-{% for event in events %}<tr>
-    <td data-label="{{ t('foundation.field.title') }}"><a href="/events/{{ event.id }}">{{ event.title }}</a></td>
-    {% if kind == 'event' %}
-    <td data-label="{{ t('foundation.field.starts_on') }}">{{ event.starts_on|date('d.m.Y') }}{% if event.ends_on %} – {{ event.ends_on|date('d.m.Y') }}{% endif %}</td>
-    <td data-label="{{ t('foundation.field.status') }}">{{ t('events.status.' ~ event.status) }}</td>
-    {% endif %}
-    <td data-label="{{ t('foundation.field.location') }}">{{ event.location ?: '–' }}</td>
-    <td data-label="{{ t('events.tasks_progress') }}">{{ event.tasks_done }} / {{ event.tasks_total }}</td>
-</tr>
-{% else %}<tr><td colspan="5">{{ t(kind == 'template' ? 'events.templates_empty' : 'events.empty') }}</td></tr>{% endfor %}
-</tbody></table></div>
+{% set columns = [{key: 'title', label: t('foundation.field.title')}] %}
+{% if kind == 'event' %}
+{% set columns = columns|merge([
+{key: 'starts_on', label: t('foundation.field.starts_on'), type: 'date'},
+{key: 'status', label: t('foundation.field.status')}
+]) %}
+{% endif %}
+{% set columns = columns|merge([
+{key: 'location', label: t('foundation.field.location')},
+{key: 'tasks_done', label: t('events.tasks_progress')}
+]) %}
+{% embed 'components/data_grid.twig' with {rows: events, columns: columns, server_paged: false, label: t(kind == 'template' ? 'events.templates' : 'events.title'), empty_text: t(kind == 'template' ? 'events.templates_empty' : 'events.empty')} %}
+{% block cell %}
+{% if column.key == 'title' %}<a href="/events/{{ row.id }}">{{ row.title }}</a>
+{% elseif column.key == 'starts_on' %}{{ row.starts_on|date('d.m.Y') }}{% if row.ends_on %} – {{ row.ends_on|date('d.m.Y') }}{% endif %}
+{% elseif column.key == 'status' %}{{ t('events.status.' ~ row.status) }}
+{% elseif column.key == 'tasks_done' %}{{ row.tasks_done }} / {{ row.tasks_total }}
+{% else %}{{ parent() }}{% endif %}
+{% endblock %}
+{% endembed %}
 {% endblock %}

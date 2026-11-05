@@ -1,6 +1,5 @@
 {% extends 'layout.twig' %}
 {% block title %}{{ t('members.title') }}{% endblock %}
-{% import 'components/icons.twig' as icons %}
 
 {% block content %}
 <div class="mx-auto w-full max-w-7xl">
@@ -53,67 +52,7 @@
         </div>
     </div>
 
-    <!-- Mitglieder-Tabelle -->
-    <div class="panel">
-        <div class="table-scroll">
-            <table class="data-table table-cards mb-0">
-                <thead>
-                    <tr>
-                        <th class="w-px whitespace-nowrap">{{ t('members.no') }}</th>
-                        <th>{{ t('members.field.name') }}</th>
-                        <th>{{ t('members.field.email') }}</th>
-                        <th>{{ t('privacy.field.status') }}</th>
-                        <th class="w-px whitespace-nowrap text-center" title="{{ t('members.user.title') }}">{{ icons.icon('users') }}</th>
-                        <th class="w-px whitespace-nowrap text-right">{{ t('audit.action') }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% if members is empty %}
-                    <tr>
-                        <td colspan="6" class="text-center text-muted py-6">
-                            {{ t('ui.keine_mitglieder_gefunden') }}
-                        </td>
-                    </tr>
-                {% else %}
-                    {% for m in members %}
-                    <tr>
-                        <td data-label="{{ t('members.no') }}" class="text-muted font-mono">
-                            #{{ m.member_no }}
-                        </td>
-                        <td data-label="{{ t('members.field.name') }}">
-                            <a href="/members/{{ m.id }}" class="font-semibold text-inherit">
-                                {{ m.name }}
-                            </a>
-                        </td>
-                        <td data-label="{{ t('members.field.email') }}" class="text-muted">
-                            {{ m.data.email ?: '–' }}
-                        </td>
-                        <td data-label="Status">
-                            {% if m.current %}
-                                <span class="badge bg-success-soft text-success border border-success/30">{{ t('bookings.status.active') }}</span>
-                            {% else %}
-                                <span class="badge bg-subtle text-muted border border-line ">{{ t('ui.ausgetreten') }}</span>
-                            {% endif %}
-                        </td>
-                        <td data-label="Benutzerzugang" class="text-center">
-                            {% if m.user_id %}
-                                <span class="text-primary" title="{{ t('ui.benutzerzugang_vorhanden') }}">{{ icons.icon('users') }}</span>
-                            {% else %}
-                                <span class="text-muted opacity-25">–</span>
-                            {% endif %}
-                        </td>
-                        <td data-label="Aktion" class="text-right">
-                            <a href="/members/{{ m.id }}" class="btn btn-sm">
-                                {{ t('audit.detail') }}
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                {% endif %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+    {% include 'members/_list_table.twig' %}
     {% include 'components/pagination.twig' %}
 </div>
 {% endblock %}

@@ -103,3 +103,21 @@ test('searching from the last page returns the first matching page', () => {
     assert.equal(doc.querySelector('[data-grid-prev]').disabled, true);
     dom.window.close();
 });
+
+
+test('server-paged lists keep every loaded row and leave search and pagination to the server', () => {
+    const html = markup(Array.from({length: 60}, (_, i) => [`Person ${60 - i}`, '2026-11-05']))
+        .replace('<section data-grid>', '<section data-grid data-grid-server-paged><label data-grid-search-control hidden></label>');
+    const dom = new JSDOM(html, {runScripts: 'outside-only'});
+    dom.window.vkText = () => '{start}–{end} von {filtered} Treffern · {total} geladen';
+    dom.window.eval(script);
+    dom.window.document.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+    const doc = dom.window.document;
+    assert.equal(visible(doc).length, 60);
+    assert.equal(doc.querySelector('[data-grid-controls]').hidden, true);
+    assert.equal(doc.querySelector('[data-grid-search-control]').hidden, true);
+    doc.querySelector('[data-grid-sort="0"]').click();
+    assert.equal(visible(doc).length, 60);
+    assert.equal(visible(doc)[0].cells[0].dataset.gridValue, 'Person 1');
+    dom.window.close();
+});

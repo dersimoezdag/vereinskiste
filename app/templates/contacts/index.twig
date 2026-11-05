@@ -16,10 +16,19 @@
         <option value="{{ value }}"{% if state == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
     <button class="btn btn-soft" type="submit">{{ t('foundation.search') }}</button>
 </form>
-<div class="panel"><table class="data-table table-cards"><thead><tr><th>{{ t('install.admin_name') }}</th><th>{{ t('ui.e_mail') }}</th><th>{{ t('privacy.field.status') }}</th></tr></thead><tbody>
-{% for contact in contacts %}<tr><td data-label="Name"><a href="/contacts/{{ contact.id }}">{{ contact.name }}</a></td>
-    <td data-label="E-Mail">{{ contact.data.email }}</td><td data-label="Status">{{ contact.active ? 'Aktiv' : 'Archiviert' }}</td></tr>
-{% else %}<tr><td colspan="3">{{ t('foundation.empty') }}</td></tr>{% endfor %}
-</tbody></table></div>
+{% embed 'components/data_grid.twig' with {rows: contacts, server_paged: true, columns: [
+{key: 'name', label: t('install.admin_name')},
+{key: 'email', label: t('ui.e_mail'), sortable: false},
+{key: 'active', label: t('privacy.field.status'), type: 'badge', values: {
+'1': {label: 'Aktiv', tone: 'bg-success-soft text-success'},
+'0': {label: 'Archiviert', tone: 'bg-subtle text-muted'}
+}}
+], label: t('foundation.contacts'), empty_text: t('foundation.empty')} %}
+{% block cell %}
+{% if column.key == 'name' %}<a href="/contacts/{{ row.id }}">{{ row.name }}</a>
+{% elseif column.key == 'email' %}<span class="break-all">{{ row.data.email ?: '–' }}</span>
+{% else %}{{ parent() }}{% endif %}
+{% endblock %}
+{% endembed %}
 {% include 'components/pagination.twig' %}
 {% endblock %}

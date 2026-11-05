@@ -9,15 +9,21 @@
 <nav class="tabs mb-4" aria-label="{{ t('expenses.title') }}">
     {% for value in ['open', 'reimbursed', 'all'] %}<a class="tab{% if state == value %} active{% endif %}" href="/expenses?state={{ value }}">{{ t('expenses.filter.' ~ value) }}</a>{% endfor %}
 </nav>
-<div class="panel"><table class="data-table table-cards"><thead><tr><th>{{ t('foundation.field.spent_on') }}</th><th>{{ t('expenses.person') }}</th><th>{{ t('foundation.field.purpose') }}</th><th class="text-right">{{ t('bookings.amount_eur') }}</th><th>{{ t('foundation.field.has_receipt') }}</th><th>{{ t('foundation.field.status') }}</th></tr></thead><tbody>
-{% for expense in expenses %}<tr>
-    <td data-label="{{ t('foundation.field.spent_on') }}">{{ expense.spent_on|date('d.m.Y') }}</td>
-    <td data-label="{{ t('expenses.person') }}">{{ expense.person }}</td>
-    <td data-label="{{ t('foundation.field.purpose') }}"><a href="/expenses/{{ expense.id }}">{{ expense.purpose }}</a></td>
-    <td data-label="{{ t('bookings.amount_eur') }}" class="text-right">{{ expense.amount|eur }}</td>
-    <td data-label="{{ t('foundation.field.has_receipt') }}">{{ expense.has_receipt ? t('users.roles.allowed') : t('users.roles.denied') }}</td>
-    <td data-label="{{ t('foundation.field.status') }}">{% include 'expenses/_badge.twig' %}</td>
-</tr>{% else %}<tr><td colspan="6">{{ t('expenses.empty') }}</td></tr>{% endfor %}
-</tbody></table></div>
+{% embed 'components/data_grid.twig' with {rows: expenses, server_paged: true, columns: [
+{key: 'spent_on', label: t('foundation.field.spent_on'), type: 'date'},
+{key: 'person', label: t('expenses.person')},
+{key: 'purpose', label: t('foundation.field.purpose')},
+{key: 'amount', label: t('bookings.amount_eur'), type: 'money'},
+{key: 'has_receipt', label: t('foundation.field.has_receipt'), sort_values: {'1': t('users.roles.allowed'), '0': t('users.roles.denied')}},
+{key: 'reimbursed', label: t('foundation.field.status'), sort_values: {'1': t('expenses.status.reimbursed'), '0': t('expenses.status.open')}}
+], label: t('expenses.title'), empty_text: t('expenses.empty')} %}
+{% block cell %}
+{% if column.key == 'spent_on' %}{{ row.spent_on|date('d.m.Y') }}
+{% elseif column.key == 'purpose' %}<a href="/expenses/{{ row.id }}">{{ row.purpose }}</a>
+{% elseif column.key == 'has_receipt' %}{{ row.has_receipt ? t('users.roles.allowed') : t('users.roles.denied') }}
+{% elseif column.key == 'reimbursed' %}{% include 'expenses/_badge.twig' with {expense: row} %}
+{% else %}{{ parent() }}{% endif %}
+{% endblock %}
+{% endembed %}
 {% include 'components/pagination.twig' %}
 {% endblock %}

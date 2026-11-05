@@ -1,0 +1,27 @@
+{% embed 'components/data_grid.twig' with {rows: members, server_paged: true, columns: [
+{key: 'member_no', label: t('members.no')},
+{key: 'name', label: t('members.field.name')},
+{key: 'email', label: t('members.field.email'), sortable: false},
+{key: 'current', label: t('privacy.field.status'), sort_values: {'1': t('bookings.status.active'), '0': t('ui.ausgetreten')}},
+{key: 'user_id', label: t('members.user.title'), sortable: false},
+{key: 'actions', label: t('audit.action'), actions: true}
+], label: t('members.title'), empty_text: t('ui.keine_mitglieder_gefunden')} %}
+{% block cell %}
+{% import 'components/icons.twig' as icons %}
+{% if column.key == 'member_no' %}
+<span class="text-muted font-mono">#{{ row.member_no }}</span>
+{% elseif column.key == 'name' %}
+<a href="/members/{{ row.id }}" class="font-semibold text-inherit">{{ row.name }}</a>
+{% elseif column.key == 'email' %}
+<span class="text-muted break-all">{{ row.data.email ?: '–' }}</span>
+{% elseif column.key == 'current' %}
+<span class="badge {{ row.current ? 'bg-success-soft text-success' : 'bg-subtle text-muted' }}">{{ row.current ? t('bookings.status.active') : t('ui.ausgetreten') }}</span>
+{% elseif column.key == 'user_id' %}
+{% if row.user_id %}
+<span class="text-primary" title="{{ t('ui.benutzerzugang_vorhanden') }}">{{ icons.icon('users') }}<span class="sr-only">{{ t('ui.benutzerzugang_vorhanden') }}</span></span>
+{% else %}<span class="text-muted">–</span>{% endif %}
+{% elseif column.key == 'actions' %}
+<a href="/members/{{ row.id }}" class="btn btn-sm">{{ t('audit.detail') }}</a>
+{% else %}{{ parent() }}{% endif %}
+{% endblock %}
+{% endembed %}

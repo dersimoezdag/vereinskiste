@@ -37,6 +37,26 @@ final class DataGridTemplateTest extends TestCase
         $this->assertStringContainsString('data-grid-search-control hidden', $html);
     }
 
+    public function test_server_paged_grid_preserves_inactive_badges_and_disabled_sorting(): void
+    {
+        $html = $this->view()->render('components/data_grid.twig', [
+            'label' => 'Test', 'empty_text' => 'Leer', 'server_paged' => true,
+            'columns' => [
+                ['key' => 'name', 'label' => 'Name', 'sortable' => false],
+                ['key' => 'active', 'label' => 'Status', 'type' => 'badge', 'values' => [
+                    0 => ['label' => 'Inaktiv', 'tone' => 'text-muted'],
+                    1 => ['label' => 'Aktiv', 'tone' => 'text-success'],
+                ]],
+            ],
+            'rows' => [['name' => 'Erika', 'active' => false]],
+        ]);
+        $this->assertStringContainsString('data-grid-server-paged', $html);
+        $this->assertStringContainsString('data-grid-value="Inaktiv"', $html);
+        $this->assertStringContainsString('<span class="badge text-muted">Inaktiv</span>', $html);
+        $this->assertStringNotContainsString('data-grid-sort="0"', $html);
+        $this->assertStringContainsString('data-grid-sort="1"', $html);
+    }
+
     public function test_application_embed_renders_custom_cells_actions_and_shared_status(): void
     {
         $html = $this->view()->render('members/_applications_table.twig', [

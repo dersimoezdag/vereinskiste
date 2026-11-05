@@ -12,6 +12,7 @@
         var previous = grid.querySelector('[data-grid-prev]');
         var next = grid.querySelector('[data-grid-next]');
         var buttons = Array.from(grid.querySelectorAll('[data-grid-sort]'));
+        var serverPaged = grid.hasAttribute('data-grid-server-paged');
         var page = 0, sortColumn = null, direction = 1;
         var indexed = rows.map(function (row, index) {
             return {node: row, index: index, text: normalize(row.textContent)};
@@ -33,7 +34,7 @@
                     return direction * comparison || a.index - b.index;
                 });
             }
-            var limit = size.value === 'all' ? Math.max(1, matches.length) : Number(size.value);
+            var limit = serverPaged || size.value === 'all' ? Math.max(1, matches.length) : Number(size.value);
             var pages = Math.max(1, Math.ceil(matches.length / limit));
             page = Math.min(page, pages - 1);
             rows.forEach(function (row) { row.hidden = true; });
@@ -68,9 +69,9 @@
                 sortColumn = column; page = 0; render();
             });
         });
-        grid.querySelector('[data-grid-controls]').hidden = false;
+        grid.querySelector('[data-grid-controls]').hidden = serverPaged;
         var searchControl = grid.querySelector('[data-grid-search-control]');
-        if (searchControl) { searchControl.hidden = false; }
+        if (searchControl) { searchControl.hidden = serverPaged; }
         render();
     }
     function init() { document.querySelectorAll('[data-grid]').forEach(enhance); }

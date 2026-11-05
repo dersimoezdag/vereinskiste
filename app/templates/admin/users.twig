@@ -8,50 +8,29 @@
     <a class="btn btn-primary" href="/users/new">{{ t('users.new') }}</a>
 </div>
 
-<div class="panel">
-    <div class="table-scroll">
-        <table class="data-table table-cards">
-            <thead>
-                <tr>
-                    <th>{{ t('users.name') }}</th>
-                    <th>{{ t('users.email') }}</th>
-                    <th>{{ t('members.user.field') }}</th>
-                    <th>{{ t('users.roles') }} {{ role_help.button() }}</th>
-                    <th>{{ t('users.status') }}</th>
-                    <th>{{ t('common.actions') }}</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for user in users %}
-                <tr{% if not user.active %} class="text-muted"{% endif %}>
-                    <td data-label="{{ t('users.name') }}">
-                        {{ user.name }}
-                        {% if user.id == me %}<span class="badge bg-primary-soft text-primary">{{ t('users.you') }}</span>{% endif %}
-                    </td>
-                    <td data-label="{{ t('users.email') }}">{{ user.email }}</td>
-                    <td data-label="{{ t('members.user.field') }}">
-                        {% if user.member_id %}
-                            <a href="/members/{{ user.member_id }}" class="text-inherit">#{{ user.member_no }} {{ user.member_name }}</a>
-                        {% else %}
-                            <span class="text-muted">–</span>
-                        {% endif %}
-                    </td>
-                    <td data-label="{{ t('users.roles') }}">
-                        {% for role in user.roles %}<span class="badge bg-subtle text-muted me-1">{{ t('users.role.' ~ role) }}</span>{% endfor %}
-                    </td>
-                    <td data-label="{{ t('users.status') }}">
-                        {% if user.active %}<span class="badge bg-success-soft text-success">{{ t('users.active') }}</span>{% else %}<span class="badge bg-subtle text-muted">{{ t('common.inactive') }}</span>{% endif %}
-                    </td>
-                    <td data-label="{{ t('common.actions') }}">
-                        <a class="btn" href="/users/{{ user.id }}/edit">{{ t('users.edit') }}</a>
-                    </td>
-                </tr>
-            {% else %}
-                <tr><td colspan="6" class="text-muted">{{ t('users.empty') }}</td></tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
+<div class="mb-3">{{ t('users.roles') }} {{ role_help.button() }}</div>
+{% embed 'components/data_grid.twig' with {rows: users, server_paged: false, columns: [
+{key: 'name', label: t('users.name')},
+{key: 'email', label: t('users.email')},
+{key: 'member_name', label: t('members.user.field')},
+{key: 'roles', sort_key: 'name', label: t('users.roles'), sortable: false},
+{key: 'active', label: t('users.status'), type: 'badge', values: {
+'1': {label: t('users.active'), tone: 'bg-success-soft text-success'},
+'0': {label: t('common.inactive'), tone: 'bg-subtle text-muted'}
+}},
+{key: 'actions', label: t('common.actions'), actions: true}
+], label: t('users.title'), empty_text: t('users.empty')} %}
+{% block cell %}
+{% if column.key == 'name' %}
+<span{% if not row.active %} class="text-muted"{% endif %}>{{ row.name }}</span>
+{% if row.id == me %}<span class="badge bg-primary-soft text-primary">{{ t('users.you') }}</span>{% endif %}
+{% elseif column.key == 'member_name' %}
+{% if row.member_id %}<a href="/members/{{ row.member_id }}" class="text-inherit">#{{ row.member_no }} {{ row.member_name }}</a>{% else %}<span class="text-muted">–</span>{% endif %}
+{% elseif column.key == 'roles' %}
+{% for role in row.roles %}<span class="badge bg-subtle text-muted me-1">{{ t('users.role.' ~ role) }}</span>{% endfor %}
+{% elseif column.key == 'actions' %}<a class="btn btn-sm" href="/users/{{ row.id }}/edit">{{ t('users.edit') }}</a>
+{% else %}{{ parent() }}{% endif %}
+{% endblock %}
+{% endembed %}
 {{ role_help.dialog(all_roles, permissions, role_permissions) }}
 {% endblock %}

@@ -1,8 +1,9 @@
 {# rows, columns: [{key, label, sort_key?, sortable?, actions?}], label, empty_text.
    Override cell for custom contents and filters for additional filter controls.
-   Search and pagination operate on the rows supplied by the caller. #}
-<section class="panel data-grid" data-grid aria-label="{{ label }}">
-    <div class="panel-header flex flex-wrap items-center justify-between gap-3">
+   Search and pagination operate on the rows supplied by the caller.
+   server_paged keeps the caller’s server search/pagination; sorting applies to the loaded page. #}
+<section class="panel data-grid" data-grid{% if server_paged|default(false) %} data-grid-server-paged{% endif %} aria-label="{{ label }}">
+    <div class="panel-header flex flex-wrap items-center justify-between gap-3"{% if server_paged|default(false) %} hidden{% endif %}>
         <label class="flex flex-wrap items-center gap-2 text-sm" data-grid-search-control hidden>
             <span>{{ t('grid.search') }}</span>
             <input type="search" class="input input-sm" data-grid-search placeholder="{{ t('grid.search_placeholder') }}">
@@ -15,7 +16,7 @@
             <thead><tr>
                 {% for column in columns %}
                 <th scope="col"{% if column.actions|default(false) %} class="data-grid-actions"{% endif %}>
-                    {% if column.sortable|default(true) and not column.actions|default(false) %}
+                    {% if (column.sortable ?? true) and not column.actions|default(false) %}
                     <button type="button" class="data-grid-sort" data-grid-sort="{{ loop.index0 }}">{{ column.label }} <span aria-hidden="true" data-grid-sort-icon>↕</span></button>
                     {% else %}{{ column.label }}{% endif %}
                 </th>
@@ -25,13 +26,13 @@
                 {% for row in rows %}
                 <tr data-grid-row>
                     {% for column in columns %}
-                    {% set sort_value = attribute(row, column.sort_key|default(column.key))|default('') %}
+                    {% set sort_value = attribute(row, column.sort_key|default(column.key)) ?? '' %}
                     {% if column.type|default('text') == 'date' and sort_value %}{% set sort_value = sort_value|date('U') %}{% endif %}
                     {% if column.type|default('text') == 'badge' %}{% set sort_value = column.values[sort_value].label|default(sort_value) %}{% endif %}
                     {% set sort_value = column.sort_values[sort_value]|default(sort_value) %}
                     <td data-label="{{ column.label }}" data-grid-value="{{ sort_value }}" data-grid-type="{{ column.type|default('text') in ['date', 'money'] ? 'number' : 'text' }}"{% if column.actions|default(false) %} class="data-grid-actions"{% endif %}>
                         <div class="min-w-0">{% block cell %}
-                            {% set value = attribute(row, column.key)|default('') %}
+                            {% set value = attribute(row, column.key) ?? '' %}
                             {% if column.type|default('text') == 'date' and value %}
                             <div class="whitespace-nowrap">{{ value|date('d.m.Y') }}<div class="text-sm text-muted">{{ value|date('H:i') }}</div></div>
                             {% elseif column.type|default('text') == 'badge' %}
