@@ -2,10 +2,30 @@
 {% block title %}{{ t('finance.documents') }}{% endblock %}
 {% block content %}
 <h1>{{ t('finance.documents') }}</h1>
-{% if can('invoices.write') %}<div class="flex gap-2 mb-4"><a class="btn btn-primary" href="/invoices/import">{{ t('finance.document_upload') }}</a><a class="btn" href="/invoices/new">{{ t('finance.document_manual') }}</a></div>{% endif %}
+{% if can('invoices.write') %}<div class="flex flex-wrap gap-2 mb-4"><a class="btn btn-primary" href="/invoices/import">{{ t('finance.document_upload') }}</a><a class="btn" href="/invoices/new">{{ t('finance.document_manual') }}</a></div>{% endif %}
 <p>{{ t('invoices.no_payment') }}</p>
 <form class="panel panel-body mb-4" method="get" action="/invoices">{% if per_page %}<input type="hidden" name="per_page" value="{{ per_page }}">{% endif %}<div class="grid-12 gap-2"><div class="col-span-12 md:col-span-6"><label class="label" for="invoice-q">{{ t('common.search') }}</label><input class="input" id="invoice-q" name="q" value="{{ search }}" maxlength="100"></div><div class="col-span-12 md:col-span-4"><label class="label" for="invoice-state">{{ t('privacy.field.status') }}</label><select class="input" id="invoice-state" name="state">{% for key in ['all','draft','reviewed','unpaid','partially_paid','paid','overdue','cancelled'] %}<option value="{{ key }}"{% if state==key %} selected{% endif %}>{{ t('invoices.status.' ~ key) }}</option>{% endfor %}</select></div><div class="col-span-12 md:col-span-2 self-end"><button class="btn">{{ t('common.search') }}</button></div></div></form>
-<div class="panel table-scroll"><table class="data-table"><thead><tr><th>{{ t('invoices.field.number') }}</th><th>{{ t('invoices.field.supplier_name') }}</th><th>{{ t('invoices.field.invoice_date') }}</th><th>{{ t('invoices.field.gross') }}</th><th>{{ t('privacy.field.status') }}</th><th>{{ t('ui.zahlung') }}</th></tr></thead><tbody>
-{% for invoice in invoices %}<tr><td><a href="/invoices/{{ invoice.id }}">{{ invoice.number ?: '#' ~ invoice.id }}</a></td><td>{{ invoice.supplier_name }}</td><td>{{ invoice.invoice_date ? invoice.invoice_date|date('d.m.Y') : '–' }}</td><td>{{ invoice.gross ? (invoice.currency == 'EUR' ? invoice.gross|eur : invoice.gross ~ ' ' ~ invoice.currency) : '–' }}</td><td>{{ t('invoices.status.' ~ invoice.status) }}</td><td>{% if invoice.kind=='invoice' and invoice.status=='reviewed' %}{{ t('ui.bezahlt') }} {{ invoice.paid_total|eur }}<br>{{ t('ui.offen') }} {{ invoice.remaining|eur }}{% if invoice.payment_status %}<br>{{ t('intake.payment.' ~ invoice.payment_status) }}{% endif %}{% else %}–{% endif %}</td></tr>{% else %}<tr><td colspan="6">{{ t('invoices.empty') }}</td></tr>{% endfor %}</tbody></table></div>
+{% embed 'components/data_grid.twig' with {rows: invoices, server_paged: true, columns: [
+{key: 'number', label: t('invoices.field.number')},
+{key: 'supplier_name', label: t('invoices.field.supplier_name')},
+{key: 'invoice_date', label: t('invoices.field.invoice_date'), type: 'date'},
+{key: 'gross', label: t('invoices.field.gross'), sortable: false},
+{key: 'status', label: t('privacy.field.status')},
+{key: 'payment', label: t('ui.zahlung'), sortable: false}
+], label: t('finance.documents'), empty_text: t('invoices.empty')} %}
+{% block cell %}
+{% if column.key == 'number' %}<a href="/invoices/{{ row.id }}">{{ row.number ?: '#' ~ row.id }}</a>
+{% elseif column.key == 'invoice_date' %}{{ row.invoice_date ? row.invoice_date|date('d.m.Y') : '–' }}
+{% elseif column.key == 'gross' %}
+{{ row.gross is not null and row.gross is not same as('') ? (row.currency == 'EUR' ? row.gross|eur : row.gross ~ ' ' ~ row.currency) : '–' }}
+{% elseif column.key == 'status' %}{{ t('invoices.status.' ~ row.status) }}
+{% elseif column.key == 'payment' %}
+{% if row.kind == 'invoice' and row.status == 'reviewed' %}
+{{ t('ui.bezahlt') }} {{ row.paid_total|eur }}<br>{{ t('ui.offen') }} {{ row.remaining|eur }}
+{% if row.payment_status %}<br>{{ t('intake.payment.' ~ row.payment_status) }}{% endif %}
+{% else %}–{% endif %}
+{% else %}{{ parent() }}{% endif %}
+{% endblock %}
+{% endembed %}
 {% include 'components/pagination.twig' %}
 {% endblock %}

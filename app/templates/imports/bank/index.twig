@@ -5,10 +5,17 @@
 <h1>{{ t('ui.kontoauszug_import') }}</h1>
 <p>{{ t('ui.bankumsaetze_pruefen_und_uebernehmen_die_uebernahme_veraendert_ke') }}</p>
 {% if can('imports.write') %}<a class="btn btn-primary mb-4" href="/imports/bank/new">{{ t('ui.csv_hochladen') }}</a>{% endif %}
-<div class="panel"><table class="data-table table-cards"><thead><tr><th>{{ t('ui.import') }}</th><th>{{ t('bookings.account') }}</th><th>{{ t('privacy.field.status') }}</th><th>{{ t('ui.zeilen') }}</th></tr></thead><tbody>
-{% for import in imports %}<tr><td data-label="Import"><a href="/imports/bank/{{ import.id }}">#{{ import.id }} · {{ import.created_at|date('d.m.Y H:i') }}</a></td>
-<td data-label="Konto">{{ import.account_name }}</td><td data-label="Status">{{ t('bank.status.' ~ import.status) }}</td><td data-label="Zeilen">{{ import.total_rows }}</td></tr>
-{% else %}<tr><td colspan="4">{{ t('ui.noch_keine_importe_vorhanden') }}</td></tr>{% endfor %}
-</tbody></table></div>
+{% embed 'components/data_grid.twig' with {rows: imports, server_paged: true, columns: [
+{key: 'created_at', label: t('ui.import'), type: 'date'},
+{key: 'account_name', label: t('bookings.account')},
+{key: 'status', label: t('privacy.field.status')},
+{key: 'total_rows', label: t('ui.zeilen')}
+], label: t('ui.kontoauszug_import'), empty_text: t('ui.noch_keine_importe_vorhanden')} %}
+{% block cell %}
+{% if column.key == 'created_at' %}<a href="/imports/bank/{{ row.id }}">#{{ row.id }} · {{ row.created_at|date('d.m.Y H:i') }}</a>
+{% elseif column.key == 'status' %}{{ t('bank.status.' ~ row.status) }}
+{% else %}{{ parent() }}{% endif %}
+{% endblock %}
+{% endembed %}
 {% include 'components/pagination.twig' %}
 {% endblock %}

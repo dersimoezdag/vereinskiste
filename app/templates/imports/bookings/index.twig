@@ -19,12 +19,16 @@
 {% endif %}
 <h2>{{ t('booking_import.history') }}</h2>
 <p class="field-hint">{{ t('booking_import.draft_hint') }}</p>
-<div class="panel"><table class="data-table table-cards"><thead><tr><th>{{ t('booking_import.file_name') }}</th><th>{{ t('booking_import.account') }}</th><th>{{ t('foundation.field.status') }}</th><th>{{ t('booking_import.count') }}</th></tr></thead><tbody>
-{% for import in imports %}<tr>
-    <td data-label="{{ t('booking_import.file_name') }}"><a href="/imports/bookings/{{ import.id }}">{{ import.file_name }}</a></td>
-    <td data-label="{{ t('booking_import.account') }}">{{ import.account_name }}</td>
-    <td data-label="{{ t('foundation.field.status') }}">{{ t('booking_import.status.' ~ import.status) }}</td>
-    <td data-label="{{ t('booking_import.count') }}">{{ import.created_count }}</td>
-</tr>{% else %}<tr><td colspan="4">{{ t('booking_import.empty') }}</td></tr>{% endfor %}
-</tbody></table></div>
+{% embed 'components/data_grid.twig' with {rows: imports, server_paged: false, columns: [
+{key: 'file_name', label: t('booking_import.file_name')},
+{key: 'account_name', label: t('booking_import.account')},
+{key: 'status', label: t('foundation.field.status')},
+{key: 'created_count', label: t('booking_import.count')}
+], label: t('booking_import.history'), empty_text: t('booking_import.empty')} %}
+{% block cell %}
+{% if column.key == 'file_name' %}<a href="/imports/bookings/{{ row.id }}">{{ row.file_name }}</a>
+{% elseif column.key == 'status' %}{{ t('booking_import.status.' ~ row.status) }}
+{% else %}{{ parent() }}{% endif %}
+{% endblock %}
+{% endembed %}
 {% endblock %}
