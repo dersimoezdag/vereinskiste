@@ -33,7 +33,7 @@ final class DocumentController extends AdminController
     {
         $body = $this->body($req); $pdo = ($this->pdo)();
         try {
-            Fields::read($body, ['reason' => 500], ['reason']);
+            Fields::read($body, ['reason' => 500]);
             $upload = UploadInput::fromRequest($req) ?? throw new ValidationError(['receipt' => 'validation.receipt.none']);
             Transaction::run($pdo, function () use ($pdo, $upload, $body, $req, $isDark): void {
                 $profile = new Profile($pdo);
@@ -57,7 +57,7 @@ final class DocumentController extends AdminController
         $body = $this->body($req); $pdo = ($this->pdo)();
         $isDark = ($body['target'] ?? '') === 'dark';
         try {
-            Fields::read($body, ['reason' => 500], ['reason']);
+            Fields::read($body, ['reason' => 500]);
             Transaction::run($pdo, function () use ($pdo, $body, $req, $isDark): void {
                 $profile = new Profile($pdo);
                 $version = Fields::version($body['version'] ?? null);

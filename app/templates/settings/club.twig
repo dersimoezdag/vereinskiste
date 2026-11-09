@@ -12,6 +12,8 @@
 
 <h2 class="h3 mt-6">{{ t('foundation.logo') }}</h2>
 <div class="panel panel-body">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="min-w-0">
     {% if logo_id %}
     <div class="flex items-center gap-4 mb-4">
         <div class="p-2 rounded border border-line bg-surface max-h-20 flex items-center justify-center">
@@ -37,9 +39,8 @@
     </form>
 </div>
 
-<h2 class="h3 mt-6">{{ t('foundation.logo_dark') }}</h2>
+<div class="min-w-0">
 <p class="text-sm text-muted mb-3">{{ t('foundation.logo_dark_hint') }}</p>
-<div class="panel panel-body">
     {% if logo_dark_id %}
     <div class="flex items-center gap-4 mb-4">
         <div class="p-2 rounded border border-line bg-neutral-900 max-h-20 flex items-center justify-center">
@@ -63,6 +64,8 @@
         <input class="input mb-4" id="club-logo-dark" type="file" name="receipt" accept="image/png,image/jpeg,image/svg+xml" required>
         <button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button>
     </form>
+</div>
+</div>
 </div>
 
 {% include 'components/foundation_history.twig' %}

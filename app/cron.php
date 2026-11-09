@@ -51,6 +51,7 @@ try {
     $queue->enqueue('receipt_registration', [], $slot, 10);
     $queue->enqueue('booking_import_cleanup', [], (string) intdiv(time(), 86400), -10);
     $queue->enqueue('upload_cleanup', [], (string) intdiv(time(), 86400), -10);
+    $queue->enqueue('update_cleanup', [], (string) intdiv(time(), 86400), -10);
     (new Vereinskiste\Jobs\Runner($queue, [
         'application_mail' => static function () use ($pdo, $smtp): void {
             $outbox = new Vereinskiste\Mail\Outbox($pdo); $mailer = new Vereinskiste\Mail\Mailer($smtp); $deadline = microtime(true) + 8;
@@ -71,6 +72,10 @@ try {
         },
         'upload_cleanup' => static function () use ($pdo): void {
             (new Vereinskiste\Files\UnregisteredUploads($pdo, VK_INSTANCE_APP . '/storage/documents'))->clean();
+        },
+        // Alte Update-Pakete, Datenbankexporte und Versionsablagen entfernen (nur ohne laufendes Update).
+        'update_cleanup' => static function () use ($cronRuntime): void {
+            (new Vereinskiste\Update\Cleanup($cronRuntime))->run();
         },
     ]))->run(max(1,20-(int)ceil(microtime(true)-$cronStarted)), 20);
 } finally {

@@ -20,6 +20,16 @@ final class Files
         if (!is_array($data)) { throw new Failure('state'); }
         return $data;
     }
+    /** Deletes a file or directory tree; symbolic links are removed, never followed. */
+    public static function remove(string $path): void
+    {
+        if (is_link($path) || is_file($path)) { if (!unlink($path)) { throw new Failure('storage'); } return; }
+        if (!is_dir($path)) { return; }
+        foreach (scandir($path) ?: [] as $entry) {
+            if ($entry !== '.' && $entry !== '..') { self::remove($path . '/' . $entry); }
+        }
+        if (!rmdir($path)) { throw new Failure('storage'); }
+    }
     public static function mkdir(string $path): void
     {
         if (is_link($path)) { throw new Failure('storage'); }

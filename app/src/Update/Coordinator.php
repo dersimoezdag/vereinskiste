@@ -58,6 +58,8 @@ final class Coordinator
                     $activation=new Activation($this->db,$this->runtime,$this->state);
                     switch ($data['phase']) {
                         case 'waiting':
+                            // Extracted and verified (phase 'waiting' is persisted): the download is no longer needed.
+                            if (is_file($this->state->path($data) . '/package.zip')) { Files::remove($this->state->path($data) . '/package.zip'); }
                             $data['backup']=(new DatabaseBackup($this->db,$this->state->path($data) . '/backup'))->start();
                             $data['phase']='backup'; break;
                         case 'backup':

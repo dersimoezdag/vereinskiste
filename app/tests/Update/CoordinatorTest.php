@@ -40,6 +40,7 @@ final class CoordinatorTest extends TestCase
         $worker=new Coordinator($this->db,$this->runtime,$http); $worker->start($release,'1.0.0',1);
         $this->until($worker,'verify');
         $state=(new State($this->runtime))->load();
+        $this->assertFileDoesNotExist((new State($this->runtime))->path($state) . '/package.zip');
         $this->assertSame('1.1.0',$this->runtime->active()['version']);
         $this->assertSame($this->runtime->instance,$this->runtime->application());
         // Simulate process death after DB commit, before the phase write.

@@ -65,7 +65,7 @@ final class FoundationPagesTest extends TestCase
         $this->loginAs(['admin']);
         $path = $this->tmpFile($this->pngBytes(), 'logo.png');
         $request = (new ServerRequestFactory())->createServerRequest('POST', '/settings/club/logo')
-            ->withParsedBody(['_csrf' => $this->csrf(), 'version' => '1', 'reason' => 'Vereinslogo'])
+            ->withParsedBody(['_csrf' => $this->csrf(), 'version' => '1'])
             ->withUploadedFiles(['receipt' => new UploadedFile($path, 'logo.png', 'image/png', filesize($path), UPLOAD_ERR_OK)]);
         $this->assertSame('/settings/club', $this->app->handle($request)->getHeaderLine('Location'));
         $this->assertSame(200, $this->get('/documents/1')->getStatusCode());
@@ -103,7 +103,7 @@ final class FoundationPagesTest extends TestCase
         $darkSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="white"/></svg>';
         $darkPath = $this->tmpFile($darkSvg, 'logo-dark.svg');
         $darkRequest = (new ServerRequestFactory())->createServerRequest('POST', '/settings/club/logo-dark')
-            ->withParsedBody(['_csrf' => $this->csrf(), 'version' => $version, 'reason' => 'SVG-Darklogo'])
+            ->withParsedBody(['_csrf' => $this->csrf(), 'version' => $version])
             ->withUploadedFiles(['receipt' => new UploadedFile($darkPath, 'logo-dark.svg', 'image/svg+xml', strlen($darkSvg), UPLOAD_ERR_OK)]);
         $this->assertSame('/settings/club', $this->app->handle($darkRequest)->getHeaderLine('Location'));
 
@@ -116,7 +116,7 @@ final class FoundationPagesTest extends TestCase
         $this->signIn('wer@example.org');
         $version = (string) (new Profile($this->pdo))->get()['version'];
         $delRequest = (new ServerRequestFactory())->createServerRequest('POST', '/settings/club/logo-delete')
-            ->withParsedBody(['_csrf' => $this->csrf(), 'version' => $version, 'target' => 'dark', 'reason' => 'Darklogo entfernt']);
+            ->withParsedBody(['_csrf' => $this->csrf(), 'version' => $version, 'target' => 'dark']);
         $this->assertSame('/settings/club', $this->app->handle($delRequest)->getHeaderLine('Location'));
         $this->assertNull((new Profile($this->pdo))->get()['logo_dark_id']);
     }

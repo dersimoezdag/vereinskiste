@@ -40,10 +40,16 @@ Erreichen einer Grenze bricht den Vorgang ab; keine Schutzprüfung deaktivieren.
 
 Bei `recovery_required` bleibt die Anwendung gesperrt. Unter
 `/settings/auto-update` kann ein Vorstand die Wiederherstellung erneut versuchen.
-Die privaten Sicherungen und Versionsablagen unter `app/storage/updates` behalten.
-Sie enthalten personenbezogene Daten und müssen durch Backups und restriktive
+Die privaten Sicherungen und Versionsablagen unter `app/storage/updates`
+enthalten personenbezogene Daten und müssen durch Backups und restriktive
 Dateirechte geschützt werden. Keine Wartungsdateien löschen, solange die
 Datenbankwiederherstellung nicht erfolgreich abgeschlossen ist.
+
+Aufräumen übernimmt der vorhandene Mail-Cron einmal täglich, nur wenn kein
+Update läuft und kein Wartungsmodus aktiv ist: Das heruntergeladene Paket wird
+schon nach dem Entpacken entfernt, Datenbankexporte abgeschlossener Updates
+nach 7 Tagen. Von den Versionsablagen bleiben nur die aktive und die zuvor
+aktive Version erhalten. Ein zusätzlicher Cronjob ist nicht nötig.
 
 Wenn die Wiederherstellung dauerhaft scheitert, Domain und Cron im Hostingpanel
 sperren und das zuvor extern gesicherte vollständige Paket, die Datenbank und
