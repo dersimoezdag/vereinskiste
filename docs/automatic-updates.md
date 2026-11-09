@@ -30,8 +30,10 @@ ist kein unterstützter Vorgang: dabei könnten zwischenzeitliche Buchungen verl
 
 Automatische Updates unterstützen die reguläre Vereinskiste-Datenbank im
 `public`-Schema. Eigene Views, Fremdschema-Abhängigkeiten und andere nicht
-unterstützte Schemaobjekte erfordern ein manuelles Update. Grenzen: 50.000
-Datenbankzeilen, 64 MiB Sicherungsdaten, 256 MiB entpackte Paketdateien.
+unterstützte Schemaobjekte erfordern ein manuelles Update. Grenzen: 2.000.000
+Datenbankzeilen, 512 MiB Sicherungsdaten, 256 MiB entpackte Paketdateien.
+Sicherung und Wiederherstellung laufen in kurzen, fortsetzbaren Schritten; ein
+unterbrochener Rollback setzt an derselben Stelle wieder an.
 Erreichen einer Grenze bricht den Vorgang ab; keine Schutzprüfung deaktivieren.
 
 ## Fehler und Wiederherstellung

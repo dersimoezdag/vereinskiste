@@ -58,10 +58,28 @@ final class CoordinatorTest extends TestCase
         $worker=new Coordinator($this->db,$this->runtime,$http); $worker->start($release,'1.0.0',1); $this->until($worker,'verify');
         $state=(new State($this->runtime))->load(); $state['verify_until']=0; (new State($this->runtime))->save($state);
         $this->assertSame('rollback',$worker->step()['phase']);
-        $this->assertSame('rolled_back',$worker->step()['phase']);
+        // The restore runs in resumable steps (reset, data blocks, post) while the phase stays 'rollback'.
+        for ($i=0; $i<50 && ($phase=$worker->step()['phase'])==='rollback'; $i++) {
+            $this->assertNotNull($this->runtime->maintenance());
+        }
+        $this->assertSame('rolled_back',$phase);
         $this->assertNull($this->runtime->active()); $this->assertNull($this->runtime->maintenance());
         $this->assertSame(0,(int)$this->db->query("SELECT count(*) FROM information_schema.columns WHERE table_name='users' AND column_name='target_only'")->fetchColumn());
         $this->assertSame('Admin',$this->db->query('SELECT name FROM users WHERE id=1')->fetchColumn());
+    }
+    public function test_interrupted_restore_resumes_even_though_settings_no_longer_prove_the_commit(): void
+    {
+        [$release,$http]=$this->package($this->runtime->instance,'ALTER TABLE users ADD COLUMN target_only text');
+        $worker=new Coordinator($this->db,$this->runtime,$http); $worker->start($release,'1.0.0',1); $this->until($worker,'verify');
+        $state=(new State($this->runtime))->load(); $state['verify_until']=0; (new State($this->runtime))->save($state);
+        $this->assertSame('rollback',$worker->step()['phase']);
+        $this->assertSame('rollback',$worker->step()['phase']); // reset stage: tables recreated empty
+        $this->assertSame(0,(int)$this->db->query('SELECT count(*) FROM settings')->fetchColumn());
+        $state=(new State($this->runtime))->load(); $state['phase']='recovery_required'; (new State($this->runtime))->save($state);
+        for ($i=0; $i<50 && ($phase=$worker->step()['phase'])==='rollback'; $i++) {}
+        $this->assertSame('rolled_back',$phase);
+        $this->assertSame('Admin',$this->db->query('SELECT name FROM users WHERE id=1')->fetchColumn());
+        $this->assertSame(0,(int)$this->db->query("SELECT count(*) FROM information_schema.columns WHERE table_name='users' AND column_name='target_only'")->fetchColumn());
     }
     public function test_migration_error_rolls_back_and_unfreezes_the_original_version(): void
     {

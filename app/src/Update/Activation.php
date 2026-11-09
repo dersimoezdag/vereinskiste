@@ -43,7 +43,16 @@ final class Activation
     }
     public function rollback(array $data): array
     {
-        if ($this->committed($data)) { (new DatabaseRestore($this->db,$this->state->path($data) . '/backup'))->run(); }
+        // A resumed recovery continues as a normal, self-polling rollback.
+        $data['phase']='rollback';
+        if (!array_key_exists('restore',$data) && $this->committed($data)) {
+            // Persist intent before the first reset: afterwards `settings` no longer proves the commit.
+            $data['restore']=null; $this->state->save($data);
+        }
+        if (array_key_exists('restore',$data) && !($data['restore']['done']??false)) {
+            $data['restore']=(new DatabaseRestore($this->db,$this->state->path($data) . '/backup'))->step($data['restore']);
+            if (!($data['restore']['done']??false)) { return $data; }
+        }
         $this->runtime->pointer($data['previous']);
         (new AuditLog($this->db))->record('auto_update_rolled_back',$data['actor'],['operation'=>$data['id'],'version'=>$data['version']]);
         $data['phase']='rolled_back'; $this->state->save($data); $this->unfreeze(); return $data;

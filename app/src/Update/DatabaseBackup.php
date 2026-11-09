@@ -6,7 +6,7 @@ use PDO;
 
 final class DatabaseBackup
 {
-    public const MAX_ROWS = 50000;
+    public const MAX_ROWS = 2000000;
     public function __construct(private PDO $db, private string $directory) {}
     public function start(): array
     {

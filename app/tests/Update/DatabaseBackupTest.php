@@ -36,6 +36,27 @@ final class DatabaseBackupTest extends TestCase
         $this->assertSame(2,(int)$user);
         try { $db->exec('DELETE FROM bookings'); $this->fail('Sperrtrigger'); } catch (\PDOException) { $this->assertTrue(true); }
     }
+    public function test_stepwise_restore_resumes_after_lost_progress_without_duplicates(): void
+    {
+        $db=$this->pdo(); (new Migrator($db,dirname(__DIR__,2) . '/migrations'))->migrate();
+        $db->exec("INSERT INTO users(name,email,password_hash) VALUES ('Admin','admin@example.org','hash')");
+        $db->exec("INSERT INTO audit_log(user_id,action) SELECT 1,'bulk' FROM generate_series(1,1234)");
+        $schema=(new DatabaseSchema($db))->capture(); $before=[];
+        foreach ($schema['tables'] as $table) { $before[$table['name']]=$db->query('SELECT * FROM ' . DatabaseSchema::quote($table['name']) . ' ORDER BY 1')->fetchAll(); }
+        $backup=new DatabaseBackup($db,$this->scratchDir() . '/backup'); $progress=$backup->start();
+        do { $progress=$backup->step($progress); } while (!($progress['done']??false));
+        $db->exec("ALTER TABLE users ADD COLUMN extra text; INSERT INTO audit_log(user_id,action) VALUES (1,'after')");
+        $restore=new DatabaseRestore($db,$this->scratchDir() . '/backup'); $state=null; $lost=0;
+        for ($i=0; $i<200 && !($state['done']??false); $i++) {
+            $next=$restore->step($state,0.0);
+            // Simulate a crash after the commit but before the progress was saved, once per table block in audit_log.
+            if (($next['stage']??'')==='data' && ($next['rows']??0)>0 && $lost<2 && $next['table']===($state['table']??-1)) { $lost++; continue; }
+            $state=$next;
+        }
+        $this->assertTrue($state['done']??false); $this->assertSame(2,$lost);
+        foreach ($before as $table=>$rows) { $this->assertSame($rows,$db->query('SELECT * FROM ' . DatabaseSchema::quote($table) . ' ORDER BY 1')->fetchAll(),$table); }
+        try { $db->exec('DELETE FROM audit_log'); $this->fail('Sperrtrigger'); } catch (\PDOException) { $this->assertTrue(true); }
+    }
     public function test_tampered_backup_is_rejected_before_any_schema_change(): void
     {
         $db=$this->pdo(); (new Migrator($db,dirname(__DIR__,2) . '/migrations'))->migrate();
