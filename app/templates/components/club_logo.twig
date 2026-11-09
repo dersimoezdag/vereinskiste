@@ -1,0 +1,12 @@
+{# Vereinslogo passend zum Farbschema (helle bzw. dunkle Variante, per CSS umgeschaltet). Parameter: size, class, alt #}
+{% set logo_info = club_logo() %}
+{% if logo_info %}
+    {% if logo_info.has_dark and logo_info.has_logo %}
+        <img src="{{ logo_info.url }}" alt="{{ alt|default(club_name()) }}" width="{{ size|default(48) }}" height="{{ size|default(48) }}" class="club-logo-light has-dark {{ class|default('') }}">
+        <img src="{{ logo_info.url_dark }}" alt="{{ alt|default(club_name()) }}" width="{{ size|default(48) }}" height="{{ size|default(48) }}" class="club-logo-dark {{ class|default('') }}">
+    {% elseif logo_info.has_dark %}
+        <img src="{{ logo_info.url_dark }}" alt="{{ alt|default(club_name()) }}" width="{{ size|default(48) }}" height="{{ size|default(48) }}" class="club-logo {{ class|default('') }}">
+    {% else %}
+        <img src="{{ logo_info.url }}" alt="{{ alt|default(club_name()) }}" width="{{ size|default(48) }}" height="{{ size|default(48) }}" class="club-logo {{ class|default('') }}">
+    {% endif %}
+{% endif %}

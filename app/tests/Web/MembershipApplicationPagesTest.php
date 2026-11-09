@@ -8,12 +8,15 @@ use PDO;
 use Vereinskiste\Db\Migrator;
 use Vereinskiste\Http\Kernel;
 use Vereinskiste\Http\Session\ArraySessionStore;
+use Vereinskiste\Club\Profile;
 use Vereinskiste\Members\ApplicationRepository;
+use Vereinskiste\Tests\Receipts\ReceiptFiles;
 use Vereinskiste\Tests\TestCase;
 
 final class MembershipApplicationPagesTest extends TestCase
 {
     use WebHarness;
+    use ReceiptFiles;
 
     private PDO $pdo;
 
@@ -27,8 +30,14 @@ final class MembershipApplicationPagesTest extends TestCase
             'session_store' => $this->store,
             'require_https' => false,
             'security_dir' => $this->securityDir(),
+            'documents_dir' => $this->scratchDir() . '/documents',
         ]);
         $this->webUser('admin@example.org', ['admin']);
+    }
+
+    protected function tearDown(): void
+    {
+        $this->cleanScratch();
     }
 
     public function test_address_fields_are_required_and_server_errors_preserve_input(): void
@@ -233,5 +242,31 @@ final class MembershipApplicationPagesTest extends TestCase
         $this->assertStringContainsString('value="' . $input['signature'][$first] . '"', $html);
         $this->assertMatchesRegularExpression('/id="schritt-1"[^>]*data-step-error/', $html);
         $this->assertStringContainsString('value="yes"' . "\n" . '               checked', $html);
+    }
+
+    public function test_membership_application_embeds_club_logo_and_dark_mode(): void
+    {
+        $invite = (new ApplicationRepository($this->pdo))->createInvite(1, 'Wintersemester', 7);
+
+        // Club logo and dark logo
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><rect width="50" height="50" fill="blue"/></svg>';
+        $path = $this->tmpFile($svg, 'club.svg');
+        $store = new \Vereinskiste\Files\DocumentStore($this->pdo, ['documents' => $this->scratchDir() . '/documents']);
+        $id1 = $store->addImage($path, 'club.svg', 1);
+
+        $darkSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><rect width="50" height="50" fill="white"/></svg>';
+        $pathDark = $this->tmpFile($darkSvg, 'club-dark.svg');
+        $id2 = $store->addImage($pathDark, 'club-dark.svg', 1);
+
+        $profile = new Profile($this->pdo);
+        $version = $profile->get()['version'];
+        $profile->setLogo($id1, $version, 1, 'Logo');
+        $profile->setLogo($id2, $version + 1, 1, 'Dark Logo', true);
+
+        $html = (string) $this->get('/antrag/' . $invite['token'])->getBody();
+        $this->assertStringContainsString('src="/club/logo"', $html);
+        $this->assertStringContainsString('src="/club/logo-dark"', $html);
+        $this->assertStringContainsString('club-logo-light has-dark', $html);
+        $this->assertStringContainsString('club-logo-dark', $html);
     }
 }

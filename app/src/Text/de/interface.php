@@ -36,6 +36,8 @@ return [
     'ui.hinterlegen_sie_iban_und_bic_dieses_vereinskontos_fuer_automatisc' => 'Hinterlegen Sie IBAN und BIC dieses Vereinskontos für automatische Abgleiche und SEPA-Zahlungsverkehr.',
     'ui.herunterladen' => 'herunterladen',
     'ui.png_jpeg_max_2_mb' => '(PNG/JPEG, max. 2 MB)',
+    'ui.png_jpeg_svg_max_2_mb' => '(PNG, JPEG oder SVG, max. 2 MB)',
+    'ui.logo_entfernen' => 'Logo entfernen',
     'ui.starttls' => 'STARTTLS',
     'ui.tls' => 'TLS',
     'ui.funktionen_bezeichnen_aemter_wie_1_vorstand_oder_kassenpruefer_mi' => 'Funktionen bezeichnen Ämter wie 1. Vorstand oder Kassenprüfer. Mitgliedsarten regeln z. B. Vollmitglied, Jugend oder Fördermitglied.',

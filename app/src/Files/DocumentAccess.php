@@ -25,8 +25,8 @@ final class DocumentAccess
             if ($stmt->fetchColumn() !== false) { return true; }
         }
         if ($auth->can('settings.manage')) {
-            $stmt = $this->pdo->prepare('SELECT 1 FROM club_profile WHERE logo_id = ?');
-            $stmt->execute([$id]);
+            $stmt = $this->pdo->prepare('SELECT 1 FROM club_profile WHERE logo_id = ? OR logo_dark_id = ?');
+            $stmt->execute([$id, $id]);
             if ($stmt->fetchColumn() !== false) { return true; }
         }
         if ($auth->can('bookings.read')) {

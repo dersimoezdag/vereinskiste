@@ -37,6 +37,11 @@ trait WebHarness
     }
 
     /** @param string[] $roles */
+    private function logout(): void
+    {
+        $this->store->destroy();
+    }
+
     private function loginAs(array $roles, string $email = 'wer@example.org', string $name = 'Test Person'): int
     {
         $id = $this->webUser($email, $roles, $name);

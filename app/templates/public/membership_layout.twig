@@ -1,3 +1,17 @@
 {% extends 'layout.twig' %}
 
 {% block document_title %}{{ t('applications.document_title') }} {{ club_name() }}{% endblock %}
+
+{% block public_header %}
+{% set logo_info = club_logo() %}
+{% if logo_info %}
+<div class="mb-8 text-center">
+    <div class="inline-flex items-center gap-3 text-ink">
+        {% include 'components/club_logo.twig' with {size: 48, class: 'size-12 max-h-12 w-auto object-contain shrink-0'} %}
+        <span class="text-3xl font-semibold tracking-tight">{{ club_name() }}</span>
+    </div>
+</div>
+{% else %}
+{{ parent() }}
+{% endif %}
+{% endblock %}

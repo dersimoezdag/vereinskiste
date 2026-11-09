@@ -45,7 +45,9 @@ final class ClubController extends AdminController
         return $req->getAttribute('view')->render($res, 'settings/club.twig', [
             'input' => $safe, 'version' => $input === null ? $profile['version'] : Fields::version($input['version'] ?? null),
             'reason' => is_string($input['reason'] ?? null) && mb_check_encoding($input['reason'], 'UTF-8') ? $input['reason'] : '',
-            'errors' => $errors, 'fields' => Profile::FIELDS, 'logo_id' => $profile['logo_id'], 'history' => (new History($pdo))->for('club', 1),
+            'errors' => $errors, 'fields' => Profile::FIELDS, 'logo_id' => $profile['logo_id'],
+            'logo_dark_id' => $profile['logo_dark_id'] ?? null,
+            'history' => (new History($pdo))->for('club', 1),
             'jobs' => (new \Vereinskiste\Jobs\Queue($pdo))->summary(),
         ]);
     }

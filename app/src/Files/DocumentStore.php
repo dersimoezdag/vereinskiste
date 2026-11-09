@@ -13,7 +13,7 @@ final class DocumentStore
     public function addImage(string $path, string $name, int $actor): int
     {
         $dir = $this->roots['documents'];
-        $file = (new FileStorage($dir, 2097152))->ingest($path, ['image/jpeg', 'image/png']);
+        $file = (new FileStorage($dir, 2097152))->ingest($path, ['image/jpeg', 'image/png', 'image/svg+xml']);
         try {
             return (new StoredFileRepository($this->pdo))->register($file, 'documents',
                 FileStorage::cleanName($name, $file['ext']), $actor);
@@ -27,7 +27,7 @@ final class DocumentStore
     {
         $file = (new StoredFileRepository($this->pdo))->find($id);
         if ($file === null || !isset($this->roots[$file['root']])
-            || !preg_match('/^[a-f0-9]{32}\.(pdf|jpg|png|xml|csv)\z/', $file['storage_name'])) { return null; }
+            || !preg_match('/^[a-f0-9]{32}\.(pdf|jpg|png|xml|csv|svg)\z/', $file['storage_name'])) { return null; }
         $path = $this->roots[$file['root']] . '/' . $file['storage_name'];
         if (!is_file($path) || is_link($path)) { return null; }
         return $file + ['path' => $path];

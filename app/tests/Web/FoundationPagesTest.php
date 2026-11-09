@@ -73,4 +73,71 @@ final class FoundationPagesTest extends TestCase
         $this->pdo->exec("DELETE FROM user_roles WHERE role='board'; UPDATE user_roles SET role='auditor'");
         $this->assertSame(404, $this->get('/documents/1')->getStatusCode());
     }
+
+    public function test_svg_logo_upload_dark_mode_and_public_access(): void
+    {
+        $this->loginAs(['admin']);
+        $version = (string) (new Profile($this->pdo))->get()['version'];
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="navy"/></svg>';
+        $path = $this->tmpFile($svg, 'logo.svg');
+        $request = (new ServerRequestFactory())->createServerRequest('POST', '/settings/club/logo')
+            ->withParsedBody(['_csrf' => $this->csrf(), 'version' => $version, 'reason' => 'SVG-Vereinslogo'])
+            ->withUploadedFiles(['receipt' => new UploadedFile($path, 'logo.svg', 'image/svg+xml', strlen($svg), UPLOAD_ERR_OK)]);
+        $this->assertSame('/settings/club', $this->app->handle($request)->getHeaderLine('Location'));
+
+        // Public logo endpoint is available without login
+        $this->logout();
+        $publicRes = $this->get('/club/logo');
+        $this->assertSame(200, $publicRes->getStatusCode());
+        $this->assertStringContainsString('image/svg+xml', $publicRes->getHeaderLine('Content-Type'));
+        $this->assertSame('inline', $publicRes->getHeaderLine('Content-Disposition'));
+        $this->assertStringContainsString('sandbox', $publicRes->getHeaderLine('Content-Security-Policy'));
+
+        // When only light logo is present, requesting dark logo falls back to light
+        $darkFallback = $this->get('/club/logo-dark');
+        $this->assertSame(200, $darkFallback->getStatusCode());
+
+        // Upload dark mode logo
+        $this->loginAs(['admin']);
+        $version = (string) (new Profile($this->pdo))->get()['version'];
+        $darkSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="white"/></svg>';
+        $darkPath = $this->tmpFile($darkSvg, 'logo-dark.svg');
+        $darkRequest = (new ServerRequestFactory())->createServerRequest('POST', '/settings/club/logo-dark')
+            ->withParsedBody(['_csrf' => $this->csrf(), 'version' => $version, 'reason' => 'SVG-Darklogo'])
+            ->withUploadedFiles(['receipt' => new UploadedFile($darkPath, 'logo-dark.svg', 'image/svg+xml', strlen($darkSvg), UPLOAD_ERR_OK)]);
+        $this->assertSame('/settings/club', $this->app->handle($darkRequest)->getHeaderLine('Location'));
+
+        $this->logout();
+        $darkRes = $this->get('/club/logo-dark');
+        $this->assertSame(200, $darkRes->getStatusCode());
+        $this->assertStringContainsString('white', (string) $darkRes->getBody());
+
+        // Remove dark logo
+        $this->loginAs(['admin']);
+        $version = (string) (new Profile($this->pdo))->get()['version'];
+        $delRequest = (new ServerRequestFactory())->createServerRequest('POST', '/settings/club/logo-delete')
+            ->withParsedBody(['_csrf' => $this->csrf(), 'version' => $version, 'target' => 'dark', 'reason' => 'Darklogo entfernt']);
+        $this->assertSame('/settings/club', $this->app->handle($delRequest)->getHeaderLine('Location'));
+        $this->assertNull((new Profile($this->pdo))->get()['logo_dark_id']);
+    }
+
+    public function test_malicious_svg_rejected(): void
+    {
+        $this->loginAs(['admin']);
+        $version = (string) (new Profile($this->pdo))->get()['version'];
+        $badSvg = '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>';
+        $path = $this->tmpFile($badSvg, 'bad.svg');
+        $request = (new ServerRequestFactory())->createServerRequest('POST', '/settings/club/logo')
+            ->withParsedBody(['_csrf' => $this->csrf(), 'version' => $version, 'reason' => 'Bad SVG'])
+            ->withUploadedFiles(['receipt' => new UploadedFile($path, 'bad.svg', 'image/svg+xml', strlen($badSvg), UPLOAD_ERR_OK)]);
+        $res = $this->app->handle($request);
+        $this->assertSame(422, $res->getStatusCode());
+
+        $badSvg2 = '<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"><circle cx="5" cy="5" r="5"/></svg>';
+        $path2 = $this->tmpFile($badSvg2, 'bad2.svg');
+        $request2 = (new ServerRequestFactory())->createServerRequest('POST', '/settings/club/logo')
+            ->withParsedBody(['_csrf' => $this->csrf(), 'version' => $version, 'reason' => 'Bad SVG 2'])
+            ->withUploadedFiles(['receipt' => new UploadedFile($path2, 'bad2.svg', 'image/svg+xml', strlen($badSvg2), UPLOAD_ERR_OK)]);
+        $this->assertSame(422, $this->app->handle($request2)->getStatusCode());
+    }
 }

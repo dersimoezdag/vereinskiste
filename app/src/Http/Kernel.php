@@ -88,6 +88,22 @@ final class Kernel
         $env->addFunction(new TwigFunction('club_name', static fn (): string =>
             (new \Vereinskiste\Club\Profile($pdoProvider()))->name()
         ));
+        $env->addFunction(new TwigFunction('club_logo', static function () use ($pdoProvider): ?array {
+            try {
+                $profile = (new \Vereinskiste\Club\Profile($pdoProvider()))->get();
+                if ($profile['logo_id'] === null && ($profile['logo_dark_id'] ?? null) === null) {
+                    return null;
+                }
+                return [
+                    'has_logo' => $profile['logo_id'] !== null,
+                    'has_dark' => ($profile['logo_dark_id'] ?? null) !== null,
+                    'url' => $profile['logo_id'] !== null ? '/club/logo' : '/club/logo-dark',
+                    'url_dark' => ($profile['logo_dark_id'] ?? null) !== null ? '/club/logo-dark' : '/club/logo',
+                ];
+            } catch (\Throwable) {
+                return null;
+            }
+        }));
         $env->addFunction(new TwigFunction(
             't',
             static fn (string $key): string => Message::resolve($texts, $key)
@@ -274,7 +290,11 @@ final class Kernel
         $club = new \Vereinskiste\Web\ClubController($pdoProvider);
         $documents = new \Vereinskiste\Web\DocumentController($pdoProvider,
             ['receipts' => $receiptsDir, 'documents' => $config['documents_dir'] ?? $appDir . '/storage/documents']);
+        $app->get('/club/logo', [$documents, 'publicLogo']);
+        $app->get('/club/logo-dark', [$documents, 'publicLogo']);
         $app->post('/settings/club/logo', [$documents, 'logo'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/club/logo-dark', [$documents, 'logoDark'])->add(Auth::requires('settings.manage'));
+        $app->post('/settings/club/logo-delete', [$documents, 'deleteLogo'])->add(Auth::requires('settings.manage'));
         $app->get('/documents/{id:[0-9]+}', [$documents, 'download'])->add(Auth::authenticated());
         $app->get('/settings/club', [$club, 'show'])->add(Auth::requires('settings.manage'));
         $app->post('/settings/club', [$club, 'save'])->add(Auth::requires('settings.manage'));

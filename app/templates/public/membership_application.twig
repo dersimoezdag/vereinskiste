@@ -11,8 +11,18 @@
 <div class="panel overflow-hidden">
     {% if invite.is_test %}<div class="alert alert-warning m-4" role="status"><span class="badge bg-warning-soft text-warning">{{ t('applications.test.badge') }}</span> {{ t('applications.test.notice') }}</div>{% endif %}
     <header class="border-b border-line px-5 py-5 sm:px-8">
-        <h1 class="h3 mb-1">{{ t('applications.public_title') }}</h1>
-        <p class="mb-0 text-muted">{% if invite.title %}{{ t('ui.mitgliedsantrag_fuer') }} <strong class="text-ink">{{ invite.title }}</strong>{% else %}{{ t('applications.public_subtitle') }}{% endif %}</p>
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <h1 class="h3 mb-1">{{ t('applications.public_title') }}</h1>
+                <p class="mb-0 text-muted">{% if invite.title %}{{ t('ui.mitgliedsantrag_fuer') }} <strong class="text-ink">{{ invite.title }}</strong>{% else %}{{ t('applications.public_subtitle') }}{% endif %}</p>
+            </div>
+            {% set c_logo = club_logo() %}
+            {% if c_logo %}
+            <div class="shrink-0">
+                {% include 'components/club_logo.twig' with {size: 48, class: 'size-12 max-h-12 w-auto object-contain'} %}
+            </div>
+            {% endif %}
+        </div>
         <div class="mt-4" aria-live="polite">
             <p class="mb-1 text-sm font-semibold" data-stepper-status>{{ t('applications.step_count')|replace({'{current}': 1, '{total}': steps|length}) }}</p>
             <div class="h-1.5 overflow-hidden rounded-full bg-subtle"><div class="h-full bg-primary transition-all" style="width: {{ (100 / steps|length)|round }}%" data-stepper-bar></div></div>

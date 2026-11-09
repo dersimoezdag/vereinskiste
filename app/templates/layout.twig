@@ -59,12 +59,14 @@
                 <div class="mb-2 flex justify-end">
                     {% include 'components/theme-picker.twig' %}
                 </div>
+                {% block public_header %}
                 <div class="mb-8 text-center">
                     <a href="/" class="inline-flex items-center gap-3 text-ink no-underline hover:no-underline">
                         {% include 'components/logo.twig' with {size: 48, class: 'size-12'} %}
                         <span class="text-3xl font-semibold tracking-tight">{{ t('app.name') }}</span>
                     </a>
                 </div>
+                {% endblock %}
                 {% endif %}
                 {% set message = flash() %}
                 {% if message %}<div class="snackbar" role="status" aria-live="polite" data-snackbar>{{ message }}</div>{% endif %}

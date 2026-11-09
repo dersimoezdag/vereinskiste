@@ -23,15 +23,21 @@ final class Profile
 
     public function get(bool $lock = false): array
     {
-        $row = $this->pdo->query('SELECT data, version, logo_id FROM club_profile WHERE id = 1'
-            . ($lock ? ' FOR UPDATE' : ''))->fetch();
+        try {
+            $row = $this->pdo->query('SELECT data, version, logo_id, logo_dark_id FROM club_profile WHERE id = 1'
+                . ($lock ? ' FOR UPDATE' : ''))->fetch();
+        } catch (\Throwable) {
+            $row = $this->pdo->query('SELECT data, version, logo_id FROM club_profile WHERE id = 1'
+                . ($lock ? ' FOR UPDATE' : ''))->fetch();
+        }
         $data = json_decode($row['data'], true, 512, JSON_THROW_ON_ERROR);
         if (!isset($data['name'])) {
             $data['name'] = $this->pdo->query("SELECT value FROM settings WHERE key = 'club_name'")->fetchColumn() ?: 'Verein';
         }
         return ['data' => $data + ['locale' => 'de', 'year_start' => '01-01', 'color' => '', 'timezone' => ClubTimezone::DEFAULT]
             + array_fill_keys(array_keys(self::FIELDS), ''), 'version' => (int) $row['version'],
-            'logo_id' => $row['logo_id'] === null ? null : (int) $row['logo_id']];
+            'logo_id' => $row['logo_id'] === null ? null : (int) $row['logo_id'],
+            'logo_dark_id' => ($row['logo_dark_id'] ?? null) === null ? null : (int) $row['logo_dark_id']];
     }
 
     public function name(): string { return $this->get()['data']['name']; }
@@ -47,16 +53,29 @@ final class Profile
         return ['from' => $start, 'to' => $end];
     }
 
-    public function setLogo(int $fileId, int $version, int $actor, string $reason): void
+    public function setLogo(int $fileId, int $version, int $actor, string $reason, bool $isDark = false): void
     {
-        Transaction::run($this->pdo, function () use ($fileId, $version, $actor, $reason): void {
+        Transaction::run($this->pdo, function () use ($fileId, $version, $actor, $reason, $isDark): void {
             $profile = $this->get(true);
             if ($profile['version'] !== $version) { throw new Conflict(); }
-            $stmt = $this->pdo->prepare("SELECT 1 FROM stored_files WHERE id=? AND root='documents' AND mime IN ('image/png','image/jpeg')");
+            $stmt = $this->pdo->prepare("SELECT 1 FROM stored_files WHERE id=? AND root='documents' AND mime IN ('image/png','image/jpeg','image/svg+xml')");
             $stmt->execute([$fileId]);
             if ($stmt->fetchColumn() === false) { throw new ValidationError(['receipt' => 'foundation.invalid']); }
-            (new History($this->pdo))->record('club', 1, ['logo_id' => $profile['logo_id']], ['logo_id' => $fileId], $actor, $reason);
-            $this->pdo->prepare('UPDATE club_profile SET logo_id=?,version=version+1 WHERE id=1')->execute([$fileId]);
+            $col = $isDark ? 'logo_dark_id' : 'logo_id';
+            (new History($this->pdo))->record('club', 1, [$col => $profile[$col]], [$col => $fileId], $actor, $reason);
+            $this->pdo->prepare("UPDATE club_profile SET {$col}=?,version=version+1 WHERE id=1")->execute([$fileId]);
+        });
+    }
+
+    public function removeLogo(int $version, int $actor, string $reason, bool $isDark = false): void
+    {
+        Transaction::run($this->pdo, function () use ($version, $actor, $reason, $isDark): void {
+            $profile = $this->get(true);
+            if ($profile['version'] !== $version) { throw new Conflict(); }
+            $col = $isDark ? 'logo_dark_id' : 'logo_id';
+            if ($profile[$col] === null) { return; }
+            (new History($this->pdo))->record('club', 1, [$col => $profile[$col]], [$col => null], $actor, $reason);
+            $this->pdo->prepare("UPDATE club_profile SET {$col}=NULL,version=version+1 WHERE id=1")->execute();
         });
     }
 

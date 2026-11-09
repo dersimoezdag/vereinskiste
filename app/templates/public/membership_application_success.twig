@@ -8,7 +8,11 @@
         <div>
             <div class="panel shadow-panel border-0 text-center p-6 sm:p-12">
                 <div class="mb-4">
-                    {% include 'components/logo.twig' with {size: 64, alt: 'Vereinskiste Logo'} %}
+                    {% if club_logo() %}
+                        {% include 'components/club_logo.twig' with {size: 64, class: 'mx-auto max-h-16 w-auto object-contain'} %}
+                    {% else %}
+                        {% include 'components/logo.twig' with {size: 64, alt: 'Vereinskiste Logo'} %}
+                    {% endif %}
                 </div>
                 <div class="badge bg-success-soft text-success p-4 rounded-full mx-auto mb-4 flex items-center justify-center" style="width: 60px; height: 60px;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">

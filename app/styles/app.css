@@ -489,6 +489,11 @@
     [data-theme="dark"] .brand-logo-light { display: none; }
     [data-theme="dark"] .brand-logo-dark { display: inline-block; }
 
+    /* Vereinslogo passend zum Farbschema */
+    .club-logo-dark { display: none; }
+    [data-theme="dark"] .club-logo-light.has-dark { display: none; }
+    [data-theme="dark"] .club-logo-dark { display: inline-block; }
+
     /* Info-Knoepfe neben Beschriftungen */
     .info-button {
         display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 2rem; height: 2rem; padding: 0;

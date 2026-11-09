@@ -9,15 +9,62 @@
     {% include 'components/foundation_fields.twig' with {'reason_required': false} %}
     <button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button>
 </form>
+
 <h2 class="h3 mt-6">{{ t('foundation.logo') }}</h2>
-{% if logo_id %}<a class="btn mb-4" href="/documents/{{ logo_id }}">{{ t('foundation.logo') }} {{ t('ui.herunterladen') }}</a>{% endif %}
-<form method="post" action="/settings/club/logo" enctype="multipart/form-data" class="panel panel-body">
-    {{ csrf_field() }}
-    <input type="hidden" name="version" value="{{ version }}">
-    <label class="label" for="club-logo">{{ t('foundation.logo') }} {{ t('ui.png_jpeg_max_2_mb') }}</label>
-    <input class="input mb-4" id="club-logo" type="file" name="receipt" accept="image/png,image/jpeg" required>
-    <button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button>
-</form>
+<div class="panel panel-body">
+    {% if logo_id %}
+    <div class="flex items-center gap-4 mb-4">
+        <div class="p-2 rounded border border-line bg-surface max-h-20 flex items-center justify-center">
+            <img src="/club/logo" alt="{{ t('foundation.logo') }}" class="max-h-16 max-w-[160px] object-contain">
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <a class="btn" href="/documents/{{ logo_id }}">{{ t('foundation.logo') }} {{ t('ui.herunterladen') }}</a>
+            <form method="post" action="/settings/club/logo-delete" class="inline">
+                {{ csrf_field() }}
+                <input type="hidden" name="version" value="{{ version }}">
+                <input type="hidden" name="target" value="light">
+                <button class="btn btn-soft text-danger" type="submit">{{ t('foundation.logo_delete') }}</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+    <form method="post" action="/settings/club/logo" enctype="multipart/form-data">
+        {{ csrf_field() }}
+        <input type="hidden" name="version" value="{{ version }}">
+        <label class="label" for="club-logo">{{ t('foundation.logo') }} {{ t('ui.png_jpeg_svg_max_2_mb') }}</label>
+        <input class="input mb-4" id="club-logo" type="file" name="receipt" accept="image/png,image/jpeg,image/svg+xml" required>
+        <button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button>
+    </form>
+</div>
+
+<h2 class="h3 mt-6">{{ t('foundation.logo_dark') }}</h2>
+<p class="text-sm text-muted mb-3">{{ t('foundation.logo_dark_hint') }}</p>
+<div class="panel panel-body">
+    {% if logo_dark_id %}
+    <div class="flex items-center gap-4 mb-4">
+        <div class="p-2 rounded border border-line bg-neutral-900 max-h-20 flex items-center justify-center">
+            <img src="/club/logo-dark" alt="{{ t('foundation.logo_dark') }}" class="max-h-16 max-w-[160px] object-contain">
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <a class="btn" href="/documents/{{ logo_dark_id }}">{{ t('foundation.logo_dark') }} {{ t('ui.herunterladen') }}</a>
+            <form method="post" action="/settings/club/logo-delete" class="inline">
+                {{ csrf_field() }}
+                <input type="hidden" name="version" value="{{ version }}">
+                <input type="hidden" name="target" value="dark">
+                <button class="btn btn-soft text-danger" type="submit">{{ t('foundation.logo_delete') }}</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+    <form method="post" action="/settings/club/logo-dark" enctype="multipart/form-data">
+        {{ csrf_field() }}
+        <input type="hidden" name="version" value="{{ version }}">
+        <label class="label" for="club-logo-dark">{{ t('foundation.logo_dark') }} {{ t('ui.png_jpeg_svg_max_2_mb') }}</label>
+        <input class="input mb-4" id="club-logo-dark" type="file" name="receipt" accept="image/png,image/jpeg,image/svg+xml" required>
+        <button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button>
+    </form>
+</div>
+
 {% include 'components/foundation_history.twig' %}
 {% if jobs %}<h2 class="h3 mt-6">{{ t('foundation.jobs') }}</h2>
 <ul>{% for job in jobs %}<li>{{ t('foundation.job.' ~ job.status) }}: {{ job.count }}</li>{% endfor %}</ul>{% endif %}
