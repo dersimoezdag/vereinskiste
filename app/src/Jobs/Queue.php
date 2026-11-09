@@ -51,14 +51,16 @@ final class Queue
         return $stmt->rowCount() === 1;
     }
 
-    public function summary(): array
-    {
-        return $this->pdo->query('SELECT status,count(*)::int AS count FROM jobs GROUP BY status ORDER BY status')->fetchAll();
-    }
-
+    /**
+     * The mail cron enqueues about 12 jobs per minute (~17,000 per day), most without work to do.
+     * Finished jobs carry no business data: keep them one day, failed ones 30 days for diagnosis.
+     * The batch keeps up with the inflow and works off an existing backlog within minutes.
+     */
     public function prune(): void
     {
         $this->pdo->exec("DELETE FROM jobs WHERE id IN (SELECT id FROM jobs
-            WHERE status='done' AND finished_at < now()-interval '30 days' ORDER BY id LIMIT 100)");
+            WHERE status='done' AND finished_at < now()-interval '1 day'
+               OR status='failed' AND finished_at < now()-interval '30 days'
+            ORDER BY id LIMIT 5000)");
     }
 }

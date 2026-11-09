@@ -48,7 +48,6 @@ final class ClubController extends AdminController
             'errors' => $errors, 'fields' => Profile::FIELDS, 'logo_id' => $profile['logo_id'],
             'logo_dark_id' => $profile['logo_dark_id'] ?? null,
             'history' => (new History($pdo))->for('club', 1),
-            'jobs' => (new \Vereinskiste\Jobs\Queue($pdo))->summary(),
         ]);
     }
 }

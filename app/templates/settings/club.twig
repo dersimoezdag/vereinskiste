@@ -69,6 +69,4 @@
 </div>
 
 {% include 'components/foundation_history.twig' %}
-{% if jobs %}<h2 class="h3 mt-6">{{ t('foundation.jobs') }}</h2>
-<ul>{% for job in jobs %}<li>{{ t('foundation.job.' ~ job.status) }}: {{ job.count }}</li>{% endfor %}</ul>{% endif %}
 {% endblock %}

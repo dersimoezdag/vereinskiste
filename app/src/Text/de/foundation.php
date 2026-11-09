@@ -11,8 +11,6 @@ return [
     'foundation.field.mandate_reference' => 'Mandatsreferenz',
     'foundation.field.mandate_date' => 'Mandatsdatum',
 
-    'foundation.jobs' => 'Hintergrundaufgaben', 'foundation.job.pending' => 'Wartend',
-    'foundation.job.running' => 'In Bearbeitung', 'foundation.job.done' => 'Erledigt', 'foundation.job.failed' => 'Fehlgeschlagen',
     'foundation.duplicates' => 'Es gibt bereits ähnliche Finanzkontakte. Bitte vor dem Anlegen prüfen.',
     'foundation.duplicates.confirm' => 'Dies ist ein anderer Kontakt. Trotzdem anlegen.',
     'foundation.club' => 'Verein', 'foundation.contacts' => 'Finanzkontakte',

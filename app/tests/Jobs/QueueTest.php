@@ -46,4 +46,16 @@ final class QueueTest extends TestCase
         $this->assertSame(['status' => 'failed', 'error_code' => 'handler_failed'], $row);
         $this->assertNull($queue->claim());
     }
+    public function test_prune_drops_done_jobs_after_a_day_and_failed_jobs_after_thirty_days(): void
+    {
+        $queue = new Queue($this->db);
+        foreach (['done_old' => ['done', '25 hours'], 'done_new' => ['done', '23 hours'], 'failed_mid' => ['failed', '10 days'],
+                  'failed_old' => ['failed', '31 days'], 'pending' => ['pending', null]] as $kind => [$status, $age]) {
+            $queue->enqueue(str_replace('_', '-', $kind), [], $kind);
+            $this->db->prepare("UPDATE jobs SET status=?, finished_at=CASE WHEN ?::text IS NULL THEN NULL ELSE now()-?::interval END WHERE kind=?")
+                ->execute([$status, $age, $age, str_replace('_', '-', $kind)]);
+        }
+        $queue->prune();
+        $this->assertSame(['done-new', 'failed-mid', 'pending'], $this->db->query('SELECT kind FROM jobs ORDER BY kind')->fetchAll(\PDO::FETCH_COLUMN));
+    }
 }
