@@ -36,22 +36,28 @@ trait WebHarness
         return $id;
     }
 
-    /** @param string[] $roles */
     private function logout(): void
     {
         $this->store->destroy();
     }
 
+    /** @param string[] $roles */
     private function loginAs(array $roles, string $email = 'wer@example.org', string $name = 'Test Person'): int
     {
         $id = $this->webUser($email, $roles, $name);
+        $this->signIn($email);
+        return $id;
+    }
+
+    /** Meldet einen bereits angelegten Benutzer ueber das Formular an. */
+    private function signIn(string $email): void
+    {
         $res = $this->app->handle(
             (new ServerRequestFactory())->createServerRequest('POST', '/login')->withParsedBody([
                 '_csrf' => $this->csrf(), 'email' => $email, 'password' => 'richtig-richtig',
             ])
         );
         $this->assertSame(302, $res->getStatusCode());
-        return $id;
     }
 
     private function csrf(): string

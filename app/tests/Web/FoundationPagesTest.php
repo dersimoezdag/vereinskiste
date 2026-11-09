@@ -98,7 +98,7 @@ final class FoundationPagesTest extends TestCase
         $this->assertSame(200, $darkFallback->getStatusCode());
 
         // Upload dark mode logo
-        $this->loginAs(['admin']);
+        $this->signIn('wer@example.org');
         $version = (string) (new Profile($this->pdo))->get()['version'];
         $darkSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="white"/></svg>';
         $darkPath = $this->tmpFile($darkSvg, 'logo-dark.svg');
@@ -113,7 +113,7 @@ final class FoundationPagesTest extends TestCase
         $this->assertStringContainsString('white', (string) $darkRes->getBody());
 
         // Remove dark logo
-        $this->loginAs(['admin']);
+        $this->signIn('wer@example.org');
         $version = (string) (new Profile($this->pdo))->get()['version'];
         $delRequest = (new ServerRequestFactory())->createServerRequest('POST', '/settings/club/logo-delete')
             ->withParsedBody(['_csrf' => $this->csrf(), 'version' => $version, 'target' => 'dark', 'reason' => 'Darklogo entfernt']);
@@ -139,5 +139,13 @@ final class FoundationPagesTest extends TestCase
             ->withParsedBody(['_csrf' => $this->csrf(), 'version' => $version, 'reason' => 'Bad SVG 2'])
             ->withUploadedFiles(['receipt' => new UploadedFile($path2, 'bad2.svg', 'image/svg+xml', strlen($badSvg2), UPLOAD_ERR_OK)]);
         $this->assertSame(422, $this->app->handle($request2)->getStatusCode());
+
+        $xxe = '<?xml version="1.0"?><!DOCTYPE svg [<!ENTITY x SYSTEM "file:///etc/passwd">]>'
+            . '<svg xmlns="http://www.w3.org/2000/svg"><text>&x;</text></svg>';
+        $path3 = $this->tmpFile($xxe, 'xxe.svg');
+        $request3 = (new ServerRequestFactory())->createServerRequest('POST', '/settings/club/logo')
+            ->withParsedBody(['_csrf' => $this->csrf(), 'version' => $version, 'reason' => 'XXE'])
+            ->withUploadedFiles(['receipt' => new UploadedFile($path3, 'xxe.svg', 'image/svg+xml', strlen($xxe), UPLOAD_ERR_OK)]);
+        $this->assertSame(422, $this->app->handle($request3)->getStatusCode());
     }
 }

@@ -76,13 +76,18 @@ final class UploadValidator
         if ($content === false || trim($content) === '') {
             throw new ValidationError(['receipt' => 'validation.receipt.empty']);
         }
+        // Keine DTD: verhindert externe Entitaeten (XXE, z. B. file:///etc/passwd im oeffentlich
+        // ausgelieferten Logo) und Entity-Expansion. Entitaeten werden bewusst NICHT ersetzt (kein LIBXML_NOENT).
+        if (preg_match('/<!DOCTYPE|<!ENTITY/i', $content)) {
+            throw new ValidationError(['receipt' => 'validation.receipt.type']);
+        }
         $dom = new DOMDocument();
         $prev = libxml_use_internal_errors(true);
-        $loaded = $dom->loadXML($content, LIBXML_NONET | LIBXML_NOENT | LIBXML_NOWARNING);
+        $loaded = $dom->loadXML($content, LIBXML_NONET | LIBXML_NOWARNING);
         libxml_clear_errors();
         libxml_use_internal_errors($prev);
 
-        if (!$loaded || $dom->documentElement === null || strtolower($dom->documentElement->localName) !== 'svg') {
+        if (!$loaded || $dom->doctype !== null || $dom->documentElement === null || strtolower($dom->documentElement->localName) !== 'svg') {
             throw new ValidationError(['receipt' => 'validation.receipt.type']);
         }
 
