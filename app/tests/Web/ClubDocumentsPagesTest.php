@@ -50,6 +50,14 @@ final class ClubDocumentsPagesTest extends TestCase
   $this->assertSame(404,$this->get('/documents/rules/1')->getStatusCode());
   $this->assertSame(404,$this->get('/documents/constitution/1/versions/999')->getStatusCode());
  }
+ public function test_minutes_can_be_club_meetings(): void
+ {
+  $this->loginAs(['secretary']);
+  $this->assertStringContainsString('Vereinssitzung',(string)$this->get('/documents/minutes/new')->getBody());
+  $this->publish('minutes',['title'=>'Vereinsabend','meeting_type'=>'club']);
+  $this->assertStringContainsString('Vereinssitzung',(string)$this->get('/documents/minutes/1')->getBody());
+  $this->assertSame(200,$this->get('/documents/minutes/1/pdf')->getStatusCode());
+ }
  public function test_minutes_are_newest_first_and_readers_cannot_access_confidential_content(): void
  {
   $this->loginAs(['secretary']);

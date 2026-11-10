@@ -13,7 +13,7 @@ final class Input
   foreach (['source'=>['pdf','editor'],'status'=>['draft','published']] as $key=>$allowed) {
    if (!in_array($data[$key],$allowed,true)) { throw new ValidationError([$key=>'foundation.invalid']); }
   }
-  if ($kind==='minutes' && !in_array($data['meeting_type'],['board','assembly'],true)) { throw new ValidationError(['meeting_type'=>'foundation.invalid']); }
+  if ($kind==='minutes' && !in_array($data['meeting_type'],['board','assembly','club'],true)) { throw new ValidationError(['meeting_type'=>'foundation.invalid']); }
   if ($kind!=='minutes' && $data['label']==='') { throw new ValidationError(['label'=>'foundation.required']); }
   if ($kind!=='minutes') { $data['meeting_type']=null;$data['participants']=''; }
   $data['content']=$data['source']==='editor' ? Content::clean($data['content']) : '';
