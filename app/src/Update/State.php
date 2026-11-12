@@ -29,6 +29,16 @@ final class State
         $data=$this->load();
         if ($data===null) { return ['phase'=>'idle']; }
         $result=array_intersect_key($data,array_flip(['id','version','phase','error','downloaded','size','extracted','entries','backup_rows','backup_table','backup_tables','failed_phase']));
+        if (isset($data['error'])) {
+            try {
+                $failure=Files::read($this->path($data) . '/failure.json');
+                if (is_string($failure['message']??null)) {
+                    $result['failure_detail']=substr($failure['message'],0,1000);
+                }
+            } catch (\Throwable) {
+                // A damaged diagnostic must not hide the update status.
+            }
+        }
         if ($data['phase']==='verify') { $result['probe_url']='/_update-probe/' . $data['probe']; }
         return $result;
     }
