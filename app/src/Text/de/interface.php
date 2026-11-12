@@ -6,6 +6,10 @@ return [
     'js.postal_places_empty' => 'Keine Ortsvorschläge gefunden. Ort bitte selbst eingeben.',
     'js.postal_places_loading' => 'Ortsvorschläge werden geladen.',
     'js.postal_places_failed' => 'Ortssuche nicht verfügbar. Ort bitte selbst eingeben.',
+    'js.person_search_placeholder' => 'Person suchen …',
+    'js.person_search_no_results' => 'Keine Personen gefunden',
+    'js.person_search_clear' => 'Auswahl aufheben',
+    'js.person_search_empty_choice' => '– Keine Person –',
 
     'js.dashboard_saving' => 'Übersicht wird gespeichert …',
     'js.dashboard_saved' => 'Übersicht gespeichert.',

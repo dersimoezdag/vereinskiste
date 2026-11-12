@@ -82,8 +82,14 @@
                     {{ csrf_field() }}
                     <label class="label" for="task-title-{{ task.id }}">{{ t('events.task.title') }}</label>
                     <input class="input mb-2" id="task-title-{{ task.id }}" name="title" maxlength="200" required value="{{ task.title }}">
-                    <label class="label" for="task-member-{{ task.id }}">{{ t('events.task.member') }}</label>
-                    <select class="input mb-2" id="task-member-{{ task.id }}" name="member_id"><option value="">{{ t('bookings.choose') }}</option>{% for member in members %}<option value="{{ member.id }}"{% if task.member_id ~ '' == member.id ~ '' %} selected{% endif %}>{{ member.name }}</option>{% endfor %}</select>
+                    {% include 'components/person_picker.twig' with {
+                        id: 'task-member-' ~ task.id,
+                        name: 'member_id',
+                        label: t('events.task.member'),
+                        value: task.member_id,
+                        persons: members,
+                        class: 'mb-2'
+                    } %}
                     <label class="label" for="task-person-{{ task.id }}">{{ t('events.task.person') }}</label>
                     <input class="input mb-2" id="task-person-{{ task.id }}" name="person_name" maxlength="200" value="{{ task.person_name }}">
                     <label class="label" for="task-offset-{{ task.id }}">{{ t('events.task.offset') }}</label>
@@ -99,8 +105,15 @@
         {{ csrf_field() }}
         <div class="col-span-12 md:col-span-4"><label class="label" for="task-title">{{ t('events.task.title') }}</label>
             <input class="input{% if errors.title is defined %} is-invalid{% endif %}" id="task-title" name="title" maxlength="200" required></div>
-        <div class="col-span-12 md:col-span-3"><label class="label" for="task-member">{{ t('events.task.member') }}</label>
-            <select class="input" id="task-member" name="member_id"><option value="">{{ t('bookings.choose') }}</option>{% for member in members %}<option value="{{ member.id }}">{{ member.name }}</option>{% endfor %}</select></div>
+        <div class="col-span-12 md:col-span-3">
+            {% include 'components/person_picker.twig' with {
+                id: 'task-member',
+                name: 'member_id',
+                label: t('events.task.member'),
+                value: '',
+                persons: members
+            } %}
+        </div>
         <div class="col-span-12 md:col-span-3"><label class="label" for="task-person">{{ t('events.task.person') }}</label>
             <input class="input" id="task-person" name="person_name" maxlength="200"></div>
         <div class="col-span-12 md:col-span-2"><label class="label" for="task-offset">{{ t('events.task.offset') }}</label>

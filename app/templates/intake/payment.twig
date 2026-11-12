@@ -5,7 +5,14 @@
 {% if can('invoices.write') and invoice.status!='cancelled' and invoice.kind=='invoice' and (not request or request.status=='draft') %}
 <form method="post" action="/invoices/{{ invoice.id }}/payment">{{ csrf_field() }}<input type="hidden" name="version" value="{{ request.version|default(0) }}"><input type="hidden" name="action" value="save">
 <label class="label" for="payment-kind">{{ t('ui.zahlungsart') }}</label><select class="input mb-4" id="payment-kind" name="kind"><option value="supplier"{% if request.kind=='supplier' %} selected{% endif %}>{{ t('ui.rechnung_an_lieferanten_zahlen') }}</option><option value="reimbursement"{% if request.kind=='reimbursement' %} selected{% endif %}>{{ t('ui.auslage_an_mitglied_erstatten') }}</option></select>
-<label class="label" for="payment-member">{{ t('ui.mitglied_bei_erstattung') }}</label><select class="input mb-4" id="payment-member" name="member_id"><option value="">{{ t('bookings.choose') }}</option>{% for member in members %}<option value="{{ member.id }}"{% if request.member_id==member.id %} selected{% endif %}>{{ member.name }}</option>{% endfor %}</select>
+{% include 'components/person_picker.twig' with {
+    id: 'payment-member',
+    name: 'member_id',
+    label: t('ui.mitglied_bei_erstattung'),
+    value: request.member_id|default(''),
+    persons: members,
+    class: 'mb-4'
+} %}
 <p class="text-muted">{{ t('ui.bei_einer_erstattung_wird_der_name_des_gewaehlten_mitglieds_als_e') }}</p>
 {% for field,label in {'recipient':'Empfänger (bei Lieferantenzahlung)','iban':'Geprüfte IBAN','purpose':'Verwendungszweck','reason':'Anlass / Veranstaltung und Begründung'} %}<label class="label" for="payment-{{ field }}">{{ label }}</label><input class="input mb-4" id="payment-{{ field }}" name="{{ field }}" value="{{ request[field]|default('') }}" maxlength="{{ field=='reason'?500:200 }}"{% if field!='recipient' %} required{% endif %}>{% endfor %}
 <label class="check mb-4"><input class="check-input" type="checkbox" name="recipient_verified" value="1" required><span class="check-label">{{ t('intake.payment.recipient_verified') }}</span></label><button class="btn btn-primary">{{ t('ui.zahlungsvorschlag_speichern') }}</button>

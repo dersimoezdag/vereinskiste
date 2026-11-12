@@ -11,10 +11,18 @@
     <input type="hidden" name="version" value="{{ expense ? expense.version : 0 }}">
     <fieldset{% if not writable %} disabled{% endif %}>
     <div class="grid-12 gap-4 mb-4">
-        <div class="col-span-12 md:col-span-6"><label class="label" for="expense-member">{{ t('events.task.member') }}</label>
-            <select class="input{% if errors.member_id is defined %} is-invalid{% endif %}" id="expense-member" name="member_id"><option value="">{{ t('bookings.choose') }}</option>
-            {% for member in members %}<option value="{{ member.id }}"{% if input.member_id|default('') ~ '' == member.id ~ '' %} selected{% endif %}>{{ member.name }}</option>{% endfor %}</select>
-            {% if errors.member_id is defined %}<div class="field-error">{{ t(errors.member_id) }}</div>{% endif %}</div>
+        <div class="col-span-12 md:col-span-6">
+            {% include 'components/person_picker.twig' with {
+                id: 'expense-member',
+                name: 'member_id',
+                label: t('events.task.member'),
+                value: input.member_id|default(''),
+                persons: members,
+                disabled: not writable,
+                is_invalid: errors.member_id is defined,
+                error: errors.member_id|default(null)
+            } %}
+        </div>
         <div class="col-span-12 md:col-span-6"><label class="label" for="expense-person">{{ t('events.task.person') }}</label>
             <input class="input" id="expense-person" name="person_name" maxlength="200" value="{{ input.person_name|default('') }}"></div>
         <div class="col-span-12"><label class="label" for="expense-purpose">{{ t('foundation.field.purpose') }}</label>

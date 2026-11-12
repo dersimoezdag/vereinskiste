@@ -29,7 +29,7 @@
                     <div class="flex items-center gap-2"><label class="label" for="user-member-id">{{ t('members.user.field') }}</label>
                     {% if member_link_locked and member_link_admin %}<button type="button" class="btn btn-sm btn-icon" data-member-link-unlock aria-label="{{ t('users.member_unlock') }}" title="{{ t('users.member_unlock') }}"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m16 3 5 5-12 12H4v-5L16 3zM14 5l5 5"/></svg></button>{% endif %}</div>
                     <input type="hidden" name="member_link_unlocked" value="0" data-member-link-unlocked>
-                    <select id="user-member-id" name="member_id" class="input{% if errors.member_id is defined %} is-invalid{% endif %}"{% if member_link_locked %} disabled{% endif %}>
+                    <select id="user-member-id" name="member_id" class="input{% if errors.member_id is defined %} is-invalid{% endif %}"{% if member_link_locked %} disabled{% endif %} data-person-picker>
                         <option value="">{{ t('members.user.field.none') }}</option>
                         {% for m in linkable_members %}
                         <option value="{{ m.id }}"{% if input.member_id == m.id %} selected{% endif %} data-member-name="{{ m.name }}" data-member-email="{{ m.email|default('') }}">

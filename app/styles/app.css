@@ -624,3 +624,79 @@
 .suggestions-list { position: absolute; top: 100%; left: 0; right: 0; z-index: 50; margin-top: .25rem; padding: .25rem; max-height: 16rem; overflow: auto; background: var(--vk-surface); color: var(--vk-ink); border: 1px solid var(--vk-line); border-radius: .5rem; box-shadow: 0 8px 24px #0002; }
 .suggestions-list [role="option"] { padding: .625rem .75rem; border-radius: .25rem; cursor: pointer; overflow-wrap: anywhere; }
 .suggestions-list [role="option"]:hover, .suggestions-list [aria-selected="true"] { background: var(--vk-primary-soft); color: var(--vk-primary-strong); }
+
+/* Person-Picker (wiederverwendbare Such- und Auswahlkomponente) */
+.person-picker { position: relative; width: 100%; min-width: 0; }
+.person-picker-control { position: relative; width: 100%; }
+.person-picker-search { width: 100%; padding-right: 2.25rem; }
+.person-picker-clear {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-muted);
+    font-size: 1.125rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: color 0.15s, background-color 0.15s;
+}
+.person-picker-clear:hover { color: var(--color-ink); background: var(--color-subtle); }
+.person-picker-clear:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+.person-picker-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    margin-top: 0.25rem;
+    padding: 0.25rem;
+    max-height: 16rem;
+    overflow-y: auto;
+    background: var(--vk-surface);
+    color: var(--vk-ink);
+    border: 1px solid var(--vk-line);
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow-pop);
+}
+.person-picker-option {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    color: var(--color-ink);
+    font-size: 0.875rem;
+    user-select: none;
+}
+.person-picker-option:hover,
+.person-picker-option[aria-selected="true"] {
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+}
+.person-picker-option.is-empty-choice {
+    color: var(--color-muted);
+    font-style: italic;
+    border-bottom: 1px solid var(--color-line);
+    margin-bottom: 0.25rem;
+    padding-bottom: 0.5rem;
+}
+.person-picker-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.person-picker-badge { font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-muted); flex-shrink: 0; }
+.person-picker-no-results {
+    padding: 0.75rem;
+    color: var(--color-muted);
+    font-size: 0.875rem;
+    text-align: center;
+}

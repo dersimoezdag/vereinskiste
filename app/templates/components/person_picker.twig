@@ -1,0 +1,93 @@
+{# Wiederverwendbare Person-Picker-Komponente:
+   Suchfeld mit Live-Vorschlägen ab 1 Buchstabe, sonst vollständige Liste alphabetisch.
+   Parameter:
+   - id: Eindeutige ID des Feldes (z. B. 'expense-member')
+   - name: Name des Formularfelds (Standard: 'member_id')
+   - label: Beschriftung über dem Feld (optional)
+   - value: Aktuell ausgewählte Person-ID
+   - persons: Liste der Personen (Array von Objekten mit id, name, optional member_no, email)
+   - placeholder: Platzhalter für das Suchfeld (Standard: t('js.person_search_placeholder'))
+   - empty_label: Bezeichnung für leere Auswahl (Standard: t('bookings.choose'))
+   - allow_empty: Ob eine Leer-Auswahl erlaubt ist (Standard: true)
+   - required: Ob das Feld ausgefüllt werden muss (Standard: false)
+   - disabled: Ob das Feld deaktiviert ist (Standard: false)
+   - class: Zusätzliche CSS-Klassen für den Container (optional)
+   - is_invalid: Ob das Feld als fehlerhaft markiert werden soll
+   - error: Fehlermeldung (Textschlüssel oder Text)
+   - hint: Hinweistext unter dem Feld (optional)
+#}
+{% set picker_id = id|default('person-picker-' ~ random()) %}
+{% set field_name = name|default('member_id') %}
+{% set current_val = value|default('') ~ '' %}
+{% set items = persons|default(options|default([])) %}
+{% set is_disabled = disabled|default(false) %}
+{% set has_error = (is_invalid|default(false) or error|default(false)) %}
+
+<div class="person-picker {{ class|default('') }}" id="{{ picker_id }}-container" data-person-picker{% if is_disabled %} data-disabled="1"{% endif %}>
+    {% if label|default(false) %}
+        <label class="label{% if required|default(false) %} required{% endif %}" for="{{ picker_id }}-search">{{ label }}</label>
+    {% endif %}
+
+    {# Verstecktes natives Select als semantischer Fallback und Formularüberträger #}
+    <select class="input person-picker-select{% if has_error %} is-invalid{% endif %}"
+            id="{{ picker_id }}"
+            name="{{ field_name }}"
+            {% if required|default(false) %}required{% endif %}
+            {% if is_disabled %}disabled{% endif %}
+            data-person-picker-select>
+        {% if allow_empty|default(true) %}
+            <option value="">{{ empty_label|default(t('bookings.choose')) }}</option>
+        {% endif %}
+        {% for p in items %}
+            <option value="{{ p.id }}"{% if current_val == (p.id ~ '') %} selected{% endif %}
+                    data-member-name="{{ p.name }}"
+                    {% if p.member_no|default('') %}data-member-no="{{ p.member_no }}"{% endif %}
+                    {% if p.email|default('') %}data-member-email="{{ p.email }}"{% endif %}>
+                {% if p.member_no|default('') %}#{{ p.member_no }} {% endif %}{{ p.name }}
+            </option>
+        {% endfor %}
+    </select>
+
+    {# Struktur für die JS-Interaktion mit Suchfeld, Clear-Knopf und Vorschlagsliste #}
+    <div class="person-picker-control relative">
+        <div class="person-picker-input-wrap relative flex items-center">
+            <input type="text"
+                   class="input person-picker-search{% if has_error %} is-invalid{% endif %}"
+                   id="{{ picker_id }}-search"
+                   role="combobox"
+                   aria-autocomplete="list"
+                   aria-expanded="false"
+                   aria-haspopup="listbox"
+                   aria-controls="{{ picker_id }}-list"
+                   autocomplete="off"
+                   placeholder="{{ placeholder|default(t('js.person_search_placeholder')) }}"
+                   {% if is_disabled %}disabled{% endif %}
+                   data-person-picker-search>
+
+            <button type="button"
+                    class="person-picker-clear"
+                    tabindex="-1"
+                    aria-label="{{ t('js.person_search_clear') }}"
+                    title="{{ t('js.person_search_clear') }}"
+                    data-person-picker-clear
+                    hidden>
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+
+        <div class="suggestions-list person-picker-list"
+             id="{{ picker_id }}-list"
+             role="listbox"
+             aria-label="{{ label|default(t('js.person_search_placeholder')) }}"
+             data-person-picker-list
+             hidden>
+        </div>
+    </div>
+
+    {% if error|default(false) %}
+        <div class="field-error block">{{ t(error) }}</div>
+    {% endif %}
+    {% if hint|default(false) %}
+        <div class="field-hint">{{ hint }}</div>
+    {% endif %}
+</div>
