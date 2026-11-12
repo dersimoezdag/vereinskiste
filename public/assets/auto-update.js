@@ -90,6 +90,11 @@
             }
             paint(state);
             if (state.error) showError(state.error);
+            const diagnostic = document.getElementById('automatic-diagnostic');
+            if (diagnostic && state.failure_detail) {
+                diagnostic.textContent = state.failure_detail;
+                diagnostic.hidden = false;
+            }
             if (terminal.includes(state.phase) || state.phase === 'recovery_required') { window.location.reload(); return; }
             if (state.probe_url) {
                 try { await fetch(state.probe_url, {credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(10000)}); }

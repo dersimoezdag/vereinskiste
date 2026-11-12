@@ -75,6 +75,7 @@ final class Coordinator
                     }
                 }
             } catch (\Throwable $error) {
+                $this->recordFailure($data, $error);
                 $data['error']=$error instanceof Failure?$error->reason:'update';
                 $data['failed_phase']??=$data['phase'];
                 $data['phase']=$data['phase']==='rollback' || $data['phase']==='recovery_required' ? 'recovery_required'
@@ -82,6 +83,19 @@ final class Coordinator
             } finally { if ($exclusive) { $this->db->query('SELECT pg_advisory_unlock(' . self::BARRIER . ')'); } }
             $this->state->save($data); return $this->state->publicStatus();
         });
+    }
+    private function recordFailure(array $data, \Throwable $error): void
+    {
+        try {
+            Files::json($this->state->path($data) . '/failure.json', [
+                'time'=>gmdate('c'),
+                'phase'=>$data['phase'],
+                'type'=>$error::class,
+                'message'=>$error->getMessage(),
+            ]);
+        } catch (\Throwable) {
+            // Diagnostics must never prevent rollback.
+        }
     }
     public function cancel(): void
     {

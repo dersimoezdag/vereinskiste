@@ -77,6 +77,7 @@
                 {{ icons.icon('error') }}
                 <span>{% if operation.error is defined %}{{ t('auto_update.error.' ~ operation.error) }}{% endif %}</span>
             </p>
+            <p id="automatic-diagnostic" class="text-muted font-mono text-sm text-left mt-2 break-words"{% if operation.failure_detail is not defined %} hidden{% endif %}>{{ operation.failure_detail|default('') }}</p>
 
             <p id="automatic-stalled" class="alert alert-warning flex items-center gap-2 text-left mt-4 mb-0" role="alert" hidden>
                 {{ icons.icon('error') }}
