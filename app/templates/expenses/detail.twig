@@ -6,7 +6,7 @@
 {% if expense %}<p>{% include 'expenses/_badge.twig' %}{% if expense.reimbursed %} {{ expense.reimbursed_on|date('d.m.Y') }} · <a href="/bookings/{{ expense.booking_id }}">{{ t('expenses.to_booking') }}</a>{% endif %}</p>{% endif %}
 {% for key in ['delete', 'version', 'booking_id'] %}{% if errors[key] is defined %}<p class="alert alert-warning" role="alert">{{ t(errors[key]) }}</p>{% endif %}{% endfor %}
 
-<form method="post" action="{{ expense ? '/expenses/' ~ expense.id : '/expenses/new' }}" class="panel panel-body mb-4">
+<form method="post" action="{{ expense ? '/expenses/' ~ expense.id : '/expenses/new' }}" enctype="multipart/form-data" class="panel panel-body mb-4">
     {{ csrf_field() }}
     <input type="hidden" name="version" value="{{ expense ? expense.version : 0 }}">
     <fieldset{% if not writable %} disabled{% endif %}>
@@ -38,10 +38,27 @@
             <select class="input" id="expense-event" name="event_id"><option value="">{{ t('events.none') }}</option>
             {% for event in events %}<option value="{{ event.id }}"{% if input.event_id|default('') ~ '' == event.id ~ '' %} selected{% endif %}>{{ event.title }} ({{ event.starts_on|date('d.m.Y') }})</option>{% endfor %}</select></div>
         <div class="col-span-12"><label class="check" for="expense-receipt"><input class="check-input" type="checkbox" id="expense-receipt" name="has_receipt" value="1"{% if input.has_receipt|default(false) in [true, '1'] %} checked{% endif %}><span class="check-label">{{ t('foundation.field.has_receipt') }}</span></label></div>
+        <div class="col-span-12" id="expense-upload" data-upload-error="{{ errors.receipt is defined ? '1' : '0' }}">
+            {% include 'receipts/_dropzone.twig' with {id_prefix: 'expense-receipt', errors: errors} %}
+        </div>
     </div>
     {% if writable %}<div><button class="btn btn-primary" type="submit">{{ t('foundation.save') }}</button></div>{% endif %}
     </fieldset>
 </form>
+
+{% if expense and documents %}
+<section class="panel panel-body mb-4" aria-label="{{ t('expenses.documents') }}">
+    <h2 class="panel-title">{{ t('expenses.documents') }}</h2>
+    <ul>{% for document in documents %}<li>
+        <a href="/documents/{{ document.file_id }}">{{ document.original_name }}</a>
+        · {{ t(document.review_status == 'reviewed' ? 'expenses.document_reviewed' : 'expenses.document_pending') }}
+        {% if writable and document.review_status == 'pending' %}
+        <form method="post" action="/expenses/{{ expense.id }}/documents/{{ document.id }}/review" class="inline">
+            {{ csrf_field() }}<button class="btn btn-soft" type="submit">{{ t('expenses.review_document') }}</button>
+        </form>{% endif %}
+    </li>{% endfor %}</ul>
+</section>
+{% endif %}
 
 {% if expense and writable %}
 {% if expense.reimbursed %}

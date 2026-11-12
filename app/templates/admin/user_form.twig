@@ -43,6 +43,34 @@
                     {% if input.member_id %}<a href="/members/{{ input.member_id }}">{{ t('users.member_edit') }}</a>{% endif %}
                 </div>
                 {% if person_data %}<div class="col-span-12"><dl class="grid-12 gap-x-6 mb-0">{% for field in ['phone','address','house_number','zip','city','birth_date'] %}{% if person_data[field]|default('') %}<dt class="col-span-12 sm:col-span-3">{{ t('members.field.' ~ field) }}</dt><dd class="col-span-12 sm:col-span-9">{{ person_data[field] }}</dd>{% endif %}{% endfor %}</dl></div>{% endif %}
+                {% if not editing %}
+                    {% set mail_available = password_reset_available() %}
+                    {% set current_mode = input.password_mode|default(mail_available ? 'invite' : 'manual') %}
+                    <div class="col-span-12" data-password-mode-selector>
+                        <fieldset>
+                            <legend class="label">{{ t('users.password_mode.label') }}</legend>
+                            <div class="flex flex-col gap-2">
+                                <label class="check mb-0{% if not mail_available %} opacity-50 cursor-not-allowed{% endif %}">
+                                    <input class="check-input" type="radio" name="password_mode" value="invite"
+                                           {% if current_mode == 'invite' and mail_available %}checked{% endif %}
+                                           {% if not mail_available %}disabled{% endif %}
+                                           data-password-mode="invite">
+                                    <span class="check-label">{{ t('users.password_mode.invite') }}</span>
+                                </label>
+                                {% if not mail_available %}
+                                    <div class="field-hint text-muted -mt-1 ml-6">{{ t('users.password_mode.invite_unavailable') }}</div>
+                                {% endif %}
+                                <label class="check mb-0">
+                                    <input class="check-input" type="radio" name="password_mode" value="manual"
+                                           {% if current_mode == 'manual' or not mail_available %}checked{% endif %}
+                                           data-password-mode="manual">
+                                    <span class="check-label">{{ t('users.password_mode.manual') }}</span>
+                                </label>
+                            </div>
+                            {% if errors.password_mode is defined %}<div class="field-error">{{ t(errors.password_mode) }}</div>{% endif %}
+                        </fieldset>
+                    </div>
+                {% endif %}
                 {% if not editing or user_id != me %}
                     {% include 'admin/password_field.twig' %}
                 {% endif %}

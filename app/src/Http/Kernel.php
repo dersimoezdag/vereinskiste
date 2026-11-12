@@ -306,12 +306,13 @@ final class Kernel
         $app->get('/imports/bank/{id:[0-9]+}', [$bankImports, 'show'])->add(Auth::requires('imports.read'));
         $app->get('/imports/bank/{id:[0-9]+}/status', [$bankImports, 'status'])->add(Auth::requires('imports.read'));
         $app->post('/imports/bank/{id:[0-9]+}/{action:mapping|parse|decision|confirm|cancel|reset}', [$bankImports, 'action'])->add(Auth::requires('imports.write'));
-        $expenses = new \Vereinskiste\Web\ExpenseController($pdoProvider);
+        $expenses = new \Vereinskiste\Web\ExpenseController($pdoProvider, $config['documents_dir'] ?? $appDir . '/storage/documents');
         $app->get('/expenses', [$expenses, 'index'])->add(Auth::requires('bookings.read'));
         $app->get('/expenses/new', [$expenses, 'create'])->add(Auth::requires('bookings.write'));
         $app->post('/expenses/new', [$expenses, 'save'])->add(Auth::requires('bookings.write'));
         $app->get('/expenses/{id:[0-9]+}', [$expenses, 'show'])->add(Auth::requires('bookings.read'));
         $app->post('/expenses/{id:[0-9]+}', [$expenses, 'save'])->add(Auth::requires('bookings.write'));
+        $app->post('/expenses/{id:[0-9]+}/documents/{document:[0-9]+}/review', [$expenses, 'reviewDocument'])->add(Auth::requires('bookings.write'));
         $app->post('/expenses/{id:[0-9]+}/{action:reimburse|link|unlink|delete}', [$expenses, 'action'])->add(Auth::requires('bookings.write'));
         $cashbook = new \Vereinskiste\Web\CashbookController($pdoProvider);
         $app->get('/cashbook', [$cashbook, 'index'])->add(Auth::requires('bookings.read'));
@@ -442,7 +443,7 @@ final class Kernel
         $app->post('/settings/backup/verify', [$backup, 'verify'])->add(Auth::requires('settings.manage'));
         $app->post('/settings/backup/restore', [$backup, 'restore'])->add(Auth::requires('settings.manage'));
 
-        $users = new UserController($pdoProvider);
+        $users = new UserController($pdoProvider, $resetService);
         $app->get('/users', [$users, 'index'])->add(Auth::requires('users.manage'));
         $app->get('/users/new', [$users, 'showNew'])->add(Auth::requires('users.manage'));
         $app->post('/users/new', [$users, 'create'])->add(Auth::requires('users.manage'));

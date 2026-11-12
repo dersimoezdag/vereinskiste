@@ -94,6 +94,50 @@ final class PasswordResetService
         return $this->isConfigured() && $this->find($token) !== null;
     }
 
+    public function sendInvitation(int $userId): bool
+    {
+        if (!$this->isConfigured()) {
+            return false;
+        }
+        $pdo = ($this->pdo)();
+        $user = (new UserRepository($pdo))->findById($userId);
+        if ($user === null || !$user['active']) {
+            return false;
+        }
+        $token = bin2hex(random_bytes(32));
+        $hash = hash('sha256', $token);
+        $stmt = $pdo->prepare(
+            "INSERT INTO password_resets (user_id, token_hash, credential_hash, expires_at)
+             VALUES (?, ?, ?, now() + interval '7 days')
+             ON CONFLICT (user_id) DO UPDATE SET
+                token_hash = EXCLUDED.token_hash,
+                credential_hash = EXCLUDED.credential_hash,
+                created_at = now(),
+                expires_at = EXCLUDED.expires_at
+             RETURNING user_id"
+        );
+        $stmt->execute([$user['id'], $hash, self::credentials($user)]);
+        if ($stmt->fetchColumn() === false) {
+            return false;
+        }
+        $link = $this->baseUrl . '/password-reset/' . $token;
+        $subject = $this->texts['users.invite.mail.subject'] ?? 'Vereinskiste: Einladung';
+        $template = $this->texts['users.invite.mail.body'] ?? "Hallo {name},\n\nfür dich wurde ein Benutzerkonto in der Vereinskiste angelegt. Bitte vergib dein Passwort über folgenden Link:\n\n{link}\n\nDer Link ist 7 Tage gültig.";
+        $body = str_replace(
+            ['{name}', '{link}'],
+            [$user['name'], $link],
+            $template
+        );
+        try {
+            $this->mailer->send($user['email'], $subject, $body);
+            return true;
+        } catch (Throwable) {
+            $pdo->prepare('DELETE FROM password_resets WHERE token_hash = ?')->execute([$hash]);
+            error_log('Vereinskiste: Einladungs-Mail konnte nicht versendet werden.');
+            return false;
+        }
+    }
+
     /** Passwortwechsel und Tokenverbrauch sind atomar, auch bei parallelen Formularen. */
     public function reset(string $token, string $password, string $confirmation): bool
     {

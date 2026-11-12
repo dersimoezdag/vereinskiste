@@ -199,6 +199,22 @@ final class EventsFundingImportPagesTest extends TestCase
         $this->assertSame(403, $this->get('/cashbook')->getStatusCode());
     }
 
+    public function test_expense_receipt_upload_can_be_reviewed(): void
+    {
+        $this->loginAs(['treasurer']);
+        $path = $this->tmpFile(base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/lXcAAAAASUVORK5CYII='));
+        $response = $this->app->handle((new ServerRequestFactory())->createServerRequest('POST', '/expenses/new')
+            ->withParsedBody(['_csrf' => $this->csrf(), 'person_name' => 'Mira', 'purpose' => 'Material',
+                'amount' => '12,50', 'spent_on' => '2026-02-01', 'has_receipt' => '1', 'version' => '0'])
+            ->withUploadedFiles(['receipts' => [new UploadedFile($path, 'beleg.png', 'image/png', filesize($path))]]));
+        $this->assertSame(302, $response->getStatusCode());
+        $document = $this->pdo->query('SELECT id, file_id, review_status FROM expense_documents')->fetch();
+        $this->assertSame('pending', $document['review_status']);
+        $this->assertSame(200, $this->get('/documents/' . $document['file_id'])->getStatusCode());
+        $this->assertSame(302, $this->postForm('/expenses/1/documents/' . $document['id'] . '/review', [])->getStatusCode());
+        $this->assertSame('reviewed', $this->pdo->query('SELECT review_status FROM expense_documents')->fetchColumn());
+    }
+
     public function test_expense_status_follows_the_linked_booking(): void
     {
         $user = $this->loginAs(['treasurer']);

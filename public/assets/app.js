@@ -69,6 +69,13 @@ document.querySelectorAll('form[data-stepper]').forEach(function (form) {
 });
 
 // Beleg-Dropzone: Dateien hineinziehen oder anklicken; alle gesammelten Dateien gehen mit dem Formular ab.
+var expenseReceipt = document.getElementById('expense-receipt');
+if (expenseReceipt) {
+    var expenseUpload = document.getElementById('expense-upload');
+    var toggleExpenseUpload = function () { expenseUpload.hidden = !expenseReceipt.checked && expenseUpload.dataset.uploadError !== '1'; };
+    expenseReceipt.addEventListener('change', toggleExpenseUpload);
+    toggleExpenseUpload();
+}
 document.querySelectorAll('[data-dropzone]').forEach(function (zone) {
     var input = zone.querySelector('input[type="file"]');
     var list = zone.parentNode.querySelector('[data-dropzone-list]');

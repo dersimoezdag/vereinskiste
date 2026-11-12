@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Vereinskiste\Auth\AuthService;
 use Vereinskiste\Auth\PasswordPolicy;
+use Vereinskiste\Auth\PasswordResetService;
 use Vereinskiste\Auth\Permissions;
 use Vereinskiste\Auth\UserNotFound;
 use Vereinskiste\Auth\UserRepository;
@@ -22,8 +23,10 @@ final class UserController extends AdminController
     private const EMAIL_MAX = 254;
 
     /** @param Closure():\PDO $pdo */
-    public function __construct(private Closure $pdo)
-    {
+    public function __construct(
+        private Closure $pdo,
+        private ?PasswordResetService $resetService = null
+    ) {
     }
 
     public function index(Request $req, Response $res): Response
@@ -47,9 +50,17 @@ final class UserController extends AdminController
                 $email = $member['data']['email'] ?? '';
             }
         }
+        $canInvite = $this->resetService?->isConfigured() ?? false;
         return $this->renderForm($req, $res, 200, [
             'user_id' => null,
-            'input' => ['name' => $name, 'email' => $email, 'roles' => [], 'active' => true, 'member_id' => $memberId],
+            'input' => [
+                'name' => $name,
+                'email' => $email,
+                'roles' => [],
+                'active' => true,
+                'member_id' => $memberId,
+                'password_mode' => $canInvite ? 'invite' : 'manual',
+            ],
         ]);
     }
 
@@ -58,12 +69,15 @@ final class UserController extends AdminController
         $body = $this->body($req);
         $memberId = isset($body['member_id']) && ctype_digit((string) $body['member_id']) && (int) $body['member_id'] > 0
             ? (int) $body['member_id'] : null;
+        $passwordMode = $this->str($body, 'password_mode');
+        $isInvite = $passwordMode === 'invite';
         $input = [
             'name' => $this->str($body, 'name'),
             'email' => UserRepository::normalizeEmail($this->str($body, 'email')),
             'roles' => [],
             'active' => true,
             'member_id' => $memberId,
+            'password_mode' => $isInvite ? 'invite' : 'manual',
         ];
         if ($memberId !== null) {
             $member=(new \Vereinskiste\Members\MemberRepository(($this->pdo)()))->find($memberId);
@@ -75,24 +89,35 @@ final class UserController extends AdminController
         if ($rolesError !== null) {
             $errors['roles'] = $rolesError;
         }
+
         $password = $this->raw($body, 'password');
-        $passwordError = PasswordPolicy::check($password, $input['email'], $input['name']);
-        if ($passwordError !== null) {
-            $errors['password'] = $passwordError;
+        if ($isInvite) {
+            if ($this->resetService === null || !$this->resetService->isConfigured()) {
+                $errors['password_mode'] = 'users.password_mode.invite_unavailable';
+            }
+        } else {
+            $passwordError = PasswordPolicy::check($password, $input['email'], $input['name']);
+            if ($passwordError !== null) {
+                $errors['password'] = $passwordError;
+            }
         }
 
+        $createdUserId = null;
         if ($errors === []) {
             try {
-                \Vereinskiste\Ledger\Transaction::run(($this->pdo)(), function () use ($input, $password, $memberId, $req): void {
-                    $userId = $this->repo()->create(
+                \Vereinskiste\Ledger\Transaction::run(($this->pdo)(), function () use ($input, $password, $isInvite, $memberId, $req, &$createdUserId): void {
+                    $initialPasswordHash = $isInvite
+                        ? password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT)
+                        : password_hash($password, PASSWORD_DEFAULT);
+                    $createdUserId = $this->repo()->create(
                         $input['name'],
                         $input['email'],
-                        password_hash($password, PASSWORD_DEFAULT),
+                        $initialPasswordHash,
                         $input['roles'],
                         $this->actorId($req)
                     );
                     if ($memberId !== null) {
-                        (new \Vereinskiste\Members\MemberUserLink(($this->pdo)()))->link($memberId, $userId, $this->actorId($req));
+                        (new \Vereinskiste\Members\MemberUserLink(($this->pdo)()))->link($memberId, $createdUserId, $this->actorId($req));
                     }
                 });
             } catch (ValidationError $e) {
@@ -103,10 +128,17 @@ final class UserController extends AdminController
                 }
             }
         }
+        if ($errors === [] && $isInvite && $createdUserId !== null) {
+            $sent = $this->resetService?->sendInvitation($createdUserId) ?? false;
+            if (!$sent) {
+                $this->flash($req, 'users.flash.created_invite_failed');
+                return $this->redirect('/users');
+            }
+        }
         if ($errors !== []) {
             return $this->renderForm($req, $res, 422, ['user_id' => null, 'input' => $input, 'errors' => $errors]);
         }
-        $this->flash($req, 'users.flash.created');
+        $this->flash($req, $isInvite ? 'users.flash.created_and_invited' : 'users.flash.created');
         return $this->redirect('/users');
     }
 

@@ -30,3 +30,50 @@ test('show checkbox reveals and masks only the admin assignment password',()=>{
     show.click();assert.equal(input.type,'password');
     window.close();
 });
+
+test('password mode toggles between invite and manual assignment', () => {
+    const html = `
+        <label><input type="radio" name="password_mode" value="invite" data-password-mode="invite" checked></label>
+        <label><input type="radio" name="password_mode" value="manual" data-password-mode="manual"></label>
+        <div data-admin-password hidden>
+            <input type="password" data-password-input>
+            <button type="button" data-password-generate hidden></button>
+            <label data-password-visibility hidden><input type="checkbox" data-password-show></label>
+        </div>
+    `;
+    const dom = new JSDOM(html, {runScripts: 'outside-only'});
+    dom.window.vkText = () => 'Passwort generiert.';
+    dom.window.eval(fs.readFileSync(require.resolve('../public/assets/user-password.js'), 'utf8'));
+
+    const doc = dom.window.document;
+    const group = doc.querySelector('[data-admin-password]');
+    const input = doc.querySelector('[data-password-input]');
+    const inviteRadio = doc.querySelector('[data-password-mode="invite"]');
+    const manualRadio = doc.querySelector('[data-password-mode="manual"]');
+
+    // Initially invite is checked: admin password is hidden and not required
+    assert.equal(group.hidden, true);
+    assert.equal(input.required, false);
+
+    // Switch to manual
+    inviteRadio.checked = false;
+    manualRadio.checked = true;
+    manualRadio.dispatchEvent(new dom.window.Event('change'));
+
+    assert.equal(group.hidden, false);
+    assert.equal(input.required, true);
+
+    // Type a password
+    input.value = 'ein-geheimes-passwort';
+
+    // Switch back to invite
+    manualRadio.checked = false;
+    inviteRadio.checked = true;
+    inviteRadio.dispatchEvent(new dom.window.Event('change'));
+
+    assert.equal(group.hidden, true);
+    assert.equal(input.required, false);
+    assert.equal(input.value, '');
+
+    dom.window.close();
+});

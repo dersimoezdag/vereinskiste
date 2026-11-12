@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Vereinskiste\Events\EventRepository;
 use Vereinskiste\Expenses\ExpenseRepository;
+use Vereinskiste\Expenses\ExpenseDocuments;
 use Vereinskiste\Foundation\Conflict;
 use Vereinskiste\Foundation\Fields;
 use Vereinskiste\Foundation\History;
@@ -16,10 +17,12 @@ use Vereinskiste\Ledger\AccountRepository;
 use Vereinskiste\Ledger\CategoryRepository;
 use Vereinskiste\Ledger\ClosedPeriod;
 use Vereinskiste\Ledger\ValidationError;
+use Vereinskiste\Ledger\Transaction;
+use Vereinskiste\Receipts\UploadInput;
 
 final class ExpenseController extends AdminController
 {
-    public function __construct(private Closure $pdo) {}
+    public function __construct(private Closure $pdo, private string $documentsDir) {}
 
     public function index(Request $req, Response $res): Response
     {
@@ -54,7 +57,15 @@ final class ExpenseController extends AdminController
         $expense = $id === null ? null : $repo->find($id);
         if ($id !== null && $expense === null) { return $this->notFound($req); }
         try {
-            $saved = $repo->save($id, $body, Fields::version($body['version'] ?? null), $this->userId($req));
+            $uploads = UploadInput::allFromRequest($req);
+            if ($expense !== null && (new ExpenseDocuments(($this->pdo)(), $this->documentsDir))->forExpense($id) !== []) {
+                $body['has_receipt'] = '1';
+            }
+            $saved = Transaction::run(($this->pdo)(), function () use ($repo, $id, $body, $req, $uploads): int {
+                $saved = $repo->save($id, $body, Fields::version($body['version'] ?? null), $this->userId($req));
+                (new ExpenseDocuments(($this->pdo)(), $this->documentsDir))->addMany($saved, $uploads, $this->userId($req));
+                return $saved;
+            });
         } catch (ValidationError $e) {
             return $this->form($req, $res->withStatus(422), $expense, $body, $e->errors);
         } catch (Conflict) {
@@ -100,6 +111,18 @@ final class ExpenseController extends AdminController
         return $this->redirect('/expenses/' . $id);
     }
 
+    public function reviewDocument(Request $req, Response $res, array $args): Response
+    {
+        $id = (int) $args['id'];
+        $repo = new ExpenseRepository(($this->pdo)());
+        if ($repo->find($id) === null) { return $this->notFound($req); }
+        if (!(new ExpenseDocuments(($this->pdo)(), $this->documentsDir))->review($id, (int) $args['document'], $this->userId($req))) {
+            return $this->notFound($req);
+        }
+        $this->flash($req, 'expenses.document_reviewed');
+        return $this->redirect('/expenses/' . $id);
+    }
+
     private function form(Request $req, Response $res, ?array $expense, array $input, array $errors = []): Response
     {
         $pdo = ($this->pdo)();
@@ -114,6 +137,7 @@ final class ExpenseController extends AdminController
             'candidates' => $open ? $repo->candidates($expense) : [],
             'today' => date('Y-m-d'),
             'history' => $expense === null ? [] : (new History($pdo))->for('expense', $expense['id']),
+            'documents' => $expense === null ? [] : (new ExpenseDocuments($pdo, $this->documentsDir))->forExpense($expense['id']),
         ]);
     }
 }

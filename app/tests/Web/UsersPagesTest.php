@@ -764,4 +764,64 @@ final class UsersPagesTest extends TestCase
 
         $this->assertStringContainsString('href="/account/password"', $this->body($this->get('/')));
     }
+
+    public function test_user_creation_with_invite_mode(): void
+    {
+        $messages = [];
+        $mailer = new \Vereinskiste\Mail\Mailer(['host' => 'smtp.example.org', 'from' => 'verein@example.org'],
+            function (\PHPMailer\PHPMailer\PHPMailer $mail) use (&$messages): void {
+                $messages[] = $mail;
+            });
+        $limiter = new \Vereinskiste\Auth\RateLimiter($this->securityDir());
+        $app = Kernel::create([
+            'require_https' => false,
+            'security_dir' => $this->securityDir(),
+            'pdo' => $this->pdo,
+            'session_store' => $this->store,
+            'mailer' => $mailer,
+            'base_url' => 'https://verein.example.org',
+            'rate_limiter' => $limiter,
+        ]);
+
+        $this->loginAs(['admin']);
+        $csrf = $this->csrf();
+        $req = (new ServerRequestFactory())->createServerRequest('POST', '/users/new')->withParsedBody([
+            '_csrf' => $csrf,
+            'name' => 'Neu Eingeladener',
+            'email' => 'eingeladen@example.org',
+            'roles' => ['treasurer'],
+            'password_mode' => 'invite',
+            'password' => '',
+        ]);
+        $res = $app->handle($req);
+        $this->assertSame(302, $res->getStatusCode());
+        $this->assertCount(1, $messages);
+        $this->assertSame('eingeladen@example.org', array_keys($messages[0]->getAllRecipientAddresses())[0] ?? '');
+        $this->assertStringContainsString('https://verein.example.org/password-reset/', $messages[0]->Body);
+
+        $row = $this->row('eingeladen@example.org');
+        $this->assertNotNull($row);
+        $this->assertTrue((bool) $row['active']);
+
+        // Check token is in password_resets
+        preg_match('~/password-reset/([a-f0-9]{64})~', $messages[0]->Body, $m);
+        $token = $m[1];
+        $tokenHash = (string) $this->pdo->query('SELECT token_hash FROM password_resets WHERE user_id = ' . (int)$row['id'])->fetchColumn();
+        $this->assertSame(hash('sha256', $token), $tokenHash);
+    }
+
+    public function test_user_creation_with_invite_rejected_when_mail_not_configured(): void
+    {
+        $this->loginAs(['admin']);
+        $res = $this->postForm('/users/new', [
+            'name' => 'Ohne Mailer',
+            'email' => 'ohnemailer@example.org',
+            'roles' => ['auditor'],
+            'password_mode' => 'invite',
+            'password' => '',
+        ]);
+        $this->assertSame(422, $res->getStatusCode());
+        $this->assertNull($this->row('ohnemailer@example.org'));
+        $this->assertStringContainsString('E-Mail-Versand ist nicht eingerichtet', $this->body($res));
+    }
 }
