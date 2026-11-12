@@ -128,7 +128,7 @@ final class UserMemberLinkPagesTest extends TestCase
         $this->assertSame(302,$this->postForm('/users/1/edit',$data)->getStatusCode());
         $html=(string)$this->get('/users/1/edit')->getBody();
         $this->assertStringContainsString('data-member-link-unlock',$html);
-        $this->assertMatchesRegularExpression('/<select id="user-member-id"[^>]* disabled>/',$html);
+        $this->assertMatchesRegularExpression('/<select id="user-member-id"[^>]*\sdisabled(?:\s[^>]*)?>/',$html);
         $this->assertSame(403,$this->postForm('/users/1/edit',['member_id'=>'']+$data)->getStatusCode());
         unset($data['member_id']);
         $this->assertSame(302,$this->postForm('/users/1/edit',$data)->getStatusCode());

@@ -32,6 +32,7 @@
     <select class="input person-picker-select{% if has_error %} is-invalid{% endif %}"
             id="{{ picker_id }}"
             name="{{ field_name }}"
+            aria-label="{{ label|default(t('js.person_search_placeholder')) }}"
             {% if required|default(false) %}required{% endif %}
             {% if is_disabled %}disabled{% endif %}
             data-person-picker-select>
