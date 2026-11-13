@@ -21,7 +21,9 @@ use Vereinskiste\Ledger\ValidationError;
 final class ExpenseRepository
 {
     private const SELECT = "SELECT x.id, x.member_id, x.person_name, COALESCE(m.name, x.person_name) AS person, x.purpose,
-            x.amount::text AS amount, x.spent_on::text AS spent_on, x.has_receipt, x.event_id, e.title AS event_title,
+            x.amount::text AS amount, x.spent_on::text AS spent_on,
+            EXISTS(SELECT 1 FROM expense_documents d WHERE d.expense_id = x.id) AS has_receipt,
+            x.event_id, e.title AS event_title,
             x.booking_id, x.version, (b.id IS NOT NULL AND b.status = 'active') AS reimbursed,
             b.booking_date::text AS reimbursed_on
         FROM member_expenses x
@@ -96,15 +98,14 @@ final class ExpenseRepository
                 if ($current['version'] !== $version) { throw new Conflict(); }
                 $before = array_intersect_key($current, $values);
                 foreach (['member_id', 'event_id'] as $key) { $before[$key] = $before[$key] === null ? null : (int) $before[$key]; }
-                $before['has_receipt'] = (bool) $before['has_receipt'];
-                $this->pdo->prepare('UPDATE member_expenses SET member_id = ?, person_name = ?, purpose = ?, amount = ?, spent_on = ?, has_receipt = ?,
+                $this->pdo->prepare('UPDATE member_expenses SET member_id = ?, person_name = ?, purpose = ?, amount = ?, spent_on = ?,
                     event_id = ?, version = version + 1, updated_at = now() WHERE id = ?')->execute([$values['member_id'], $values['person_name'], $values['purpose'],
-                    $values['amount'], $values['spent_on'], $values['has_receipt'] ? 'true' : 'false', $values['event_id'], $id]);
+                    $values['amount'], $values['spent_on'], $values['event_id'], $id]);
             } else {
-                $stmt = $this->pdo->prepare('INSERT INTO member_expenses (member_id, person_name, purpose, amount, spent_on, has_receipt, event_id, created_by)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id');
+                $stmt = $this->pdo->prepare('INSERT INTO member_expenses (member_id, person_name, purpose, amount, spent_on, event_id, created_by)
+                    VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id');
                 $stmt->execute([$values['member_id'], $values['person_name'], $values['purpose'], $values['amount'], $values['spent_on'],
-                    $values['has_receipt'] ? 'true' : 'false', $values['event_id'], $actor]);
+                    $values['event_id'], $actor]);
                 $id = (int) $stmt->fetchColumn();
             }
             (new History($this->pdo))->record('expense', $id, $before, $values, $actor, '');
@@ -214,7 +215,7 @@ final class ExpenseRepository
         }
         if ($errors !== []) { throw new ValidationError($errors); }
         return ['member_id' => $member, 'person_name' => $member === null ? $data['person_name'] : '', 'purpose' => $data['purpose'],
-            'amount' => $amount, 'spent_on' => $text('spent_on'), 'has_receipt' => $text('has_receipt') === '1', 'event_id' => $event];
+            'amount' => $amount, 'spent_on' => $text('spent_on'), 'event_id' => $event];
     }
 
     private static function cast(array $row): array

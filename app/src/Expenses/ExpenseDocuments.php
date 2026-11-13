@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Vereinskiste\Expenses;
@@ -36,16 +37,19 @@ final class ExpenseDocuments
                     $path = $this->directory . '/' . $file['storage_name'];
                     $paths[] = $path;
                     (new DocumentInspection())->inspect($path, $file['mime']);
-                    $fileId = (new StoredFileRepository($this->pdo))->register($file, 'documents',
-                        FileStorage::cleanName($upload['name'], $file['ext']), $actor);
+                    $fileId = (new StoredFileRepository($this->pdo))->register(
+                        $file,
+                        'documents',
+                        FileStorage::cleanName($upload['name'], $file['ext']),
+                        $actor
+                    );
                     $this->pdo->prepare('INSERT INTO expense_documents(expense_id,file_id) VALUES (?,?)')->execute([$expenseId, $fileId]);
-                }
-                if ($uploads !== []) {
-                    $this->pdo->prepare('UPDATE member_expenses SET has_receipt = true WHERE id = ?')->execute([$expenseId]);
                 }
             });
         } catch (Throwable $e) {
-            foreach ($paths as $path) { @unlink($path); }
+            foreach ($paths as $path) {
+                @unlink($path);
+            }
             throw $e;
         }
     }
@@ -56,9 +60,17 @@ final class ExpenseDocuments
             $stmt = $this->pdo->prepare("UPDATE expense_documents SET review_status='reviewed', reviewed_by=?, reviewed_at=now()
                 WHERE id=? AND expense_id=? AND review_status='pending'");
             $stmt->execute([$actor, $documentId, $expenseId]);
-            if ($stmt->rowCount() !== 1) { return false; }
-            (new History($this->pdo))->record('expense', $expenseId,
-                ['receipt_review' => 'pending'], ['receipt_review' => 'reviewed'], $actor, 'Beleg geprüft');
+            if ($stmt->rowCount() !== 1) {
+                return false;
+            }
+            (new History($this->pdo))->record(
+                'expense',
+                $expenseId,
+                ['receipt_review' => 'pending'],
+                ['receipt_review' => 'reviewed'],
+                $actor,
+                'Beleg geprüft'
+            );
             return true;
         });
     }

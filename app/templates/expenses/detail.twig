@@ -37,8 +37,7 @@
         <div class="col-span-12 md:col-span-4"><label class="label" for="expense-event">{{ t('events.single') }}</label>
             <select class="input" id="expense-event" name="event_id"><option value="">{{ t('events.none') }}</option>
             {% for event in events %}<option value="{{ event.id }}"{% if input.event_id|default('') ~ '' == event.id ~ '' %} selected{% endif %}>{{ event.title }} ({{ event.starts_on|date('d.m.Y') }})</option>{% endfor %}</select></div>
-        <div class="col-span-12"><label class="check" for="expense-receipt"><input class="check-input" type="checkbox" id="expense-receipt" name="has_receipt" value="1"{% if input.has_receipt|default(false) in [true, '1'] %} checked{% endif %}><span class="check-label">{{ t('foundation.field.has_receipt') }}</span></label></div>
-        <div class="col-span-12" id="expense-upload" data-upload-error="{{ errors.receipt is defined ? '1' : '0' }}">
+        <div class="col-span-12" id="expense-upload">
             {% include 'receipts/_dropzone.twig' with {id_prefix: 'expense-receipt', errors: errors} %}
         </div>
     </div>

@@ -205,9 +205,10 @@ final class EventsFundingImportPagesTest extends TestCase
         $path = $this->tmpFile(base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/lXcAAAAASUVORK5CYII='));
         $response = $this->app->handle((new ServerRequestFactory())->createServerRequest('POST', '/expenses/new')
             ->withParsedBody(['_csrf' => $this->csrf(), 'person_name' => 'Mira', 'purpose' => 'Material',
-                'amount' => '12,50', 'spent_on' => '2026-02-01', 'has_receipt' => '1', 'version' => '0'])
+                'amount' => '12,50', 'spent_on' => '2026-02-01', 'version' => '0'])
             ->withUploadedFiles(['receipts' => [new UploadedFile($path, 'beleg.png', 'image/png', filesize($path))]]));
         $this->assertSame(302, $response->getStatusCode());
+        $this->assertTrue((new \Vereinskiste\Expenses\ExpenseRepository($this->pdo))->find(1)['has_receipt']);
         $document = $this->pdo->query('SELECT id, file_id, review_status FROM expense_documents')->fetch();
         $this->assertSame('pending', $document['review_status']);
         $this->assertSame(200, $this->get('/documents/' . $document['file_id'])->getStatusCode());
@@ -220,7 +221,8 @@ final class EventsFundingImportPagesTest extends TestCase
         $user = $this->loginAs(['treasurer']);
         $member = (new \Vereinskiste\Members\MemberRepository($this->pdo))->save(null, ['name' => 'Jule Test'], 0, $user);
         $this->assertSame(422, $this->postForm('/expenses/new', ['purpose' => 'Ohne Person', 'amount' => '1', 'spent_on' => '2026-02-01'])->getStatusCode());
-        $this->assertSame(302, $this->postForm('/expenses/new', ['member_id' => (string) $member, 'purpose' => 'Würste', 'amount' => '48,60', 'spent_on' => '2026-02-01', 'has_receipt' => '1'])->getStatusCode());
+        $this->assertSame(302, $this->postForm('/expenses/new', ['member_id' => (string) $member, 'purpose' => 'Würste', 'amount' => '48,60', 'spent_on' => '2026-02-01'])->getStatusCode());
+        $this->assertFalse((new \Vereinskiste\Expenses\ExpenseRepository($this->pdo))->find(2)['has_receipt']);
         $this->assertStringContainsString('48,60', (string) $this->get('/expenses')->getBody());
         $this->assertStringContainsString('48,60', (string) $this->get('/cashbook')->getBody());
 

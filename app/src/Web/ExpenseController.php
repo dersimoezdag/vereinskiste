@@ -58,9 +58,6 @@ final class ExpenseController extends AdminController
         if ($id !== null && $expense === null) { return $this->notFound($req); }
         try {
             $uploads = UploadInput::allFromRequest($req);
-            if ($expense !== null && (new ExpenseDocuments(($this->pdo)(), $this->documentsDir))->forExpense($id) !== []) {
-                $body['has_receipt'] = '1';
-            }
             $saved = Transaction::run(($this->pdo)(), function () use ($repo, $id, $body, $req, $uploads): int {
                 $saved = $repo->save($id, $body, Fields::version($body['version'] ?? null), $this->userId($req));
                 (new ExpenseDocuments(($this->pdo)(), $this->documentsDir))->addMany($saved, $uploads, $this->userId($req));
