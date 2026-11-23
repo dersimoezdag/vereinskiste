@@ -1,0 +1,101 @@
+name: Signed release
+# Forgejo is the release origin since 0.1.44. 0.1.43 was the last release
+# published on GitHub; the update source in the app already points here.
+on:
+  push:
+    branches: [main]
+    paths: ['app/VERSION']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (for example 0.1.44)'
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: signed-release
+  cancel-in-progress: false
+jobs:
+  release:
+    if: forgejo.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: vereinskiste_release_test
+          POSTGRES_USER: vk
+          POSTGRES_PASSWORD: vk
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U vk -d vereinskiste_release_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      VK_TEST_DSN: pgsql:host=127.0.0.1;dbname=vereinskiste_release_test
+      VK_TEST_USER: vk
+      VK_TEST_PASS: vk
+      RELEASE_VERSION: ${{ inputs.version }}
+      FORGEJO_API: https://forgejo.lexframe.de/api/v1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ forgejo.token }}
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, mbstring, fileinfo, gd, openssl, zip, sodium, curl
+          tools: composer:v2
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix tests --ignore-scripts
+      - run: npm test --prefix tests
+      - name: Resolve and validate version
+        run: |
+          version="${RELEASE_VERSION:-$(cat app/VERSION)}"
+          if ! [[ "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then exit 1; fi
+          echo "RELEASE_VERSION=$version" >> "$FORGEJO_ENV"
+          echo "VK_UPDATE_PACKAGE=$FORGEJO_WORKSPACE/dist/vereinskiste-$version.zip" >> "$FORGEJO_ENV"
+      - run: composer validate --strict --working-dir=app
+      - run: composer install --working-dir=app --prefer-dist --no-interaction
+      - run: composer audit --locked --working-dir=app
+      - name: Build package without exposing the signing key to Composer
+        run: sh scripts/build-release.sh "$RELEASE_VERSION" unsigned
+      - run: cd app && vendor/bin/phpunit
+      - name: Sign and verify manifest
+        env:
+          VK_RELEASE_SIGNING_KEY: ${{ secrets.VK_RELEASE_SIGNING_KEY }}
+        run: |
+          php scripts/sign-release.php "dist/vereinskiste-$RELEASE_VERSION.zip" "$RELEASE_VERSION"
+          php scripts/verify-signed-release.php "dist/vereinskiste-$RELEASE_VERSION.zip" "$RELEASE_VERSION"
+      - name: Publish immutable release assets on Forgejo
+        env:
+          FORGEJO_TOKEN: ${{ forgejo.token }}
+        run: |
+          set -euo pipefail
+          notes="docs/releases/$RELEASE_VERSION.md"
+          body=""
+          if [ -f "$notes" ]; then body="$(cat "$notes")"; fi
+          resp=$(curl -sf -X POST \
+            -H "Authorization: token $FORGEJO_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary @<(jq -n --arg tag "$RELEASE_VERSION" --arg sha "$FORGEJO_SHA" \
+              --arg name "Vereinskiste $RELEASE_VERSION" --arg body "$body" \
+              '{tag_name:$tag, target_commitish:$sha, name:$name, body:$body, draft:false, prerelease:false}') \
+            "$FORGEJO_API/repos/LexFrame/vereinskiste/releases")
+          id=$(printf '%s' "$resp" | jq -r '.id')
+          for asset in "dist/vereinskiste-$RELEASE_VERSION.zip" \
+                       "dist/vereinskiste-$RELEASE_VERSION.zip.sha256" \
+                       "dist/vereinskiste-$RELEASE_VERSION.zip.manifest.json" \
+                       "dist/vereinskiste-$RELEASE_VERSION.zip.manifest.sig"; do
+            curl -sf -X POST \
+              -H "Authorization: token $FORGEJO_TOKEN" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary @"$asset" \
+              "$FORGEJO_API/repos/LexFrame/vereinskiste/releases/$id/assets?name=$(basename "$asset")"
+          done
+          echo "Published release $RELEASE_VERSION (id $id) on Forgejo"
