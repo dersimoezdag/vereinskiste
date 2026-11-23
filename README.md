@@ -4,8 +4,10 @@ Kassenbuch fuer kleine Vereine (PHP 8.4, Slim 4, PostgreSQL 15). Lizenz: AGPL-3.
 
 ## Repositorys
 
-- **GitHub** (Entwicklung, Spiegel-Quelle): <https://github.com/dersimoezdag/vereinskiste>
-- **Forgejo** (Spiegel und Release-Ort — signierte Releases und Updatequelle): <https://forgejo.lexframe.de/LexFrame/vereinskiste>
+- **GitHub** (Spiegel-Quelle, keine Workflows): <https://github.com/dersimoezdag/vereinskiste>
+- **Forgejo** (Spiegel, CI- und Release-Ort — signierte Releases und Updatequelle): <https://forgejo.lexframe.de/LexFrame/vereinskiste>
+
+**Branch-Modell:** Feature-Branches werden in `dev` gemergt, `dev` landet per Fast-Forward in `main`; bei `dev` → `main` wird die Version erhöht. `dev` und `main` sind auf GitHub und Forgejo per Branch-Protection gegen Löschen und Force-Push geschützt.
 
 ## Entwicklung
 
