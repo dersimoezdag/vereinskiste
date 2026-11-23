@@ -222,7 +222,7 @@ final class EventsFundingImportPagesTest extends TestCase
         $member = (new \Vereinskiste\Members\MemberRepository($this->pdo))->save(null, ['name' => 'Jule Test'], 0, $user);
         $this->assertSame(422, $this->postForm('/expenses/new', ['purpose' => 'Ohne Person', 'amount' => '1', 'spent_on' => '2026-02-01'])->getStatusCode());
         $this->assertSame(302, $this->postForm('/expenses/new', ['member_id' => (string) $member, 'purpose' => 'Würste', 'amount' => '48,60', 'spent_on' => '2026-02-01'])->getStatusCode());
-        $this->assertFalse((new \Vereinskiste\Expenses\ExpenseRepository($this->pdo))->find(2)['has_receipt']);
+        $this->assertFalse((new \Vereinskiste\Expenses\ExpenseRepository($this->pdo))->find(1)['has_receipt']);
         $this->assertStringContainsString('48,60', (string) $this->get('/expenses')->getBody());
         $this->assertStringContainsString('48,60', (string) $this->get('/cashbook')->getBody());
 
