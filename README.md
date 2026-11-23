@@ -132,7 +132,7 @@ php scripts/verify-signed-release.php dist/vereinskiste-0.1.5.zip 0.1.5
 
 Der Build installiert Produktionsabhängigkeiten in einem temporären Verzeichnis.
 Lokale Konfiguration, Belege, Tests und Entwicklungscontainer gelangen nicht ins
-Paket. Die CI prüft Tests gegen PostgreSQL und erzeugt ein geprüftes Release-ZIP.
+Paket. Die CI (Forgejo Actions, `.forgejo/workflows/ci.yml`) prüft Tests gegen PostgreSQL und erzeugt ein geprüftes Release-ZIP. GitHub enthält keine Workflows mehr; Releases und CI laufen ausschließlich auf Forgejo.
 Seit 0.1.44 baut und veröffentlicht Forgejo Actions (`.forgejo/workflows/release.yml`)
 die signierten Releases auf <https://forgejo.lexframe.de/LexFrame/vereinskiste/releases>;
 0.1.43 war das letzte auf GitHub veröffentlichte Release.

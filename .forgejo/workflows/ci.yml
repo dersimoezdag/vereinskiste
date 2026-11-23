@@ -1,4 +1,5 @@
 name: Tests and release
+# CI runs on Forgejo only; GitHub is the mirror source without workflows.
 on:
   push:
   pull_request:
@@ -25,9 +26,12 @@ jobs:
       VK_TEST_DSN: pgsql:host=127.0.0.1;dbname=vereinskiste_test
       VK_TEST_USER: vk
       VK_TEST_PASS: vk
-      VK_UPDATE_PACKAGE: ${{ github.workspace }}/dist/vereinskiste-ci.zip
+      VK_UPDATE_PACKAGE: ${{ forgejo.workspace }}/dist/vereinskiste-ci.zip
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ forgejo.token }}
+          persist-credentials: false
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '${{ matrix.php }}'
