@@ -51,7 +51,7 @@ jobs:
           coverage: none
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
       - run: npm ci --prefix tests --ignore-scripts
       - run: npm test --prefix tests
       - name: Resolve and validate version

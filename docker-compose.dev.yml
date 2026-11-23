@@ -13,7 +13,7 @@ services:
       retries: 30
   # Baut public/assets/app.css und die Schriften (Tailwind) und baut bei Aenderungen neu.
   assets:
-    image: node:22
+    image: node:24
     working_dir: /work
     volumes:
       - .:/work

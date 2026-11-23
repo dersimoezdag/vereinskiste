@@ -34,7 +34,7 @@ Ohne diesen Build erscheinen alle Seiten ungestylt. Im Entwicklungscontainer lae
 
     docker compose -f docker-compose.dev.yml up assets
 
-Alternativ mit lokalem Node 22 (Pakete in `tests/`):
+Alternativ mit lokalem Node 24 (Pakete in `tests/`):
 
     npm --prefix tests ci --ignore-scripts
     node scripts/build-css.cjs --watch
