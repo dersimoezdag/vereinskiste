@@ -5,7 +5,7 @@ namespace Vereinskiste\Web;
 use Closure;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
-use Vereinskiste\Install\GitHubReleases;
+use Vereinskiste\Install\ForgejoReleases;
 use Vereinskiste\Install\Updater;
 use Vereinskiste\Update\Coordinator;
 use Vereinskiste\Update\Failure;
@@ -15,7 +15,7 @@ use Vereinskiste\Update\State;
 final class AutoUpdateController extends AdminController
 {
     public function __construct(private Closure $pdo,private Runtime $runtime,private string $version,
-        private string $migrations,private GitHubReleases $releases) {}
+        private string $migrations,private ForgejoReleases $releases) {}
     public function show(Request $req,Response $res): Response { return $this->render($req,$res); }
     private function render(Request $req,Response $res,?string $error=null): Response
     {

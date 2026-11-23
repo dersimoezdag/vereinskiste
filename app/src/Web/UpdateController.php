@@ -8,12 +8,12 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Throwable;
 use Vereinskiste\Install\Updater;
-use Vereinskiste\Install\GitHubReleases;
+use Vereinskiste\Install\ForgejoReleases;
 
 final class UpdateController extends AdminController
 {
     public function __construct(private Closure $pdo, private string $migrationDir, private string $version,
-        private GitHubReleases $releases)
+        private ForgejoReleases $releases)
     {
     }
 
@@ -27,8 +27,8 @@ final class UpdateController extends AdminController
         $session = $req->getAttribute('session');
         $session->commit(); // Do not hold the PHP session lock during the HTTPS request.
         $release = $this->releases->check($this->version);
-        $session->set('github_release', $release);
-        $session->set('github_release_installed', $this->version);
+        $session->set('release_info', $release);
+        $session->set('release_info_installed', $this->version);
         return $this->redirect('/settings');
     }
 
@@ -53,8 +53,8 @@ final class UpdateController extends AdminController
                 'automatic_supported'=>\Vereinskiste\Update\Requirements::supported(new \Vereinskiste\Update\Runtime(defined('VK_INSTANCE_APP')?VK_INSTANCE_APP:dirname($this->migrationDir))),
                 'operation'=>(new \Vereinskiste\Update\State(new \Vereinskiste\Update\Runtime(defined('VK_INSTANCE_APP')?VK_INSTANCE_APP:dirname($this->migrationDir))))->publicStatus(),
                 'error' => $error, 'done' => $done, 'version' => $this->version,
-                'release' => $req->getAttribute('session')->get('github_release_installed') === $this->version
-                    ? ($req->getAttribute('session')->get('github_release') ?? ['status' => 'unchecked'])
+                'release' => $req->getAttribute('session')->get('release_info_installed') === $this->version
+                    ? ($req->getAttribute('session')->get('release_info') ?? ['status' => 'unchecked'])
                     : ['status' => 'unchecked']]);
     }
 }

@@ -10,7 +10,7 @@ foreach (['app/migrations/0027_integrations.sql', 'app/migrations/0028_club_logo
     'app/update-bootstrap.php','app/update-trust.json','app/src/Update/Coordinator.php','app/src/Text/de/auto_update.php','public/assets/auto-update.js',
     'app/migrations/0006_reset_request_queue.sql', 'app/migrations/0010_bank_import.sql',
     'app/src/Text/de/core.php', 'app/src/Text/de/foundation.php', 'app/src/Text/de/bank_import.php',
-    'app/src/Text/de/updates.php', 'app/src/Text/de/dashboard.php', 'app/src/Install/GitHubTransport.php', 'app/src/Install/UpdateCheckFailure.php',
+    'app/src/Text/de/updates.php', 'app/src/Text/de/dashboard.php', 'app/src/Install/ForgejoTransport.php', 'app/src/Install/ForgejoReleases.php', 'app/src/Install/UpdateCheckFailure.php',
     'app/cron.php', 'app/migrations/0015_receipt_intake_payments.sql', 'public/assets/vendor/ocr/tesseract.min.js', 'public/assets/invoice-ocr.js', 'docs/hosting.md', 'docs/automatic-updates.md', 'docs/plans/ausbau/10-csv-import.md', 'app/config/', 'app/storage/',
     'public/index.php', 'public/.htaccess', 'public/assets/logo.svg', 'public/assets/logo-dark.svg', 'public/assets/app.css', 'public/assets/ui.js', 'public/assets/signature-pad.js', 'public/assets/application-stepper.js', 'public/assets/confetti.js', 'app/migrations/0023_split_house_numbers.sql', 'public/assets/bank-import.js', 'public/assets/dashboard.js', 'public/assets/theme.js',
     'public/assets/vendor/chartjs/chart.umd.min.js', 'public/assets/vendor/chartjs/LICENSE',

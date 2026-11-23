@@ -8,9 +8,9 @@ use RuntimeException;
 use Throwable;
 
 /** Nur Metadaten aus der festen Updatequelle; kein fremder Code wird ausgefuehrt. */
-final class GitHubReleases
+final class ForgejoReleases
 {
-    public const REPOSITORY = 'https://github.com/dersimoezdag/vereinskiste';
+    public const REPOSITORY = 'https://forgejo.lexframe.de/LexFrame/vereinskiste';
 
     /** @param Closure():array{status:int,body:string}|null $transport */
     public function __construct(private ?Closure $transport = null) {}
@@ -19,7 +19,7 @@ final class GitHubReleases
     public function check(string $installed): array
     {
         try {
-            $response = $this->transport !== null ? ($this->transport)() : (new GitHubTransport())->fetch();
+            $response = $this->transport !== null ? ($this->transport)() : (new ForgejoTransport())->fetch();
             if ($response['status'] === 404) { return ['status' => 'none']; }
             if ($response['status'] === 429 || ($response['status'] === 403 && ($response['rate_remaining'] ?? null) === 0)) {
                 throw new UpdateCheckFailure('rate_limit');
@@ -41,12 +41,12 @@ final class GitHubReleases
             if (!is_array($release['assets'] ?? [])) { throw new RuntimeException('Releaseinformationen ungültig.'); }
             foreach ($release['assets'] ?? [] as $asset) {
                 if (!is_array($asset)) { continue; }
-                if (($asset['name'] ?? '') === $name && ($asset['state'] ?? '') === 'uploaded'
+                if (($asset['name'] ?? '') === $name && ($asset['state'] ?? 'uploaded') === 'uploaded'
                     && ($asset['size'] ?? 0) > 0 && ($asset['browser_download_url'] ?? '') === $expected) {
                     $result['download'] = $expected;
                 }
                 foreach (['manifest'=>'.manifest.json','signature'=>'.manifest.sig'] as $key=>$suffix) {
-                    if (($asset['name']??'')===$name . $suffix && ($asset['state']??'')==='uploaded' && ($asset['size']??0)>0
+                    if (($asset['name']??'')===$name . $suffix && ($asset['state']??'uploaded')==='uploaded' && ($asset['size']??0)>0
                         && ($asset['browser_download_url']??'')===$expected . $suffix) { $result[$key]=$expected . $suffix; }
                 }
             }

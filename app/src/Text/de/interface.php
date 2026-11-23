@@ -130,7 +130,7 @@ return [
     'ui.v' => 'v',
     'ui.http' => '(HTTP',
     'ui.version' => ': Version',
-    'ui.github_releases' => 'GitHub Releases',
+    'ui.forgejo_releases' => 'Forgejo Releases',
     'ui.bytes' => 'Bytes',
     'ui.brotkrumen' => 'Brotkrumen',
     'ui.erklaerungstext_hier' => 'Erklärungstext hier',

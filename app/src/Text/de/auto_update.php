@@ -24,7 +24,7 @@ return [
     'auto_update.error.release_changed'=>'Die verfügbare Version hat sich geändert. Bitte erneut auf Updates prüfen.',
     'auto_update.error.schema_pending'=>'Bitte zuerst die Datenbankmigrationen der bereits installierten Version ausführen.',
     'auto_update.error.download'=>'Der Download ist fehlgeschlagen. Bitte später erneut versuchen.',
-    'auto_update.error.download_url'=>'Die Downloadadresse ist keine erlaubte GitHub-Quelle.',
+    'auto_update.error.download_url'=>'Die Downloadadresse ist keine erlaubte Release-Quelle.',
     'auto_update.error.download_limit'=>'Die Downloadantwort überschreitet das erlaubte Limit.',
     'auto_update.error.range'=>'Das Hosting oder die Downloadquelle unterstützt den benötigten abschnittsweisen Download nicht.',
     'auto_update.error.checksum'=>'Die Paket-Prüfsumme stimmt nicht mit dem signierten Manifest überein.',

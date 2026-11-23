@@ -80,14 +80,14 @@ löschen: das würde den Schutz zurücksetzen.
 ## Backup, Wiederherstellung und Update
 
 Unter **Einstellungen → Version & Updates → Auf Updates prüfen** wird das
-neueste öffentliche stabile GitHub-Release aus
-https://github.com/dersimoezdag/vereinskiste/releases geprüft. Dort muss ein
+neueste öffentliche stabile Forgejo-Release aus
+https://forgejo.lexframe.de/LexFrame/vereinskiste/releases geprüft. Dort muss ein
 vollständiges Installationspaket `vereinskiste-VERSION.zip` als Release-Asset
 veröffentlicht sein (z. B. Tag `v0.2.0`, Paket `vereinskiste-0.2.0.zip`).
-GitHubs automatisch erzeugtes Quellcode-ZIP enthält keine gebündelten
+Forgejos automatisch erzeugtes Quellcode-ZIP enthält keine gebündelten
 PHP-Abhängigkeiten und eignet sich nicht für die Hosting-Installation.
-Die Prüfung benötigt ausgehendes HTTPS zu `api.github.com`, keinen GitHub-Token
-für öffentliche Releases. Netzwerkfehler werden als fehlgeschlagene Prüfung
+Die Prüfung benötigt ausgehendes HTTPS zu `forgejo.lexframe.de` (API und
+Release-Downloads), keinen Token für öffentliche Releases. Netzwerkfehler werden als fehlgeschlagene Prüfung
 angezeigt. Das Paket herunterladen, Backup erstellen und nach dem unten
 beschriebenen Verfahren hochladen; anschließend hier das Datenbank-Update
 ausführen. Entwürfe und Vorabversionen werden nicht als Update angeboten.
@@ -125,13 +125,13 @@ passende alte Release und dessen Datenbanksicherung gemeinsam.
 Diese Anleitung ersetzt keinen erfolgreichen Hosting-Test: vor dem ersten
 Produktivbetrieb alle obigen Punkte mit den tatsächlichen Zugängen prüfen.
 
-## GitHub-Updateprüfung
+## Updateprüfung (Forgejo)
 
-Die Updateprüfung benötigt ausgehendes HTTPS zu `api.github.com` und entweder
+Die Updateprüfung benötigt ausgehendes HTTPS zu `forgejo.lexframe.de` und entweder
 die PHP-Erweiterung cURL (bevorzugt) oder aktiviertes `allow_url_fopen`.
 Bei TLS-Fehlern den CA-Zertifikatsspeicher der PHP-Installation korrigieren lassen;
 die Zertifikatsprüfung nicht deaktivieren. Gemeinsame Hosting-IP-Adressen können
-von GitHubs Anfragelimit betroffen sein. Ab 0.1.3 zeigt die Einstellungsseite
+vom Anfragelimit der Updatequelle betroffen sein. Ab 0.1.3 zeigt die Einstellungsseite
 die Fehlerkategorie, gegebenenfalls mit HTTP-Status.
 
 Ab 0.1.5 kann die Anwendung signierte Releases automatisch installieren.

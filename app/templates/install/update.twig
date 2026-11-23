@@ -25,11 +25,11 @@
                     {% elseif release.status == 'available' %}
                         <span class="badge bg-primary-soft text-primary text-base py-2 px-4 inline-flex items-center gap-1">
                             {{ icons.icon('rocket') }}
-                            <span>{{ t('settings.github.available') }} {{ t('ui.v') }}{{ release.version }}</span>
+                            <span>{{ t('settings.release.available') }} {{ t('ui.v') }}{{ release.version }}</span>
                         </span>
                     {% elseif release.status != 'unchecked' %}
                         <span class="badge bg-subtle text-muted text-base py-2 px-4">
-                            {{ t('settings.github.' ~ release.status) }}
+                            {{ t('settings.release.' ~ release.status) }}
                         </span>
                     {% endif %}
                 </div>
@@ -39,7 +39,7 @@
                     {{ csrf_field() }}
                     <button class="btn btn-soft inline-flex items-center gap-2" type="submit">
                         {{ icons.icon('sync') }}
-                        <span>{{ t('settings.github.check') }}</span>
+                        <span>{{ t('settings.release.check') }}</span>
                     </button>
                 </form>
             </div>
@@ -53,7 +53,7 @@
 {% if not compatible %}<p class="alert alert-danger flex items-center gap-2 mb-6" role="alert">{{ icons.icon('error') }}<span>{{ t('update.incompatible') }}</span></p>{% endif %}
 
 {% if release.status == 'error' and release.reason is defined %}
-<p class="alert alert-warning flex items-center gap-2 mb-6">{{ icons.icon('error') }}<span>{{ t('settings.github.error.' ~ release.reason) }}{% if release.http_status is defined %} {{ t('ui.http') }} {{ release.http_status }}){% endif %}</span></p>
+<p class="alert alert-warning flex items-center gap-2 mb-6">{{ icons.icon('error') }}<span>{{ t('settings.release.error.' ~ release.reason) }}{% if release.http_status is defined %} {{ t('ui.http') }} {{ release.http_status }}){% endif %}</span></p>
 {% endif %}
 
 <!-- Laufendes Auto-Update Banner -->
@@ -75,7 +75,7 @@
 <div class="panel mb-6 border-primary shadow-panel">
     <div class="panel-header bg-primary-soft py-4 flex items-center gap-2">
         <span class="avatar avatar-sm bg-primary text-on-primary rounded-full">{{ icons.icon('rocket') }}</span>
-        <h2 class="panel-title h3 mb-0 text-primary">{{ t('settings.github.available') }}{{ t('ui.version') }} {{ release.version }}</h2>
+        <h2 class="panel-title h3 mb-0 text-primary">{{ t('settings.release.available') }}{{ t('ui.version') }} {{ release.version }}</h2>
     </div>
     <div class="panel-body p-6">
         {% if release.manifest is defined and release.signature is defined and automatic_supported and not pending %}
@@ -111,19 +111,19 @@
 
         <div class="flex items-center justify-between flex-wrap gap-2">
             <div class="text-muted text-sm">
-                {{ t('settings.github.source') }} <a href="https://github.com/dersimoezdag/vereinskiste/releases" target="_blank" rel="noreferrer" class="text-inherit underline">{{ t('ui.github_releases') }}</a>
+                {{ t('settings.release.source') }} <a href="https://forgejo.lexframe.de/LexFrame/vereinskiste/releases" target="_blank" rel="noreferrer" class="text-inherit underline">{{ t('ui.forgejo_releases') }}</a>
             </div>
             <div class="flex gap-2">
                 {% if release.download is defined %}
                 <a class="btn btn-sm inline-flex items-center gap-1" href="{{ release.download }}" rel="noreferrer">
                     {{ icons.icon('download') }}
-                    <span>{{ t('settings.github.download') }}</span>
+                    <span>{{ t('settings.release.download') }}</span>
                 </a>
                 {% else %}
-                <span class="text-muted text-sm">{{ t('settings.github.missing_package') }}</span>
+                <span class="text-muted text-sm">{{ t('settings.release.missing_package') }}</span>
                 {% endif %}
                 <a class="btn btn-link btn-sm text-muted" href="{{ release.url }}" target="_blank" rel="noreferrer">
-                    {{ t('settings.github.release') }}
+                    {{ t('settings.release.release') }}
                 </a>
             </div>
         </div>
@@ -176,8 +176,8 @@
             <p class="text-sm text-muted mb-0">{{ t('settings.manufacturer.description') }}</p>
         </div>
         <div class="flex flex-wrap gap-2">
-            <a class="btn btn-sm" href="https://github.com/dersimoezdag" target="_blank" rel="noopener noreferrer">{{ t('settings.manufacturer.profile') }}</a>
-            <a class="btn btn-sm" href="https://github.com/dersimoezdag/vereinskiste" target="_blank" rel="noopener noreferrer">{{ t('settings.manufacturer.repository') }}</a>
+            <a class="btn btn-sm" href="https://forgejo.lexframe.de/LexFrame" target="_blank" rel="noopener noreferrer">{{ t('settings.manufacturer.profile') }}</a>
+            <a class="btn btn-sm" href="https://forgejo.lexframe.de/LexFrame/vereinskiste" target="_blank" rel="noopener noreferrer">{{ t('settings.manufacturer.repository') }}</a>
         </div>
     </div>
 </section>

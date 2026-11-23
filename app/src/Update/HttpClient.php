@@ -2,10 +2,10 @@
 declare(strict_types=1);
 namespace Vereinskiste\Update;
 
-/** Bounded HTTPS GETs, including manually validated GitHub CDN redirects. */
+/** Bounded HTTPS GETs against the allow-listed release hosts (Forgejo, plus GitHub for installs <= 0.1.42). */
 final class HttpClient
 {
-    private const HOSTS=['github.com','release-assets.githubusercontent.com','objects.githubusercontent.com','github-releases.githubusercontent.com'];
+    private const HOSTS=['forgejo.lexframe.de','github.com','release-assets.githubusercontent.com','objects.githubusercontent.com','github-releases.githubusercontent.com'];
     public function __construct(private ?\Closure $transport=null) {}
     public function get(string $url,int $limit,?array $range=null): array
     {

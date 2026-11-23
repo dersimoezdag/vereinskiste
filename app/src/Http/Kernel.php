@@ -202,9 +202,9 @@ final class Kernel
         $version = is_file($versionFile) ? trim((string) file_get_contents($versionFile)) : '–';
         \Vereinskiste\Integrations\Routes::register($app, $pdoProvider, $version, $config['base_url'] ?? '');
         $updater = new UpdateController($pdoProvider, $migrationDir, $version,
-            $config['release_checker'] ?? new \Vereinskiste\Install\GitHubReleases());
+            $config['release_checker'] ?? new \Vereinskiste\Install\ForgejoReleases());
         $automatic=new \Vereinskiste\Web\AutoUpdateController($pdoProvider,$runtime,$version,$migrationDir,
-            $config['release_checker']??new \Vereinskiste\Install\GitHubReleases());
+            $config['release_checker']??new \Vereinskiste\Install\ForgejoReleases());
         $app->get('/settings/auto-update',[$automatic,'show'])->add(Auth::requires('settings.manage'));
         $app->post('/settings/auto-update/start',[$automatic,'start'])->add(Auth::requires('settings.manage'));
         $app->get('/settings/auto-update/status',[$automatic,'status'])->add(Auth::requires('settings.manage'));

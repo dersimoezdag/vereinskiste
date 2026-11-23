@@ -2,6 +2,11 @@
 
 Kassenbuch fuer kleine Vereine (PHP 8.4, Slim 4, PostgreSQL 15). Lizenz: AGPL-3.0, siehe `LICENSE`.
 
+## Repositorys
+
+- **GitHub** (Entwicklung, Spiegel-Quelle): <https://github.com/dersimoezdag/vereinskiste>
+- **Forgejo** (Spiegel und Release-Ort — signierte Releases und Updatequelle): <https://forgejo.lexframe.de/LexFrame/vereinskiste>
+
 ## Entwicklung
 
 Der laufende Ausbau um Vereinsprofil, Finanzkontakte und Importgrundlagen ist im

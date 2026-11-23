@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace Vereinskiste\Tests\Update;
 
+use Vereinskiste\Install\ForgejoReleases;
 use Vereinskiste\Update\Files;
 use Vereinskiste\Update\HttpClient;
 
@@ -25,7 +26,7 @@ trait PackageFixture
         $manifest=json_encode(['key_id'=>'fixture','version'=>$version,'protocol'=>1,'package'=>'vereinskiste-' . $version . '.zip',
             'size'=>strlen($zip),'sha256'=>hash('sha256',$zip),'php'=>'8.4.0'],JSON_THROW_ON_ERROR);
         $signature=base64_encode(sodium_crypto_sign_detached($manifest,sodium_crypto_sign_secretkey($pair)));
-        $url='https://github.com/dersimoezdag/vereinskiste/releases/download/' . $version . '/vereinskiste-' . $version . '.zip';
+        $url=ForgejoReleases::REPOSITORY . '/releases/download/' . $version . '/vereinskiste-' . $version . '.zip';
         $release=['status'=>'available','version'=>$version,'download'=>$url,'manifest'=>$url . '.manifest.json','signature'=>$url . '.manifest.sig'];
         $client=new HttpClient(static function(string $requested,int $limit,?array $range) use($manifest,$signature,$zip): array {
             $body=str_ends_with($requested,'.manifest.json')?$manifest:(str_ends_with($requested,'.manifest.sig')?$signature:$zip);

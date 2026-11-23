@@ -7,7 +7,7 @@ use PDO;
 use Vereinskiste\Db\Migrator;
 use Vereinskiste\Http\Kernel;
 use Vereinskiste\Http\Session\ArraySessionStore;
-use Vereinskiste\Install\GitHubReleases;
+use Vereinskiste\Install\ForgejoReleases;
 use Vereinskiste\Tests\TestCase;
 
 final class UpdatePagesTest extends TestCase
@@ -20,12 +20,12 @@ final class UpdatePagesTest extends TestCase
     {
         $this->pdo = $this->pdo();
         (new Migrator($this->pdo, dirname(__DIR__, 2) . '/migrations'))->migrate();
-        $checker = new GitHubReleases(function (): array {
+        $checker = new ForgejoReleases(function (): array {
             $this->calls++;
             return ['status' => 200, 'body' => json_encode(['tag_name' => 'v0.2.0',
                 'draft' => false, 'prerelease' => false, 'assets' => [['name' => 'vereinskiste-0.2.0.zip',
-                    'state' => 'uploaded', 'size' => 100, 'browser_download_url' =>
-                        GitHubReleases::REPOSITORY . '/releases/download/v0.2.0/vereinskiste-0.2.0.zip']]])];
+                    'size' => 100, 'browser_download_url' =>
+                        ForgejoReleases::REPOSITORY . '/releases/download/v0.2.0/vereinskiste-0.2.0.zip']]])];
         });
         $this->store = new ArraySessionStore();
         $this->app = Kernel::create(['pdo' => $this->pdo, 'session_store' => $this->store,
@@ -49,7 +49,7 @@ final class UpdatePagesTest extends TestCase
     }
     public function test_error_page_explains_rate_limits_without_exposing_the_response(): void
     {
-        $checker = new GitHubReleases(static fn (): array => ['status' => 429, 'body' => 'private-response-content']);
+        $checker = new ForgejoReleases(static fn (): array => ['status' => 429, 'body' => 'private-response-content']);
         $this->app = Kernel::create(['pdo' => $this->pdo,'session_store' => $this->store,'security_dir' => $this->securityDir(),
             'require_https' => false,'release_checker' => $checker]);
         $this->loginAs(['admin']);

@@ -3,11 +3,11 @@ declare(strict_types=1);
 namespace Vereinskiste\Install;
 
 /** Fixed HTTPS destination, verified TLS, no redirects and a bounded response. */
-final class GitHubTransport
+final class ForgejoTransport
 {
-    private const API = 'https://api.github.com/repos/dersimoezdag/vereinskiste/releases/latest';
+    private const API = 'https://forgejo.lexframe.de/api/v1/repos/LexFrame/vereinskiste/releases/latest';
     private const MAX_BYTES = 262144;
-    private const HEADERS = ['Accept: application/vnd.github+json', 'User-Agent: Vereinskiste-Updatecheck', 'X-GitHub-Api-Version: 2026-03-10'];
+    private const HEADERS = ['Accept: application/json', 'User-Agent: Vereinskiste-Updatecheck'];
 
     public function fetch(): array
     {

@@ -24,7 +24,7 @@ final class Coordinator
             if (($release['status']??'')!=='available' || !isset($release['download'],$release['manifest'],$release['signature'])
                 || !preg_match('/^\d+\.\d+\.\d+\z/',$release['version']??'') || !version_compare($release['version'],$installed,'>')) { throw new Failure('signed_release'); }
             if (!version_compare($release['version'],$current,'>')) { throw new Failure('signed_release'); }
-            $base=\Vereinskiste\Install\GitHubReleases::REPOSITORY . '/releases/download/';
+            $base=\Vereinskiste\Install\ForgejoReleases::REPOSITORY . '/releases/download/';
             foreach (['download','manifest','signature'] as $key) {
                 if (!str_starts_with($release[$key],$base)) { throw new Failure('download_url'); }
             }
