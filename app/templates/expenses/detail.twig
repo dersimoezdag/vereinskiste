@@ -4,7 +4,7 @@
 {% set writable = can('bookings.write') %}
 <h1>{{ expense ? expense.purpose : t('expenses.new') }}</h1>
 {% if expense %}<p>{% include 'expenses/_badge.twig' %}{% if expense.reimbursed %} {{ expense.reimbursed_on|date('d.m.Y') }} · <a href="/bookings/{{ expense.booking_id }}">{{ t('expenses.to_booking') }}</a>{% endif %}</p>{% endif %}
-{% for key in ['delete', 'version', 'booking_id'] %}{% if errors[key] is defined %}<p class="alert alert-warning" role="alert">{{ t(errors[key]) }}</p>{% endif %}{% endfor %}
+{% for key in ['delete', 'version', 'booking_id', 'payout', 'payout_method', 'payout_detail', 'payout_account_id'] %}{% if errors[key] is defined %}<p class="alert alert-warning" role="alert">{{ t(errors[key]) }}</p>{% endif %}{% endfor %}
 
 <form method="post" action="{{ expense ? '/expenses/' ~ expense.id : '/expenses/new' }}" enctype="multipart/form-data" class="panel panel-body mb-4">
     {{ csrf_field() }}
@@ -56,6 +56,56 @@
             {{ csrf_field() }}<button class="btn btn-soft" type="submit">{{ t('expenses.review_document') }}</button>
         </form>{% endif %}
     </li>{% endfor %}</ul>
+</section>
+{% endif %}
+
+{% if expense and expense.reimbursed %}
+<section class="panel panel-body mb-4" aria-label="{{ t('expenses.payout') }}">
+    <h2 class="panel-title">{{ t('expenses.payout') }}</h2>
+    {% if not expense.paid %}
+        {% if writable %}
+        <p class="text-muted">{{ t('expenses.payout_hint') }}</p>
+        <form method="post" action="/expenses/{{ expense.id }}/payout" class="grid-12 gap-2">
+            {{ csrf_field() }}
+            <div class="col-span-12 md:col-span-4"><label class="label" for="payout-method">{{ t('expenses.payout_method') }}</label>
+                <select class="input{% if errors.payout_method is defined %} is-invalid{% endif %}" id="payout-method" name="payout_method" required>
+                    <option value="">{{ t('bookings.choose') }}</option>
+                    <option value="paypal">{{ t('expenses.payout_method.paypal') }}</option>
+                    <option value="bank">{{ t('expenses.payout_method.bank') }}</option>
+                    <option value="cash">{{ t('expenses.payout_method.cash') }}</option>
+                </select>
+                {% if errors.payout_method is defined %}<div class="field-error">{{ t(errors.payout_method) }}</div>{% endif %}</div>
+            <div class="col-span-12 md:col-span-4"><label class="label" for="payout-detail">{{ t('expenses.payout_detail') }}</label>
+                <input class="input{% if errors.payout_detail is defined %} is-invalid{% endif %}" id="payout-detail" name="payout_detail" maxlength="200">
+                {% if errors.payout_detail is defined %}<div class="field-error">{{ t(errors.payout_detail) }}</div>{% endif %}</div>
+            <div class="col-span-12 md:col-span-2"><label class="label" for="payout-bic">{{ t('expenses.payout_bic') }}</label>
+                <input class="input" id="payout-bic" name="payout_bic" maxlength="11"></div>
+            <div class="col-span-12 md:col-span-2"><label class="label" for="payout-account">{{ t('expenses.payout_account') }}</label>
+                <select class="input{% if errors.payout_account_id is defined %} is-invalid{% endif %}" id="payout-account" name="payout_account_id" required>
+                    <option value="">{{ t('bookings.choose') }}</option>
+                    {% for account in accounts %}<option value="{{ account.id }}"{% if expense.booking_account_id == account.id %} selected{% endif %}>{{ account.name }}</option>{% endfor %}
+                </select>
+                {% if errors.payout_account_id is defined %}<div class="field-error">{{ t(errors.payout_account_id) }}</div>{% endif %}</div>
+            <div class="col-span-12 flex items-end"><button class="btn btn-primary" type="submit">{{ t('expenses.payout_action') }}</button></div>
+        </form>
+        {% endif %}
+    {% else %}
+        <dl class="grid-12 gap-2">
+            <div class="col-span-12 md:col-span-4"><dt class="text-muted text-sm">{{ t('expenses.payout_method') }}</dt><dd>{{ t('expenses.payout_method.' ~ expense.payout_method) }}</dd></div>
+            {% if expense.payout_detail %}<div class="col-span-12 md:col-span-4"><dt class="text-muted text-sm">{{ t('expenses.payout_detail') }}</dt><dd>{{ expense.payout_detail }}</dd></div>{% endif %}
+            <div class="col-span-12 md:col-span-4"><dt class="text-muted text-sm">{{ t('expenses.payout_account') }}</dt><dd>{{ expense.payout_account_name }}</dd></div>
+            <div class="col-span-12 md:col-span-4"><dt class="text-muted text-sm">{{ t('expenses.payout_paid_on') }}</dt><dd>{{ expense.payout_at|date('d.m.Y H:i') }}</dd></div>
+        </dl>
+        {% if policy.expense_counter_signature and not expense.counter_signed %}
+        <p class="alert alert-warning mt-4">{{ t('expenses.payout_awaiting_counter_signature') }}</p>
+        {% if is_recipient %}<a class="btn btn-primary mt-2" href="/expenses/{{ expense.id }}/countersign">{{ t('expenses.counter_sign_action') }}</a>{% endif %}
+        {% endif %}
+        {% if payout_signature %}
+        <h3 class="mt-4">{{ t('expenses.payout_signature') }}</h3>
+        <p class="text-muted text-sm">{{ t('expenses.payout_place') }}: {{ payout_signature.signed_place }} · {{ t('expenses.payout_signed_on') }}: {{ payout_signature.signed_at|date('d.m.Y H:i') }}</p>
+        <img src="/expenses/{{ expense.id }}/payout-signature.png" alt="{{ t('expenses.payout_signature') }}" style="max-width:480px;border:1px solid var(--line);border-radius:8px;background:#fff">
+        {% endif %}
+    {% endif %}
 </section>
 {% endif %}
 

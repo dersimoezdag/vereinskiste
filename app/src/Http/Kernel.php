@@ -313,7 +313,10 @@ final class Kernel
         $app->get('/expenses/{id:[0-9]+}', [$expenses, 'show'])->add(Auth::requires('bookings.read'));
         $app->post('/expenses/{id:[0-9]+}', [$expenses, 'save'])->add(Auth::requires('bookings.write'));
         $app->post('/expenses/{id:[0-9]+}/documents/{document:[0-9]+}/review', [$expenses, 'reviewDocument'])->add(Auth::requires('bookings.write'));
-        $app->post('/expenses/{id:[0-9]+}/{action:reimburse|link|unlink|delete}', [$expenses, 'action'])->add(Auth::requires('bookings.write'));
+        $app->post('/expenses/{id:[0-9]+}/{action:reimburse|link|unlink|delete|payout}', [$expenses, 'action'])->add(Auth::requires('bookings.write'));
+        $app->get('/expenses/{id:[0-9]+}/countersign', [$expenses, 'countersignForm'])->add(Auth::requires('bookings.read'));
+        $app->post('/expenses/{id:[0-9]+}/countersign', [$expenses, 'countersign'])->add(Auth::requires('bookings.read'));
+        $app->get('/expenses/{id:[0-9]+}/payout-signature.png', [$expenses, 'payoutSignaturePng'])->add(Auth::requires('bookings.read'));
         $cashbook = new \Vereinskiste\Web\CashbookController($pdoProvider);
         $app->get('/cashbook', [$cashbook, 'index'])->add(Auth::requires('bookings.read'));
         $bookingImports = new \Vereinskiste\Web\BookingImportController($pdoProvider);

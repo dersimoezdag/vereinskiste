@@ -131,6 +131,8 @@ return [
     'ui.http' => '(HTTP',
     'ui.version' => ': Version',
     'ui.forgejo_releases' => 'Forgejo Releases',
+    'ui.gegenzeichnung_auslagen_empfaenger' => 'Bei Auslagen: Gegenzeichnung (Unterschrift) des Empfängers verlangen',
+    'ui.gegenzeichnung_auslagen_hint' => 'Ist diese Option aktiv, muss der Empfänger einer Auslage die Auszahlung mit seiner Unterschrift gegenzeichnen, sobald er ein Benutzerkonto hat. Ohne verknüpftes Konto wird die Auszahlung ohne Gegenzeichnung endgültig.',
     'ui.bytes' => 'Bytes',
     'ui.brotkrumen' => 'Brotkrumen',
     'ui.erklaerungstext_hier' => 'Erklärungstext hier',

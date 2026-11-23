@@ -93,6 +93,12 @@ final class ExpenseController extends AdminController
                     $repo->unlink($id);
                     $this->flash($req, 'expenses.unlinked_flash');
                     break;
+
+                case 'payout':
+                    $policy = (new \Vereinskiste\Invoices\PaymentPolicy(($this->pdo)()))->get();
+                    $repo->markPaidOut($id, $body, $this->userId($req), $policy['expense_counter_signature']);
+                    $this->flash($req, 'expenses.paid_out_flash');
+                    break;
                 default:
                     $repo->delete($id);
                     $this->flash($req, 'expenses.deleted');
@@ -106,6 +112,50 @@ final class ExpenseController extends AdminController
             return ErrorPage::render($req->getAttribute('view'), 409, 'error.409.title', 'error.409.text', '/expenses', 'common.back');
         }
         return $this->redirect('/expenses/' . $id);
+    }
+
+    /** Gegenzeichnen-Seite fuer den Empfaenger (verknuepftes Mitglied mit Login). */
+    public function countersignForm(Request $req, Response $res, array $args): Response
+    {
+        $expense = (new ExpenseRepository(($this->pdo)()))->find((int) $args['id']);
+        if ($expense === null) { return $this->notFound($req); }
+        if (!$expense['paid'] || $expense['counter_signed'] || $this->recipientId($expense) !== $this->userId($req)) {
+            return ErrorPage::render($req->getAttribute('view'), 403, 'error.403.title', 'error.403.text', '/expenses/' . $expense['id'], 'common.back');
+        }
+        return $req->getAttribute('view')->render($res, 'expenses/countersign.twig', [
+            'expense' => $expense, 'errors' => [],
+        ]);
+    }
+
+    public function countersign(Request $req, Response $res, array $args): Response
+    {
+        $id = (int) $args['id'];
+        $repo = new ExpenseRepository(($this->pdo)());
+        $expense = $repo->find($id);
+        if ($expense === null) { return $this->notFound($req); }
+        $body = $this->body($req);
+        try {
+            $repo->counterSign($id, $this->str($body, 'signature'), $this->str($body, 'place'), $this->userId($req));
+        } catch (ValidationError $e) {
+            return $req->getAttribute('view')->render($res->withStatus(422), 'expenses/countersign.twig', [
+                'expense' => $expense, 'errors' => $e->errors, 'place' => $this->str($body, 'place'),
+            ]);
+        } catch (Conflict) {
+            return ErrorPage::render($req->getAttribute('view'), 409, 'error.409.title', 'error.409.text', '/expenses/' . $id, 'common.back');
+        }
+        $this->flash($req, 'expenses.counter_signed_flash');
+        return $this->redirect('/expenses/' . $id);
+    }
+
+    /** Unterschriftsbild der Gegenzeichnung als PNG ausliefern. */
+    public function payoutSignaturePng(Request $req, Response $res, array $args): Response
+    {
+        $signature = (new ExpenseRepository(($this->pdo)()))->payoutSignature((int) $args['id']);
+        if ($signature === null) { return $this->notFound($req); }
+        $res->getBody()->write($signature['signature_png']);
+        return $res->withHeader('Content-Type', 'image/png')
+            ->withHeader('Cache-Control', 'private, no-store')
+            ->withHeader('Content-Disposition', 'inline; filename="payout-signature.png"');
     }
 
     public function reviewDocument(Request $req, Response $res, array $args): Response
@@ -125,6 +175,7 @@ final class ExpenseController extends AdminController
         $pdo = ($this->pdo)();
         $repo = new ExpenseRepository($pdo);
         $open = $expense !== null && !$expense['reimbursed'];
+        $policy = (new \Vereinskiste\Invoices\PaymentPolicy($pdo))->get();
         return $req->getAttribute('view')->render($res, 'expenses/detail.twig', [
             'expense' => $expense, 'input' => $input, 'errors' => $errors,
             'members' => $pdo->query('SELECT id, name FROM members WHERE anonymized_at IS NULL ORDER BY lower(name), id LIMIT 1000')->fetchAll(),
@@ -135,6 +186,19 @@ final class ExpenseController extends AdminController
             'today' => date('Y-m-d'),
             'history' => $expense === null ? [] : (new History($pdo))->for('expense', $expense['id']),
             'documents' => $expense === null ? [] : (new ExpenseDocuments($pdo, $this->documentsDir))->forExpense($expense['id']),
+            'policy' => $policy,
+            'payout_signature' => $expense === null ? null : $repo->payoutSignature($expense['id']),
+            'is_recipient' => $expense !== null && $this->recipientId($expense) === $this->userId($req),
         ]);
+    }
+
+    /** user_id des mit der Auslage verknuepften Mitglieds, falls vorhanden. */
+    private function recipientId(array $expense): ?int
+    {
+        if ($expense['member_id'] === null) { return null; }
+        $stmt = ($this->pdo)()->prepare('SELECT u.id AS user_id FROM users u WHERE u.member_id = ?');
+        $stmt->execute([$expense['member_id']]);
+        $userId = $stmt->fetchColumn();
+        return $userId === false || $userId === null ? null : (int) $userId;
     }
 }

@@ -1,0 +1,33 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ t('expenses.counter_sign_title') }}{% endblock %}
+{% block content %}
+<h1>{{ t('expenses.counter_sign_title') }}</h1>
+<p>{{ expense.purpose }} · {{ expense.amount|eur }} · {{ expense.person }}
+    {% if expense.payout_method %}{{ t('expenses.payout_method.' ~ expense.payout_method) }}{% if expense.payout_detail %} · {{ expense.payout_detail }}{% endif %}{% endif %}</p>
+<p class="text-muted">{{ t('expenses.counter_sign_hint') }}</p>
+{% for key, error in errors %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endfor %}
+<form method="post" action="/expenses/{{ expense.id }}/countersign" class="panel panel-body mb-4">
+    {{ csrf_field() }}
+    <div class="signature-pad{% if errors['signature'] is defined %} is-invalid{% endif %}" data-signature-pad data-signature-required>
+        <span class="label">{{ t('declarations.signature') }}</span>
+        <div class="signature-surface">
+            <canvas class="signature-canvas" role="img" aria-label="{{ t('declarations.signature_hint') }}"></canvas>
+            <span class="signature-hint" aria-hidden="true">{{ t('declarations.signature_hint') }}</span>
+        </div>
+        <input type="hidden" name="signature" value="" data-signature-value>
+        <div class="mt-2 flex flex-wrap gap-2">
+            <button type="button" class="btn btn-sm" data-signature-clear>{{ t('declarations.signature_clear') }}</button>
+            <button type="button" class="btn btn-sm" data-signature-enlarge>{{ t('declarations.signature_enlarge') }}</button>
+        </div>
+        {% if errors['signature'] is defined %}<p class="field-error block" role="alert">{{ t(errors['signature']) }}</p>{% endif %}
+    </div>
+    <div class="mt-4">
+        <label class="label" for="cs-place">{{ t('declarations.place') }}</label>
+        <input class="input{% if errors['place'] is defined %} is-invalid{% endif %}" id="cs-place" name="place" maxlength="100" required value="{{ place|default('') }}">
+        {% if errors['place'] is defined %}<div class="field-error">{{ t(errors['place']) }}</div>{% endif %}
+    </div>
+    <div class="mt-4"><button class="btn btn-primary" type="submit">{{ t('expenses.counter_sign_action') }}</button></div>
+</form>
+<a class="btn btn-link" href="/expenses/{{ expense.id }}">{{ t('common.back') }}</a>
+{% endblock %}
+{% block scripts %}<script src="{{ asset('signature-pad.js') }}"></script>{% endblock %}

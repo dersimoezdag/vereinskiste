@@ -6,6 +6,8 @@
 {% for error in errors %}<p class="alert alert-danger" role="alert">{{ t(error) }}</p>{% endfor %}
 <form class="panel panel-body" method="post" action="/settings/payments">{{ csrf_field() }}<input type="hidden" name="version" value="{{ policy.version }}">
 <label class="check mb-4"><input class="check-input" type="checkbox" name="four_eyes" value="1"{% if policy.four_eyes %} checked{% endif %}><span class="check-label">{{ t('ui.vier_augen_prinzip_fuer_zahlungsfreigaben_verpflichtend_machen') }}</span></label>
+<label class="check mb-4"><input class="check-input" type="checkbox" name="expense_counter_signature" value="1"{% if policy.expense_counter_signature %} checked{% endif %}><span class="check-label">{{ t('ui.gegenzeichnung_auslagen_empfaenger') }}</span></label>
+<p>{{ t('ui.gegenzeichnung_auslagen_hint') }}</p>
 <p>{{ t('ui.ausgeschaltet_personen_mit_freigaberecht_insbesondere_der_kassenw') }}</p>
 <p>{{ t('ui.erstattungen_an_das_eigene_verknuepfte_mitglied_benoetigen_in_bei') }}</p>
 <label class="label" for="policy-reason">{{ t('ui.begruendung_der_aenderung') }}</label><input class="input mb-4" id="policy-reason" name="reason" maxlength="500" required><button class="btn btn-primary">{{ t('common.save') }}</button>

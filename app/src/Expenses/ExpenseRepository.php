@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Vereinskiste\Expenses;
 
 use PDO;
+use Vereinskiste\Finance\BankDetails;
 use Vereinskiste\Foundation\Conflict;
 use Vereinskiste\Foundation\Fields;
 use Vereinskiste\Foundation\History;
@@ -11,8 +12,10 @@ use Vereinskiste\Ledger\BookingService;
 use Vereinskiste\Ledger\DateInput;
 use Vereinskiste\Ledger\InvalidAmount;
 use Vereinskiste\Ledger\Money;
+use Vereinskiste\Ledger\TextInput;
 use Vereinskiste\Ledger\Transaction;
 use Vereinskiste\Ledger\ValidationError;
+use Vereinskiste\Members\SignatureImage;
 
 /**
  * Auslagen von Personen fuer den Verein. Erstattet ist eine Auslage genau dann, wenn eine aktive
@@ -25,11 +28,15 @@ final class ExpenseRepository
             EXISTS(SELECT 1 FROM expense_documents d WHERE d.expense_id = x.id) AS has_receipt,
             x.event_id, e.title AS event_title,
             x.booking_id, x.version, (b.id IS NOT NULL AND b.status = 'active') AS reimbursed,
-            b.booking_date::text AS reimbursed_on
+            b.booking_date::text AS reimbursed_on, b.account_id AS booking_account_id,
+            x.payout_method, x.payout_detail, x.payout_account_id, x.payout_at::text AS payout_at,
+            x.payout_by, x.counter_signed_at::text AS counter_signed_at, x.counter_signed_by,
+            pa.name AS payout_account_name
         FROM member_expenses x
         LEFT JOIN members m ON m.id = x.member_id
         LEFT JOIN events e ON e.id = x.event_id
-        LEFT JOIN bookings b ON b.id = x.booking_id";
+        LEFT JOIN bookings b ON b.id = x.booking_id
+        LEFT JOIN accounts pa ON pa.id = x.payout_account_id";
     private const STATE = ['open' => " WHERE (b.id IS NULL OR b.status <> 'active')", 'reimbursed' => " WHERE b.status = 'active'", 'all' => ''];
 
     public function __construct(private PDO $pdo) {}
@@ -152,6 +159,96 @@ final class ExpenseRepository
         $this->pdo->prepare('UPDATE member_expenses SET booking_id = NULL, version = version + 1, updated_at = now() WHERE id = ?')->execute([$id]);
     }
 
+    /**
+     * Markiert eine erstattete Auslage als ausbezahlt. Auszahlungsweg paypal/bank/cash,
+     * Quelle ist ein aktives Konto (Vorschlag: Konto der Erstattungsbuchung).
+     * Bei aktivierter Gegenzeichnung und verknuepftem Empfaenger-Login bleibt die
+     * Gegenzeichnung offen (counter_signed_at NULL), sonst ist die Auszahlung final.
+     */
+    public function markPaidOut(int $id, array $input, int $actor, bool $counterSignatureRequired): void
+    {
+        Transaction::run($this->pdo, function () use ($id, $input, $actor, $counterSignatureRequired): void {
+            $expense = $this->lock($id);
+            if (!$expense['reimbursed']) { throw new ValidationError(['payout' => 'expenses.payout_requires_booking']); }
+            if ($expense['paid']) { throw new ValidationError(['payout' => 'expenses.payout_already']); }
+            $method = is_string($input['payout_method'] ?? null) ? $input['payout_method'] : '';
+            if (!in_array($method, ['paypal', 'bank', 'cash'], true)) { throw new ValidationError(['payout_method' => 'foundation.invalid']); }
+            $detail = trim(is_string($input['payout_detail'] ?? null) ? $input['payout_detail'] : '');
+            if ($method === 'paypal') {
+                if (mb_strlen($detail) > 200 || !filter_var($detail, FILTER_VALIDATE_EMAIL)) {
+                    throw new ValidationError(['payout_detail' => 'validation.email.invalid']);
+                }
+            } elseif ($method === 'bank') {
+                try {
+                    $bank = BankDetails::read($detail, trim(is_string($input['payout_bic'] ?? null) ? $input['payout_bic'] : ''));
+                } catch (ValidationError) {
+                    throw new ValidationError(['payout_detail' => 'foundation.iban.invalid']);
+                }
+                $detail = $bank['iban'] . ($bank['bic'] !== '' ? ' ' . $bank['bic'] : '');
+            } else {
+                $detail = '';
+            }
+            $accountId = Fields::version(trim(is_string($input['payout_account_id'] ?? null) ? $input['payout_account_id'] : ''));
+            $stmt = $this->pdo->prepare('SELECT 1 FROM accounts WHERE id = ? AND active');
+            $stmt->execute([$accountId]);
+            if ($stmt->fetchColumn() === false) { throw new ValidationError(['payout_account_id' => 'foundation.invalid']); }
+            $this->pdo->prepare('UPDATE member_expenses SET payout_method = ?, payout_detail = ?, payout_account_id = ?,
+                payout_at = now(), payout_by = ?, version = version + 1, updated_at = now() WHERE id = ?')
+                ->execute([$method, $detail, $accountId, $actor, $id]);
+            (new History($this->pdo))->record('expense', $id,
+                ['payout_method' => null, 'payout_detail' => '', 'payout_account_id' => null],
+                ['payout_method' => $method, 'payout_detail' => $detail, 'payout_account_id' => $accountId], $actor,
+                $counterSignatureRequired && $this->recipientUserId($expense) !== null ? 'payout pending counter-signature' : 'payout marked');
+        });
+    }
+
+    /** Gegenzeichnung des Empfaengers (verknuepftes Mitglied) mit Unterschrift und Ort. */
+    public function counterSign(int $id, string $dataUrl, string $place, int $actor): void
+    {
+        Transaction::run($this->pdo, function () use ($id, $dataUrl, $place, $actor): void {
+            $expense = $this->lock($id);
+            if (!$expense['paid']) { throw new ValidationError(['payout' => 'expenses.payout_not_marked']); }
+            if ($expense['counter_signed']) { throw new ValidationError(['payout' => 'expenses.payout_already_signed']); }
+            if ($this->recipientUserId($expense) !== $actor) { throw new ValidationError(['payout' => 'expenses.payout_not_recipient']); }
+            $png = SignatureImage::fromDataUrl($dataUrl);
+            $place = mb_substr(trim($place), 0, 100);
+            if (TextInput::isBlank($place)) { throw new ValidationError(['place' => 'foundation.required']); }
+            $stmt = $this->pdo->prepare('INSERT INTO expense_payout_signatures (expense_id, signature_png, signature_sha256, signed_place)
+                VALUES (?, ?, ?, ?)');
+            $stmt->bindValue(1, $id, \PDO::PARAM_INT);
+            $stmt->bindValue(2, $png, \PDO::PARAM_LOB);
+            $stmt->bindValue(3, hash('sha256', $png));
+            $stmt->bindValue(4, $place);
+            $stmt->execute();
+            $this->pdo->prepare('UPDATE member_expenses SET counter_signed_at = now(), counter_signed_by = ?,
+                version = version + 1, updated_at = now() WHERE id = ?')->execute([$actor, $id]);
+            (new History($this->pdo))->record('expense', $id, ['counter_signed_at' => null],
+                ['counter_signed_at' => 'now', 'signed_place' => $place], $actor, 'payout counter-signed');
+        });
+    }
+
+    /** @return array{signature_png:string,signature_sha256:string,signed_place:string,signed_at:string}|null */
+    public function payoutSignature(int $id): ?array
+    {
+        $stmt = $this->pdo->prepare('SELECT signature_png, signature_sha256, signed_place, signed_at::text AS signed_at
+            FROM expense_payout_signatures WHERE expense_id = ?');
+        $stmt->execute([$id]);
+        $row = $stmt->fetch();
+        if ($row === false) { return null; }
+        if (is_resource($row['signature_png'])) { $row['signature_png'] = (string) stream_get_contents($row['signature_png']); }
+        return $row;
+    }
+
+    /** user_id des mit der Auslage verknuepften Mitglieds, falls vorhanden. */
+    private function recipientUserId(array $expense): ?int
+    {
+        if ($expense['member_id'] === null) { return null; }
+        $stmt = $this->pdo->prepare('SELECT u.id AS user_id FROM users u WHERE u.member_id = ?');
+        $stmt->execute([$expense['member_id']]);
+        $userId = $stmt->fetchColumn();
+        return $userId === false || $userId === null ? null : (int) $userId;
+    }
+
     public function delete(int $id): void
     {
         Transaction::run($this->pdo, function () use ($id): void {
@@ -225,6 +322,8 @@ final class ExpenseRepository
         foreach (['reimbursed', 'has_receipt'] as $key) {
             $row[$key] = in_array($row[$key], [true, 't', 'true', 1, '1'], true);
         }
+        $row['paid'] = ($row['payout_method'] ?? null) !== null && $row['payout_method'] !== '';
+        $row['counter_signed'] = ($row['counter_signed_at'] ?? null) !== null;
         return $row;
     }
 }

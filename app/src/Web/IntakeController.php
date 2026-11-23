@@ -21,7 +21,7 @@ final class IntakeController extends AdminController
     public function savePaymentSettings(Request $req,Response $res): Response
     {
         $input=$this->body($req);
-        try {(new \Vereinskiste\Invoices\PaymentPolicy(($this->pdo)()))->save(($input['four_eyes']??'')==='1',Fields::version($input['version']??null),$this->userId($req),$this->str($input,'reason'));}
+        try {(new \Vereinskiste\Invoices\PaymentPolicy(($this->pdo)()))->save(($input['four_eyes']??'')==='1',($input['expense_counter_signature']??'')==='1',Fields::version($input['version']??null),$this->userId($req),$this->str($input,'reason'));}
         catch(ValidationError $e) {return $this->renderPaymentSettings($req,$res->withStatus(422),$e->errors);}
         catch(Conflict) {return $this->renderPaymentSettings($req,$res->withStatus(409),['version'=>'foundation.conflict']);}
         return $this->redirect('/settings/payments');

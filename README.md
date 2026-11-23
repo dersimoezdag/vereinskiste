@@ -179,6 +179,10 @@ Bei einer Rechnung **Zahlung / Auslagenerstattung** ausfüllen: Lieferantenzahlu
 
 Die Freigabe führt keine Überweisung aus. Nach Auszahlung eine tatsächliche Ausgabebuchung zuordnen; mehrere Teilzahlungen sind möglich. Eine Bankbuchung kann zunächst genau einer Rechnung zugeordnet werden; Sammelzahlungen werden noch nicht aufgeteilt. Stornierte Buchungen zählen nicht als Zahlung. Änderungen an zugeordneten Buchungen erfordern zuerst das begründete Aufheben der Zuordnung. Alle Zahlungsentscheidungen und Zuordnungsänderungen werden unveränderlich protokolliert. Rechnungslisten zeigen unbezahlte, teilweise bezahlte und bezahlte Rechnungen.
 
+### Auslagen auszahlen
+
+Erstattete Auslagen (mit aktiver Buchung verknüpft) lassen sich auf der Auslagenseite **als ausbezahlt markieren**: Auszahlungsweg **PayPal** (E-Mail-Adresse des Empfängers), **Überweisung** (IBAN mit Prüfsumme, BIC optional) oder **Bar**, dazu das zahlende Konto. Unter **Einstellungen → Zahlungsfreigabe** kann optional eine **Gegenzeichnung des Empfängers** verlangt werden: Hat der Empfänger ein verknüpftes Benutzerkonto, zeichnet er die Auszahlung mit seiner Unterschrift (Ort + unveränderlich gespeichertes PNG) gegen, bevor sie endgültig ist. Ohne verknüpftes Konto wird die Auszahlung direkt endgültig.
+
 ### Vorstand und Administrator
 
 Bei neuer Zuweisung der Benutzerrolle **Vorstand** wird die Rolle **Admin** ausdrücklich mit gespeichert. Danach lassen sich beide Rollen unabhängig verwalten: Admin kann entzogen werden, obwohl Vorstand bestehen bleibt. Beim Entfernen von Vorstand fragt das Formular, ob Admin ebenfalls entfernt werden soll. Zusätzliche Fachrollen gelten weiterhin. Mindestens ein aktiver Administrator muss bestehen bleiben. Vereinsämter beim Mitglied ändern diese Benutzerrollen nicht.
