@@ -20,7 +20,7 @@
             {% for account in accounts %}
                 <tr{% if not account.active %} class="text-muted"{% endif %}>
                     <td data-label="{{ t('accounts.name') }}">
-                        {{ account.name }}
+                        <a href="/bookings?account_id={{ account.id }}">{{ account.name }}</a>
                         {% if not account.active %}<span class="badge bg-subtle text-muted">{{ t('common.inactive') }}</span>{% endif %}
                         <div class="text-muted text-sm">{{ t('accounts.opening') }}: {{ account.opening_balance|eur }} ({{ account.opening_date|date('d.m.Y') }})</div>
                     </td>
