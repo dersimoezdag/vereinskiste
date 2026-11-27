@@ -19,7 +19,7 @@ Content-Type: application/json
 MCP-Protocol-Version: 2025-11-25</code></pre>
 </section>
 <section class="panel mb-6"><div class="table-scroll"><table class="data-table"><thead><tr><th>{{ t('integrations.operation') }}</th><th>API</th><th>{{ t('integrations.scopes') }}</th></tr></thead><tbody>
-{% for name,operation in operations %}<tr><td class="font-mono">{{ name }}</td><td class="font-mono">{{ operation.method }} {{ operation.path }}</td><td>{{ operation.scope }}</td></tr>{% endfor %}
+{% for name,operation in operations %}<tr><td data-label="{{ t('integrations.operation') }}" class="font-mono">{{ name }}</td><td data-label="API" class="font-mono">{{ operation.method }} {{ operation.path }}</td><td data-label="{{ t('integrations.scopes') }}">{{ operation.scope }}</td></tr>{% endfor %}
 </tbody></table></div></section>
 <section class="panel panel-body"><p class="mb-3">{{ t('integrations.retry_help') }}</p><p>{{ t('integrations.users_help') }}</p></section>
 {% endblock %}

@@ -61,7 +61,7 @@
             <a class="text-sm" href="/members/invites{% if invite_status != 'all' %}?invite_status=all{% endif %}">{{ t(invite_status == 'all' ? 'applications.invites.show_current' : 'applications.invites.show_all') }}</a>
         </div>
         <div class="table-scroll">
-            <table class="data-table mb-0">
+            <table class="data-table table-cards mb-0">
                 <thead>
                     <tr>
                         <th>{{ t('ui.empfaenger_link') }}</th>
@@ -79,7 +79,7 @@
                 {% else %}
                     {% for inv in invites %}
                     <tr>
-                        <td>
+                        <td data-label="{{ t('ui.empfaenger_link') }}">
                             <div class="font-semibold">
                                 {{ inv.title ?: 'Einladungs-Link' }}
                                 {% if inv.is_test %}<span class="badge bg-warning-soft text-warning ms-1">{{ t('applications.test.badge') }}</span>{% endif %}
@@ -101,11 +101,11 @@
                             </div>
                             {% endif %}
                         </td>
-                        <td class="text-sm text-muted">
+                        <td data-label="{{ t('applications.invites.expires_at') }}" class="text-sm text-muted">
                             {{ inv.expires_at|date('d.m.Y H:i') }}
                             <div>{{ t('applications.invites.usage')|replace({'{used}': inv.used_count, '{total}': inv.max_uses}) }}</div>
                         </td>
-                        <td>
+                        <td data-label="{{ t('privacy.field.status') }}">
                             {% if inv.is_revoked %}
                                 <span class="badge bg-subtle text-muted">{{ t('applications.invites.revoked') }}</span>
                             {% elseif inv.is_used %}

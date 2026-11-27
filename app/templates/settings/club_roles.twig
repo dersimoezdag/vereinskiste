@@ -65,7 +65,7 @@
                     <h3 class="panel-title">{{ t('clubroles.title') }}</h3>
                 </div>
                 <div class="table-scroll">
-                    <table class="data-table mb-0">
+                    <table class="data-table table-cards mb-0">
                         <thead>
                             <tr>
                                 <th>{{ t('clubroles.name') }}</th>
@@ -77,7 +77,7 @@
                         <tbody>
                         {% for r in roles %}
                             <tr {% if not r.active %}class="opacity-75 bg-subtle"{% endif %}>
-                                <td>
+                                <td data-label="{{ t('clubroles.name') }}">
                                     <div class="font-semibold">
                                         {{ r.name }}
                                         {% if not r.active %}
@@ -91,14 +91,14 @@
                                     <div class="text-sm text-muted">{{ r.description }}</div>
                                     {% endif %}
                                 </td>
-                                <td>
+                                <td data-label="{{ t('clubroles.kind') }}">
                                     {% if r.kind == 'membership_type' %}
                                         <span class="badge bg-primary-soft text-primary">{{ t('clubroles.kind.membership_type') }}</span>
                                     {% else %}
                                         <span class="badge bg-subtle text-muted">{{ t('clubroles.kind.function') }}</span>
                                     {% endif %}
                                 </td>
-                                <td>
+                                <td data-label="{{ t('clubroles.holders') }}">
                                     {% if r.holders_list is empty %}
                                         <span class="text-muted text-sm">{{ t('ui.0_traeger') }}</span>
                                     {% else %}
@@ -110,7 +110,7 @@
                                         </div>
                                     {% endif %}
                                 </td>
-                                <td class="text-right">
+                                <td data-label="{{ t('audit.action') }}" class="text-right">
                                     <button type="button" class="btn btn-sm"
                                             data-toggle-target="edit-role-{{ r.id }}" aria-controls="edit-role-{{ r.id }}">
                                         {{ t('bookings.edit') }}
