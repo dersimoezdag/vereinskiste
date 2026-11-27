@@ -111,17 +111,17 @@
             </div>
             {% endif %}
 
-            <div class="flex gap-2 justify-center mt-6">
+            <div class="flex flex-wrap gap-2 justify-center mt-6">
                 <form method="post" action="/settings/auto-update/step" id="automatic-step">
                     {{ csrf_field() }}
-                    <button type="submit" class="btn btn-primary inline-flex items-center gap-1">
+                    <button type="submit" class="btn btn-primary whitespace-normal inline-flex items-center gap-1">
                         {{ icons.icon('arrow-forward') }}
                         <span>{{ t('auto_update.continue') }}</span>
                     </button>
                 </form>
                 <form method="post" action="/settings/auto-update/cancel">
                     {{ csrf_field() }}
-                    <button type="submit" class="btn btn-danger-soft inline-flex items-center gap-1">
+                    <button type="submit" class="btn btn-danger-soft whitespace-normal inline-flex items-center gap-1">
                         {{ icons.icon('error') }}
                         <span>{{ t('auto_update.cancel') }}</span>
                     </button>

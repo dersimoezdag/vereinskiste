@@ -8,36 +8,36 @@
 <section class="panel mb-6 shadow-panel border-0" aria-labelledby="version-title">
     <div class="panel-body p-6">
         <div class="flex flex-wrap items-center gap-4">
-            <div class="shrink-0 flex flex-wrap gap-2">
-                <div class="avatar avatar-lg bg-primary-soft text-primary rounded-full">
+            <div class="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+                <div class="avatar avatar-lg bg-primary-soft text-primary rounded-full shrink-0">
                     {{ icons.icon('settings') }}
                 </div>
-            </div>
-            <div class="min-w-0 flex-1">
-                <h2 class="panel-title text-muted text-sm font-semibold uppercase mb-1" id="version-title">{{ t('settings.version') }}</h2>
-                <div class="flex items-center gap-4 mt-1 flex-wrap">
-                    <span class="h1 mb-0 font-semibold">{{ t('ui.v') }}{{ version }}</span>
+                <div class="min-w-0 flex-1">
+                    <h2 class="panel-title text-muted text-sm font-semibold uppercase mb-1" id="version-title">{{ t('settings.version') }}</h2>
+                    <div class="flex items-center gap-2 sm:gap-4 mt-1 flex-wrap">
+                        <span class="h1 mb-0 font-semibold">{{ t('ui.v') }}{{ version }}</span>
                     {% if release.status == 'current' %}
-                        <span class="badge bg-success-soft text-success text-base py-2 px-4 inline-flex items-center gap-1">
+                        <span class="badge bg-success-soft text-success whitespace-normal text-left text-base py-2 px-4 inline-flex items-center gap-1">
                             {{ icons.icon('check') }}
                             <span>{{ t('update.current') }}</span>
                         </span>
                     {% elseif release.status == 'available' %}
-                        <span class="badge bg-primary-soft text-primary text-base py-2 px-4 inline-flex items-center gap-1">
+                        <span class="badge bg-primary-soft text-primary whitespace-normal text-left text-base py-2 px-4 inline-flex items-center gap-1">
                             {{ icons.icon('rocket') }}
                             <span>{{ t('settings.release.available') }} {{ t('ui.v') }}{{ release.version }}</span>
                         </span>
                     {% elseif release.status != 'unchecked' %}
-                        <span class="badge bg-subtle text-muted text-base py-2 px-4">
+                        <span class="badge bg-subtle text-muted whitespace-normal text-left text-base py-2 px-4">
                             {{ t('settings.release.' ~ release.status) }}
                         </span>
                     {% endif %}
+                    </div>
                 </div>
             </div>
-            <div class="shrink-0 flex flex-wrap gap-2">
+            <div class="w-full shrink-0 sm:w-auto">
                 <form method="post" action="/settings/check-updates">
                     {{ csrf_field() }}
-                    <button class="btn btn-soft inline-flex items-center gap-2" type="submit">
+                    <button class="btn btn-soft w-full sm:w-auto inline-flex items-center gap-2" type="submit">
                         {{ icons.icon('sync') }}
                         <span>{{ t('settings.release.check') }}</span>
                     </button>
@@ -58,7 +58,7 @@
 
 <!-- Laufendes Auto-Update Banner -->
 {% if operation.phase not in ['idle', 'done', 'failed', 'cancelled', 'rolled_back'] %}
-<div class="alert alert-info flex items-center justify-between p-4 mb-6">
+<div class="alert alert-info flex flex-wrap items-center justify-between gap-2 p-4 mb-6">
     <div class="flex items-center gap-2">
         <span class="spinner spinner-sm" role="status"></span>
         <div><strong>{{ t('auto_update.running') }}</strong> {{ t('auto_update.status_is') }} <em>{{ t('auto_update.phase.' ~ operation.phase) }}</em>.</div>
@@ -113,7 +113,7 @@
             <div class="text-muted text-sm">
                 {{ t('settings.release.source') }} <a href="https://forgejo.lexframe.de/LexFrame/vereinskiste/releases" target="_blank" rel="noreferrer" class="text-inherit underline">{{ t('ui.forgejo_releases') }}</a>
             </div>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
                 {% if release.download is defined %}
                 <a class="btn btn-sm inline-flex items-center gap-1" href="{{ release.download }}" rel="noreferrer">
                     {{ icons.icon('download') }}
