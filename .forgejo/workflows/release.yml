@@ -43,12 +43,16 @@ jobs:
         with:
           token: ${{ forgejo.token }}
           persist-credentials: false
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          extensions: pdo_pgsql, mbstring, fileinfo, gd, openssl, zip, sodium, curl
-          tools: composer:v2
-          coverage: none
+      # shivammathur/setup-php is not mirrored on the Forgejo instance, so PHP
+      # is installed from the ondrej PPA instead.
+      - name: Setup PHP
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository -y ppa:ondrej/php
+          sudo apt-get update
+          sudo apt-get install -y php8.4-cli php8.4-pgsql php8.4-mbstring php8.4-fileinfo php8.4-gd php8.4-openssl php8.4-zip php8.4-curl
+          curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
       - uses: actions/setup-node@v4
         with:
           node-version: '24'

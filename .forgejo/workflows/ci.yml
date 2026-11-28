@@ -32,12 +32,16 @@ jobs:
         with:
           token: ${{ forgejo.token }}
           persist-credentials: false
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: '${{ matrix.php }}'
-          extensions: pdo_pgsql, mbstring, fileinfo, gd, openssl, zip, sodium, curl
-          tools: composer:v2
-          coverage: none
+      # shivammathur/setup-php is not mirrored on the Forgejo instance, so PHP
+      # is installed from the ondrej PPA instead.
+      - name: Setup PHP
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository -y ppa:ondrej/php
+          sudo apt-get update
+          sudo apt-get install -y php${{ matrix.php }}-cli php${{ matrix.php }}-pgsql php${{ matrix.php }}-mbstring php${{ matrix.php }}-fileinfo php${{ matrix.php }}-gd php${{ matrix.php }}-openssl php${{ matrix.php }}-zip php${{ matrix.php }}-curl
+          curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
